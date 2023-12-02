@@ -50,6 +50,22 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			using (var connection = new MySqlConnection(dbConnectionString))
 			{
 				connection.Open();
+
+				string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
+							  `id` int(11) NOT NULL,
+							  `player_steamid` varchar(64) NOT NULL,
+							  `player_name` varchar(128) NOT NULL,
+							  `admin_steamid` varchar(64) NOT NULL,
+							  `admin_name` varchar(128) NOT NULL,
+							  `duration` int(11) NOT NULL,
+							  `ends` timestamp NOT NULL,
+							  `created` timestamp NOT NULL,
+							  `status` enum('ACTIVE','UNBANNED','EXPIRED','') NOT NULL DEFAULT 'ACTIVE'
+							) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+
+				MySqlCommand command = new MySqlCommand(sql, connection);
+				command.ExecuteNonQuery();
+
 				connection.Close();
 			}
 
@@ -106,7 +122,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		player!.Pawn.Value!.Freeze();
 
 		BanManager _banManager = new(dbConnectionString);
-		
+
 		int.TryParse(command.GetArg(2), out time);
 
 		if (command.ArgCount >= 3)
