@@ -11,6 +11,12 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_kick <#userid or name> [reason] - Kick player
 - css_slay <#userid or name> - Kill player
 - css_slap <#userid or name> [damage] - Slap player
+- css_map <mapname> - Change map
+- css_say <message> - Say message as admin in chat
+- css_psay <#userid or name> <message> - Sends private message to player
+- css_csay <message> - Say message as admin in center
+- css_hsay <message> - Say message as admin in hud
+
 
 ### Requirments
 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v90**
