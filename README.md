@@ -41,3 +41,5 @@ After first launch, u need to configure plugin in  addons/counterstrikesharp/con
         public static char LightRed = '\x0F';
 ```
 Use color name for e.g. {LightRed}
+
+Credits for https://github.com/Hackmastr/css-basic-admin/
