@@ -7,15 +7,22 @@ Manage your Counter-Strike 2 server by simple commands :)
 It's only plugin base, I don't have much time for more extensive development, so if you want to help, do it :)
 
 ### Commands
-- css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player
-- css_kick <#userid or name> [reason] - Kick player
-- css_slay <#userid or name> - Kill player
-- css_slap <#userid or name> [damage] - Slap player
-- css_map <mapname> - Change map
-- css_say <message> - Say message as admin in chat
-- css_psay <#userid or name> <message> - Sends private message to player
-- css_csay <message> - Say message as admin in center
-- css_hsay <message> - Say message as admin in hud
+- css_admin - Display all admin commands // @css/generic
+- css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player // @css/ban
+- css_kick <#userid or name> [reason] - Kick player / @css/kick
+- css_slay <#userid or name> - Kill player // @css/slay
+- css_slap <#userid or name> [damage] - Slap player // @css/slay
+- css_map <mapname> - Change map // @css/map
+- css_say <message> - Say message as admin in chat // @css/chat
+- css_psay <#userid or name> <message> - Sends private message to player // @css/chat
+- css_csay <message> - Say message as admin in center // @css/chat
+- css_hsay <message> - Say message as admin in hud // @css/chat
+- css_noclip <#userid or name> - Toggle noclip for player // @css/cheats
+- css_freeze <#userid or name> [duration] - Freeze player // @css/slay
+- css_unfreeze <#userid or name> - Unfreeze player // @css/slay
+- css_respawn <#userid or name> - Respawn player // @css/cheats
+- css_cvar <cvar> <value> - Change cvar value // @css/cvar
+- css_rcon <command> - Run command as server // @css/rcon
 
 
 ### Requirments

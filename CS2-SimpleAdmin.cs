@@ -3,8 +3,10 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
+using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -188,7 +190,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		int damage = 0;
 
-
 		if (command.ArgCount >= 2)
 		{
 			int.TryParse(command.GetArg(2), out damage);
@@ -261,6 +262,102 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Helper.ReplaceTags(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]),
 			0, 0, 0, 0);
 	}
+
+	[ConsoleCommand("css_noclip", "Noclip a player.")]
+	[CommandHelper(1, "<#userid or name>")]
+	[RequiresPermissions("@css/cheats")]
+	public void OnNoclipCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out var player))
+			return;
+
+		player!.Pawn.Value!.ToggleNoclip();
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminNoclipMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+	}
+
+	[ConsoleCommand("css_freeze", "Freeze a player.")]
+	[CommandHelper(1, "<#userid or name> [duration]")]
+	[RequiresPermissions("@css/slay")]
+	public void OnFreezeCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out var player))
+			return;
+
+		int time = 0;
+		int.TryParse(command.GetArg(2), out time);
+
+		player!.Pawn.Value!.Freeze();
+
+		if (time > 0)
+			AddTimer(time, () => player.Pawn.Value!.Unfreeze());
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminFreezeMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+	}
+
+	[ConsoleCommand("css_unfreeze", "Unfreeze a player.")]
+	[CommandHelper(1, "<#userid or name>")]
+	[RequiresPermissions("@css/slay")]
+	public void OnUnfreezeCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out var player))
+			return;
+
+		player!.Pawn.Value!.Unfreeze();
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminUnFreezeMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+	}
+
+	[ConsoleCommand("css_respawn", "Respawn a dead player.")]
+	[CommandHelper(1, "<#userid or name>")]
+	[RequiresPermissions("@css/cheats")]
+	public void OnRespawnCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out var player))
+			return;
+
+		player!.Respawn();
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminRespawnMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+	}
+
+	[ConsoleCommand("css_cvar", "Change a cvar.")]
+	[CommandHelper(2, "<cvar> <value>")]
+	[RequiresPermissions("@css/cvar")]
+	public void OnCvarCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		var cvar = ConVar.Find(command.GetArg(1));
+
+		if (cvar == null)
+		{
+			command.ReplyToCommand($"Cvar \"{command.GetArg(1)}\" not found.");
+			return;
+		}
+
+		if (cvar.Name.Equals("sv_cheats") && !AdminManager.PlayerHasPermissions(caller, "@css/cheats"))
+		{
+			command.ReplyToCommand($"You don't have permissions to change \"{command.GetArg(1)}\".");
+			return;
+		}
+
+		var value = command.GetArg(2);
+
+		Server.ExecuteCommand($"{cvar.Name} {value}");
+
+		command.ReplyToCommand($"{caller!.PlayerName} changed cvar {cvar.Name} to {value}.");
+		Logger.LogInformation($"{caller.PlayerName} changed cvar {cvar.Name} to {value}.");
+	}
+
+	[ConsoleCommand("css_rcon", "Run a server console command.")]
+	[CommandHelper(1, "<command>")]
+	[RequiresPermissions("@css/rcon")]
+	public void OnRcomCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		Server.ExecuteCommand(command.ArgString);
+
+		Logger.LogInformation($"{caller!.PlayerName} executed command ({command.ArgString}).");
+	}
+
 
 
 	private static bool GetTarget(CommandInfo command, out CCSPlayerController? player)
