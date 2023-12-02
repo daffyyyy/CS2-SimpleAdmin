@@ -3,6 +3,8 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Utils;
 using MySqlConnector;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -183,17 +185,81 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminSlapMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 	}
 
-	private static bool GetTarget(CommandInfo info, out CCSPlayerController? player)
+	[ConsoleCommand("css_map")]
+	[RequiresPermissions("@css/map")]
+	[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		var matches = Helper.GetTarget(info.GetArg(1), out player);
+		string map = command.GetArg(1);
+
+		if (!Server.IsMapValid(map))
+		{
+			command.ReplyToCommand($"Map {map} not found.");
+			return;
+		}
+
+		AddTimer(5f, () =>
+		{
+			Server.ExecuteCommand($"changelevel {map}");
+		});
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{MAP}", map)));
+	}
+
+	[ConsoleCommand("css_say", "Say to all players.")]
+	[CommandHelper(1, "<message>")]
+	[RequiresPermissions("@css/chat")]
+	public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		Server.PrintToChatAll(Helper.ReplaceTags(Config.Messages.AdminSayPrefix + command.GetCommandString[command.GetCommandString.IndexOf(' ')..]));
+	}
+
+	[ConsoleCommand("css_psay", "Private message a player.")]
+	[CommandHelper(2, "<#userid or name> <message>")]
+	[RequiresPermissions("@css/chat")]
+	public void OnAdminPrivateSayCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out var player))
+			return;
+
+		var range = command.GetArg(0).Length + command.GetArg(1).Length + 2;
+		var message = command.GetCommandString[range..];
+
+		command.ReplyToCommand(Helper.ReplaceTags($"({player!.PlayerName}) {message}"));
+		player.PrintToChat(Helper.ReplaceTags($"({caller!.PlayerName}) {message}"));
+	}
+
+	[ConsoleCommand("css_csay", "Say to all players (in center).")]
+	[CommandHelper(1, "<message>")]
+	[RequiresPermissions("@css/chat")]
+	public void OnAdminCenterSayCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		Helper.PrintToCenterAll(Helper.ReplaceTags(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]));
+	}
+
+	[ConsoleCommand("css_hsay", "Say to all players (in hud).")]
+	[CommandHelper(1, "<message>")]
+	[RequiresPermissions("@css/chat")]
+	public void OnAdminHudSayCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		VirtualFunctions.ClientPrintAll(
+			HudDestination.Alert,
+			Helper.ReplaceTags(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]),
+			0, 0, 0, 0);
+	}
+
+
+	private static bool GetTarget(CommandInfo command, out CCSPlayerController? player)
+	{
+		var matches = Helper.GetTarget(command.GetArg(1), out player);
 
 		switch (matches)
 		{
 			case TargetResult.None:
-				info.ReplyToCommand($"Target {info.GetArg(1)} not found.");
+				command.ReplyToCommand($"Target {command.GetArg(1)} not found.");
 				return false;
 			case TargetResult.Multiple:
-				info.ReplyToCommand($"Multiple targets found for \"{info.GetArg(1)}\".");
+				command.ReplyToCommand($"Multiple targets found for \"{command.GetArg(1)}\".");
 				return false;
 		}
 

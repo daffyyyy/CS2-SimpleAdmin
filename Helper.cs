@@ -37,7 +37,15 @@ namespace CS2_SimpleAdmin
 
 		public static void KickPlayer(int? userId, string? reason = null)
 		{
-			Server.ExecuteCommand($"kickid {userId} {reason}");
+			NativeAPI.IssueServerCommand($"kickid {userId} {reason}");
+		}
+
+		public static void PrintToCenterAll(string message)
+		{
+			Utilities.GetPlayers().ForEach(controller =>
+			{
+				controller.PrintToCenter(message);
+			});
 		}
 
 		internal static string ReplaceTags(string message)

@@ -22,6 +22,11 @@ namespace CS2_SimpleAdmin
 		public string AdminSlayMessage { get; set; } = "Admin {ADMIN} slayed {PLAYER}!";
 		[JsonPropertyName("AdminSlapMessage")]
 		public string AdminSlapMessage { get; set; } = "Admin {ADMIN} slapped {PLAYER}!";
+		[JsonPropertyName("AdminChangeMap")]
+		public string AdminChangeMap { get; set; } = "Admin {ADMIN} changed map to {MAP}!";
+		[JsonPropertyName("AdminSayPrefix")]
+		public string AdminSayPrefix { get; set; } = "{RED}ADMIN: {DEFAULT}!";
+
 	}
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
