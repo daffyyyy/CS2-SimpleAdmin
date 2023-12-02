@@ -25,8 +25,11 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("AdminChangeMap")]
 		public string AdminChangeMap { get; set; } = "Admin {ADMIN} changed map to {MAP}!";
 		[JsonPropertyName("AdminSayPrefix")]
-		public string AdminSayPrefix { get; set; } = "{RED}ADMIN: {DEFAULT}!";
-
+		public string AdminSayPrefix { get; set; } = "{RED}ADMIN: {DEFAULT}";
+		[JsonPropertyName("AdminHelpCommand")]
+		public string AdminHelpCommand { get; set; } = "{GREEN}[ CS2-SimpleAdmin HELP ]{DEFAULT}\n- css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player\n- css_kick <#userid or name> [reason] - Kick player\n" +
+			"- css_slay <#userid or name> - Kill player\n- css_slap <#userid or name> [damage] - Slap player\n- css_map <mapname> - Change map\n- css_say <message> - Say message as admin in chat\n" +
+			"- css_psay <#userid or name> <message> - Sends private message to player\n- css_csay <message> - Say message as admin in center\n- css_hsay <message> - Say message as admin in hud";
 	}
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig

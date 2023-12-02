@@ -15,7 +15,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.0";
+	public override string ModuleVersion => "1.0.1";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -78,6 +78,20 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		Config = config;
+	}
+
+	[ConsoleCommand("css_admin")]
+	[RequiresPermissions("@css/generic")]
+	public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (caller == null || !caller.IsValid) return;
+
+		var splitMessage = Config.Messages.AdminHelpCommand.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+		foreach (var line in splitMessage)
+		{
+			caller.PrintToChat(Helper.ReplaceTags($" {line}"));
+		}
 	}
 
 	[ConsoleCommand("css_kick")]
@@ -211,7 +225,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		Server.PrintToChatAll(Helper.ReplaceTags(Config.Messages.AdminSayPrefix + command.GetCommandString[command.GetCommandString.IndexOf(' ')..]));
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Messages.AdminSayPrefix}  {command.GetCommandString[command.GetCommandString.IndexOf(' ')..]}"));
 	}
 
 	[ConsoleCommand("css_psay", "Private message a player.")]
