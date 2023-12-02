@@ -54,16 +54,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				connection.Open();
 
 				string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
-							  `id` int(11) NOT NULL,
-							  `player_steamid` varchar(64) NOT NULL,
-							  `player_name` varchar(128) NOT NULL,
-							  `admin_steamid` varchar(64) NOT NULL,
-							  `admin_name` varchar(128) NOT NULL,
-							  `duration` int(11) NOT NULL,
-							  `ends` timestamp NOT NULL,
-							  `created` timestamp NOT NULL,
-							  `status` enum('ACTIVE','UNBANNED','EXPIRED','') NOT NULL DEFAULT 'ACTIVE'
-							) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
+                                `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                                `player_steamid` VARCHAR(64) NOT NULL,
+                                `player_name` VARCHAR(128) NOT NULL,
+                                `admin_steamid` VARCHAR(64) NOT NULL,
+                                `admin_name` VARCHAR(128) NOT NULL,
+                                `duration` INT NOT NULL,
+                                `ends` TIMESTAMP NOT NULL,
+                                `created` TIMESTAMP NOT NULL,
+                                `status` ENUM('ACTIVE', 'UNBANNED', 'EXPIRED', '') NOT NULL DEFAULT 'ACTIVE'
+                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 				MySqlCommand command = new MySqlCommand(sql, connection);
 				command.ExecuteNonQuery();
