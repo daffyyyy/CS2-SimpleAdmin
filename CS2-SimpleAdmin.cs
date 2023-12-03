@@ -296,7 +296,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Messages.AdminSayPrefix}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName) + command.GetCommandString.Substring(command.GetCommandString.IndexOf(' '))));
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Messages.AdminSayPrefix}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName) + command.GetCommandString[command.GetCommandString.IndexOf(' ')..]));
 	}
 
 	[ConsoleCommand("css_psay", "Private message a player.")]
