@@ -202,7 +202,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	}
 
 	[ConsoleCommand("css_map")]
-	[RequiresPermissions("@css/map")]
+	[RequiresPermissions("@css/changemap")]
 	[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 	{

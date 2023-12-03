@@ -12,7 +12,7 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_kick <#userid or name> [reason] - Kick player / @css/kick
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay
-- css_map <mapname> - Change map // @css/map
+- css_map <mapname> - Change map // @css/changemap
 - css_say <message> - Say message as admin in chat // @css/chat
 - css_psay <#userid or name> <message> - Sends private message to player // @css/chat
 - css_csay <message> - Say message as admin in center // @css/chat
