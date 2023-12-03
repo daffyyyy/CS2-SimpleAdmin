@@ -522,6 +522,25 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{MAP}", map)));
 	}
 
+	[ConsoleCommand("css_wsmap", "Change workshop map.")]
+	[ConsoleCommand("css_workshop", "Change workshop map.")]
+	[CommandHelper(1, "<name or id>")]
+	[RequiresPermissions("@css/changemap")]
+	public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		string? _command = null;
+		var map = command.GetArg(1);
+
+		_command = ulong.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{MAP}", map)));
+
+		AddTimer(5f, () =>
+		{
+			Server.ExecuteCommand(_command);
+		});
+	}
+
 	[ConsoleCommand("css_say", "Say to all players.")]
 	[CommandHelper(1, "<message>")]
 	[RequiresPermissions("@css/chat")]
