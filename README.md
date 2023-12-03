@@ -7,6 +7,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 It's only plugin base, I don't have much time for more extensive development, so if you want to help, do it :)
 
 ### Commands
+```js
 - css_admin - Display all admin commands // @css/generic
 - css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player // @css/ban
 - css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64 // @css/ban
@@ -29,6 +30,7 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_respawn <#userid or name> - Respawn player // @css/cheats
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon
+```
 
 ### Requirments
 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v90**
