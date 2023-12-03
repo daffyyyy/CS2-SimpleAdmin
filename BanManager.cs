@@ -25,12 +25,13 @@ namespace CS2_SimpleAdmin
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
 
-			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
-				"VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
+			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
+				"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
 			_dbConnection.Execute(sql, new
 			{
 				playerSteamid = player.AuthorizedSteamID.SteamId64.ToString(),
 				playerName = player.PlayerName,
+				playerIp = player.IpAddress!.Split(":")[0],
 				adminSteamid = issuer == null ? "Console" : issuer?.AuthorizedSteamID?.SteamId64.ToString(),
 				adminName = issuer == null ? "Console" : issuer.PlayerName,
 				banReason = reason,
@@ -68,16 +69,50 @@ namespace CS2_SimpleAdmin
 			_dbConnection.Close();
 		}
 
-		public bool IsPlayerBanned(string steamId)
+		public void AddBanByIp(string playerIp, CCSPlayerController? issuer, string reason, int time = 0)
+		{
+			if (string.IsNullOrEmpty(playerIp)) return;
+
+			_dbConnection.Open();
+
+			DateTime now = DateTime.Now;
+			DateTime futureTime = now.AddMinutes(time);
+
+			var sql = "INSERT INTO `sa_bans` (`player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
+				"VALUES (@playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
+
+			_dbConnection.Execute(sql, new
+			{
+				playerIp,
+				adminSteamid = issuer == null ? "Console" : issuer?.AuthorizedSteamID?.SteamId64.ToString(),
+				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				banReason = reason,
+				duration = time,
+				ends = futureTime,
+				created = now
+			});
+
+			_dbConnection.Close();
+		}
+
+		public bool IsPlayerBanned(string steamId, string? ipAddress = null)
 		{
 			_dbConnection.Open();
 
 			DateTime now = DateTime.Now;
 
-			string sql = "SELECT COUNT(*) FROM sa_bans WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
-			int banCount = _dbConnection.ExecuteScalar<int>(sql, new { PlayerSteamID = steamId, CurrentTime = now });
+			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 
-			_dbConnection.Close();
+			int banCount;
+
+			if (!string.IsNullOrEmpty(ipAddress))
+			{
+				banCount = _dbConnection.ExecuteScalar<int>(sql, new { PlayerSteamID = steamId, PlayerIP = ipAddress, CurrentTime = now });
+			}
+			else
+			{
+				banCount = _dbConnection.ExecuteScalar<int>(sql, new { PlayerSteamID = steamId, PlayerIP = DBNull.Value, CurrentTime = now });
+			}
 
 			return banCount > 0;
 		}
@@ -91,7 +126,7 @@ namespace CS2_SimpleAdmin
 
 			_dbConnection.Open();
 
-			string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern AND status = 'ACTIVE'";
+			string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern AND status = 'ACTIVE'";
 			_dbConnection.Execute(sqlUnban, new { pattern = playerPattern });
 
 			_dbConnection.Close();

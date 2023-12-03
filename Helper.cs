@@ -24,9 +24,24 @@ namespace CS2_SimpleAdmin
 			);
 		}
 
+		public static List<CCSPlayerController> GetPlayerFromIp(string ipAddress)
+		{
+			return Utilities.GetPlayers().FindAll(x =>
+				x.IpAddress != null &&
+				x.IpAddress.Split(":")[0].Equals(ipAddress)
+			);
+		}
+
 		public static bool IsValidSteamID64(string input)
 		{
 			string pattern = @"^\d{17}$";
+
+			return Regex.IsMatch(input, pattern);
+		}
+
+		public static bool IsValidIP(string input)
+		{
+			string pattern = @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 
 			return Regex.IsMatch(input, pattern);
 		}

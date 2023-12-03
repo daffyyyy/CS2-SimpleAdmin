@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -11,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 
 namespace CS2_SimpleAdmin;
+[MinimumApiVersion(98)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public List<int> gaggedPlayers = new List<int>();
@@ -19,7 +21,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.1";
+	public override string ModuleVersion => "1.0.3";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -59,8 +61,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
                                 `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                `player_steamid` VARCHAR(64) NOT NULL,
+                                `player_steamid` VARCHAR(64),
                                 `player_name` VARCHAR(128),
+                                `player_ip` VARCHAR(128),
                                 `admin_steamid` VARCHAR(64) NOT NULL,
                                 `admin_name` VARCHAR(128) NOT NULL,
                                 `reason` VARCHAR(255) NOT NULL,
@@ -388,9 +391,63 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		command.ReplyToCommand($"Banned player with steamid {steamid}.");
 	}
 
+	[ConsoleCommand("css_banip")]
+	[RequiresPermissions("@css/ban")]
+	[CommandHelper(minArgs: 1, usage: "<ip> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnBanIp(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.ArgCount < 2)
+			return;
+		if (string.IsNullOrEmpty(command.GetArg(1))) return;
+
+		string ipAddress = command.GetArg(1);
+
+		if (!Helper.IsValidIP(ipAddress))
+		{
+			command.ReplyToCommand($"Invalid IP address.");
+			return;
+		}
+
+		int time = 0;
+		string reason = "Unknown";
+
+		BanManager _banManager = new(dbConnectionString);
+
+		int.TryParse(command.GetArg(2), out time);
+
+		if (command.ArgCount >= 3)
+			reason = command.GetArg(3);
+
+		_banManager.AddBanByIp(ipAddress, caller, reason, time);
+
+		List<CCSPlayerController> matches = Helper.GetPlayerFromIp(ipAddress);
+		if (matches.Count == 1)
+		{
+			CCSPlayerController? player = matches.FirstOrDefault();
+			if (player != null)
+			{
+				player!.Pawn.Value!.Freeze();
+
+				if (time == 0)
+				{
+					player!.PrintToCenter($"{Config.Messages.PlayerBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+				}
+				else
+				{
+					player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+				}
+
+				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId));
+			}
+		}
+		command.ReplyToCommand($"Banned player with IP address {ipAddress}.");
+	}
+
 	[ConsoleCommand("css_unban")]
 	[RequiresPermissions("@css/unban")]
-	[CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[CommandHelper(minArgs: 1, usage: "<steamid or name or ip>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnUnbanCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		if (command.GetArg(1).Length <= 1)

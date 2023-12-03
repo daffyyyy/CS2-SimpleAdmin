@@ -46,7 +46,17 @@ namespace CS2_SimpleAdmin
 
 			BanManager _banManager = new(dbConnectionString);
 			MuteManager _muteManager = new(dbConnectionString);
-			bool isBanned = _banManager.IsPlayerBanned(player.AuthorizedSteamID.SteamId64.ToString());
+
+			bool isBanned = false;
+			if (player.IpAddress != null)
+			{
+				isBanned = _banManager.IsPlayerBanned(player.AuthorizedSteamID.SteamId64.ToString(), player.IpAddress.Split(":")[0]);
+			}
+			else
+			{
+				isBanned = _banManager.IsPlayerBanned(player.AuthorizedSteamID.SteamId64.ToString());
+			}
+
 			List<dynamic> activeMutes = _muteManager.IsPlayerMuted(player.AuthorizedSteamID.SteamId64.ToString());
 
 			if (activeMutes.Count > 0)

@@ -10,7 +10,8 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_admin - Display all admin commands // @css/generic
 - css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player // @css/ban
 - css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64 // @css/ban
-- css_unban <steamid or name> - Unban player // @css/unban
+- css_banip <ip> [time in minutes/0 perm] [reason] - Ban player via IP address // @css/ban
+- css_unban <steamid or name or ip> - Unban player // @css/unban
 - css_kick <#userid or name> [reason] - Kick player / @css/kick
 - css_gag <#userid or name> [time in minutes/0 perm] [reason] - Gag player // @css/chat
 - css_addgag <steamid> [time in minutes/0 perm] [reason] - Gag player via steamid64 // @css/chat
