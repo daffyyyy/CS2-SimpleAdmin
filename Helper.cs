@@ -3,6 +3,7 @@ using CounterStrikeSharp.API;
 using MySqlConnector;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace CS2_SimpleAdmin
 {
@@ -13,6 +14,18 @@ namespace CS2_SimpleAdmin
 		public static List<CCSPlayerController> GetPlayerFromName(string name)
 		{
 			return Utilities.GetPlayers().FindAll(x => x.PlayerName.Contains(name, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public static List<CCSPlayerController> GetPlayerFromSteamid64(string steamid)
+		{
+			return Utilities.GetPlayers().FindAll(x => x.AuthorizedSteamID!.SteamId64.ToString().Equals(steamid));
+		}
+
+		public static bool IsValidSteamID64(string input)
+		{
+			string pattern = @"^\d{17}$";
+
+			return Regex.IsMatch(input, pattern);
 		}
 
 		public static TargetResult GetTarget(string target, out CCSPlayerController? player)

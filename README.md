@@ -9,6 +9,8 @@ It's only plugin base, I don't have much time for more extensive development, so
 ### Commands
 - css_admin - Display all admin commands // @css/generic
 - css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player // @css/ban
+- css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64 // @css/ban
+- css_unban <steamid or name> - Unban player // @css/unban
 - css_kick <#userid or name> [reason] - Kick player / @css/kick
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay

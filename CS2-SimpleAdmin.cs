@@ -8,7 +8,6 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace CS2_SimpleAdmin;
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
@@ -58,7 +57,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
                                 `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                 `player_steamid` VARCHAR(64) NOT NULL,
-                                `player_name` VARCHAR(128) NOT NULL,
+                                `player_name` VARCHAR(128),
                                 `admin_steamid` VARCHAR(64) NOT NULL,
                                 `admin_name` VARCHAR(128) NOT NULL,
                                 `reason` VARCHAR(255) NOT NULL,
@@ -161,7 +160,77 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		AddTimer(10.0f, () => Helper.KickPlayer(player!.UserId));
+	}
 
+	[ConsoleCommand("css_addban")]
+	[RequiresPermissions("@css/ban")]
+	[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.ArgCount < 2)
+			return;
+		if (string.IsNullOrEmpty(command.GetArg(1))) return;
+
+		string steamid = command.GetArg(1);
+
+		if (!Helper.IsValidSteamID64(steamid))
+		{
+			command.ReplyToCommand($"Invalid SteamID64.");
+			return;
+		}
+
+		int time = 0;
+		string reason = "Unknown";
+
+		BanManager _banManager = new(dbConnectionString);
+
+		int.TryParse(command.GetArg(2), out time);
+
+		if (command.ArgCount >= 3)
+			reason = command.GetArg(3);
+
+		_banManager.AddBanBySteamid(steamid, caller, reason, time);
+
+		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
+		if (matches.Count == 1)
+		{
+			CCSPlayerController? player = matches.FirstOrDefault();
+			if (player != null)
+			{
+				if (time == 0)
+				{
+					player!.PrintToCenter($"{Config.Messages.PlayerBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+				}
+				else
+				{
+					player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+				}
+
+				AddTimer(10.0f, () => Helper.KickPlayer(player.UserId));
+			}
+		}
+		command.ReplyToCommand($"Banned player with steamid {steamid}.");
+	}
+
+	[ConsoleCommand("css_unban")]
+	[RequiresPermissions("@css/unban")]
+	[CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnUnbanCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.GetArg(1).Length <= 1)
+		{
+			command.ReplyToCommand($"Too short pattern to search.");
+			return;
+		}
+
+		string pattern = command.GetArg(1);
+		BanManager _banManager = new(dbConnectionString);
+
+		_banManager.UnbanPlayer(pattern);
+
+		command.ReplyToCommand($"Unbanned player with pattern {pattern}.");
 	}
 
 	[ConsoleCommand("css_slay")]
