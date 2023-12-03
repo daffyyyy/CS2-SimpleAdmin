@@ -53,6 +53,7 @@ namespace CS2_SimpleAdmin
 
 			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
 				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
+
 			_dbConnection.Execute(sql, new
 			{
 				playerSteamid = playerSteamId,
@@ -90,7 +91,7 @@ namespace CS2_SimpleAdmin
 
 			_dbConnection.Open();
 
-			string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern";
+			string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern AND status = 'ACTIVE'";
 			_dbConnection.Execute(sqlUnban, new { pattern = playerPattern });
 
 			_dbConnection.Close();

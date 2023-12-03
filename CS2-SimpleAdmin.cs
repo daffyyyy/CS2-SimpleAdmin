@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,8 @@ using MySqlConnector;
 namespace CS2_SimpleAdmin;
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
+	public List<int> gaggedPlayers = new List<int>();
+
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
@@ -70,6 +73,24 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				MySqlCommand command = new MySqlCommand(sql, connection);
 				command.ExecuteNonQuery();
 
+				sql = @"CREATE TABLE IF NOT EXISTS `sa_mutes` (
+						 `id` int(11) NOT NULL AUTO_INCREMENT,
+						 `player_steamid` varchar(64) NOT NULL,
+						 `player_name` varchar(128) NOT NULL,
+						 `admin_steamid` varchar(64) NOT NULL,
+						 `admin_name` varchar(128) NOT NULL,
+						 `reason` varchar(255) NOT NULL,
+						 `duration` int(11) NOT NULL,
+						 `ends` timestamp NOT NULL,
+						 `created` timestamp NOT NULL,
+						 `type` enum('GAG','MUTE','') NOT NULL DEFAULT 'GAG',
+						 `status` enum('ACTIVE','UNMUTED','EXPIRED','') NOT NULL DEFAULT 'ACTIVE',
+						 PRIMARY KEY (`id`)
+						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+				command = new MySqlCommand(sql, connection);
+				command.ExecuteNonQuery();
+
 				connection.Close();
 			}
 
@@ -105,7 +126,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			return;
 
 		player!.Pawn.Value!.Freeze();
-		string reason = "Brak powodu";
+		string reason = "Unknown";
 
 		if (command.ArgCount >= 2)
 			reason = command.GetArg(2);
@@ -113,15 +134,166 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 2)
 		{
 			player!.PrintToCenter($"{Config.Messages.PlayerKickMessage}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			AddTimer(10.0f, () => Helper.KickPlayer(player!.UserId, reason));
+			AddTimer(Config.KickTime, () => Helper.KickPlayer(player!.UserId, reason));
 
 		}
 		else
 		{
-			AddTimer(10.0f, () => Helper.KickPlayer(player!.UserId));
+			AddTimer(Config.KickTime, () => Helper.KickPlayer(player!.UserId));
 		}
 
 		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminKickMessage}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+	}
+
+	[ConsoleCommand("css_gag")]
+	[RequiresPermissions("@css/chat")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnGagCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out var player))
+			return;
+		if (command.ArgCount < 2)
+			return;
+
+		int time = 0;
+		string reason = "Unknown";
+
+		MuteManager _muteManager = new(dbConnectionString);
+
+		int.TryParse(command.GetArg(2), out time);
+
+		if (command.ArgCount >= 3)
+			reason = command.GetArg(3);
+
+		_muteManager.MutePlayer(player, caller, reason, time, 0);
+
+		if (!gaggedPlayers.Contains((int)player!.Index))
+			gaggedPlayers.Add((int)player.Index);
+
+		if (time == 0)
+		{
+			player!.PrintToCenter($"{Config.Messages.PlayerGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+		}
+		else
+		{
+			player!.PrintToCenter($"{Config.Messages.PlayerGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+		}
+	}
+
+	[ConsoleCommand("css_addgag")]
+	[RequiresPermissions("@css/chat")]
+	[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnAddGagCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.ArgCount < 2)
+			return;
+		if (string.IsNullOrEmpty(command.GetArg(1))) return;
+
+		string steamid = command.GetArg(1);
+
+		if (!Helper.IsValidSteamID64(steamid))
+		{
+			command.ReplyToCommand($"Invalid SteamID64.");
+			return;
+		}
+
+		int time = 0;
+		string reason = "Unknown";
+
+		MuteManager _muteManager = new(dbConnectionString);
+
+		int.TryParse(command.GetArg(2), out time);
+
+		if (command.ArgCount >= 3)
+			reason = command.GetArg(3);
+
+		_muteManager.AddMuteBySteamid(steamid, caller, reason, time, 0);
+
+		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
+		if (matches.Count == 1)
+		{
+			CCSPlayerController? player = matches.FirstOrDefault();
+			if (player != null)
+			{
+				if (time == 0)
+				{
+					player!.PrintToCenter($"{Config.Messages.PlayerGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+				}
+				else
+				{
+					player!.PrintToCenter($"{Config.Messages.PlayerGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
+					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+				}
+
+				if (!gaggedPlayers.Contains((int)player.Index))
+					gaggedPlayers.Add((int)player.Index);
+			}
+		}
+		command.ReplyToCommand($"Gagged player with steamid {steamid}.");
+	}
+
+	[ConsoleCommand("css_unmute")]
+	[RequiresPermissions("@css/chat")]
+	[CommandHelper(minArgs: 1, usage: "<steamid or name> <type [gag/mute]>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnUnmuteCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.GetArg(1).Length <= 1)
+		{
+			command.ReplyToCommand($"Too short pattern to search.");
+			return;
+		}
+
+		string pattern = command.GetArg(1);
+
+		MuteManager _muteManager = new(dbConnectionString);
+
+		if (Helper.IsValidSteamID64(pattern))
+		{
+			List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(pattern);
+			if (matches.Count == 1)
+			{
+				CCSPlayerController? player = matches.FirstOrDefault();
+				if (player != null)
+				{
+					gaggedPlayers.Remove((int)player.Index);
+				}
+			}
+		}
+		else
+		{
+			List<CCSPlayerController> matches = Helper.GetPlayerFromName(pattern);
+			if (matches.Count == 1)
+			{
+				CCSPlayerController? player = matches.FirstOrDefault();
+				if (player != null)
+				{
+					gaggedPlayers.Remove((int)player.Index);
+				}
+			}
+		}
+
+		if (command.ArgCount >= 3)
+		{
+			string? action = command.GetArg(2)?.ToLower();
+
+			if (action == "gag")
+			{
+				_muteManager.UnmutePlayer(pattern, 0); // Unmute by type 0 (gag)
+			}
+			else if (action == "mute")
+			{
+				_muteManager.UnmutePlayer(pattern, 1); // Unmute by type 1 (mute)
+			}
+		}
+		else
+		{
+			_muteManager.UnmutePlayer(pattern, 2); // Default unmute (all types)
+		}
+
+		command.ReplyToCommand($"Unmuted player with pattern {pattern}.");
 	}
 
 	[ConsoleCommand("css_ban")]
@@ -159,7 +331,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 		}
 
-		AddTimer(10.0f, () => Helper.KickPlayer(player!.UserId));
+		AddTimer(Config.KickTime, () => Helper.KickPlayer(player!.UserId));
 	}
 
 	[ConsoleCommand("css_addban")]
@@ -197,6 +369,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			CCSPlayerController? player = matches.FirstOrDefault();
 			if (player != null)
 			{
+				player!.Pawn.Value!.Freeze();
+
 				if (time == 0)
 				{
 					player!.PrintToCenter($"{Config.Messages.PlayerBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
@@ -208,7 +382,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 				}
 
-				AddTimer(10.0f, () => Helper.KickPlayer(player.UserId));
+				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId));
 			}
 		}
 		command.ReplyToCommand($"Banned player with steamid {steamid}.");

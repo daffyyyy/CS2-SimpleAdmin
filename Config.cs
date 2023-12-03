@@ -11,13 +11,20 @@ namespace CS2_SimpleAdmin
 		public string PlayerBanMessagePerm { get; set; } = "You have been banned permanently for {REASON} by {ADMIN}!";
 		[JsonPropertyName("PlayerKickMessage")]
 		public string PlayerKickMessage { get; set; } = "You have been kicked for {REASON} by {ADMIN}!";
+		[JsonPropertyName("PlayerGagMessageTime")]
+		public string PlayerGagMessageTime { get; set; } = "You have been gagged for {REASON} for {TIME} minutes by {ADMIN}!";
+		[JsonPropertyName("PlayerGagMessagePerm")]
+		public string PlayerGagMessagePerm { get; set; } = "You have been gagged permanently for {REASON} by {ADMIN}!";
 		[JsonPropertyName("AdminBanMessageTime")]
 		public string AdminBanMessageTime { get; set; } = "Admin {ADMIN} banned {PLAYER} for {REASON} for {TIME} minutes!";
 		[JsonPropertyName("AdminBanMessagePerm")]
 		public string AdminBanMessagePerm { get; set; } = "Admin {ADMIN} banned {PLAYER} permanently for {REASON}";
-
 		[JsonPropertyName("AdminKickMessage")]
 		public string AdminKickMessage { get; set; } = "Admin {ADMIN} kicked {PLAYER} for {REASON}!";
+		[JsonPropertyName("AdminGagMessageTime")]
+		public string AdminGagMessageTime { get; set; } = "Admin {ADMIN} gagged {PLAYER} for {REASON} for {TIME} minutes!";
+		[JsonPropertyName("AdminGagMessagePerm")]
+		public string AdminGagMessagePerm { get; set; } = "Admin {ADMIN} gagged {PLAYER} permanently for {REASON}";
 		[JsonPropertyName("AdminSlayMessage")]
 		public string AdminSlayMessage { get; set; } = "Admin {ADMIN} slayed {PLAYER}!";
 		[JsonPropertyName("AdminSlapMessage")]
@@ -63,6 +70,8 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("Prefix")]
 		public string Prefix { get; set; } = "{GREEN}[SimpleAdmin]";
+		[JsonPropertyName("KickTime")]
+		public int KickTime { get; set; } = 10;
 
 		[JsonPropertyName("Messages")]
 		public Messages Messages { get; set; } = new Messages();

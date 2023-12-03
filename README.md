@@ -12,6 +12,9 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64 // @css/ban
 - css_unban <steamid or name> - Unban player // @css/unban
 - css_kick <#userid or name> [reason] - Kick player / @css/kick
+- css_gag <#userid or name> [time in minutes/0 perm] [reason] - Gag player // @css/chat
+- css_addgag <steamid> [time in minutes/0 perm] [reason] - Gag player via steamid64 // @css/chat
+- css_unmute <steamid or name> <type [gag/mute] - Unmute player // @css/chat
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay
 - css_map <mapname> - Change map // @css/changemap
@@ -25,7 +28,6 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_respawn <#userid or name> - Respawn player // @css/cheats
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon
-
 
 ### Requirments
 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v90**
