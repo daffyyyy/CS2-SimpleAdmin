@@ -23,14 +23,15 @@ namespace CS2_SimpleAdmin
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
 
-			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `duration`, `ends`, `created`) " +
-				"VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @duration, @ends, @created)";
+			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
+				"VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
 			_dbConnection.Execute(sql, new
 			{
 				playerSteamid = player.AuthorizedSteamID.SteamId64.ToString(),
 				playerName = player.PlayerName,
 				adminSteamid = issuer == null ? "Console" : issuer?.AuthorizedSteamID?.SteamId64.ToString(),
 				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				banReason = reason,
 				duration = time,
 				ends = futureTime,
 				created = now
@@ -58,7 +59,8 @@ namespace CS2_SimpleAdmin
 			_dbConnection.Open();
 
 			string sql = "UPDATE sa_bans SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
-			int affectedRows = _dbConnection.Execute(sql, new { CurrentTime = DateTime.Now });
+			_dbConnection.Execute(sql, new { CurrentTime = DateTime.Now });
+			//int affectedRows = _dbConnection.Execute(sql, new { CurrentTime = DateTime.Now });
 
 			_dbConnection.Close();
 		}

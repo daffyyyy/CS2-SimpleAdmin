@@ -61,6 +61,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                                 `player_name` VARCHAR(128) NOT NULL,
                                 `admin_steamid` VARCHAR(64) NOT NULL,
                                 `admin_name` VARCHAR(128) NOT NULL,
+                                `reason` VARCHAR(255) NOT NULL,
                                 `duration` INT NOT NULL,
                                 `ends` TIMESTAMP NOT NULL,
                                 `created` TIMESTAMP NOT NULL,
