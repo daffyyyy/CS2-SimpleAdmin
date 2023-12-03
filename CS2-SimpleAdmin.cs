@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.4";
+	public override string ModuleVersion => "1.0.4a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -177,6 +177,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (!gaggedPlayers.Contains((int)player!.Index))
 			gaggedPlayers.Add((int)player.Index);
 
+		if (time > 0 && time <= 30)
+		{
+			AddTimer(time * 60, () =>
+			{
+				if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+				if (TagsDetected)
+					NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index.ToString()}");
+
+				_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+		}
 
 		if (time == 0)
 		{
@@ -238,6 +250,19 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (TagsDetected)
 					NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
+
+				if (time > 0 && time <= 30)
+				{
+					AddTimer(time * 60, () =>
+					{
+						if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+						if (TagsDetected)
+							NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index.ToString()}");
+
+						_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				}
 
 				if (!gaggedPlayers.Contains((int)player.Index))
 					gaggedPlayers.Add((int)player.Index);
