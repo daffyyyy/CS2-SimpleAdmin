@@ -5,24 +5,24 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
+using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 [MinimumApiVersion(98)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
-	public static List<int> gaggedPlayers = new List<int>();
+	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
 	public static bool TagsDetected = false;
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.4a";
+	public override string ModuleVersion => "1.0.4b";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -295,7 +295,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (player != null)
 				{
 					if (gaggedPlayers.Contains((int)player.Index))
-						gaggedPlayers.Remove((int)player.Index);
+					{
+
+						if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+						{
+							gaggedPlayers.Add(removedItem);
+						}
+					}
 
 					if (TagsDetected)
 						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
@@ -311,7 +317,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (player != null)
 				{
 					if (gaggedPlayers.Contains((int)player.Index))
-						gaggedPlayers.Remove((int)player.Index);
+					{
+						if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+						{
+							gaggedPlayers.Add(removedItem);
+						}
+					}
 
 					if (TagsDetected)
 						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");

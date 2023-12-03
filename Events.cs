@@ -58,7 +58,12 @@ namespace CS2_SimpleAdmin
 			if (player == null || !player.IsValid || player.IsBot || player.IsHLTV) return;
 
 			if (gaggedPlayers.Contains((int)player.Index))
-				gaggedPlayers.Remove((int)player.Index);
+			{
+				if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+				{
+					gaggedPlayers.Add(removedItem);
+				}
+			}
 
 			if (TagsDetected)
 				NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
