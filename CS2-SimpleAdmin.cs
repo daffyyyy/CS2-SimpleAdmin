@@ -15,13 +15,14 @@ namespace CS2_SimpleAdmin;
 [MinimumApiVersion(98)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
-	public List<int> gaggedPlayers = new List<int>();
+	public static List<int> gaggedPlayers = new List<int>();
+	public static bool TagsDetected = false;
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.3";
+	public override string ModuleVersion => "1.0.4";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -168,10 +169,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_muteManager.MutePlayer(player, caller, reason, time, 0);
+		_ = _muteManager.MutePlayer(player, caller, reason, time, 0);
+
+		if (TagsDetected)
+			NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
 
 		if (!gaggedPlayers.Contains((int)player!.Index))
 			gaggedPlayers.Add((int)player.Index);
+
 
 		if (time == 0)
 		{
@@ -212,7 +217,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_muteManager.AddMuteBySteamid(steamid, caller, reason, time, 0);
+		_ = _muteManager.AddMuteBySteamid(steamid, caller, reason, time, 0);
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
@@ -230,6 +235,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					player!.PrintToCenter($"{Config.Messages.PlayerGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
 					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 				}
+
+				if (TagsDetected)
+					NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
 
 				if (!gaggedPlayers.Contains((int)player.Index))
 					gaggedPlayers.Add((int)player.Index);
@@ -261,7 +269,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				CCSPlayerController? player = matches.FirstOrDefault();
 				if (player != null)
 				{
-					gaggedPlayers.Remove((int)player.Index);
+					if (gaggedPlayers.Contains((int)player.Index))
+						gaggedPlayers.Remove((int)player.Index);
+
+					if (TagsDetected)
+						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
 				}
 			}
 		}
@@ -273,7 +285,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				CCSPlayerController? player = matches.FirstOrDefault();
 				if (player != null)
 				{
-					gaggedPlayers.Remove((int)player.Index);
+					if (gaggedPlayers.Contains((int)player.Index))
+						gaggedPlayers.Remove((int)player.Index);
+
+					if (TagsDetected)
+						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
+
+					pattern = player.AuthorizedSteamID!.SteamId64.ToString();
 				}
 			}
 		}
@@ -284,16 +302,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 			if (action == "gag")
 			{
-				_muteManager.UnmutePlayer(pattern, 0); // Unmute by type 0 (gag)
+				_ = _muteManager.UnmutePlayer(pattern, 0); // Unmute by type 0 (gag)
 			}
 			else if (action == "mute")
 			{
-				_muteManager.UnmutePlayer(pattern, 1); // Unmute by type 1 (mute)
+				_ = _muteManager.UnmutePlayer(pattern, 1); // Unmute by type 1 (mute)
 			}
 		}
 		else
 		{
-			_muteManager.UnmutePlayer(pattern, 2); // Default unmute (all types)
+			_ = _muteManager.UnmutePlayer(pattern, 2); // Default unmute (all types)
 		}
 
 		command.ReplyToCommand($"Unmuted player with pattern {pattern}.");
@@ -321,7 +339,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_banManager.BanPlayer(player, caller, reason, time);
+		_ = _banManager.BanPlayer(player, caller, reason, time);
 
 		if (time == 0)
 		{
@@ -364,7 +382,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_banManager.AddBanBySteamid(steamid, caller, reason, time);
+		_ = _banManager.AddBanBySteamid(steamid, caller, reason, time);
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
@@ -418,7 +436,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_banManager.AddBanByIp(ipAddress, caller, reason, time);
+		_ = _banManager.AddBanByIp(ipAddress, caller, reason, time);
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromIp(ipAddress);
 		if (matches.Count == 1)
@@ -459,7 +477,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		string pattern = command.GetArg(1);
 		BanManager _banManager = new(dbConnectionString);
 
-		_banManager.UnbanPlayer(pattern);
+		_ = _banManager.UnbanPlayer(pattern);
 
 		command.ReplyToCommand($"Unbanned player with pattern {pattern}.");
 	}

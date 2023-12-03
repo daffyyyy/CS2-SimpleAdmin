@@ -47,42 +47,8 @@ namespace CS2_SimpleAdmin
 			BanManager _banManager = new(dbConnectionString);
 			MuteManager _muteManager = new(dbConnectionString);
 
-			bool isBanned = false;
-			if (player.IpAddress != null)
-			{
-				isBanned = _banManager.IsPlayerBanned(player.AuthorizedSteamID.SteamId64.ToString(), player.IpAddress.Split(":")[0]);
-			}
-			else
-			{
-				isBanned = _banManager.IsPlayerBanned(player.AuthorizedSteamID.SteamId64.ToString());
-			}
-
-			List<dynamic> activeMutes = _muteManager.IsPlayerMuted(player.AuthorizedSteamID.SteamId64.ToString());
-
-			if (activeMutes.Count > 0)
-			{
-				// Player is muted, handle mute
-				foreach (var mute in activeMutes)
-				{
-					string muteType = mute.type;
-
-					if (muteType == "GAG")
-					{
-						if (!gaggedPlayers.Contains((int)player.Index))
-							gaggedPlayers.Add((int)player.Index);
-					}
-					else
-					{
-						continue;
-					}
-				}
-			}
-
-			// Player is banned, kick him
-			if (isBanned)
-			{
-				Helper.KickPlayer(player.UserId, "Banned");
-			}
+			_ = _banManager.CheckBan(player);
+			_ = _muteManager.CheckMute(player);
 		}
 
 		private void OnClientDisconnect(int playerSlot)
@@ -91,7 +57,11 @@ namespace CS2_SimpleAdmin
 
 			if (player == null || !player.IsValid || player.IsBot || player.IsHLTV) return;
 
-			gaggedPlayers.Remove((int)player.Index);
+			if (gaggedPlayers.Contains((int)player.Index))
+				gaggedPlayers.Remove((int)player.Index);
+
+			if (TagsDetected)
+				NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
 		}
 
 		private void OnMapStart(string mapName)
@@ -99,10 +69,16 @@ namespace CS2_SimpleAdmin
 			AddTimer(120.0f, () =>
 			{
 				BanManager _banManager = new(dbConnectionString);
-				_banManager.ExpireOldBans();
+				_ = _banManager.ExpireOldBans();
 				MuteManager _muteManager = new(dbConnectionString);
-				_muteManager.ExpireOldMutes();
+				_ = _muteManager.ExpireOldMutes();
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+			string? path = Path.GetDirectoryName(ModuleDirectory);
+			if (Directory.Exists(path + "/CS2-Tags"))
+			{
+				TagsDetected = true;
+			}
 		}
 	}
 }
