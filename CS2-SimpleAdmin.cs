@@ -12,7 +12,7 @@ using MySqlConnector;
 using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
-[MinimumApiVersion(98)]
+[MinimumApiVersion(101)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.4b";
+	public override string ModuleVersion => "1.0.4c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -138,12 +138,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 2)
 		{
 			player!.PrintToCenter($"{Config.Messages.PlayerKickMessage}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			AddTimer(Config.KickTime, () => Helper.KickPlayer(player!.UserId, reason));
-
+			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason));
 		}
 		else
 		{
-			AddTimer(Config.KickTime, () => Helper.KickPlayer(player!.UserId));
+			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
 		}
 
 		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminKickMessage}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
@@ -162,14 +161,30 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		string reason = "Unknown";
 
-		MuteManager _muteManager = new(dbConnectionString);
-
 		int.TryParse(command.GetArg(2), out time);
 
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_ = _muteManager.MutePlayer(player, caller, reason, time, 0);
+		PlayerInfo playerInfo = new PlayerInfo
+		{
+			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = player?.PlayerName,
+			IpAddress = player?.IpAddress?.Split(":")[0]
+		};
+
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			MuteManager _muteManager = new(dbConnectionString);
+			await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
+		});
 
 		if (TagsDetected)
 			NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
@@ -184,8 +199,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
 				if (TagsDetected)
-					NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index.ToString()}");
+					NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index}");
 
+				MuteManager _muteManager = new(dbConnectionString);
 				_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 		}
@@ -229,7 +245,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_ = _muteManager.AddMuteBySteamid(steamid, caller, reason, time, 0);
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		_ = _muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 0);
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
@@ -360,6 +383,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	{
 		if (!GetTarget(command, out var player))
 			return;
+		if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 		if (command.ArgCount < 2)
 			return;
 
@@ -368,14 +392,30 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		player!.Pawn.Value!.Freeze();
 
-		BanManager _banManager = new(dbConnectionString);
-
 		int.TryParse(command.GetArg(2), out time);
 
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_ = _banManager.BanPlayer(player, caller, reason, time);
+		PlayerInfo playerInfo = new PlayerInfo
+		{
+			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = player?.PlayerName,
+			IpAddress = player?.IpAddress?.Split(":")[0]
+		};
+
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			await _banManager.BanPlayer(playerInfo, adminInfo, reason, time);
+		});
 
 		if (time == 0)
 		{
@@ -388,7 +428,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 		}
 
-		AddTimer(Config.KickTime, () => Helper.KickPlayer(player!.UserId));
+		AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
 	}
 
 	[ConsoleCommand("css_addban")]
@@ -418,7 +458,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
 
-		_ = _banManager.AddBanBySteamid(steamid, caller, reason, time);
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
+		});
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
@@ -439,7 +490,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 				}
 
-				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId));
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
 			}
 		}
 		command.ReplyToCommand($"Banned player with steamid {steamid}.");
@@ -465,14 +516,23 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		string reason = "Unknown";
 
-		BanManager _banManager = new(dbConnectionString);
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
+		});
 
 		int.TryParse(command.GetArg(2), out time);
 
 		if (command.ArgCount >= 3)
 			reason = command.GetArg(3);
-
-		_ = _banManager.AddBanByIp(ipAddress, caller, reason, time);
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromIp(ipAddress);
 		if (matches.Count == 1)
@@ -493,9 +553,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 				}
 
-				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId));
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, "Banned"));
 			}
 		}
+
 		command.ReplyToCommand($"Banned player with IP address {ipAddress}.");
 	}
 

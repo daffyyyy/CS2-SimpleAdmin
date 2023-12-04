@@ -1,9 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
-using Dapper;
+﻿using Dapper;
 using MySqlConnector;
-using System.Data;
-using System.Xml.Linq;
 
 namespace CS2_SimpleAdmin
 {
@@ -15,10 +11,8 @@ namespace CS2_SimpleAdmin
 		{
 			_dbConnection = new MySqlConnection(connectionString);
 		}
-		public async Task BanPlayer(CCSPlayerController? player, CCSPlayerController? issuer, string reason, int time = 0)
+		public async Task BanPlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0)
 		{
-			if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
-
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
 
@@ -30,11 +24,11 @@ namespace CS2_SimpleAdmin
 
 			await connection.ExecuteAsync(sql, new
 			{
-				playerSteamid = player.AuthorizedSteamID.SteamId64.ToString(),
-				playerName = player.PlayerName,
-				playerIp = player.IpAddress!.Split(":")[0],
-				adminSteamid = issuer == null ? "Console" : issuer.AuthorizedSteamID?.SteamId64.ToString(),
-				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				playerSteamid = player.SteamId,
+				playerName = player.Name,
+				playerIp = player.IpAddress,
+				adminSteamid = issuer.SteamId == null ? "Console" : issuer.SteamId,
+				adminName = issuer.Name == null ? "Console" : issuer.Name,
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
@@ -42,7 +36,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public async Task AddBanBySteamid(string playerSteamId, CCSPlayerController? issuer, string reason, int time = 0)
+		public async Task AddBanBySteamid(string playerSteamId, PlayerInfo issuer, string reason, int time = 0)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
@@ -58,8 +52,8 @@ namespace CS2_SimpleAdmin
 			await connection.ExecuteAsync(sql, new
 			{
 				playerSteamid = playerSteamId,
-				adminSteamid = issuer == null ? "Console" : issuer.AuthorizedSteamID?.SteamId64.ToString(),
-				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				adminSteamid = issuer.SteamId == null ? "Console" : issuer.SteamId,
+				adminName = issuer.Name == null ? "Console" : issuer.Name,
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
@@ -67,7 +61,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public async Task AddBanByIp(string playerIp, CCSPlayerController? issuer, string reason, int time = 0)
+		public async Task AddBanByIp(string playerIp, PlayerInfo issuer, string reason, int time = 0)
 		{
 			if (string.IsNullOrEmpty(playerIp)) return;
 
@@ -83,8 +77,8 @@ namespace CS2_SimpleAdmin
 			await connection.ExecuteAsync(sql, new
 			{
 				playerIp,
-				adminSteamid = issuer == null ? "Console" : issuer?.AuthorizedSteamID?.SteamId64.ToString(),
-				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				adminSteamid = issuer.SteamId == null ? "Console" : issuer.SteamId,
+				adminName = issuer.Name == null ? "Console" : issuer.Name,
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
@@ -92,7 +86,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public async Task<bool> IsPlayerBanned(string steamId, string? ipAddress = null)
+		public async Task<bool> IsPlayerBanned(PlayerInfo player)
 		{
 			DateTime now = DateTime.Now;
 
@@ -103,13 +97,13 @@ namespace CS2_SimpleAdmin
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
 
-			if (!string.IsNullOrEmpty(ipAddress))
+			if (!string.IsNullOrEmpty(player.IpAddress))
 			{
-				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId, PlayerIP = ipAddress, CurrentTime = now });
+				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = player.SteamId, PlayerIP = player.IpAddress, CurrentTime = now });
 			}
 			else
 			{
-				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId, PlayerIP = DBNull.Value, CurrentTime = now });
+				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = player.SteamId, PlayerIP = DBNull.Value, CurrentTime = now });
 			}
 
 			return banCount > 0;
@@ -137,30 +131,5 @@ namespace CS2_SimpleAdmin
 			string sql = "UPDATE sa_bans SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
 		}
-
-		public async Task CheckBan(CCSPlayerController? player)
-		{
-			if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
-
-			string steamId = player.AuthorizedSteamID.SteamId64.ToString();
-			string? ipAddress = player.IpAddress?.Split(":")[0];
-
-			bool isBanned = false;
-
-			if (ipAddress != null)
-			{
-				isBanned = await IsPlayerBanned(steamId, ipAddress);
-			}
-			else
-			{
-				isBanned = await IsPlayerBanned(steamId);
-			}
-
-			if (isBanned)
-			{
-				Helper.KickPlayer(player.UserId, "Banned");
-			}
-		}
-
 	}
 }

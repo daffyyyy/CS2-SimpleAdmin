@@ -35,7 +35,7 @@ namespace CS2_SimpleAdmin
 
 			CCSPlayerController? player = Utilities.GetPlayerFromIndex(playerIndex);
 
-			if (player.AuthorizedSteamID == null)
+			if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
 			{
 				AddTimer(3.0f, () =>
 				{
@@ -44,11 +44,72 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			BanManager _banManager = new(dbConnectionString);
-			MuteManager _muteManager = new(dbConnectionString);
+			PlayerInfo playerInfo = new PlayerInfo
+			{
+				UserId = player.UserId,
+				Index = (int)player.Index,
+				SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
 
-			_ = _banManager.CheckBan(player);
-			_ = _muteManager.CheckMute(player);
+			Task.Run(async () =>
+			{
+				if (player == null) return;
+				BanManager _banManager = new(dbConnectionString);
+				bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
+
+				MuteManager _muteManager = new(dbConnectionString);
+				List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
+
+				Server.NextFrame(() =>
+				{
+					if (player == null) return;
+					if (isBanned)
+					{
+						Helper.KickPlayer((ushort)player.UserId!, "Banned");
+						return;
+					}
+
+					if (activeMutes.Count > 0)
+					{
+						foreach (var mute in activeMutes)
+						{
+							string muteType = mute.type;
+							TimeSpan duration = mute.ends - mute.created;
+							int durationInSeconds = (int)duration.TotalSeconds;
+
+							if (muteType == "GAG")
+							{
+								if (!gaggedPlayers.Any(index => index == player.Index))
+									gaggedPlayers.Add((int)player.Index);
+
+								if (TagsDetected)
+									NativeAPI.IssueServerCommand($"css_tag_mute {player.Index}");
+
+								/*
+								CCSPlayerController currentPlayer = player;
+
+								if (mute.duration == 0 || durationInSeconds >= 1800) continue;
+
+								await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
+
+								if (currentPlayer != null && currentPlayer.IsValid)
+								{
+									NativeAPI.IssueServerCommand($"css_tag_unmute {currentPlayer.Index.ToString()}");
+									await UnmutePlayer(currentPlayer.AuthorizedSteamID.SteamId64.ToString(), 0);
+								}
+								*/
+							}
+							else
+							{
+								// Mic mute
+							}
+						}
+					}
+				});
+			});
+
 		}
 
 		private void OnClientDisconnect(int playerSlot)

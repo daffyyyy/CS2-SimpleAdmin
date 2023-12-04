@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API;
-using MySqlConnector;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -66,7 +65,7 @@ namespace CS2_SimpleAdmin
 			return player?.IsValid == true ? TargetResult.Single : TargetResult.None;
 		}
 
-		public static void KickPlayer(int? userId, string? reason = null)
+		public static void KickPlayer(ushort userId, string? reason = null)
 		{
 			NativeAPI.IssueServerCommand($"kickid {userId} {reason}");
 		}

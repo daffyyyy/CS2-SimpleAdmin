@@ -14,9 +14,9 @@ namespace CS2_SimpleAdmin
 			_dbConnection = new MySqlConnection(connectionString);
 		}
 
-		public async Task MutePlayer(CCSPlayerController? player, CCSPlayerController? issuer, string reason, int time = 0, int type = 0)
+		public async Task MutePlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0, int type = 0)
 		{
-			if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+			if (player == null || player.SteamId == null) return;
 
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
@@ -33,24 +33,19 @@ namespace CS2_SimpleAdmin
 
 			await connection.ExecuteAsync(sql, new
 			{
-				playerSteamid = player.AuthorizedSteamID.SteamId64.ToString(),
-				playerName = player.PlayerName,
-				adminSteamid = issuer == null ? "Console" : issuer?.AuthorizedSteamID?.SteamId64.ToString(),
-				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				playerSteamid = player.SteamId,
+				playerName = player.Name,
+				adminSteamid = issuer.SteamId == null ? "Console" : issuer.SteamId,
+				adminName = issuer.SteamId == null ? "Console" : issuer.Name,
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
 				created = now,
 				type = muteType,
 			});
-
-			if (connection.State != ConnectionState.Closed)
-			{
-				connection.Close();
-			}
 		}
 
-		public async Task AddMuteBySteamid(string playerSteamId, CCSPlayerController? issuer, string reason, int time = 0, int type = 0)
+		public async Task AddMuteBySteamid(string playerSteamId, PlayerInfo issuer, string reason, int time = 0, int type = 0)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
@@ -70,19 +65,14 @@ namespace CS2_SimpleAdmin
 			await connection.ExecuteAsync(sql, new
 			{
 				playerSteamid = playerSteamId,
-				adminSteamid = issuer == null ? "Console" : issuer?.AuthorizedSteamID?.SteamId64.ToString(),
-				adminName = issuer == null ? "Console" : issuer.PlayerName,
+				adminSteamid = issuer.SteamId == null ? "Console" : issuer.SteamId,
+				adminName = issuer.Name == null ? "Console" : issuer.Name,
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
 				created = now,
 				type = muteType
 			});
-
-			if (connection.State != ConnectionState.Closed)
-			{
-				connection.Close();
-			}
 		}
 
 		public async Task<List<dynamic>> IsPlayerMuted(string steamId)
@@ -94,11 +84,6 @@ namespace CS2_SimpleAdmin
 
 			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 			var activeMutes = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
-
-			if (connection.State != ConnectionState.Closed)
-			{
-				connection.Close();
-			}
 
 			return activeMutes;
 		}
@@ -134,11 +119,6 @@ namespace CS2_SimpleAdmin
 
 			string sqlUnban = "UPDATE sa_mutes SET status = 'UNMUTED' WHERE (player_steamid = @pattern OR player_name = @pattern) AND type = @muteType AND status = 'ACTIVE'";
 			await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern, muteType });
-
-			if (connection.State != ConnectionState.Closed)
-			{
-				connection.Close();
-			}
 		}
 
 		public async Task ExpireOldMutes()
@@ -148,18 +128,13 @@ namespace CS2_SimpleAdmin
 
 			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
-
-			if (connection.State != ConnectionState.Closed)
-			{
-				connection.Close();
-			}
 		}
 
-		public async Task CheckMute(CCSPlayerController? player)
+		public async Task CheckMute(PlayerInfo player)
 		{
-			if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+			if (player.Index == null) return;
 
-			string steamId = player.AuthorizedSteamID.SteamId64.ToString();
+			string steamId = player.SteamId!;
 			List<dynamic> activeMutes = await IsPlayerMuted(steamId);
 
 			if (activeMutes.Count > 0)
@@ -172,12 +147,13 @@ namespace CS2_SimpleAdmin
 
 					if (muteType == "GAG")
 					{
-						if (!CS2_SimpleAdmin.gaggedPlayers.Contains((int)player.Index))
+						if (!CS2_SimpleAdmin.gaggedPlayers.Any(index => index == player.Index))
 							CS2_SimpleAdmin.gaggedPlayers.Add((int)player.Index);
 
 						if (CS2_SimpleAdmin.TagsDetected)
 							NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
 
+						/*
 						CCSPlayerController currentPlayer = player;
 
 						if (mute.duration == 0 || durationInSeconds >= 1800) continue;
@@ -189,6 +165,7 @@ namespace CS2_SimpleAdmin
 							NativeAPI.IssueServerCommand($"css_tag_unmute {currentPlayer.Index.ToString()}");
 							await UnmutePlayer(currentPlayer.AuthorizedSteamID.SteamId64.ToString(), 0);
 						}
+						*/
 					}
 					else
 					{
