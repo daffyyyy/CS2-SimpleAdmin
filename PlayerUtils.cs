@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 
 namespace CS2_SimpleAdmin;
@@ -8,6 +9,11 @@ public static class PlayerUtils
 	public static void Slap(this CBasePlayerPawn pawn, int damage = 0)
 	{
 		PerformSlap(pawn, damage);
+	}
+
+	public static bool CanTarget(this CCSPlayerController controller, CCSPlayerController target)
+	{
+		return AdminManager.CanPlayerTarget(controller, target);
 	}
 
 	public static void Bury(this CBasePlayerPawn pawn, float depth = 10f)

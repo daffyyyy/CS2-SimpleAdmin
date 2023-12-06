@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.4c";
+	public override string ModuleVersion => "1.0.5";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -126,8 +126,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
+		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
 			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
 
 		player!.Pawn.Value!.Freeze();
 		string reason = "Unknown";
@@ -153,10 +159,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnGagCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
+		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
 			return;
-		if (command.ArgCount < 2)
+
+		if (!caller!.CanTarget(player) || command.ArgCount < 2)
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
 			return;
+		}
 
 		int time = 0;
 		string reason = "Unknown";
@@ -252,14 +262,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = caller?.IpAddress?.Split(":")[0]
 		};
 
-		_ = _muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 0);
-
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
 		{
 			CCSPlayerController? player = matches.FirstOrDefault();
 			if (player != null)
 			{
+				if (!caller!.CanTarget(player))
+				{
+					command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+					return;
+				}
+
 				if (time == 0)
 				{
 					player!.PrintToCenter($"{Config.Messages.PlayerGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
@@ -291,6 +305,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					gaggedPlayers.Add((int)player.Index);
 			}
 		}
+		_ = _muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 0);
 		command.ReplyToCommand($"Gagged player with steamid {steamid}.");
 	}
 
@@ -381,11 +396,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnBanCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
+		if (!GetTarget(command, out var player) || command.ArgCount < 2)
 			return;
 		if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
-		if (command.ArgCount < 2)
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
 			return;
+		}
 
 		int time = 0;
 		string reason = "Unknown";
@@ -465,11 +484,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = caller?.IpAddress?.Split(":")[0]
 		};
 
-		Task.Run(async () =>
-		{
-			BanManager _banManager = new(dbConnectionString);
-			await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
-		});
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
@@ -477,6 +491,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			CCSPlayerController? player = matches.FirstOrDefault();
 			if (player != null)
 			{
+				if (!caller!.CanTarget(player))
+				{
+					command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+					return;
+				}
+
 				player!.Pawn.Value!.Freeze();
 
 				if (time == 0)
@@ -489,6 +509,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
 					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 				}
+
+				Task.Run(async () =>
+				{
+					BanManager _banManager = new(dbConnectionString);
+					await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
+				});
 
 				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
 			}
@@ -523,12 +549,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = caller?.IpAddress?.Split(":")[0]
 		};
 
-		Task.Run(async () =>
-		{
-			BanManager _banManager = new(dbConnectionString);
-			await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
-		});
-
 		int.TryParse(command.GetArg(2), out time);
 
 		if (command.ArgCount >= 3)
@@ -540,6 +560,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			CCSPlayerController? player = matches.FirstOrDefault();
 			if (player != null)
 			{
+				if (!caller!.CanTarget(player))
+				{
+					command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+					return;
+				}
+
 				player!.Pawn.Value!.Freeze();
 
 				if (time == 0)
@@ -552,6 +578,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
 					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
 				}
+
+				Task.Run(async () =>
+				{
+					BanManager _banManager = new(dbConnectionString);
+					await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
+				});
 
 				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, "Banned"));
 			}
@@ -584,8 +616,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnSlayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out CCSPlayerController? player))
+		if (!GetTarget(command, out CCSPlayerController? player) || player == null || !player.IsValid)
 			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
+
 		if (!player!.PawnIsAlive)
 			return;
 
@@ -599,8 +638,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [damage]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnSlapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out CCSPlayerController? player))
+		if (!GetTarget(command, out CCSPlayerController? player) || player == null || !player.IsValid)
 			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
+
 		if (!player!.PawnIsAlive)
 			return;
 
@@ -614,6 +660,53 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		player!.Pawn.Value!.Slap(damage);
 
 		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminSlapMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+	}
+
+	[ConsoleCommand("css_team")]
+	[RequiresPermissions("@css/kick")]
+	[CommandHelper(minArgs: 2, usage: "<#userid or name> [<ct/tt/spec>]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnTeamCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!GetTarget(command, out CCSPlayerController? player) || player == null || !player.IsValid)
+			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
+
+		string teamName = command.GetArg(2).ToLower();
+		CsTeam teamNum = CsTeam.Spectator;
+
+		switch (teamName)
+		{
+			case "ct":
+			case "counterterrorist":
+				teamNum = CsTeam.CounterTerrorist;
+				break;
+			case "t":
+			case "tt":
+			case "terrorist":
+				teamNum = CsTeam.Terrorist;
+				break;
+			default:
+				teamNum = CsTeam.Spectator;
+				break;
+		}
+
+		if (player.TeamNum == ((byte)teamNum))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is already in selected team!");
+			return;
+		}
+
+		if (player.PawnIsAlive && teamNum != CsTeam.Spectator)
+			player.SwitchTeam(teamNum);
+		else
+			player.ChangeTeam(teamNum);
+
+		command.ReplyToCommand($"Successfully changed team for {player.PlayerName}");
 	}
 
 	[ConsoleCommand("css_map")]
@@ -703,8 +796,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/cheats")]
 	public void OnNoclipCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
+		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
 			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
 
 		player!.Pawn.Value!.ToggleNoclip();
 
@@ -716,8 +815,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/slay")]
 	public void OnFreezeCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
+		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
 			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
 
 		int time = 0;
 		int.TryParse(command.GetArg(2), out time);
@@ -748,8 +853,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/cheats")]
 	public void OnRespawnCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
+		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
 			return;
+
+		if (!caller!.CanTarget(player))
+		{
+			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
 
 		player!.Respawn();
 

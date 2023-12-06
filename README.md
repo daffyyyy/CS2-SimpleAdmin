@@ -19,6 +19,7 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_unmute <steamid or name> <type [gag/mute] - Unmute player // @css/chat
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay
+- css_team <#userid or name> [<ct/tt/spec>] - Change player team // @css/kick
 - css_map <mapname> - Change map // @css/changemap
 - css_wsmap <name or id> - Change workshop map // @css/changemap
 - css_say <message> - Say message as admin in chat // @css/chat

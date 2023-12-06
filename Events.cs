@@ -35,7 +35,10 @@ namespace CS2_SimpleAdmin
 
 			CCSPlayerController? player = Utilities.GetPlayerFromIndex(playerIndex);
 
-			if (player == null || !player.IsValid || player.AuthorizedSteamID == null)
+			if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
+				return;
+
+			if (player.AuthorizedSteamID == null)
 			{
 				AddTimer(3.0f, () =>
 				{
@@ -60,7 +63,7 @@ namespace CS2_SimpleAdmin
 				bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
 				MuteManager _muteManager = new(dbConnectionString);
-				List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
+				List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId!);
 
 				Server.NextFrame(() =>
 				{
