@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.5";
+	public override string ModuleVersion => "1.0.5a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -32,6 +32,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		if (hotReload)
 		{
+			registerEvents();
 			OnMapStart(string.Empty);
 		}
 	}
@@ -747,6 +748,21 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			Server.ExecuteCommand(_command);
 		});
+	}
+
+	[ConsoleCommand("css_asay", "Say to all admins.")]
+	[CommandHelper(1, "<message>")]
+	[RequiresPermissions("@css/chat")]
+	public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
+		if (command.GetCommandString[command.GetCommandString.IndexOf(' ')..].StartsWith("@"))
+		{
+			foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+			{
+				p.PrintToChat($" {ChatColors.Lime}(ADMIN) {ChatColors.Default}{caller.PlayerName}: {command.GetCommandString[command.GetCommandString.IndexOf(' ')..]}");
+			}
+		}
 	}
 
 	[ConsoleCommand("css_say", "Say to all players.")]

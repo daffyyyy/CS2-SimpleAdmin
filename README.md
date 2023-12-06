@@ -22,6 +22,7 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_team <#userid or name> [<ct/tt/spec>] - Change player team // @css/kick
 - css_map <mapname> - Change map // @css/changemap
 - css_wsmap <name or id> - Change workshop map // @css/changemap
+- css_asay <message> - Say message to all admins // @css/chat
 - css_say <message> - Say message as admin in chat // @css/chat
 - css_psay <#userid or name> <message> - Sends private message to player // @css/chat
 - css_csay <message> - Say message as admin in center // @css/chat
@@ -32,6 +33,8 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_respawn <#userid or name> - Respawn player // @css/cheats
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon
+
+- @Message - Say message to all admins // @css/chat
 ```
 
 ### Requirments
