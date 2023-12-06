@@ -756,12 +756,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
-		if (command.GetCommandString[command.GetCommandString.IndexOf(' ')..].StartsWith("@"))
+		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 		{
-			foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
-			{
-				p.PrintToChat($" {ChatColors.Lime}(ADMIN) {ChatColors.Default}{caller.PlayerName}: {command.GetCommandString[command.GetCommandString.IndexOf(' ')..]}");
-			}
+			p.PrintToChat($" {ChatColors.Lime}(ADMIN) {ChatColors.Default}{caller.PlayerName}: {command.GetCommandString[command.GetCommandString.IndexOf(' ')..]}");
 		}
 	}
 
