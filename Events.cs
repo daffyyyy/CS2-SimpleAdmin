@@ -16,10 +16,22 @@ namespace CS2_SimpleAdmin
 			RegisterListener<OnClientDisconnect>(OnClientDisconnect);
 			RegisterListener<OnMapStart>(OnMapStart);
 			AddCommandListener("say", OnCommandSay);
-			AddCommandListener("say_team", OnCommandSay);
+			AddCommandListener("say_team", OnCommandTeamSay);
 		}
 
 		private HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)
+		{
+			if (player == null || !player.IsValid || info.GetArg(1).Length == 0) return HookResult.Continue;
+
+			if (gaggedPlayers.Contains((int)player.Index))
+			{
+				return HookResult.Handled;
+			}
+
+			return HookResult.Continue;
+		}
+
+		private HookResult OnCommandTeamSay(CCSPlayerController? player, CommandInfo info)
 		{
 			if (player == null || !player.IsValid || info.GetArg(1).Length == 0) return HookResult.Continue;
 
@@ -34,6 +46,8 @@ namespace CS2_SimpleAdmin
 				{
 					p.PrintToChat($" {ChatColors.Lime}(ADMIN) {ChatColors.Default}{player.PlayerName}: {info.GetArg(1)}");
 				}
+
+				return HookResult.Handled;
 			}
 
 			return HookResult.Continue;
