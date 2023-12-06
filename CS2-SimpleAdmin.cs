@@ -32,7 +32,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		if (hotReload)
 		{
-			registerEvents();
 			OnMapStart(string.Empty);
 		}
 	}
