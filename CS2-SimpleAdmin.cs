@@ -916,7 +916,19 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		Logger.LogInformation($"{caller!.PlayerName} executed command ({command.ArgString}).");
 	}
 
+    [ConsoleCommand("css_give")]
+	[RequiresPermissions("@css/cheats")]
+	[CommandHelper(minArgs: 2, usage: "<#UserId Or Name> <WeaponName>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
+	{
 
+		if(!GetTarget(command, out var player) || player == null || !player.IsValid) return;
+
+		string weapon = command.GetArg(2);
+		player.GiveNamedItem(weapon);
+
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{WEAPON}", weapon)));
+	}
 
 	private static bool GetTarget(CommandInfo command, out CCSPlayerController? player)
 	{
