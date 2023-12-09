@@ -927,7 +927,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		string weapon = command.GetArg(2);
 		player.GiveNamedItem(weapon);
 
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{WEAPON}", weapon)));
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGiveMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{WEAPON}", weapon)));
 	}
 
 	private static bool GetTarget(CommandInfo command, out CCSPlayerController? player)
