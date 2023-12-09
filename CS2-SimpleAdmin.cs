@@ -916,18 +916,28 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		Logger.LogInformation($"{caller!.PlayerName} executed command ({command.ArgString}).");
 	}
 
+
+    string[] BannedGiveItems = {"weapon_knife_canis","weapon_falchion","weapon_flip","weapon_knife_outdoor","weapon_knife_widowmaker","weapon_elite","weapon_knife_skeleton",
+	"weapon_knife_push","weapon_knife_gypsy_jackknife","weapon_gut","weapon_tactical","weapon_knife_ursus","weapon_knife_stiletto","weapon_bayonet","weapon_m9_bayonet",
+	"weapon_karambit","weapon_butterfly","weapon_survival_bowie","weapon_knife_cord"};
     [ConsoleCommand("css_give")]
 	[RequiresPermissions("@css/give")]
 	[CommandHelper(minArgs: 2, usage: "<#UserId Or Name> <WeaponName>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-
 		if(!GetTarget(command, out var player) || player == null || !player.IsValid) return;
+		string weaponName = command.GetArg(2);
 
-		string weapon = command.GetArg(2);
-		player.GiveNamedItem(weapon);
-
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGiveMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{WEAPON}", weapon.Split("_")[1])).Replace("{PLAYER}",player.PlayerName));
+		//check if weapon is inside the bannedItems
+		foreach(string bannedWeapon in BannedGiveItems){
+			if(bannedWeapon.Equals(weaponName.ToLower())){
+				command.ReplyToCommand($"Cannot Give {weaponName} because it's illegal to be given.");
+				return;
+			}
+		}
+		//give the weapon to player and announce it
+		player.GiveNamedItem(weaponName);
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGiveMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{WEAPON}", weaponName.Split("_")[1])).Replace("{PLAYER}",player.PlayerName));
 	}
 
 	private static bool GetTarget(CommandInfo command, out CCSPlayerController? player)
