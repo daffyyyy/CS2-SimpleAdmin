@@ -33,7 +33,7 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_respawn <#userid or name> - Respawn player // @css/cheats
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon
-- css_give <#userid or name> <WeaponName> - Gives a weapon to a Player // @css/cheats
+- css_give <#userid or name> <WeaponName> - Gives a weapon to a Player // @css/give
 
 - @Message - Say message to all admins // @css/chat
 ```

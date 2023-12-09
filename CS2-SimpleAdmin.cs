@@ -917,7 +917,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	}
 
     [ConsoleCommand("css_give")]
-	[RequiresPermissions("@css/cheats")]
+	[RequiresPermissions("@css/give")]
 	[CommandHelper(minArgs: 2, usage: "<#UserId Or Name> <WeaponName>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
 	{
