@@ -926,7 +926,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		string weaponName = command.GetArg(2);
 
 		//check if weapon is knife
-		if(weaponName.Contains("knife") || weaponName.Contains("bayonet")){
+		if(weaponName.Contains("_knife") || weaponName.Contains("bayonet")){
 				command.ReplyToCommand($"Cannot Give {weaponName} because it's illegal to be given.");
 				return;
 			}
