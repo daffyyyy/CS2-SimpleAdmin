@@ -41,6 +41,8 @@ namespace CS2_SimpleAdmin
 		public string AdminRespawnMessage { get; set; } = "Admin {ADMIN} respawned {PLAYER}!";
 		[JsonPropertyName("AdminSayPrefix")]
 		public string AdminSayPrefix { get; set; } = "{RED}ADMIN: {DEFAULT}";
+		[JsonPropertyName("AdminGiveMessage")]
+		public string AdminGiveMessage { get; set; } = "Admin {ADMIN} Gave {PLAYER} a {WEAPON}!";
 		[JsonPropertyName("AdminHelpCommand")]
 		public string AdminHelpCommand { get; set; } = "{GREEN}[ CS2-SimpleAdmin HELP ]{DEFAULT}\n- css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player\n- css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64\n" +
 			"- css_banip <ip> [time in minutes/0 perm] [reason] - Ban player via IP address\n- css_unban <steamid or name or ip> - Unban player\n" +
