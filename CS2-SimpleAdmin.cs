@@ -1193,6 +1193,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.GetArg(1) == null || command.GetArg(1).Length < 0 || command.ArgCount < 2)
 			return;
 
+		answers.Clear();
+
 		string question = command.GetArg(1);
 		int answersCount = command.ArgCount;
 
@@ -1229,7 +1231,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				sb.Append(_localizer["sa_admin_vote_message_results_answer", kvp.Key, kvp.Value]);
 				Server.PrintToChatAll(sb.ToString());
 			}
-
+			answers.Clear();
 			VoteInProgress = false;
 
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
