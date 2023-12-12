@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 
@@ -42,7 +43,7 @@ public static class PlayerUtils
 
 	public static void Freeze(this CBasePlayerPawn pawn)
 	{
-		pawn.MoveType = MoveType_t.MOVETYPE_NONE;
+		pawn.MoveType = MoveType_t.MOVETYPE_OBSOLETE;
 	}
 
 	public static void Unfreeze(this CBasePlayerPawn pawn)

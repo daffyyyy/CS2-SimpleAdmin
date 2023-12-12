@@ -10,7 +10,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 ### Commands
 ```js
 - css_admin - Display all admin commands // @css/generic
-- css_who - Display informations about player // @css/generic
+- css_who <#userid or name>  - Display informations about player // @css/generic
 - css_players - Display player list // @css/generic
 - css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player // @css/ban
 - css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64 // @css/ban
@@ -27,6 +27,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay
 - css_team <#userid or name> [<ct/tt/spec>] - Change player team // @css/kick
+- css_vote <"Question?"> ["Answer1"] ["Answer2"] ... - Create vote // @css/generic
 - css_map <mapname> - Change map // @css/changemap
 - css_wsmap <name or id> - Change workshop map // @css/changemap
 - css_asay <message> - Say message to all admins // @css/chat

@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Memory;
+using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -21,13 +22,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
+	public static Dictionary<string, int> answers = new Dictionary<string, int>();
 	public static bool TagsDetected = false;
+	public static bool VoteInProgress = false;
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.0a";
+	public override string ModuleVersion => "1.2.1a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -1140,6 +1143,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public void OnTeamCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		string teamName = command.GetArg(2).ToLower();
+		string _teamName;
 		CsTeam teamNum = CsTeam.Spectator;
 
 		TargetResult? targets = GetTarget(command);
@@ -1151,14 +1155,17 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			case "ct":
 			case "counterterrorist":
 				teamNum = CsTeam.CounterTerrorist;
+				_teamName = "CT";
 				break;
 			case "t":
 			case "tt":
 			case "terrorist":
 				teamNum = CsTeam.Terrorist;
+				_teamName = "TT";
 				break;
 			default:
 				teamNum = CsTeam.Spectator;
+				_teamName = "SPEC";
 				break;
 		}
 
@@ -1170,8 +1177,64 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					player.SwitchTeam(teamNum);
 				else
 					player.ChangeTeam(teamNum);
+
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, _teamName]);
+				Server.PrintToChatAll(sb.ToString());
 			}
 		});
+	}
+
+	[ConsoleCommand("css_vote")]
+	[RequiresPermissions("@css/generic")]
+	[CommandHelper(minArgs: 2, usage: "<question> [... options ...]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnVoteCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.GetArg(1) == null || command.GetArg(1).Length < 0 || command.ArgCount < 2)
+			return;
+
+		string question = command.GetArg(1);
+		int answersCount = command.ArgCount;
+
+		ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
+
+		for (int i = 2; i <= answersCount - 1; i++)
+		{
+			answers.Add(command.GetArg(i), 0);
+			voteMenu.AddMenuOption(command.GetArg(i), Helper.handleVotes);
+		}
+
+		Helper.PrintToCenterAll(_localizer!["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
+		StringBuilder sb = new(_localizer!["sa_prefix"]);
+		sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
+		Server.PrintToChatAll(sb.ToString());
+
+		VoteInProgress = true;
+
+		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV))
+		{
+			if (p == null) continue;
+			ChatMenus.OpenMenu(p, voteMenu);
+		}
+
+		AddTimer(40, () =>
+		{
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_vote_message_results", question]);
+			Server.PrintToChatAll(sb.ToString());
+
+			foreach (KeyValuePair<string, int> kvp in answers)
+			{
+				sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_vote_message_results_answer", kvp.Key, kvp.Value]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+
+			VoteInProgress = false;
+
+		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+		return;
 	}
 
 	[ConsoleCommand("css_map")]
@@ -1227,7 +1290,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		StringBuilder sb = new();
 		sb.Append(_localizer!["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, command.GetCommandString[command.GetCommandString.IndexOf(' ')..]]);
-		Server.PrintToChatAll(sb.ToString());
 
 		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 		{

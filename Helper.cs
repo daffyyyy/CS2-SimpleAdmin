@@ -3,6 +3,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin
 {
@@ -97,6 +98,12 @@ namespace CS2_SimpleAdmin
 			}
 
 			return message;
+		}
+
+		internal static void handleVotes(CCSPlayerController player, ChatMenuOption option)
+		{
+			if (CS2_SimpleAdmin.VoteInProgress)
+				CS2_SimpleAdmin.answers[option.Text]++;
 		}
 
 	}
