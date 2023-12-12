@@ -1365,6 +1365,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public void OnCvarCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		var cvar = ConVar.Find(command.GetArg(1));
+		string playerName = caller == null ? "Console" : caller.PlayerName;
 
 		if (cvar == null)
 		{
@@ -1382,19 +1383,19 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Server.ExecuteCommand($"{cvar.Name} {value}");
 
-		command.ReplyToCommand($"{caller!.PlayerName} changed cvar {cvar.Name} to {value}.");
-		Logger.LogInformation($"{caller.PlayerName} changed cvar {cvar.Name} to {value}.");
+		command.ReplyToCommand($"{playerName} changed cvar {cvar.Name} to {value}.");
+		Logger.LogInformation($"{playerName} changed cvar {cvar.Name} to {value}.");
 	}
 
 	[ConsoleCommand("css_rcon", "Run a server console command.")]
 	[CommandHelper(1, "<command>")]
 	[RequiresPermissions("@css/rcon")]
-	public void OnRcomCommand(CCSPlayerController? caller, CommandInfo command)
+	public void OnRconCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		string playerName = caller == null ? "Console" : caller.PlayerName;
 		Server.ExecuteCommand(command.ArgString);
-		command.ReplyToCommand($"{caller!.PlayerName} executed command {command.ArgString}.");
-
-		Logger.LogInformation($"{caller!.PlayerName} executed command ({command.ArgString}).");
+		command.ReplyToCommand($"{playerName} executed command {command.ArgString}.");
+		Logger.LogInformation($"{playerName} executed command ({command.ArgString}).");
 	}
 
 	private static TargetResult? GetTarget(CommandInfo command)
