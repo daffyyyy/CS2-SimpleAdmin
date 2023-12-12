@@ -45,6 +45,7 @@ namespace CS2_SimpleAdmin
 			return Regex.IsMatch(input, pattern);
 		}
 
+		/*
 		public static TargetResult GetTarget(string target, out CCSPlayerController? player)
 		{
 			player = null;
@@ -64,6 +65,7 @@ namespace CS2_SimpleAdmin
 
 			return player?.IsValid == true ? TargetResult.Single : TargetResult.None;
 		}
+		*/
 
 		public static void KickPlayer(ushort userId, string? reason = null)
 		{

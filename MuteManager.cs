@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using MySqlConnector;
 using System.Data;
@@ -86,6 +87,19 @@ namespace CS2_SimpleAdmin
 			var activeMutes = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
 
 			return activeMutes;
+		}
+
+		public async Task<int> GetPlayerMutes(string steamId)
+		{
+			await using var connection = _dbConnection;
+			await connection.OpenAsync();
+
+			int muteCount;
+			string sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
+
+			muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId });
+
+			return muteCount;
 		}
 
 		public async Task UnmutePlayer(string playerPattern, int type = 0)

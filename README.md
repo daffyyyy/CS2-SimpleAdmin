@@ -4,7 +4,8 @@
 Manage your Counter-Strike 2 server by simple commands :) 
 
 ### Info
-It's only plugin base, I don't have much time for more extensive development, so if you want to help, do it :)
+~~It's only plugin base~~, I don't have much time for more extensive development, so if you want to help, do it :)
+**The plugin will be developed as much as possible**, so it is no longer just a base for other plugins
 
 ### Commands
 ```js
@@ -16,7 +17,11 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_kick <#userid or name> [reason] - Kick player / @css/kick
 - css_gag <#userid or name> [time in minutes/0 perm] [reason] - Gag player // @css/chat
 - css_addgag <steamid> [time in minutes/0 perm] [reason] - Gag player via steamid64 // @css/chat
-- css_unmute <steamid or name> <type [gag/mute] - Unmute player // @css/chat
+- css_ungag <steamid or name> - Ungag player // @css/chat
+- css_mute <#userid or name> [time in minutes/0 perm] [reason] - Mute player // @css/chat
+- css_addmute <steamid> [time in minutes/0 perm] [reason] - Mute player via steamid64 // @css/chat
+- css_unmute <steamid or name> - Unmute player // @css/chat
+- css_give <#userid or name> <weapon> - Give weapon to player // @css/cheats
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay
 - css_team <#userid or name> [<ct/tt/spec>] - Change player team // @css/kick
@@ -34,7 +39,7 @@ It's only plugin base, I don't have much time for more extensive development, so
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon
 
-- @Message - Say message to all admins // @css/chat
+- team_chat @Message - Say message to all admins // @css/chat
 ```
 
 ### Requirments

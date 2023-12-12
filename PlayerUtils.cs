@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
+using System.Text;
 
 namespace CS2_SimpleAdmin;
 
@@ -10,9 +11,16 @@ public static class PlayerUtils
 	{
 		PerformSlap(pawn, damage);
 	}
+	public static void Print(this CCSPlayerController controller, string message = "")
+	{
+		StringBuilder _message = new(CS2_SimpleAdmin._localizer!["sa_prefix"]);
+		_message.Append(message);
+		controller.PrintToChat(_message.ToString());
+	}
 
 	public static bool CanTarget(this CCSPlayerController controller, CCSPlayerController target)
 	{
+		if (target.IsBot) return true;
 		return AdminManager.CanPlayerTarget(controller, target);
 	}
 

@@ -3,7 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Utils;
+using System.Text;
 using static CounterStrikeSharp.API.Core.Listeners;
 
 namespace CS2_SimpleAdmin
@@ -17,8 +17,8 @@ namespace CS2_SimpleAdmin
 			RegisterListener<OnMapStart>(OnMapStart);
 			AddCommandListener("say", OnCommandSay);
 			AddCommandListener("say_team", OnCommandTeamSay);
+			AddCommandListener("callvote", OnCommandCallVote);
 		}
-
 		private HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)
 		{
 			if (player == null || !player.IsValid || info.GetArg(1).Length == 0) return HookResult.Continue;
@@ -40,11 +40,26 @@ namespace CS2_SimpleAdmin
 				return HookResult.Handled;
 			}
 
-			if (info.GetArg(1).StartsWith("@") && AdminManager.PlayerHasPermissions(player, "@css/chat"))
+			if (info.GetArg(1).StartsWith("@"))
 			{
-				foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+				StringBuilder sb = new();
+
+				if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
 				{
-					p.PrintToChat($" {ChatColors.Lime}(ADMIN) {ChatColors.Default}{player.PlayerName}: {info.GetArg(1).Remove(0, 1)}");
+					sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
+					foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+					{
+						p.PrintToChat(sb.ToString());
+					}
+				}
+				else
+				{
+					sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
+					player.PrintToChat(sb.ToString());
+					foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+					{
+						p.PrintToChat(sb.ToString());
+					}
 				}
 
 				return HookResult.Handled;
@@ -53,11 +68,26 @@ namespace CS2_SimpleAdmin
 			return HookResult.Continue;
 		}
 
+		private HookResult OnCommandCallVote(CCSPlayerController? player, CommandInfo info)
+		{
+			string reason = info.GetArg(1);
+
+			if (reason == "kick" || reason == "ban")
+			{
+				int.TryParse(info.GetArg(2), out int target);
+				if (target > 0)
+				{
+					if (!player!.CanTarget(Utilities.GetPlayerFromUserid(target)))
+						return HookResult.Handled;
+				}
+			}
+
+			return HookResult.Continue;
+		}
+
 		private void OnClientAuthorized(int playerSlot, SteamID steamID)
 		{
-			int playerIndex = playerSlot + 1;
-
-			CCSPlayerController? player = Utilities.GetPlayerFromIndex(playerIndex);
+			CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
 			if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
 				return;
@@ -82,7 +112,7 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				if (player == null) return;
+				if (player == null || !player.IsValid) return;
 				BanManager _banManager = new(dbConnectionString);
 				bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
@@ -91,7 +121,7 @@ namespace CS2_SimpleAdmin
 
 				Server.NextFrame(() =>
 				{
-					if (player == null) return;
+					if (player == null || !player.IsValid) return;
 					if (isBanned)
 					{
 						Helper.KickPlayer((ushort)player.UserId!, "Banned");
@@ -108,11 +138,35 @@ namespace CS2_SimpleAdmin
 
 							if (muteType == "GAG")
 							{
+								// Chat mute
 								if (!gaggedPlayers.Any(index => index == player.Index))
 									gaggedPlayers.Add((int)player.Index);
 
 								if (TagsDetected)
 									NativeAPI.IssueServerCommand($"css_tag_mute {player.Index}");
+
+								if (duration.Minutes >= 0 && duration.Minutes <= 30)
+								{
+									AddTimer(durationInSeconds, () =>
+									{
+										if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+										if (gaggedPlayers.Contains((int)player.Index))
+										{
+											if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+											{
+												gaggedPlayers.Add(removedItem);
+											}
+										}
+
+										if (TagsDetected)
+											NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index}");
+
+										MuteManager _muteManager = new(dbConnectionString);
+										_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+									}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+								}
+
 
 								/*
 								CCSPlayerController currentPlayer = player;
@@ -130,13 +184,26 @@ namespace CS2_SimpleAdmin
 							}
 							else
 							{
-								// Mic mute
+								// Voice mute
+								player.VoiceFlags = VoiceFlags.Muted;
+
+								if (duration.Minutes >= 0 && duration.Minutes <= 30)
+								{
+									AddTimer(durationInSeconds, () =>
+									{
+										if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+										player.VoiceFlags = VoiceFlags.Normal;
+
+										MuteManager _muteManager = new(dbConnectionString);
+										_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
+									}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+								}
 							}
 						}
 					}
 				});
 			});
-
 		}
 
 		private void OnClientDisconnect(int playerSlot)

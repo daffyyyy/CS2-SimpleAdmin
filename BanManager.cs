@@ -109,6 +109,26 @@ namespace CS2_SimpleAdmin
 			return banCount > 0;
 		}
 
+		public async Task<int> GetPlayerBans(PlayerInfo player)
+		{
+			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)";
+			int banCount;
+
+			await using var connection = _dbConnection;
+			await connection.OpenAsync();
+
+			if (!string.IsNullOrEmpty(player.IpAddress))
+			{
+				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = player.SteamId, PlayerIP = player.IpAddress });
+			}
+			else
+			{
+				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = player.SteamId, PlayerIP = DBNull.Value });
+			}
+
+			return banCount;
+		}
+
 		public async Task UnbanPlayer(string playerPattern)
 		{
 			if (playerPattern == null || playerPattern.Length <= 1)

@@ -4,25 +4,30 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace CS2_SimpleAdmin;
-[MinimumApiVersion(101)]
+[MinimumApiVersion(124)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
+	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
+	public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
 	public static bool TagsDetected = false;
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.0.5a";
+	public override string ModuleVersion => "1.2.0a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -105,6 +110,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		Config = config;
+		_localizer = Localizer;
 	}
 
 	[ConsoleCommand("css_admin")]
@@ -113,7 +119,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	{
 		if (caller == null || !caller.IsValid) return;
 
-		var splitMessage = Config.Messages.AdminHelpCommand.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+		var splitMessage = _localizer!["sa_adminhelp"].ToString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 
 		foreach (var line in splitMessage)
 		{
@@ -121,37 +127,123 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 	}
 
+	[ConsoleCommand("css_who")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[RequiresPermissions("@css/generic")]
+	public void OnWhoCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
+
+		BanManager _banManager = new(dbConnectionString);
+		MuteManager _muteManager = new(dbConnectionString);
+
+		playersToTarget.ForEach(player =>
+		{
+			PlayerInfo playerInfo = new PlayerInfo
+			{
+				UserId = player.UserId,
+				Index = (int)player.Index,
+				SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
+
+			Task.Run(async () =>
+			{
+				int totalBans = 0;
+				int totalMutes = 0;
+
+				totalBans = await _banManager.GetPlayerBans(playerInfo);
+				totalMutes = await _muteManager.GetPlayerMutes(playerInfo.SteamId!);
+
+
+				Server.NextFrame(() =>
+				{
+					caller!.PrintToConsole($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
+
+					caller!.PrintToConsole($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+					caller!.PrintToConsole($"• UserID: \"{playerInfo.UserId}\"");
+					if (playerInfo.SteamId != null)
+						caller!.PrintToConsole($"• SteamID64: \"{playerInfo.SteamId}\"");
+					if (player.AuthorizedSteamID != null)
+					{
+						caller!.PrintToConsole($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
+						caller!.PrintToConsole($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
+					}
+					if (playerInfo.IpAddress != null)
+						caller!.PrintToConsole($"• IP Address: \"{playerInfo.IpAddress}\"");
+					caller!.PrintToConsole($"• Ping: \"{player.Ping}\"");
+					if (player.AuthorizedSteamID != null)
+					{
+						caller!.PrintToConsole($"• Total Bans: \"{totalBans}\"");
+						caller!.PrintToConsole($"• Total Mutes: \"{totalMutes}\"");
+					}
+
+					caller!.PrintToConsole($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+				});
+			});
+
+		});
+	}
+
+	[ConsoleCommand("css_players")]
+	[CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[RequiresPermissions("@css/generic")]
+	public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
+
+		playersToTarget.ForEach(player =>
+		{
+			caller!.PrintToConsole($"--------- PLAYER LIST ---------");
+
+			caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
+
+			caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
+
+		});
+	}
+
 	[ConsoleCommand("css_kick")]
 	[RequiresPermissions("@css/kick")]
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
-			return;
-
-		if (!caller!.CanTarget(player))
-		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
-		player!.Pawn.Value!.Freeze();
 		string reason = "Unknown";
 
-		if (command.ArgCount >= 2)
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
+
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		{
+			return;
+		}
+
+		if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
 			reason = command.GetArg(2);
 
-		if (command.ArgCount >= 2)
+		targets.Players.ForEach(player =>
 		{
-			player!.PrintToCenter($"{Config.Messages.PlayerKickMessage}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason));
-		}
-		else
-		{
-			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
-		}
+			player.Pawn.Value!.Freeze();
 
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminKickMessage}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+			if (command.ArgCount >= 2)
+			{
+				player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason));
+			}
+			else
+			{
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
+			}
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_kick_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_gag")]
@@ -159,73 +251,81 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnGagCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
-			return;
-
-		if (!caller!.CanTarget(player) || command.ArgCount < 2)
-		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
 		int time = 0;
 		string reason = "Unknown";
 
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
+
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		{
+			return;
+		}
+
 		int.TryParse(command.GetArg(2), out time);
 
-		if (command.ArgCount >= 3)
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
 
-		PlayerInfo playerInfo = new PlayerInfo
+		MuteManager _muteManager = new(dbConnectionString);
+
+		playersToTarget.ForEach(player =>
 		{
-			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
-			Name = player?.PlayerName,
-			IpAddress = player?.IpAddress?.Split(":")[0]
-		};
-
-		PlayerInfo adminInfo = new PlayerInfo
-		{
-			SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
-			Name = caller?.PlayerName,
-			IpAddress = caller?.IpAddress?.Split(":")[0]
-		};
-
-		Task.Run(async () =>
-		{
-			MuteManager _muteManager = new(dbConnectionString);
-			await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
-		});
-
-		if (TagsDetected)
-			NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
-
-		if (!gaggedPlayers.Contains((int)player!.Index))
-			gaggedPlayers.Add((int)player.Index);
-
-		if (time > 0 && time <= 30)
-		{
-			AddTimer(time * 60, () =>
+			PlayerInfo playerInfo = new PlayerInfo
 			{
-				if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+				SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
 
-				if (TagsDetected)
-					NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index}");
+			PlayerInfo adminInfo = new PlayerInfo
+			{
+				SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = caller?.PlayerName,
+				IpAddress = caller?.IpAddress?.Split(":")[0]
+			};
 
-				MuteManager _muteManager = new(dbConnectionString);
-				_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
-			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-		}
+			Task.Run(async () =>
+			{
+				await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
+			});
 
-		if (time == 0)
-		{
-			player!.PrintToCenter($"{Config.Messages.PlayerGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
-		}
-		else
-		{
-			player!.PrintToCenter($"{Config.Messages.PlayerGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
-		}
+			if (TagsDetected)
+				NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
+
+			if (!gaggedPlayers.Contains((int)player!.Index))
+				gaggedPlayers.Add((int)player.Index);
+
+			if (time > 0 && time <= 30)
+			{
+				AddTimer(time * 60, () =>
+				{
+					if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+					if (TagsDetected)
+						NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index}");
+
+					MuteManager _muteManager = new(dbConnectionString);
+					_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+			}
+
+			if (time == 0)
+			{
+				player!.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_gag_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+			else
+			{
+				player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_gag_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+		});
 	}
 
 	[ConsoleCommand("css_addgag")]
@@ -252,7 +352,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		int.TryParse(command.GetArg(2), out time);
 
-		if (command.ArgCount >= 3)
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
 
 		PlayerInfo adminInfo = new PlayerInfo
@@ -266,7 +366,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (matches.Count == 1)
 		{
 			CCSPlayerController? player = matches.FirstOrDefault();
-			if (player != null)
+			if (player != null && player.IsValid)
 			{
 				if (!caller!.CanTarget(player))
 				{
@@ -276,13 +376,17 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					player!.PrintToCenter($"{Config.Messages.PlayerGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+					player!.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_gag_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+					Server.PrintToChatAll(sb.ToString());
 				}
 				else
 				{
-					player!.PrintToCenter($"{Config.Messages.PlayerGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGagMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+					player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_gag_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+					Server.PrintToChatAll(sb.ToString());
 				}
 
 				if (TagsDetected)
@@ -309,10 +413,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		command.ReplyToCommand($"Gagged player with steamid {steamid}.");
 	}
 
-	[ConsoleCommand("css_unmute")]
+	[ConsoleCommand("css_ungag")]
 	[RequiresPermissions("@css/chat")]
-	[CommandHelper(minArgs: 1, usage: "<steamid or name> <type [gag/mute]>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
-	public void OnUnmuteCommand(CCSPlayerController? caller, CommandInfo command)
+	[CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnUngagCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		if (command.GetArg(1).Length <= 1)
 		{
@@ -320,8 +424,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			return;
 		}
 
-		string pattern = command.GetArg(1);
+		bool found = false;
 
+		string pattern = command.GetArg(1);
 		MuteManager _muteManager = new(dbConnectionString);
 
 		if (Helper.IsValidSteamID64(pattern))
@@ -330,11 +435,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			if (matches.Count == 1)
 			{
 				CCSPlayerController? player = matches.FirstOrDefault();
-				if (player != null)
+				if (player != null && player.IsValid)
 				{
 					if (gaggedPlayers.Contains((int)player.Index))
 					{
-
 						if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
 						{
 							gaggedPlayers.Add(removedItem);
@@ -343,6 +447,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 					if (TagsDetected)
 						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
+
+					found = true;
 				}
 			}
 		}
@@ -352,7 +458,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			if (matches.Count == 1)
 			{
 				CCSPlayerController? player = matches.FirstOrDefault();
-				if (player != null)
+				if (player != null && player.IsValid)
 				{
 					if (gaggedPlayers.Contains((int)player.Index))
 					{
@@ -366,62 +472,166 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
 
 					pattern = player.AuthorizedSteamID!.SteamId64.ToString();
+
+					found = true;
 				}
 			}
 		}
-
-		if (command.ArgCount >= 3)
+		if (found)
 		{
-			string? action = command.GetArg(2)?.ToLower();
-
-			if (action == "gag")
-			{
-				_ = _muteManager.UnmutePlayer(pattern, 0); // Unmute by type 0 (gag)
-			}
-			else if (action == "mute")
-			{
-				_ = _muteManager.UnmutePlayer(pattern, 1); // Unmute by type 1 (mute)
-			}
-		}
-		else
-		{
-			_ = _muteManager.UnmutePlayer(pattern, 2); // Default unmute (all types)
+			_ = _muteManager.UnmutePlayer(pattern, 0); // Unmute by type 0 (gag)
+			command.ReplyToCommand($"Ungaged player with pattern {pattern}.");
+			return;
 		}
 
-		command.ReplyToCommand($"Unmuted player with pattern {pattern}.");
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
+
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		{
+			return;
+		}
+
+		if (playersToTarget.Count > 1)
+		{
+			playersToTarget.ForEach(player =>
+			{
+				if (gaggedPlayers.Contains((int)player.Index))
+				{
+					if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+					{
+						gaggedPlayers.Add(removedItem);
+					}
+				}
+
+				if (player.AuthorizedSteamID != null)
+					_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0); // Unmute by type 0 (gag)
+
+				if (TagsDetected)
+					NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
+			});
+
+			command.ReplyToCommand($"Ungaged player with pattern {pattern}.");
+			return;
+		}
 	}
 
-	[ConsoleCommand("css_ban")]
-	[RequiresPermissions("@css/ban")]
+	[ConsoleCommand("css_mute")]
+	[RequiresPermissions("@css/chat")]
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
-	public void OnBanCommand(CCSPlayerController? caller, CommandInfo command)
+	public void OnMuteCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player) || command.ArgCount < 2)
-			return;
-		if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+		int time = 0;
+		string reason = "Unknown";
 
-		if (!caller!.CanTarget(player))
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
+
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
 		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			return;
+		}
+
+		int.TryParse(command.GetArg(2), out time);
+
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
+			reason = command.GetArg(3);
+
+		MuteManager _muteManager = new(dbConnectionString);
+
+		playersToTarget.ForEach(player =>
+		{
+			PlayerInfo playerInfo = new PlayerInfo
+			{
+				SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
+
+			PlayerInfo adminInfo = new PlayerInfo
+			{
+				SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = caller?.PlayerName,
+				IpAddress = caller?.IpAddress?.Split(":")[0]
+			};
+
+			if (!mutedPlayers.Contains((int)player!.Index))
+				mutedPlayers.Add((int)player!.Index);
+
+			Task.Run(async () =>
+			{
+				await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
+			});
+
+			player.VoiceFlags = VoiceFlags.Muted;
+
+			if (time > 0 && time <= 30)
+			{
+				AddTimer(time * 60, () =>
+				{
+					if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+					//MuteManager _muteManager = new(dbConnectionString);
+					//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
+
+					if (mutedPlayers.Contains((int)player.Index))
+					{
+						if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+						{
+							mutedPlayers.Add(removedItem);
+						}
+					}
+
+					player.VoiceFlags = VoiceFlags.Normal;
+				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+			}
+
+			if (time == 0)
+			{
+				player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_mute_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+			else
+			{
+				player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_mute_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+		});
+
+	}
+
+	[ConsoleCommand("css_addmute")]
+	[RequiresPermissions("@css/chat")]
+	[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnAddMuteCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.ArgCount < 2)
+			return;
+		if (string.IsNullOrEmpty(command.GetArg(1))) return;
+
+		string steamid = command.GetArg(1);
+
+		if (!Helper.IsValidSteamID64(steamid))
+		{
+			command.ReplyToCommand($"Invalid SteamID64.");
 			return;
 		}
 
 		int time = 0;
 		string reason = "Unknown";
 
-		player!.Pawn.Value!.Freeze();
+		MuteManager _muteManager = new(dbConnectionString);
 
 		int.TryParse(command.GetArg(2), out time);
 
-		if (command.ArgCount >= 3)
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
-
-		PlayerInfo playerInfo = new PlayerInfo
-		{
-			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
-			Name = player?.PlayerName,
-			IpAddress = player?.IpAddress?.Split(":")[0]
-		};
 
 		PlayerInfo adminInfo = new PlayerInfo
 		{
@@ -430,24 +640,225 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = caller?.IpAddress?.Split(":")[0]
 		};
 
-		Task.Run(async () =>
+		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
+		if (matches.Count == 1)
 		{
-			BanManager _banManager = new(dbConnectionString);
-			await _banManager.BanPlayer(playerInfo, adminInfo, reason, time);
-		});
+			CCSPlayerController? player = matches.FirstOrDefault();
+			if (player != null && player.IsValid)
+			{
+				if (!caller!.CanTarget(player))
+				{
+					command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+					return;
+				}
 
-		if (time == 0)
+				if (time == 0)
+				{
+					player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_mute_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+					Server.PrintToChatAll(sb.ToString());
+				}
+				else
+				{
+					player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_mute_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+					Server.PrintToChatAll(sb.ToString());
+				}
+
+				if (!mutedPlayers.Contains((int)player!.Index))
+					mutedPlayers.Add((int)player!.Index);
+
+				if (time > 0 && time <= 30)
+				{
+					AddTimer(time * 60, () =>
+					{
+						if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
+
+						if (mutedPlayers.Contains((int)player.Index))
+						{
+							if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+							{
+								mutedPlayers.Add(removedItem);
+							}
+						}
+
+						player.VoiceFlags = VoiceFlags.Normal;
+
+						_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
+					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				}
+			}
+		}
+		_ = _muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
+		command.ReplyToCommand($"Muted player with steamid {steamid}.");
+	}
+
+	[ConsoleCommand("css_unmute")]
+	[RequiresPermissions("@css/chat")]
+	[CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnUnmuteCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.GetArg(1).Length <= 1)
 		{
-			player!.PrintToCenter($"{Config.Messages.PlayerBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+			command.ReplyToCommand($"Too short pattern to search.");
+			return;
+		}
+
+		string pattern = command.GetArg(1);
+		bool found = false;
+		MuteManager _muteManager = new(dbConnectionString);
+
+		if (Helper.IsValidSteamID64(pattern))
+		{
+			List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(pattern);
+			if (matches.Count == 1)
+			{
+				CCSPlayerController? player = matches.FirstOrDefault();
+				if (player != null && player.IsValid)
+				{
+					if (mutedPlayers.Contains((int)player.Index))
+					{
+						if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+						{
+							mutedPlayers.Add(removedItem);
+						}
+					}
+
+					player.VoiceFlags = VoiceFlags.Normal;
+					found = true;
+				}
+			}
 		}
 		else
 		{
-			player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-			Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+			List<CCSPlayerController> matches = Helper.GetPlayerFromName(pattern);
+			if (matches.Count == 1)
+			{
+				CCSPlayerController? player = matches.FirstOrDefault();
+				if (player != null && player.IsValid)
+				{
+					if (mutedPlayers.Contains((int)player.Index))
+					{
+						if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+						{
+							mutedPlayers.Add(removedItem);
+						}
+					}
+
+					player.VoiceFlags = VoiceFlags.Normal;
+					pattern = player.AuthorizedSteamID!.SteamId64.ToString();
+					found = true;
+				}
+			}
 		}
 
-		AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
+		if (found)
+		{
+			_ = _muteManager.UnmutePlayer(pattern, 1); // Unmute by type 1 (mute)
+			command.ReplyToCommand($"Unmuted player with pattern {pattern}.");
+			return;
+		}
+
+		TargetResult? targets = GetTarget(command);
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
+
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		{
+			return;
+		}
+
+		if (playersToTarget.Count > 1)
+		{
+			playersToTarget.ForEach(player =>
+			{
+				if (mutedPlayers.Contains((int)player.Index))
+				{
+					if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+					{
+						mutedPlayers.Add(removedItem);
+					}
+				}
+
+				if (player.AuthorizedSteamID != null)
+					_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1); // Unmute by type 1 (mute)
+
+				player.VoiceFlags = VoiceFlags.Normal;
+			});
+
+			command.ReplyToCommand($"Unmuted player with pattern {pattern}.");
+			return;
+		}
+	}
+
+	[ConsoleCommand("css_ban")]
+	[RequiresPermissions("@css/ban")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnBanCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (command.ArgCount < 2)
+			return;
+
+		int time = 0;
+		string reason = "Unknown";
+
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
+
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		{
+			return;
+		}
+
+		BanManager _banManager = new(dbConnectionString);
+
+		int.TryParse(command.GetArg(2), out time);
+
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
+			reason = command.GetArg(3);
+
+		playersToTarget.ForEach(player =>
+		{
+			player.Pawn.Value!.Freeze();
+
+			PlayerInfo playerInfo = new PlayerInfo
+			{
+				SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
+
+			PlayerInfo adminInfo = new PlayerInfo
+			{
+				SteamId = caller?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = caller?.PlayerName,
+				IpAddress = caller?.IpAddress?.Split(":")[0]
+			};
+
+			Task.Run(async () =>
+			{
+				await _banManager.BanPlayer(playerInfo, adminInfo, reason, time);
+			});
+
+			if (time == 0)
+			{
+				player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_ban_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+			else
+			{
+				player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+				StringBuilder sb = new(_localizer!["sa_prefix"]);
+				sb.Append(_localizer["sa_admin_ban_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+				Server.PrintToChatAll(sb.ToString());
+			}
+
+			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
+		});
 	}
 
 	[ConsoleCommand("css_addban")]
@@ -474,7 +885,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		int.TryParse(command.GetArg(2), out time);
 
-		if (command.ArgCount >= 3)
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
 
 		PlayerInfo adminInfo = new PlayerInfo
@@ -489,7 +900,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (matches.Count == 1)
 		{
 			CCSPlayerController? player = matches.FirstOrDefault();
-			if (player != null)
+			if (player != null && player.IsValid)
 			{
 				if (!caller!.CanTarget(player))
 				{
@@ -501,13 +912,17 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					player!.PrintToCenter($"{Config.Messages.PlayerBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+					player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_ban_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+					Server.PrintToChatAll(sb.ToString());
 				}
 				else
 				{
-					player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+					player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_ban_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+					Server.PrintToChatAll(sb.ToString());
 				}
 
 				Task.Run(async () =>
@@ -551,14 +966,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		int.TryParse(command.GetArg(2), out time);
 
-		if (command.ArgCount >= 3)
+		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
 
 		List<CCSPlayerController> matches = Helper.GetPlayerFromIp(ipAddress);
 		if (matches.Count == 1)
 		{
 			CCSPlayerController? player = matches.FirstOrDefault();
-			if (player != null)
+			if (player != null && player.IsValid)
 			{
 				if (!caller!.CanTarget(player))
 				{
@@ -570,13 +985,17 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					player!.PrintToCenter($"{Config.Messages.PlayerBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessagePerm}".Replace("{REASON}", reason).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+					player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_ban_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+					Server.PrintToChatAll(sb.ToString());
 				}
 				else
 				{
-					player!.PrintToCenter($"{Config.Messages.PlayerBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName));
-					Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminBanMessageTime}".Replace("{REASON}", reason).Replace("{TIME}", time.ToString()).Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+					player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_ban_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+					Server.PrintToChatAll(sb.ToString());
 				}
 
 				Task.Run(async () =>
@@ -616,21 +1035,62 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnSlayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out CCSPlayerController? player) || player == null || !player.IsValid)
-			return;
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
 
-		if (!caller!.CanTarget(player))
+		playersToTarget.ForEach(player =>
 		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
+			player.CommitSuicide(false, true);
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_slay_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
+	}
+
+	[ConsoleCommand("css_give")]
+	[RequiresPermissions("@css/cheats")]
+	[CommandHelper(minArgs: 2, usage: "<#userid or name> <weapon>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
+
+		string weaponName = command.GetArg(2);
+
+		// check if item is typed
+		if (weaponName == null || weaponName.Length < 5)
+		{
+			command.ReplyToCommand($"No weapon typed.");
 			return;
 		}
 
-		if (!player!.PawnIsAlive)
+		// check if item is valid
+		if (!weaponName.Contains("weapon_") || !weaponName.Contains("item_"))
+		{
+			command.ReplyToCommand($"{weaponName} is not a valid item.");
 			return;
+		}
 
-		player!.CommitSuicide(false, true);
+		// check if weapon is knife
+		if (weaponName.Contains("_knife") || weaponName.Contains("bayonet"))
+		{
+			if (CoreConfig.FollowCS2ServerGuidelines)
+			{
+				command.ReplyToCommand($"Cannot Give {weaponName} because it's illegal to be given.");
+				return;
+			}
+		}
 
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminSlayMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+		playersToTarget.ForEach(player =>
+		{
+			//give the weapon to player and announce it
+			player.GiveNamedItem(weaponName);
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_give_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, weaponName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_slap")]
@@ -638,28 +1098,24 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [damage]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnSlapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out CCSPlayerController? player) || player == null || !player.IsValid)
-			return;
-
-		if (!caller!.CanTarget(player))
-		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
-		if (!player!.PawnIsAlive)
-			return;
-
 		int damage = 0;
+
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
 
 		if (command.ArgCount >= 2)
 		{
 			int.TryParse(command.GetArg(2), out damage);
 		}
 
-		player!.Pawn.Value!.Slap(damage);
-
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminSlapMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+		playersToTarget.ForEach(player =>
+		{
+			player!.Pawn.Value!.Slap(damage);
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_slap_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_team")]
@@ -667,17 +1123,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 2, usage: "<#userid or name> [<ct/tt/spec>]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnTeamCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out CCSPlayerController? player) || player == null || !player.IsValid)
-			return;
-
-		if (!caller!.CanTarget(player))
-		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
 		string teamName = command.GetArg(2).ToLower();
 		CsTeam teamNum = CsTeam.Spectator;
+
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
 		switch (teamName)
 		{
@@ -695,18 +1146,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				break;
 		}
 
-		if (player.TeamNum == ((byte)teamNum))
+		playersToTarget.ForEach(player =>
 		{
-			command.ReplyToCommand($"{player.PlayerName} is already in selected team!");
-			return;
-		}
-
-		if (player.PawnIsAlive && teamNum != CsTeam.Spectator)
-			player.SwitchTeam(teamNum);
-		else
-			player.ChangeTeam(teamNum);
-
-		command.ReplyToCommand($"Successfully changed team for {player.PlayerName}");
+			if (player.TeamNum != ((byte)teamNum))
+			{
+				if (player.PawnIsAlive && teamNum != CsTeam.Spectator)
+					player.SwitchTeam(teamNum);
+				else
+					player.ChangeTeam(teamNum);
+			}
+		});
 	}
 
 	[ConsoleCommand("css_map")]
@@ -727,7 +1176,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.ExecuteCommand($"changelevel {map}");
 		});
 
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{MAP}", map)));
+		StringBuilder sb = new(_localizer!["sa_prefix"]);
+		sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
+		Server.PrintToChatAll(sb.ToString());
 	}
 
 	[ConsoleCommand("css_wsmap", "Change workshop map.")]
@@ -741,7 +1192,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		_command = ulong.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
 
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminChangeMap}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{MAP}", map)));
+		StringBuilder sb = new(_localizer!["sa_prefix"]);
+		sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
+		Server.PrintToChatAll(sb.ToString());
 
 		AddTimer(5f, () =>
 		{
@@ -755,9 +1208,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
+
+		StringBuilder sb = new();
+		sb.Append(_localizer!["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, command.GetCommandString[command.GetCommandString.IndexOf(' ')..]]);
+		Server.PrintToChatAll(sb.ToString());
+
 		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 		{
-			p.PrintToChat($" {ChatColors.Lime}(ADMIN) {ChatColors.Default}{caller.PlayerName}: {command.GetCommandString[command.GetCommandString.IndexOf(' ')..]}");
+			p.PrintToChat(sb.ToString());
 		}
 	}
 
@@ -766,7 +1224,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Messages.AdminSayPrefix}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName) + command.GetCommandString[command.GetCommandString.IndexOf(' ')..]));
+		StringBuilder sb = new();
+		sb.Append(_localizer!["sa_adminsay_prefix", command.GetCommandString[command.GetCommandString.IndexOf(' ')..]]);
+		Server.PrintToChatAll(sb.ToString());
 	}
 
 	[ConsoleCommand("css_psay", "Private message a player.")]
@@ -774,14 +1234,19 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminPrivateSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
-			return;
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid).ToList();
 
-		var range = command.GetArg(0).Length + command.GetArg(1).Length + 2;
-		var message = command.GetCommandString[range..];
+		int range = command.GetArg(0).Length + command.GetArg(1).Length + 2;
+		string message = command.GetCommandString[range..];
 
-		command.ReplyToCommand(Helper.ReplaceTags($"({player!.PlayerName}) {message}"));
-		player.PrintToChat(Helper.ReplaceTags($"({caller!.PlayerName}) {message}"));
+		playersToTarget.ForEach(player =>
+		{
+			player.PrintToChat(Helper.ReplaceTags($"({caller!.PlayerName}) {message}"));
+		});
+
+		command.ReplyToCommand(Helper.ReplaceTags($" Private message sent!"));
 	}
 
 	[ConsoleCommand("css_csay", "Say to all players (in center).")]
@@ -808,18 +1273,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/cheats")]
 	public void OnNoclipCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
-			return;
+		TargetResult? targets = GetTarget(command);
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
 
-		if (!caller!.CanTarget(player))
+		playersToTarget.ForEach(player =>
 		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
-		player!.Pawn.Value!.ToggleNoclip();
-
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminNoclipMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+			player!.Pawn.Value!.ToggleNoclip();
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_noclip_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_freeze", "Freeze a player.")]
@@ -827,24 +1290,23 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/slay")]
 	public void OnFreezeCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
-			return;
-
-		if (!caller!.CanTarget(player))
-		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
 		int time = 0;
 		int.TryParse(command.GetArg(2), out time);
 
-		player!.Pawn.Value!.Freeze();
+		TargetResult? targets = GetTarget(command);
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
 
-		if (time > 0)
-			AddTimer(time, () => player.Pawn.Value!.Unfreeze());
+		playersToTarget.ForEach(player =>
+		{
+			player!.Pawn.Value!.Freeze();
 
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminFreezeMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+			if (time > 0)
+				AddTimer(time, () => player.Pawn.Value!.Unfreeze());
+
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_freeze_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_unfreeze", "Unfreeze a player.")]
@@ -852,12 +1314,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/slay")]
 	public void OnUnfreezeCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player))
-			return;
+		TargetResult? targets = GetTarget(command);
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
 
-		player!.Pawn.Value!.Unfreeze();
-
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminUnFreezeMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+		playersToTarget.ForEach(player =>
+		{
+			player!.Pawn.Value!.Unfreeze();
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_unfreeze_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_respawn", "Respawn a dead player.")]
@@ -865,18 +1331,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/cheats")]
 	public void OnRespawnCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		if (!GetTarget(command, out var player) || player == null || !player.IsValid)
-			return;
+		TargetResult? targets = GetTarget(command);
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (!caller!.CanTarget(player))
+		playersToTarget.ForEach(player =>
 		{
-			command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
-			return;
-		}
-
-		player!.Respawn();
-
-		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminRespawnMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{PLAYER}", player.PlayerName)));
+			player!.Respawn();
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_respawn_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
 	}
 
 	[ConsoleCommand("css_cvar", "Change a cvar.")]
@@ -912,14 +1376,33 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public void OnRcomCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		Server.ExecuteCommand(command.ArgString);
+		command.ReplyToCommand($"{caller!.PlayerName} executed command {command.ArgString}.");
 
 		Logger.LogInformation($"{caller!.PlayerName} executed command ({command.ArgString}).");
 	}
 
 
 
-	private static bool GetTarget(CommandInfo command, out CCSPlayerController? player)
+	private static TargetResult? GetTarget(CommandInfo command)
 	{
+		var matches = command.GetArgTargetResult(1);
+
+		if (!matches.Any())
+		{
+			command.ReplyToCommand($"Target {command.GetArg(1)} not found.");
+			return null;
+		}
+
+		if (matches.Count() > 1 || command.GetArg(1).StartsWith('@'))
+			return matches;
+
+		if (matches.Count() == 1 || !command.GetArg(1).StartsWith('@'))
+			return matches;
+
+		command.ReplyToCommand($"Multiple targets found for \"{command.GetArg(1)}\".");
+		return null;
+
+		/*
 		var matches = Helper.GetTarget(command.GetArg(1), out player);
 
 		switch (matches)
@@ -933,6 +1416,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		return true;
+		*/
 	}
 }
 
