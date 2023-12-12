@@ -1179,7 +1179,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					player.ChangeTeam(teamNum);
 
 				StringBuilder sb = new(_localizer!["sa_prefix"]);
-				sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, _teamName]);
+				sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, _teamName]);
 				Server.PrintToChatAll(sb.ToString());
 			}
 		});
