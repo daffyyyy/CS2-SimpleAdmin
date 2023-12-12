@@ -1139,7 +1139,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	[ConsoleCommand("css_team")]
 	[RequiresPermissions("@css/kick")]
-	[CommandHelper(minArgs: 2, usage: "<#userid or name> [<ct/tt/spec>]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[CommandHelper(minArgs: 2, usage: "<#userid or name> [<ct/tt/spec>] [-k]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnTeamCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		string teamName = command.GetArg(2).ToLower();
@@ -1173,7 +1173,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (player.TeamNum != ((byte)teamNum))
 			{
-				if (player.PawnIsAlive && teamNum != CsTeam.Spectator)
+				if (player.PawnIsAlive && command.GetArg(3) == null && teamNum != CsTeam.Spectator)
 					player.SwitchTeam(teamNum);
 				else
 					player.ChangeTeam(teamNum);
