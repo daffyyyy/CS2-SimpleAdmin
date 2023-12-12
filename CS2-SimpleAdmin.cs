@@ -306,8 +306,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					if (TagsDetected)
 						NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index}");
 
-					MuteManager _muteManager = new(dbConnectionString);
-					_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+					if (gaggedPlayers.Contains((int)player.Index))
+					{
+						if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+						{
+							gaggedPlayers.Add(removedItem);
+						}
+					}
+
+					//MuteManager _muteManager = new(dbConnectionString);
+					//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
 				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
@@ -401,7 +409,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						if (TagsDetected)
 							NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index.ToString()}");
 
-						_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+						if (gaggedPlayers.Contains((int)player.Index))
+						{
+							if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+							{
+								gaggedPlayers.Add(removedItem);
+							}
+						}
+
+						//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
 					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
 
