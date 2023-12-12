@@ -10,6 +10,8 @@ Manage your Counter-Strike 2 server by simple commands :)
 ### Commands
 ```js
 - css_admin - Display all admin commands // @css/generic
+- css_who - Display informations about player // @css/generic
+- css_players - Display player list // @css/generic
 - css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player // @css/ban
 - css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64 // @css/ban
 - css_banip <ip> [time in minutes/0 perm] [reason] - Ban player via IP address // @css/ban
