@@ -193,10 +193,18 @@ namespace CS2_SimpleAdmin
 									{
 										if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
+										if (mutedPlayers.Contains((int)player.Index))
+										{
+											if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+											{
+												mutedPlayers.Add(removedItem);
+											}
+										}
+
 										player.VoiceFlags = VoiceFlags.Normal;
 
-										MuteManager _muteManager = new(dbConnectionString);
-										_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
+										//MuteManager _muteManager = new(dbConnectionString);
+										//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
 									}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 								}
 							}
@@ -217,6 +225,14 @@ namespace CS2_SimpleAdmin
 				if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
 				{
 					gaggedPlayers.Add(removedItem);
+				}
+			}
+
+			if (mutedPlayers.Contains((int)player.Index))
+			{
+				if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+				{
+					mutedPlayers.Add(removedItem);
 				}
 			}
 
