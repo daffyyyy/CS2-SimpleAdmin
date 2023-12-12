@@ -1382,6 +1382,23 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	}
 
 
+    [ConsoleCommand("css_give")]
+	[RequiresPermissions("@css/give")]
+	[CommandHelper(minArgs: 2, usage: "<#UserId Or Name> <WeaponName>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if(!GetTarget(command, out var player) || player == null || !player.IsValid) return;
+		string weaponName = command.GetArg(2);
+
+		//check if weapon is knife
+		if(weaponName.Contains("_knife") || weaponName.Contains("bayonet")){
+				command.ReplyToCommand($"Cannot Give {weaponName} because it's illegal to be given.");
+				return;
+			}
+		//give the weapon to player and announce it
+		player.GiveNamedItem(weaponName);
+		Server.PrintToChatAll(Helper.ReplaceTags($" {Config.Prefix} {Config.Messages.AdminGiveMessage}".Replace("{ADMIN}", caller?.PlayerName == null ? "Console" : caller.PlayerName).Replace("{WEAPON}", weaponName.Split("_")[1])).Replace("{PLAYER}",player.PlayerName));
+	}
 
 	private static TargetResult? GetTarget(CommandInfo command)
 	{
