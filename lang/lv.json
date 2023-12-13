@@ -15,10 +15,14 @@
 	"sa_admin_gag_message_perm": "Admins {lightred}{0}{default} liedza pieeju čatam {lightred}{1}{default} uz mūžu par {lightred}{2}{default}!",
 	"sa_admin_mute_message_time": "Admins {lightred}{0}{default} liedza pieeju balss čatam {lightred}{1}{default} par {lightred}{2}{default} uz {lightred}{3}{default} minūtēm!",
 	"sa_admin_mute_message_perm": "Admins {lightred}{0}{default} liedza pieeju balss čatam {lightred}{1}{default} uz mūžu par {lightred}{2}{default}!",
+<<<<<<< HEAD
 	"sa_admin_give_message": "Admins {lightred}{0}{default} iedeva {lightred}{1}{default} {lightred}{2}{default}!",
 	"sa_admin_hp_message": "Admins {lightred}{0}{default} mainīja {lightred}{1}{default} ZS apjomu{default}!",
 	"sa_admin_speed_message": "Admins {lightred}{0}{default} mainīja {lightred}{1}{default} ātrumu{default}!",
 	"sa_admin_god_message": "Admins {lightred}{0}{default} mainīja dieva režīmu priekš {lightred}{1}{default}!",
+=======
+	"sa_admin_give_message": "Admins {lightred}{0}{default} iedeva {lightred}{1}{default} {lightred}{IE{default}ROCI}!",
+>>>>>>> e040dbced51f36dc764ecbd7a099f64431f39040
 	"sa_admin_slay_message": "Admins {lightred}{0}{default} nonāvēja {lightred}{1}{default}!",
 	"sa_admin_slap_message": "Admins {lightred}{0}{default} iepērā {lightred}{1}{default}!",
 	"sa_admin_changemap_message": "Admins {lightred}{0}{default} nomainīja karti uz {lightred}{1}{default}!",
