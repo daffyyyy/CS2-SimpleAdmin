@@ -24,6 +24,9 @@ Manage your Counter-Strike 2 server by simple commands :)
 - css_addmute <steamid> [time in minutes/0 perm] [reason] - Mute player via steamid64 // @css/chat
 - css_unmute <steamid or name> - Unmute player // @css/chat
 - css_give <#userid or name> <weapon> - Give weapon to player // @css/cheats
+- css_hp <#userid or name> [health] - Set player health // @css/slay
+- css_speed <#userid or name> [speed] - Set player speed // @css/slay
+- css_god <#userid or name> - Toggle godmode for player // @css/cheats
 - css_slay <#userid or name> - Kill player // @css/slay
 - css_slap <#userid or name> [damage] - Slap player // @css/slay
 - css_team <#userid or name> [<ct/tt/spec>] - Change player team // @css/kick

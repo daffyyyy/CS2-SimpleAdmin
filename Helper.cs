@@ -102,8 +102,8 @@ namespace CS2_SimpleAdmin
 
 		internal static void handleVotes(CCSPlayerController player, ChatMenuOption option)
 		{
-			if (CS2_SimpleAdmin.VoteInProgress)
-				CS2_SimpleAdmin.answers[option.Text]++;
+			if (CS2_SimpleAdmin.voteInProgress)
+				CS2_SimpleAdmin.voteAnswers[option.Text]++;
 		}
 
 	}

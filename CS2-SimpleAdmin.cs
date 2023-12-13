@@ -22,15 +22,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
-	public static Dictionary<string, int> answers = new Dictionary<string, int>();
+	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
+	public static List<int> GodPlayers = new List<int>();
 	public static bool TagsDetected = false;
-	public static bool VoteInProgress = false;
+	public static bool voteInProgress = false;
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.1a";
+	public override string ModuleVersion => "1.2.2a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -105,10 +106,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				connection.Close();
 			}
-
 		}
-		catch (MySqlException ex)
+		catch (Exception ex)
 		{
+			Logger.LogError("Unable to connect to database!");
+			Logger.LogDebug(ex.Message);
 			throw new Exception("[CS2-SimpleAdmin] Unable to connect to Database!" + ex.Message);
 		}
 
@@ -944,15 +946,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					Server.PrintToChatAll(sb.ToString());
 				}
 
-				Task.Run(async () =>
-				{
-					BanManager _banManager = new(dbConnectionString);
-					await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
-				});
-
 				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
 			}
 		}
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
+		});
+
 		command.ReplyToCommand($"Banned player with steamid {steamid}.");
 	}
 
@@ -1017,15 +1020,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					Server.PrintToChatAll(sb.ToString());
 				}
 
-				Task.Run(async () =>
-				{
-					BanManager _banManager = new(dbConnectionString);
-					await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
-				});
-
 				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, "Banned"));
 			}
 		}
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
+		});
 
 		command.ReplyToCommand($"Banned player with IP address {ipAddress}.");
 	}
@@ -1086,7 +1089,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		// check if item is valid
-		if (!weaponName.Contains("weapon_") || !weaponName.Contains("item_"))
+		if (!weaponName.Contains("weapon_") && !weaponName.Contains("item_"))
 		{
 			command.ReplyToCommand($"{weaponName} is not a valid item.");
 			return;
@@ -1104,10 +1107,76 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		playersToTarget.ForEach(player =>
 		{
-			//give the weapon to player and announce it
 			player.GiveNamedItem(weaponName);
 			StringBuilder sb = new(_localizer!["sa_prefix"]);
 			sb.Append(_localizer["sa_admin_give_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, weaponName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
+	}
+
+	[ConsoleCommand("css_hp")]
+	[RequiresPermissions("@css/slay")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnHpCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		int health = 100;
+		int.TryParse(command.GetArg(2), out health);
+
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
+
+		playersToTarget.ForEach(player =>
+		{
+			player.SetHp(health);
+
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_hp_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
+	}
+
+	[ConsoleCommand("css_speed")]
+	[RequiresPermissions("@css/slay")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name> <speed>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnSpeedCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		double speed = 1.0;
+		double.TryParse(command.GetArg(2), out speed);
+
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
+
+		playersToTarget.ForEach(player =>
+		{
+			player.Speed = (float)speed;
+			player.PlayerPawn.Value!.Speed = (float)speed;
+
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_speed_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
+	}
+
+	[ConsoleCommand("css_god")]
+	[RequiresPermissions("@css/cheats")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnGodCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
+
+		playersToTarget.ForEach(player =>
+		{
+			if (!GodPlayers.Contains((int)player.Index))
+				GodPlayers.Add((int)player.Index);
+			else
+				GodPlayers.Remove((int)player.Index);
+
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_god_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
 			Server.PrintToChatAll(sb.ToString());
 		});
 	}
@@ -1193,7 +1262,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.GetArg(1) == null || command.GetArg(1).Length < 0 || command.ArgCount < 2)
 			return;
 
-		answers.Clear();
+		voteAnswers.Clear();
 
 		string question = command.GetArg(1);
 		int answersCount = command.ArgCount;
@@ -1202,7 +1271,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		for (int i = 2; i <= answersCount - 1; i++)
 		{
-			answers.Add(command.GetArg(i), 0);
+			voteAnswers.Add(command.GetArg(i), 0);
 			voteMenu.AddMenuOption(command.GetArg(i), Helper.handleVotes);
 		}
 
@@ -1211,7 +1280,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 		Server.PrintToChatAll(sb.ToString());
 
-		VoteInProgress = true;
+		voteInProgress = true;
 
 		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV))
 		{
@@ -1225,14 +1294,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			sb.Append(_localizer["sa_admin_vote_message_results", question]);
 			Server.PrintToChatAll(sb.ToString());
 
-			foreach (KeyValuePair<string, int> kvp in answers)
+			foreach (KeyValuePair<string, int> kvp in voteAnswers)
 			{
 				sb = new(_localizer!["sa_prefix"]);
 				sb.Append(_localizer["sa_admin_vote_message_results_answer", kvp.Key, kvp.Value]);
 				Server.PrintToChatAll(sb.ToString());
 			}
-			answers.Clear();
-			VoteInProgress = false;
+			voteAnswers.Clear();
+			voteInProgress = false;
 
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 

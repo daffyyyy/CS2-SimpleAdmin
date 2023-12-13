@@ -25,6 +25,34 @@ public static class PlayerUtils
 		return AdminManager.CanPlayerTarget(controller, target);
 	}
 
+	public static void SetHp(this CCSPlayerController controller, int health = 100)
+	{
+		if (health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null) return;
+
+		controller.Health = health;
+		controller.PlayerPawn.Value.Health = health;
+
+		if (health > 100)
+		{
+			controller.MaxHealth = health;
+			controller.PlayerPawn.Value.MaxHealth = health;
+		}
+
+		var weaponServices = controller.PlayerPawn.Value!.WeaponServices;
+		if (weaponServices == null) return;
+
+		controller.GiveNamedItem("weapon_healthshot");
+
+		foreach (var weapon in weaponServices.MyWeapons)
+		{
+			if (weapon != null && weapon.IsValid && weapon.Value!.DesignerName == "weapon_healthshot")
+			{
+				weapon.Value.Remove();
+				break;
+			}
+		}
+	}
+
 	public static void Bury(this CBasePlayerPawn pawn, float depth = 10f)
 	{
 		var newPos = new Vector(pawn.AbsOrigin!.X, pawn.AbsOrigin.Y,
