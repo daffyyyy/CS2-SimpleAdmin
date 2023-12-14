@@ -16,7 +16,7 @@ using System.Collections.Concurrent;
 using System.Text;
 
 namespace CS2_SimpleAdmin;
-[MinimumApiVersion(124)]
+[MinimumApiVersion(126)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static IStringLocalizer? _localizer;
@@ -31,7 +31,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.2a";
+	public override string ModuleVersion => "1.2.3a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -202,15 +202,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
 
+		caller!.PrintToConsole($"--------- PLAYER LIST ---------");
 		playersToTarget.ForEach(player =>
 		{
-			caller!.PrintToConsole($"--------- PLAYER LIST ---------");
-
 			caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
 
-			caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
-
 		});
+		caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
 	}
 
 	[ConsoleCommand("css_kick")]
@@ -624,7 +622,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				Server.PrintToChatAll(sb.ToString());
 			}
 		});
-
 	}
 
 	[ConsoleCommand("css_addmute")]
@@ -1114,6 +1111,25 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
+	[ConsoleCommand("css_strip")]
+	[RequiresPermissions("@css/slay")]
+	[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnStripCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		TargetResult? targets = GetTarget(command);
+		if (targets == null) return;
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.PawnIsAlive).ToList();
+
+		playersToTarget.ForEach(player =>
+		{
+			player.RemoveWeapons();
+
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_strip_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		});
+	}
+
 	[ConsoleCommand("css_hp")]
 	[RequiresPermissions("@css/slay")]
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
@@ -1232,6 +1248,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				teamNum = CsTeam.Terrorist;
 				_teamName = "TT";
 				break;
+			case "swap":
+				_teamName = "SWAP";
+				break;
 			default:
 				teamNum = CsTeam.Spectator;
 				_teamName = "SPEC";
@@ -1240,17 +1259,32 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		playersToTarget.ForEach(player =>
 		{
-			if (player.TeamNum != ((byte)teamNum))
+			if (!teamName.Equals("swap"))
 			{
-				if (player.PawnIsAlive && command.GetArg(3) == null && teamNum != CsTeam.Spectator)
+				if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !command.GetArg(3).ToLower().Equals("-k"))
 					player.SwitchTeam(teamNum);
 				else
 					player.ChangeTeam(teamNum);
-
-				StringBuilder sb = new(_localizer!["sa_prefix"]);
-				sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, _teamName]);
-				Server.PrintToChatAll(sb.ToString());
 			}
+			else
+			{
+				if (player.TeamNum != (byte)CsTeam.Spectator)
+				{
+					CsTeam teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+					_teamName = teamNum == CsTeam.Terrorist ? "TT" : "CT";
+					if (player.PawnIsAlive && !command.GetArg(3).ToLower().Equals("-k"))
+					{
+						player.SwitchTeam(teamNum);
+					}
+					else
+					{
+						player.ChangeTeam(teamNum);
+					}
+				}
+			}
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, _teamName]);
+			Server.PrintToChatAll(sb.ToString());
 		});
 	}
 

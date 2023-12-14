@@ -153,7 +153,7 @@ public partial class CS2_SimpleAdmin
 							if (TagsDetected)
 								NativeAPI.IssueServerCommand($"css_tag_mute {player.Index}");
 
-							if (duration.Minutes >= 0 && duration.Minutes <= 30)
+							if (durationInSeconds != 0 && duration.Minutes >= 0 && duration.Minutes <= 30)
 							{
 								AddTimer(durationInSeconds, () =>
 								{
@@ -195,7 +195,7 @@ public partial class CS2_SimpleAdmin
 							// Voice mute
 							player.VoiceFlags = VoiceFlags.Muted;
 
-							if (duration.Minutes >= 0 && duration.Minutes <= 30)
+							if (durationInSeconds != 0 && duration.Minutes >= 0 && duration.Minutes <= 30)
 							{
 								AddTimer(durationInSeconds, () =>
 								{

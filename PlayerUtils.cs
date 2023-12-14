@@ -38,7 +38,7 @@ public static class PlayerUtils
 			controller.PlayerPawn.Value.MaxHealth = health;
 		}
 
-		var weaponServices = controller.PlayerPawn.Value!.WeaponServices;
+		CPlayer_WeaponServices? weaponServices = controller.PlayerPawn.Value!.WeaponServices;
 		if (weaponServices == null) return;
 
 		controller.GiveNamedItem("weapon_healthshot");
