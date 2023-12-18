@@ -17,7 +17,6 @@ namespace CS2_SimpleAdmin
 		{
 			if (_adminCache.ContainsKey(steamId))
 			{
-				Console.WriteLine("From cache");
 				return _adminCache[steamId].Select(flag => (dynamic)flag).ToList();
 			}
 			else
