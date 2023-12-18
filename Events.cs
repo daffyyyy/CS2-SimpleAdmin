@@ -127,6 +127,9 @@ public partial class CS2_SimpleAdmin
 			MuteManager _muteManager = new(dbConnectionString);
 			List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId!);
 
+			AdminSQLManager _adminManager = new(dbConnectionString);
+			List<dynamic> activeFlags = await _adminManager.GetAdminFlags(playerInfo.SteamId!);
+
 			Server.NextFrame(() =>
 			{
 				if (player == null || !player.IsValid) return;
@@ -218,6 +221,36 @@ public partial class CS2_SimpleAdmin
 						}
 					}
 				}
+
+				if (activeFlags != null && activeFlags.Count > 0)
+				{
+					foreach (var flags in activeFlags)
+					{
+						if (flags == null) continue;
+						string flagsValue = flags.flags.ToString();
+
+						if (!string.IsNullOrEmpty(flagsValue))
+						{
+							string[] _flags = flagsValue.Split(",");
+
+							AddTimer(10, () =>
+							{
+								if (player == null) return;
+								foreach (var _flag in _flags)
+								{
+									if (_flag.StartsWith("@"))
+									{
+										AdminManager.AddPlayerPermissions(player, _flag);
+									}
+									if (_flag.StartsWith("3"))
+									{
+										AdminManager.AddPlayerToGroup(player, _flag);
+									}
+								}
+							});
+						}
+					}
+				}
 			});
 		});
 	}
@@ -261,6 +294,8 @@ public partial class CS2_SimpleAdmin
 			_ = _banManager.ExpireOldBans();
 			MuteManager _muteManager = new(dbConnectionString);
 			_ = _muteManager.ExpireOldMutes();
+			AdminSQLManager _adminManager = new(dbConnectionString);
+			_ = _adminManager.DeleteOldAdmins();
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 		string? path = Path.GetDirectoryName(ModuleDirectory);

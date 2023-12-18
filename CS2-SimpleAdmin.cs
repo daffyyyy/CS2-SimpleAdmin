@@ -16,7 +16,7 @@ using System.Collections.Concurrent;
 using System.Text;
 
 namespace CS2_SimpleAdmin;
-[MinimumApiVersion(126)]
+[MinimumApiVersion(124)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static IStringLocalizer? _localizer;
@@ -29,9 +29,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
-	public override string ModuleDescription => "";
+	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.3a";
+	public override string ModuleVersion => "1.2.4a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -104,6 +104,20 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				command = new MySqlCommand(sql, connection);
 				command.ExecuteNonQuery();
 
+				sql = @"CREATE TABLE IF NOT EXISTS `sa_admins` (
+						 `id` int(11) NOT NULL AUTO_INCREMENT,
+						 `player_steamid` varchar(64) NOT NULL,
+						 `player_name` varchar(128) NOT NULL,
+						 `flags` TEXT,
+						 `immunity` varchar(64) NOT NULL DEFAULT '0',
+						 `ends` timestamp,
+						 `created` timestamp NOT NULL,
+						 PRIMARY KEY (`id`)
+						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+				command = new MySqlCommand(sql, connection);
+				command.ExecuteNonQuery();
+
 				connection.Close();
 			}
 		}
@@ -130,6 +144,60 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			caller.PrintToChat(Helper.ReplaceTags($" {line}"));
 		}
+	}
+
+	[ConsoleCommand("css_addadmin")]
+	[CommandHelper(minArgs: 4, usage: "<steamid> <name> <flags/groups> <immunity> <duration>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[RequiresPermissions("@css/root")]
+	public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!Helper.IsValidSteamID64(command.GetArg(1)))
+		{
+			command.ReplyToCommand($"Invalid SteamID64.");
+			return;
+		}
+		if (command.GetArg(2).Length <= 0)
+		{
+			command.ReplyToCommand($"Invalid player name.");
+			return;
+		}
+		if (!command.GetArg(3).Contains("@") && !command.GetArg(3).Contains("#"))
+		{
+			command.ReplyToCommand($"Invalid player name.");
+			return;
+		}
+
+		string steamid = command.GetArg(1);
+		string name = command.GetArg(2);
+		string flags = command.GetArg(3);
+		int immunity = 0;
+		int.TryParse(command.GetArg(4), out immunity);
+		int time = 0;
+		int.TryParse(command.GetArg(5), out time);
+
+		AdminSQLManager _adminManager = new(dbConnectionString);
+		_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time);
+
+		command.ReplyToCommand($"Added '{flags}' flags to '{name}' ({steamid})");
+	}
+
+	[ConsoleCommand("css_deladmin")]
+	[CommandHelper(minArgs: 1, usage: "<steamid>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[RequiresPermissions("@css/root")]
+	public void OnDelAdminCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (!Helper.IsValidSteamID64(command.GetArg(1)))
+		{
+			command.ReplyToCommand($"Invalid SteamID64.");
+			return;
+		}
+
+		string steamid = command.GetArg(1);
+
+		AdminSQLManager _adminManager = new(dbConnectionString);
+		_ = _adminManager.DeleteAdminBySteamId(steamid);
+
+		command.ReplyToCommand($"Removed flags from '{steamid}'");
 	}
 
 	[ConsoleCommand("css_who")]
@@ -163,30 +231,56 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				totalBans = await _banManager.GetPlayerBans(playerInfo);
 				totalMutes = await _muteManager.GetPlayerMutes(playerInfo.SteamId!);
 
-
 				Server.NextFrame(() =>
 				{
-					caller!.PrintToConsole($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
-
-					caller!.PrintToConsole($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
-					caller!.PrintToConsole($"• UserID: \"{playerInfo.UserId}\"");
-					if (playerInfo.SteamId != null)
-						caller!.PrintToConsole($"• SteamID64: \"{playerInfo.SteamId}\"");
-					if (player.AuthorizedSteamID != null)
+					if (caller != null)
 					{
-						caller!.PrintToConsole($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
-						caller!.PrintToConsole($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
-					}
-					if (playerInfo.IpAddress != null)
-						caller!.PrintToConsole($"• IP Address: \"{playerInfo.IpAddress}\"");
-					caller!.PrintToConsole($"• Ping: \"{player.Ping}\"");
-					if (player.AuthorizedSteamID != null)
-					{
-						caller!.PrintToConsole($"• Total Bans: \"{totalBans}\"");
-						caller!.PrintToConsole($"• Total Mutes: \"{totalMutes}\"");
-					}
+						caller!.PrintToConsole($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
 
-					caller!.PrintToConsole($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+						caller!.PrintToConsole($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+						caller!.PrintToConsole($"• UserID: \"{playerInfo.UserId}\"");
+						if (playerInfo.SteamId != null)
+							caller!.PrintToConsole($"• SteamID64: \"{playerInfo.SteamId}\"");
+						if (player.AuthorizedSteamID != null)
+						{
+							caller!.PrintToConsole($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
+							caller!.PrintToConsole($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
+						}
+						if (playerInfo.IpAddress != null)
+							caller!.PrintToConsole($"• IP Address: \"{playerInfo.IpAddress}\"");
+						caller!.PrintToConsole($"• Ping: \"{player.Ping}\"");
+						if (player.AuthorizedSteamID != null)
+						{
+							caller!.PrintToConsole($"• Total Bans: \"{totalBans}\"");
+							caller!.PrintToConsole($"• Total Mutes: \"{totalMutes}\"");
+						}
+
+						caller!.PrintToConsole($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+					}
+					else
+					{
+						Server.PrintToConsole($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
+
+						Server.PrintToConsole($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+						Server.PrintToConsole($"• UserID: \"{playerInfo.UserId}\"");
+						if (playerInfo.SteamId != null)
+							Server.PrintToConsole($"• SteamID64: \"{playerInfo.SteamId}\"");
+						if (player.AuthorizedSteamID != null)
+						{
+							Server.PrintToConsole($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
+							Server.PrintToConsole($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
+						}
+						if (playerInfo.IpAddress != null)
+							Server.PrintToConsole($"• IP Address: \"{playerInfo.IpAddress}\"");
+						Server.PrintToConsole($"• Ping: \"{player.Ping}\"");
+						if (player.AuthorizedSteamID != null)
+						{
+							Server.PrintToConsole($"• Total Bans: \"{totalBans}\"");
+							Server.PrintToConsole($"• Total Mutes: \"{totalMutes}\"");
+						}
+
+						Server.PrintToConsole($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+					}
 				});
 			});
 
@@ -202,13 +296,26 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
 
-		caller!.PrintToConsole($"--------- PLAYER LIST ---------");
-		playersToTarget.ForEach(player =>
+		if (caller != null)
 		{
-			caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
+			caller!.PrintToConsole($"--------- PLAYER LIST ---------");
+			playersToTarget.ForEach(player =>
+			{
+				caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
 
-		});
-		caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
+			});
+			caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
+		}
+		else
+		{
+			Server.PrintToConsole($"--------- PLAYER LIST ---------");
+			playersToTarget.ForEach(player =>
+			{
+				Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
+
+			});
+			Server.PrintToConsole($"--------- END PLAYER LIST ---------");
+		}
 	}
 
 	[ConsoleCommand("css_kick")]
@@ -1130,6 +1237,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
+
 	[ConsoleCommand("css_hp")]
 	[RequiresPermissions("@css/slay")]
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
@@ -1287,6 +1395,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(sb.ToString());
 		});
 	}
+
 
 	[ConsoleCommand("css_vote")]
 	[RequiresPermissions("@css/generic")]
