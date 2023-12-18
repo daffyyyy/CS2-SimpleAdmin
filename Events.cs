@@ -222,7 +222,37 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
-				if (activeFlags != null && activeFlags.Count > 0)
+				if (AdminSQLManager._adminCache.ContainsKey(playerInfo.SteamId!))
+				{
+					AddTimer(10, () =>
+					{
+						foreach (var flagsValue in AdminSQLManager._adminCache[playerInfo.SteamId!])
+						{
+							if (!string.IsNullOrEmpty(flagsValue))
+							{
+								string[] _flags = flagsValue.Split(',');
+
+								if (player == null) return;
+								foreach (var _flag in _flags)
+								{
+									if (_flag.StartsWith("@"))
+									{
+										AdminManager.AddPlayerPermissions(player, _flag);
+									}
+									if (_flag.StartsWith("#"))
+									{
+										AdminManager.AddPlayerToGroup(player, _flag);
+									}
+								}
+							}
+						}
+					});
+				}
+
+
+				/*
+
+				if (_adminManager._adminCache != null && _adminManager._adminCache.Count > 0)
 				{
 					foreach (var flags in activeFlags)
 					{
@@ -250,7 +280,8 @@ public partial class CS2_SimpleAdmin
 							});
 						}
 					}
-				}
+			}
+				*/
 			});
 		});
 	}
@@ -280,6 +311,14 @@ public partial class CS2_SimpleAdmin
 		if (GodPlayers.Contains((int)player.Index))
 		{
 			GodPlayers.Remove((int)player.Index);
+		}
+
+		if (player.AuthorizedSteamID != null)
+		{
+			if (AdminSQLManager._adminCache.ContainsKey(player.AuthorizedSteamID.SteamId64.ToString()))
+			{
+				AdminSQLManager._adminCache.Remove(player.AuthorizedSteamID.SteamId64.ToString());
+			}
 		}
 
 		if (TagsDetected)

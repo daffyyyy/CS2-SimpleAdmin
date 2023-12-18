@@ -1,12 +1,12 @@
 ﻿using Dapper;
 using MySqlConnector;
-using System.Collections.Generic;
 
 namespace CS2_SimpleAdmin
 {
 	internal class AdminSQLManager
 	{
 		private readonly MySqlConnection _dbConnection;
+		public static readonly Dictionary<string, List<string>> _adminCache = new Dictionary<string, List<string>>();
 
 		public AdminSQLManager(string connectionString)
 		{
@@ -15,20 +15,38 @@ namespace CS2_SimpleAdmin
 
 		public async Task<List<dynamic>> GetAdminFlags(string steamId)
 		{
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			if (_adminCache.ContainsKey(steamId))
+			{
+				Console.WriteLine("From cache");
+				return _adminCache[steamId].Select(flag => (dynamic)flag).ToList();
+			}
+			else
+			{
+				await using var connection = _dbConnection;
+				await connection.OpenAsync();
 
-			DateTime now = DateTime.Now;
+				DateTime now = DateTime.Now;
 
-			string sql = "SELECT flags FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime)";
-			List<dynamic> activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
+				string sql = "SELECT flags FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime)";
+				List<dynamic> activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
 
-			return activeFlags;
+				_adminCache[steamId] = new List<string>();
+				foreach (var flags in activeFlags)
+				{
+					if (flags == null) continue;
+					string flagsValue = flags.flags.ToString();
+					_adminCache[steamId].Add(flagsValue);
+				}
+			}
+			return _adminCache[steamId].Select(flag => (dynamic)flag).ToList();
 		}
 
 		public async Task DeleteAdminBySteamId(string playerSteamId)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
+
+			if (_adminCache.ContainsKey(playerSteamId))
+				_adminCache.Remove(playerSteamId);
 
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
