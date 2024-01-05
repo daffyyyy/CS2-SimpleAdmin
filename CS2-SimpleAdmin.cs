@@ -16,7 +16,8 @@ using System.Collections.Concurrent;
 using System.Text;
 
 namespace CS2_SimpleAdmin;
-[MinimumApiVersion(124)]
+
+[MinimumApiVersion(142)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static IStringLocalizer? _localizer;
@@ -31,7 +32,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.4b";
+	public override string ModuleVersion => "1.2.5a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -125,7 +126,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			Logger.LogError("Unable to connect to database!");
 			Logger.LogDebug(ex.Message);
-			throw new Exception("[CS2-SimpleAdmin] Unable to connect to Database!" + ex.Message);
+			throw new Exception("[CS2-SimpleAdmin] Unable to connect to Database!");
 		}
 
 		Config = config;
@@ -283,7 +284,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					}
 				});
 			});
-
 		});
 	}
 
@@ -294,7 +294,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	{
 		TargetResult? targets = GetTarget(command);
 		if (targets == null) return;
-		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
+		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.Connected == PlayerConnectedState.PlayerConnected && !player.IsHLTV).ToList();
 
 		if (caller != null)
 		{
@@ -302,7 +302,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			playersToTarget.ForEach(player =>
 			{
 				caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
-
 			});
 			caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
 		}
@@ -312,7 +311,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			playersToTarget.ForEach(player =>
 			{
 				Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
-
 			});
 			Server.PrintToConsole($"--------- END PLAYER LIST ---------");
 		}
@@ -1020,7 +1018,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = caller?.IpAddress?.Split(":")[0]
 		};
 
-
 		List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 		if (matches.Count == 1)
 		{
@@ -1237,7 +1234,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
-
 	[ConsoleCommand("css_hp")]
 	[RequiresPermissions("@css/slay")]
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
@@ -1274,8 +1270,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		playersToTarget.ForEach(player =>
 		{
+			/*
 			player.Speed = (float)speed;
 			player.PlayerPawn.Value!.Speed = (float)speed;
+			*/
+			player.SetSpeed((float)speed);
 
 			StringBuilder sb = new(_localizer!["sa_prefix"]);
 			sb.Append(_localizer["sa_admin_speed_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
@@ -1350,15 +1349,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				teamNum = CsTeam.CounterTerrorist;
 				_teamName = "CT";
 				break;
+
 			case "t":
 			case "tt":
 			case "terrorist":
 				teamNum = CsTeam.Terrorist;
 				_teamName = "TT";
 				break;
+
 			case "swap":
 				_teamName = "SWAP";
 				break;
+
 			default:
 				teamNum = CsTeam.Spectator;
 				_teamName = "SPEC";
@@ -1395,7 +1397,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(sb.ToString());
 		});
 	}
-
 
 	[ConsoleCommand("css_vote")]
 	[RequiresPermissions("@css/generic")]
@@ -1445,7 +1446,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			}
 			voteAnswers.Clear();
 			voteInProgress = false;
-
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 		return;
@@ -1502,8 +1502,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	{
 		if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
 
+		byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
+		string utf8String = Encoding.UTF8.GetString(utf8BytesString);
+
 		StringBuilder sb = new();
-		sb.Append(_localizer!["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, command.GetCommandString[command.GetCommandString.IndexOf(' ')..]]);
+		sb.Append(_localizer!["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, utf8String]);
 
 		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 		{
@@ -1516,8 +1519,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
+
+		byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
+		string utf8String = Encoding.UTF8.GetString(utf8BytesString);
+
 		StringBuilder sb = new();
-		sb.Append(_localizer!["sa_adminsay_prefix", command.GetCommandString[command.GetCommandString.IndexOf(' ')..]]);
+		sb.Append(_localizer!["sa_adminsay_prefix", utf8String]);
 		Server.PrintToChatAll(sb.ToString());
 	}
 
@@ -1533,9 +1541,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int range = command.GetArg(0).Length + command.GetArg(1).Length + 2;
 		string message = command.GetCommandString[range..];
 
+		byte[] utf8BytesString = Encoding.UTF8.GetBytes(message);
+		string utf8String = Encoding.UTF8.GetString(utf8BytesString);
+
 		playersToTarget.ForEach(player =>
 		{
-			player.PrintToChat(Helper.ReplaceTags($"({caller!.PlayerName}) {message}"));
+			player.PrintToChat(Helper.ReplaceTags($"({caller!.PlayerName}) {utf8String}"));
 		});
 
 		command.ReplyToCommand(Helper.ReplaceTags($" Private message sent!"));
@@ -1546,7 +1557,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminCenterSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		Helper.PrintToCenterAll(Helper.ReplaceTags(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]));
+		byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
+		string utf8String = Encoding.UTF8.GetString(utf8BytesString);
+
+		Helper.PrintToCenterAll(Helper.ReplaceTags(utf8String));
 	}
 
 	[ConsoleCommand("css_hsay", "Say to all players (in hud).")]
@@ -1554,9 +1568,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/chat")]
 	public void OnAdminHudSayCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
+		string utf8String = Encoding.UTF8.GetString(utf8BytesString);
+
 		VirtualFunctions.ClientPrintAll(
 			HudDestination.Alert,
-			Helper.ReplaceTags(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]),
+			Helper.ReplaceTags(utf8String),
 			0, 0, 0, 0);
 	}
 
@@ -1701,6 +1718,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			case TargetResult.None:
 				command.ReplyToCommand($"Target {command.GetArg(1)} not found.");
 				return false;
+
 			case TargetResult.Multiple:
 				command.ReplyToCommand($"Multiple targets found for \"{command.GetArg(1)}\".");
 				return false;
@@ -1710,4 +1728,3 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		*/
 	}
 }
-

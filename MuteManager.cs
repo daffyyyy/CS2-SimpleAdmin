@@ -1,5 +1,4 @@
 ﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using MySqlConnector;
 using System.Data;
@@ -188,7 +187,5 @@ namespace CS2_SimpleAdmin
 				}
 			}
 		}
-
-
 	}
 }

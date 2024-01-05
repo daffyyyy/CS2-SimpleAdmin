@@ -24,6 +24,7 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("KickTime")]
 		public int KickTime { get; set; } = 10;
+
 		[JsonPropertyName("DisableDangerousCommands")]
 		public bool DisableDangerousCommands { get; set; } = true;
 	}

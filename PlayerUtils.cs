@@ -1,6 +1,5 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 
@@ -12,6 +11,7 @@ public static class PlayerUtils
 	{
 		PerformSlap(pawn, damage);
 	}
+
 	public static void Print(this CCSPlayerController controller, string message = "")
 	{
 		StringBuilder _message = new(CS2_SimpleAdmin._localizer!["sa_prefix"]);
@@ -23,6 +23,14 @@ public static class PlayerUtils
 	{
 		if (target.IsBot) return true;
 		return AdminManager.CanPlayerTarget(controller, target);
+	}
+
+	public static void SetSpeed(this CCSPlayerController controller, float speed)
+	{
+		CCSPlayerPawn? playerPawnValue = controller.PlayerPawn.Value;
+		if (playerPawnValue == null) return;
+
+		playerPawnValue.VelocityModifier = speed;
 	}
 
 	public static void SetHp(this CCSPlayerController controller, int health = 100)

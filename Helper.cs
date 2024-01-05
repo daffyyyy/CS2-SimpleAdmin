@@ -1,9 +1,10 @@
-﻿using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin
 {
@@ -44,6 +45,35 @@ namespace CS2_SimpleAdmin
 			string pattern = @"^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 
 			return Regex.IsMatch(input, pattern);
+		}
+
+		public static void GivePlayerFlags(CCSPlayerController player, dynamic flags)
+		{
+			if (player == null) return;
+
+			foreach (var flagsValue in flags)
+			{
+				if (!string.IsNullOrEmpty(flagsValue))
+				{
+					string[] _flags = flagsValue.Split(',');
+					Console.WriteLine(flagsValue);
+
+					foreach (var _flag in _flags)
+					{
+						Server.NextFrame(() =>
+						{
+							if (_flag.StartsWith("@"))
+							{
+								AdminManager.AddPlayerPermissions(player, _flag);
+							}
+							if (_flag.StartsWith("#"))
+							{
+								AdminManager.AddPlayerToGroup(player, _flag);
+							}
+						});
+					}
+				}
+			}
 		}
 
 		/*
@@ -105,6 +135,5 @@ namespace CS2_SimpleAdmin
 			if (CS2_SimpleAdmin.voteInProgress)
 				CS2_SimpleAdmin.voteAnswers[option.Text]++;
 		}
-
 	}
 }

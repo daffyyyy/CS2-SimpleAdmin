@@ -11,6 +11,7 @@ namespace CS2_SimpleAdmin
 		{
 			_dbConnection = new MySqlConnection(connectionString);
 		}
+
 		public async Task BanPlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0)
 		{
 			DateTime now = DateTime.Now;

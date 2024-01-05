@@ -7,11 +7,13 @@ using System.Text;
 using static CounterStrikeSharp.API.Core.Listeners;
 
 namespace CS2_SimpleAdmin;
+
 public partial class CS2_SimpleAdmin
 {
 	private void registerEvents()
 	{
 		RegisterListener<OnClientAuthorized>(OnClientAuthorized);
+		//RegisterEventHandler<EventPlayerConnectFull>(OnPlayerFullConnect);
 		RegisterListener<OnClientDisconnect>(OnClientDisconnect);
 		RegisterListener<OnMapStart>(OnMapStart);
 		RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
@@ -20,6 +22,32 @@ public partial class CS2_SimpleAdmin
 		AddCommandListener("say_team", OnCommandTeamSay);
 		AddCommandListener("callvote", OnCommandCallVote);
 	}
+
+	/*private HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
+	{
+		CCSPlayerController? player = @event.Userid;
+
+		if (player == null || player.IsBot || player.IsHLTV) return HookResult.Continue;
+
+		PlayerInfo playerInfo = new PlayerInfo
+		{
+			UserId = player.UserId,
+			Index = (int)player.Index,
+			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = player?.PlayerName,
+			IpAddress = player?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			Server.NextFrame(() =>
+			{
+				if (player == null) return;
+			});
+		});
+		return HookResult.Continue;
+	}
+	*/
 
 	private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
 	{
@@ -100,15 +128,6 @@ public partial class CS2_SimpleAdmin
 		if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
 			return;
 
-		if (player.AuthorizedSteamID == null)
-		{
-			AddTimer(3.0f, () =>
-			{
-				OnClientAuthorized(playerSlot, steamID);
-			});
-			return;
-		}
-
 		PlayerInfo playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId,
@@ -120,7 +139,6 @@ public partial class CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			if (player == null || !player.IsValid) return;
 			BanManager _banManager = new(dbConnectionString);
 			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
@@ -178,7 +196,6 @@ public partial class CS2_SimpleAdmin
 								}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 							}
 
-
 							/*
 							CCSPlayerController currentPlayer = player;
 
@@ -222,33 +239,7 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
-				if (AdminSQLManager._adminCache.ContainsKey(playerInfo.SteamId!))
-				{
-					AddTimer(10, () =>
-					{
-						foreach (var flagsValue in AdminSQLManager._adminCache[playerInfo.SteamId!])
-						{
-							if (!string.IsNullOrEmpty(flagsValue))
-							{
-								string[] _flags = flagsValue.Split(',');
-
-								if (player == null) return;
-								foreach (var _flag in _flags)
-								{
-									if (_flag.StartsWith("@"))
-									{
-										AdminManager.AddPlayerPermissions(player, _flag);
-									}
-									if (_flag.StartsWith("#"))
-									{
-										AdminManager.AddPlayerToGroup(player, _flag);
-									}
-								}
-							}
-						}
-					});
-				}
-
+				AddTimer(14, () => Helper.GivePlayerFlags(player, activeFlags));
 
 				/*
 
@@ -315,10 +306,10 @@ public partial class CS2_SimpleAdmin
 
 		if (player.AuthorizedSteamID != null)
 		{
-			if (AdminSQLManager._adminCache.ContainsKey(player.AuthorizedSteamID.SteamId64.ToString()))
-			{
-				AdminSQLManager._adminCache.Remove(player.AuthorizedSteamID.SteamId64.ToString());
-			}
+			//string steamIdString = player.AuthorizedSteamID.SteamId64.ToString();
+
+			//AdminSQLManager._adminCache.TryRemove(steamIdString, out _);
+			AdminManager.RemovePlayerPermissions(player);
 		}
 
 		if (TagsDetected)

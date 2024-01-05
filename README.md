@@ -53,7 +53,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 ```
 
 ### Requirments
-[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v90**
+[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v142**
 
 ### Configuration
 After first launch, u need to configure plugin in  addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json

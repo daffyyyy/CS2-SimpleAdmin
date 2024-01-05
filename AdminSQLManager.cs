@@ -6,13 +6,15 @@ namespace CS2_SimpleAdmin
 	internal class AdminSQLManager
 	{
 		private readonly MySqlConnection _dbConnection;
-		public static readonly Dictionary<string, List<string>> _adminCache = new Dictionary<string, List<string>>();
+		// Unused for now
+		//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
 
 		public AdminSQLManager(string connectionString)
 		{
 			_dbConnection = new MySqlConnection(connectionString);
 		}
 
+		/*
 		public async Task<List<dynamic>> GetAdminFlags(string steamId)
 		{
 			if (_adminCache.ContainsKey(steamId))
@@ -26,7 +28,7 @@ namespace CS2_SimpleAdmin
 
 				DateTime now = DateTime.Now;
 
-				string sql = "SELECT flags FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime)";
+				string sql = "SELECT flags, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime)";
 				List<dynamic> activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
 
 				_adminCache[steamId] = new List<string>();
@@ -39,13 +41,91 @@ namespace CS2_SimpleAdmin
 			}
 			return _adminCache[steamId].Select(flag => (dynamic)flag).ToList();
 		}
+		*/
+
+		public async Task<List<object>> GetAdminFlags(string steamId)
+		{
+			/* Unused for now
+			if (_adminCache.TryGetValue(steamId, out ConcurrentBag<string>? cachedFlags))
+			{
+				return cachedFlags.ToList<object>();
+			}
+			*/
+			DateTime now = DateTime.Now;
+
+			await using var connection = _dbConnection;
+			await connection.OpenAsync();
+
+			string sql = "SELECT flags, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime)";
+			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now }))?.ToList();
+
+			if (activeFlags == null)
+			{
+				return new List<object>();
+			}
+
+			List<string> filteredFlags = new List<string>();
+
+			foreach (var flags in activeFlags)
+			{
+				if (flags == null) continue;
+
+				string flag = flags.flags.ToString();
+				if (flag != null)
+				{
+					filteredFlags.Add(flag);
+				}
+			}
+
+			/* Unused for now
+			bool shouldCache = activeFlags.Any(flags =>
+			{
+				if (flags?.ends == null)
+				{
+					return true;
+				}
+
+				if (flags.ends is DateTime endsTime)
+				{
+					return (endsTime - now).TotalHours > 1;
+				}
+
+				return false;
+			});
+
+			if (shouldCache)
+			{
+				List<string> flagsToCache = new List<string>();
+
+				foreach (var flags in activeFlags)
+				{
+					if (flags.ends == null || (DateTime.Now - (DateTime)flags.ends).TotalHours > 6)
+					{
+						if (flags == null) continue;
+						flagsToCache.Add(flags.flags.ToString());
+					}
+				}
+
+				_adminCache.AddOrUpdate(steamId, new ConcurrentBag<string>(flagsToCache), (_, existingBag) =>
+				{
+					foreach (var flag in flagsToCache)
+					{
+						existingBag.Add(flag);
+					}
+					return existingBag;
+				});
+				return flagsToCache.Cast<object>().ToList();
+			}
+			*/
+
+			return filteredFlags.Cast<object>().ToList();
+		}
 
 		public async Task DeleteAdminBySteamId(string playerSteamId)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
-			if (_adminCache.ContainsKey(playerSteamId))
-				_adminCache.Remove(playerSteamId);
+			//_adminCache.TryRemove(playerSteamId, out _);
 
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
