@@ -47,33 +47,30 @@ namespace CS2_SimpleAdmin
 			return Regex.IsMatch(input, pattern);
 		}
 
-		public static void GivePlayerFlags(CCSPlayerController player, dynamic flags)
+		public static void GivePlayerFlags(CCSPlayerController player, List<(List<string>, int)> flagsWithImmunity)
 		{
 			if (player == null) return;
 
-			foreach (var flagsValue in flags)
+			foreach (var (flags, immunity) in flagsWithImmunity)
 			{
-				if (!string.IsNullOrEmpty(flagsValue))
-				{
-					string[] _flags = flagsValue.Split(',');
-					Console.WriteLine(flagsValue);
+				AdminManager.SetPlayerImmunity(player, (uint)immunity);
 
-					foreach (var _flag in _flags)
+				foreach (var flag in flags)
+				{
+					if (!string.IsNullOrEmpty(flag))
 					{
-						Server.NextFrame(() =>
+						if (flag.StartsWith("@"))
 						{
-							if (_flag.StartsWith("@"))
-							{
-								AdminManager.AddPlayerPermissions(player, _flag);
-							}
-							if (_flag.StartsWith("#"))
-							{
-								AdminManager.AddPlayerToGroup(player, _flag);
-							}
-						});
+							AdminManager.AddPlayerPermissions(player, flag);
+						}
+						else if (flag.StartsWith("#"))
+						{
+							AdminManager.AddPlayerToGroup(player, flag);
+						}
 					}
 				}
 			}
+
 		}
 
 		/*

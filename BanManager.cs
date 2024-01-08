@@ -20,8 +20,8 @@ namespace CS2_SimpleAdmin
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
 
-			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
-				"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
+			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
+				"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -33,7 +33,8 @@ namespace CS2_SimpleAdmin
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
-				created = now
+				created = now,
+				serverid = CS2_SimpleAdmin.ServerId
 			});
 		}
 
@@ -47,8 +48,8 @@ namespace CS2_SimpleAdmin
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
 
-			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
-				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
+			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
+				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -58,7 +59,8 @@ namespace CS2_SimpleAdmin
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
-				created = now
+				created = now,
+				serverid = CS2_SimpleAdmin.ServerId
 			});
 		}
 
@@ -72,8 +74,8 @@ namespace CS2_SimpleAdmin
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
 
-			var sql = "INSERT INTO `sa_bans` (`player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`) " +
-				"VALUES (@playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created)";
+			var sql = "INSERT INTO `sa_bans` (`player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
+				"VALUES (@playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -83,7 +85,8 @@ namespace CS2_SimpleAdmin
 				banReason = reason,
 				duration = time,
 				ends = futureTime,
-				created = now
+				created = now,
+				serverid = CS2_SimpleAdmin.ServerId
 			});
 		}
 

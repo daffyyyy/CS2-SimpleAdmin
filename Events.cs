@@ -2,7 +2,10 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
+using Dapper;
+using MySqlConnector;
 using System.Text;
 using static CounterStrikeSharp.API.Core.Listeners;
 
@@ -139,6 +142,7 @@ public partial class CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
+
 			BanManager _banManager = new(dbConnectionString);
 			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
@@ -146,7 +150,7 @@ public partial class CS2_SimpleAdmin
 			List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId!);
 
 			AdminSQLManager _adminManager = new(dbConnectionString);
-			List<dynamic> activeFlags = await _adminManager.GetAdminFlags(playerInfo.SteamId!);
+			List<(List<string>, int)> activeFlags = await _adminManager.GetAdminFlags(playerInfo.SteamId!);
 
 			Server.NextFrame(() =>
 			{
@@ -239,7 +243,7 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
-				AddTimer(14, () => Helper.GivePlayerFlags(player, activeFlags));
+				AddTimer(6, () => Helper.GivePlayerFlags(player, activeFlags));
 
 				/*
 
@@ -332,6 +336,24 @@ public partial class CS2_SimpleAdmin
 		if (Directory.Exists(path + "/CS2-Tags"))
 		{
 			TagsDetected = true;
+		}
+
+		using (var connection = new MySqlConnection(dbConnectionString))
+		{
+			connection.Open();
+
+			connection.Execute(
+				"INSERT INTO `sa_servers` (address, hostname) VALUES (@address, @hostname) " +
+				"ON DUPLICATE KEY UPDATE hostname = @hostname",
+				new { address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}", hostname = ConVar.Find("hostname")!.StringValue });
+
+			int? serverId = connection.ExecuteScalar<int>(
+				"SELECT `id` FROM `sa_servers` WHERE `address` = @address",
+				new { address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}" });
+
+			ServerId = serverId;
+
+			connection.Close();
 		}
 	}
 

@@ -28,8 +28,8 @@ namespace CS2_SimpleAdmin
 			if (type == 1)
 				muteType = "MUTE";
 
-			var sql = "INSERT INTO `sa_mutes` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`) " +
-				"VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @type)";
+			var sql = "INSERT INTO `sa_mutes` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
+				"VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @type, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -42,6 +42,7 @@ namespace CS2_SimpleAdmin
 				ends = futureTime,
 				created = now,
 				type = muteType,
+				serverid = CS2_SimpleAdmin.ServerId
 			});
 		}
 
@@ -59,8 +60,8 @@ namespace CS2_SimpleAdmin
 			if (type == 1)
 				muteType = "MUTE";
 
-			var sql = "INSERT INTO `sa_mutes` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`) " +
-				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @type)";
+			var sql = "INSERT INTO `sa_mutes` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
+				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @type, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -71,7 +72,8 @@ namespace CS2_SimpleAdmin
 				duration = time,
 				ends = futureTime,
 				created = now,
-				type = muteType
+				type = muteType,
+				serverid = CS2_SimpleAdmin.ServerId
 			});
 		}
 

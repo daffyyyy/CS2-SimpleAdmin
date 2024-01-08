@@ -27,12 +27,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static List<int> GodPlayers = new List<int>();
 	public static bool TagsDetected = false;
 	public static bool voteInProgress = false;
+	public static int? ServerId = null;
 
 	internal string dbConnectionString = string.Empty;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.5a";
+	public override string ModuleVersion => "1.2.6a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -81,6 +82,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                                 `duration` INT NOT NULL,
                                 `ends` TIMESTAMP NOT NULL,
                                 `created` TIMESTAMP NOT NULL,
+								`server_id` INT NULL,
                                 `status` ENUM('ACTIVE', 'UNBANNED', 'EXPIRED', '') NOT NULL DEFAULT 'ACTIVE'
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
@@ -98,6 +100,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 `ends` timestamp NOT NULL,
 						 `created` timestamp NOT NULL,
 						 `type` enum('GAG','MUTE','') NOT NULL DEFAULT 'GAG',
+						 `server_id` INT NULL,
 						 `status` enum('ACTIVE','UNMUTED','EXPIRED','') NOT NULL DEFAULT 'ACTIVE',
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
@@ -109,9 +112,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `player_steamid` varchar(64) NOT NULL,
 						 `player_name` varchar(128) NOT NULL,
-						 `flags` TEXT,
+						 `flags` TEXT NOT NULL,
 						 `immunity` varchar(64) NOT NULL DEFAULT '0',
-						 `ends` timestamp,
+						 `server_id` INT NULL,
+						 `ends` timestamp NULL,
 						 `created` timestamp NOT NULL,
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
