@@ -177,8 +177,8 @@ namespace CS2_SimpleAdmin
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
 
-			var sql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `flags`, `immunity`, `ends`, `created`) " +
-				"VALUES (@playerSteamid, @playerName, @flags, @immunity, @ends, @created)";
+			var sql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `flags`, `immunity`, `ends`, `created`, `server_id`) " +
+				"VALUES (@playerSteamid, @playerName, @flags, @immunity, @ends, @created, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -187,7 +187,8 @@ namespace CS2_SimpleAdmin
 				flags,
 				immunity,
 				ends = futureTime,
-				created = now
+				created = now,
+				serverid = CS2_SimpleAdmin.ServerId
 			});
 		}
 
