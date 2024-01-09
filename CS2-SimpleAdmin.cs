@@ -33,7 +33,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.6a";
+	public override string ModuleVersion => "1.2.6b";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -119,6 +119,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 `created` timestamp NOT NULL,
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
+
+				command = new MySqlCommand(sql, connection);
+				command.ExecuteNonQuery();
+
+				sql = @"CREATE TABLE `sa_servers` (
+						 `id` int(11) NOT NULL AUTO_INCREMENT,
+						 `address` varchar(64) NOT NULL,
+						 `hostname` varchar(64) NOT NULL,
+						 PRIMARY KEY (`id`),
+						 UNIQUE KEY `address` (`address`)
+						) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+						";
 
 				command = new MySqlCommand(sql, connection);
 				command.ExecuteNonQuery();
