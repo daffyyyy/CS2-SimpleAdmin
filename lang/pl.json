@@ -25,7 +25,7 @@
 	"sa_admin_changemap_message": "Admin {lightred}{0}{default} zmienił mapę na {lightred}{1}{default}!",
 	"sa_admin_noclip_message": "Admin {lightred}{0}{default} ustawił latanie dla {lightred}{1}{default}!",
 	"sa_admin_freeze_message": "Admin {lightred}{0}{default} zamroził {lightred}{1}{default}!",
-	"sa_admin_umfreeze_message": "Admin {lightred}{0}{default} odmroził {lightred}{1}{default}!",
+	"sa_admin_unfreeze_message": "Admin {lightred}{0}{default} odmroził {lightred}{1}{default}!",
 	"sa_admin_respawn_message": "Admin {lightred}{0}{default} odrodził {lightred}{1}{default}!",
 	"sa_admin_team_message": "Admin {lightred}{0}{default} przerzucił {lightred}{1}{default} do {lightred}{2}{default}!",
 	"sa_admin_vote_menu_title": "{lime}GŁOSOWANIE NA {gold}{0}",
