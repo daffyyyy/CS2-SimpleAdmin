@@ -16,6 +16,7 @@ public partial class CS2_SimpleAdmin
 	private void registerEvents()
 	{
 		RegisterListener<OnClientAuthorized>(OnClientAuthorized);
+		RegisterListener<OnClientConnected>(OnClientConnected);
 		//RegisterEventHandler<EventPlayerConnectFull>(OnPlayerFullConnect);
 		RegisterListener<OnClientDisconnect>(OnClientDisconnect);
 		RegisterListener<OnMapStart>(OnMapStart);
@@ -124,6 +125,38 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
+	private void OnClientConnected(int playerSlot)
+	{
+		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
+
+		if (player == null || !player.IsValid || player.IpAddress == null || loadedPlayers.Contains((int)player.Index) || player.IsBot || player.IsHLTV)
+			return;
+
+		PlayerInfo playerInfo = new PlayerInfo
+		{
+			UserId = player.UserId,
+			Index = (int)player.Index,
+			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = player?.PlayerName,
+			IpAddress = player?.IpAddress.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
+			Server.NextFrame(() =>
+			{
+				if (player == null || !player.IsValid) return;
+				if (isBanned)
+				{
+					Helper.KickPlayer((ushort)player.UserId!, "Banned");
+					return;
+				}
+			});
+		});
+	}
+
 	private void OnClientAuthorized(int playerSlot, SteamID steamID)
 	{
 		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
@@ -142,7 +175,6 @@ public partial class CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-
 			BanManager _banManager = new(dbConnectionString);
 			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
@@ -158,6 +190,7 @@ public partial class CS2_SimpleAdmin
 				if (isBanned)
 				{
 					Helper.KickPlayer((ushort)player.UserId!, "Banned");
+					Console.WriteLine("Authorized banned");
 					return;
 				}
 
@@ -277,6 +310,9 @@ public partial class CS2_SimpleAdmin
 					}
 			}
 				*/
+
+				if (!loadedPlayers.Contains((int)player.Index))
+					loadedPlayers.Add((int)player.Index);
 			});
 		});
 	}
@@ -307,6 +343,9 @@ public partial class CS2_SimpleAdmin
 		{
 			GodPlayers.Remove((int)player.Index);
 		}
+
+		if (loadedPlayers.Contains((int)player.Index))
+			loadedPlayers.Remove((int)player.Index);
 
 		if (player.AuthorizedSteamID != null)
 		{

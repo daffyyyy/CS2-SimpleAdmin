@@ -23,6 +23,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
+	public static List<int> loadedPlayers = new List<int>();
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
 	public static List<int> GodPlayers = new List<int>();
 	public static bool TagsDetected = false;
@@ -33,7 +34,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.6b";
+	public override string ModuleVersion => "1.2.6c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -123,7 +124,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				command = new MySqlCommand(sql, connection);
 				command.ExecuteNonQuery();
 
-				sql = @"CREATE TABLE `sa_servers` (
+				sql = @"CREATE TABLE IF NOT EXISTS `sa_servers` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `address` varchar(64) NOT NULL,
 						 `hostname` varchar(64) NOT NULL,
