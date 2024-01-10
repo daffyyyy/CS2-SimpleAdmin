@@ -53,8 +53,8 @@ Manage your Counter-Strike 2 server by simple commands :)
 ```
 
 ### Requirments
-[CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v142**
-MySQL **tested on MySQL (MariaDB) Server version: 10.11.4-MariaDB-1~deb12u1 Debian 12**
+- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v142**
+- MySQL **tested on MySQL (MariaDB) Server version: 10.11.4-MariaDB-1~deb12u1 Debian 12**
 
 
 ### Configuration
