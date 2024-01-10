@@ -54,6 +54,8 @@ Manage your Counter-Strike 2 server by simple commands :)
 
 ### Requirments
 [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v142**
+MySQL **tested on MySQL (MariaDB) Server version: 10.11.4-MariaDB-1~deb12u1 Debian 12**
+
 
 ### Configuration
 After first launch, u need to configure plugin in  addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json
