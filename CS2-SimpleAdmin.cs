@@ -34,7 +34,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.6c";
+	public override string ModuleVersion => "1.2.6d";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 

@@ -1,4 +1,6 @@
-﻿using Dapper;
+﻿using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
+using Dapper;
 using MySqlConnector;
 
 namespace CS2_SimpleAdmin
@@ -8,6 +10,8 @@ namespace CS2_SimpleAdmin
 		private readonly MySqlConnection _dbConnection;
 		// Unused for now
 		//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
+		public static readonly HashSet<SteamID> _adminCacheSet = new HashSet<SteamID>();
+		public static readonly Dictionary<SteamID, DateTime?> _adminCacheTimestamps = new Dictionary<SteamID, DateTime?>();
 
 		public AdminSQLManager(string connectionString)
 		{
@@ -148,6 +152,93 @@ namespace CS2_SimpleAdmin
 			//return filteredFlags.Cast<object>().ToList();
 		}
 
+		public async Task<List<(string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
+		{
+			DateTime now = DateTime.Now;
+
+			await using var connection = _dbConnection;
+			await connection.OpenAsync();
+
+			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
+			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
+
+			if (activeFlags == null)
+			{
+				return new List<(string, List<string>, int, DateTime?)>();
+			}
+
+			List<(string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = new List<(string, List<string>, int, DateTime?)>();
+
+			foreach (dynamic flags in activeFlags)
+			{
+				if (flags is not IDictionary<string, object> flagsDict)
+				{
+					continue;
+				}
+
+				if (!flagsDict.TryGetValue("player_steamid", out var steamIdObj) ||
+					!flagsDict.TryGetValue("flags", out var flagsValueObj) ||
+					!flagsDict.TryGetValue("immunity", out var immunityValueObj) ||
+					!flagsDict.TryGetValue("ends", out var endsObj))
+				{
+					//Console.WriteLine("One or more required keys are missing.");
+					continue;
+				}
+
+				DateTime? ends = null;
+
+				if (endsObj != null) // Check if "ends" is not null
+				{
+					if (!DateTime.TryParse(endsObj.ToString(), out var parsedEnds))
+					{
+						//Console.WriteLine("Failed to parse 'ends' value.");
+						continue;
+					}
+
+					ends = parsedEnds;
+				}
+
+				if (!(steamIdObj is string steamId) ||
+					!(flagsValueObj is string flagsValue) ||
+					!int.TryParse(immunityValueObj.ToString(), out var immunityValue))
+				{
+					//Console.WriteLine("Failed to parse one or more values.");
+					continue;
+				}
+
+				filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
+			}
+
+			return filteredFlagsWithImmunity;
+		}
+
+		public async Task GiveAllFlags()
+		{
+			List<(string, List<string>, int, DateTime?)> allPlayers = await GetAllPlayersFlags();
+
+			foreach (var record in allPlayers)
+			{
+				string steamIdStr = record.Item1;
+				List<string> flags = record.Item2;
+				int immunity = record.Item3;
+
+				DateTime? ends = record.Item4;
+
+				if (!string.IsNullOrEmpty(steamIdStr) && SteamID.TryParse(steamIdStr, out var steamId) && steamId != null)
+				{
+					if (!_adminCacheSet.Contains(steamId))
+					{
+						_adminCacheSet.Add(steamId);
+						_adminCacheTimestamps.Add(steamId, ends);
+					}
+
+					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
+					// Often need to call 2 times
+					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
+				}
+			}
+		}
+
 		public async Task DeleteAdminBySteamId(string playerSteamId)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
@@ -159,6 +250,18 @@ namespace CS2_SimpleAdmin
 
 			string sql = "DELETE FROM sa_admins WHERE player_steamid = @PlayerSteamID";
 			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId });
+
+			if (!string.IsNullOrEmpty(playerSteamId) && SteamID.TryParse(playerSteamId, out var steamId) && steamId != null)
+			{
+				if (_adminCacheSet.Contains(steamId))
+				{
+					_adminCacheSet.Remove(steamId);
+					_adminCacheTimestamps.Remove(steamId);
+				}
+
+				AdminManager.ClearPlayerPermissions(steamId);
+				AdminManager.RemovePlayerAdminData(steamId);
+			}
 		}
 
 		public async Task AddAdminBySteamId(string playerSteamId, string playerName, string flags, int immunity = 0, int time = 0)
@@ -190,6 +293,8 @@ namespace CS2_SimpleAdmin
 				created = now,
 				serverid = CS2_SimpleAdmin.ServerId
 			});
+
+			_ = GiveAllFlags();
 		}
 
 		public async Task DeleteOldAdmins()

@@ -190,9 +190,10 @@ public partial class CS2_SimpleAdmin
 				if (isBanned)
 				{
 					Helper.KickPlayer((ushort)player.UserId!, "Banned");
-					Console.WriteLine("Authorized banned");
 					return;
 				}
+
+				//Helper.GivePlayerFlags(player, activeFlags);
 
 				if (activeMutes.Count > 0)
 				{
@@ -276,8 +277,6 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
-				AddTimer(6, () => Helper.GivePlayerFlags(player, activeFlags));
-
 				/*
 
 				if (_adminManager._adminCache != null && _adminManager._adminCache.Count > 0)
@@ -347,12 +346,13 @@ public partial class CS2_SimpleAdmin
 		if (loadedPlayers.Contains((int)player.Index))
 			loadedPlayers.Remove((int)player.Index);
 
-		if (player.AuthorizedSteamID != null)
+		if (player.AuthorizedSteamID != null && AdminSQLManager._adminCacheSet.Contains(player.AuthorizedSteamID))
 		{
-			//string steamIdString = player.AuthorizedSteamID.SteamId64.ToString();
-
-			//AdminSQLManager._adminCache.TryRemove(steamIdString, out _);
-			AdminManager.RemovePlayerPermissions(player);
+			if (AdminSQLManager._adminCacheTimestamps != null && AdminSQLManager._adminCacheTimestamps.TryGetValue(player.AuthorizedSteamID, out DateTime? expirationTime) && expirationTime.HasValue && expirationTime.Value <= DateTime.Now)
+			{
+				AdminManager.ClearPlayerPermissions(player.AuthorizedSteamID);
+				AdminManager.RemovePlayerAdminData(player.AuthorizedSteamID);
+			}
 		}
 
 		if (TagsDetected)
@@ -361,13 +361,14 @@ public partial class CS2_SimpleAdmin
 
 	private void OnMapStart(string mapName)
 	{
+		AdminSQLManager _adminManager = new(dbConnectionString);
+
 		AddTimer(120.0f, () =>
 		{
 			BanManager _banManager = new(dbConnectionString);
-			_ = _banManager.ExpireOldBans();
 			MuteManager _muteManager = new(dbConnectionString);
+			_ = _banManager.ExpireOldBans();
 			_ = _muteManager.ExpireOldMutes();
-			AdminSQLManager _adminManager = new(dbConnectionString);
 			_ = _adminManager.DeleteOldAdmins();
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
@@ -394,6 +395,8 @@ public partial class CS2_SimpleAdmin
 
 			connection.Close();
 		}
+
+		_ = _adminManager.GiveAllFlags();
 	}
 
 	private HookResult OnPlayerHurt(EventPlayerHurt @event, GameEventInfo info)

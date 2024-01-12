@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Reflection;
@@ -47,31 +48,48 @@ namespace CS2_SimpleAdmin
 			return Regex.IsMatch(input, pattern);
 		}
 
-		public static void GivePlayerFlags(CCSPlayerController player, List<(List<string>, int)> flagsWithImmunity)
+		public static void GivePlayerFlags(SteamID? steamid, List<string>? flags = null, uint immunity = 0)
 		{
-			if (player == null) return;
-
-			foreach (var (flags, immunity) in flagsWithImmunity)
+			try
 			{
-				AdminManager.SetPlayerImmunity(player, (uint)immunity);
-
-				foreach (var flag in flags)
+				if (steamid == null || (flags == null && immunity == 0))
 				{
-					if (!string.IsNullOrEmpty(flag))
+					//Console.WriteLine("Invalid input: steamid is null or both flags and immunity are not provided.");
+					return;
+				}
+
+				//Console.WriteLine($"Setting immunity for SteamID {steamid} to {immunity}");
+				AdminManager.SetPlayerImmunity(steamid, (uint)immunity);
+
+				if (flags != null)
+				{
+					//Console.WriteLine($"Applying flags to SteamID {steamid}:");
+
+					foreach (var flag in flags)
 					{
-						if (flag.StartsWith("@"))
+						if (!string.IsNullOrEmpty(flag))
 						{
-							AdminManager.AddPlayerPermissions(player, flag);
-						}
-						else if (flag.StartsWith("#"))
-						{
-							AdminManager.AddPlayerToGroup(player, flag);
+							if (flag.StartsWith("@"))
+							{
+								//Console.WriteLine($"Adding permission {flag} to SteamID {steamid}");
+								AdminManager.AddPlayerPermissions(steamid, flag);
+							}
+							else if (flag.StartsWith("#"))
+							{
+								//Console.WriteLine($"Adding SteamID {steamid} to group {flag}");
+								AdminManager.AddPlayerToGroup(steamid, flag);
+							}
 						}
 					}
 				}
 			}
-
+			catch (Exception)
+			{
+				return;
+				//Console.WriteLine($"An error occurred: {ex}");
+			}
 		}
+
 
 		/*
 		public static TargetResult GetTarget(string target, out CCSPlayerController? player)
