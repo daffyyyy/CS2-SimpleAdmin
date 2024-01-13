@@ -1,5 +1,4 @@
-﻿using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Entities;
+﻿using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using MySqlConnector;
 
@@ -250,18 +249,6 @@ namespace CS2_SimpleAdmin
 
 			string sql = "DELETE FROM sa_admins WHERE player_steamid = @PlayerSteamID";
 			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId });
-
-			if (!string.IsNullOrEmpty(playerSteamId) && SteamID.TryParse(playerSteamId, out var steamId) && steamId != null)
-			{
-				if (_adminCacheSet.Contains(steamId))
-				{
-					_adminCacheSet.Remove(steamId);
-					_adminCacheTimestamps.Remove(steamId);
-				}
-
-				AdminManager.ClearPlayerPermissions(steamId);
-				AdminManager.RemovePlayerAdminData(steamId);
-			}
 		}
 
 		public async Task AddAdminBySteamId(string playerSteamId, string playerName, string flags, int immunity = 0, int time = 0)
@@ -293,8 +280,6 @@ namespace CS2_SimpleAdmin
 				created = now,
 				serverid = CS2_SimpleAdmin.ServerId
 			});
-
-			_ = GiveAllFlags();
 		}
 
 		public async Task DeleteOldAdmins()

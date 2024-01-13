@@ -166,7 +166,7 @@ namespace CS2_SimpleAdmin
 							CS2_SimpleAdmin.gaggedPlayers.Add((int)player.Index);
 
 						if (CS2_SimpleAdmin.TagsDetected)
-							NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
+							NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index}");
 
 						/*
 						CCSPlayerController currentPlayer = player;

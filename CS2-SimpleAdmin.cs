@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -34,7 +35,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.6d";
+	public override string ModuleVersion => "1.2.6e";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -215,7 +216,45 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		AdminSQLManager _adminManager = new(dbConnectionString);
 		_ = _adminManager.DeleteAdminBySteamId(steamid);
 
+		AddTimer(2, () =>
+		{
+			if (!string.IsNullOrEmpty(steamid) && SteamID.TryParse(steamid, out var steamId) && steamId != null)
+			{
+				if (AdminSQLManager._adminCacheSet.Contains(steamId))
+				{
+					AdminSQLManager._adminCacheSet.Remove(steamId);
+					AdminSQLManager._adminCacheTimestamps.Remove(steamId);
+				}
+
+				AdminManager.ClearPlayerPermissions(steamId);
+				AdminManager.RemovePlayerAdminData(steamId);
+			}
+		});
+
 		command.ReplyToCommand($"Removed flags from '{steamid}'");
+	}
+
+	[ConsoleCommand("css_reladmin")]
+	[CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	[RequiresPermissions("@css/root")]
+	public void OnRelAdminCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		foreach (SteamID steamId in AdminSQLManager._adminCacheSet)
+		{
+			if (AdminSQLManager._adminCacheSet.Contains(steamId))
+			{
+				AdminSQLManager._adminCacheSet.Remove(steamId);
+				AdminSQLManager._adminCacheTimestamps.Remove(steamId);
+			}
+
+			AdminManager.ClearPlayerPermissions(steamId);
+			AdminManager.RemovePlayerAdminData(steamId);
+		}
+
+		AdminSQLManager _adminManager = new(dbConnectionString);
+		_ = _adminManager.GiveAllFlags();
+
+		command.ReplyToCommand($"Reloaded sql admins");
 	}
 
 	[ConsoleCommand("css_who")]
@@ -417,7 +456,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			});
 
 			if (TagsDetected)
-				NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index.ToString()}");
+				NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index}");
 
 			if (!gaggedPlayers.Contains((int)player!.Index))
 				gaggedPlayers.Add((int)player.Index);
