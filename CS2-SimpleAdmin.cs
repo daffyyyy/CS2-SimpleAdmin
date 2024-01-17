@@ -36,7 +36,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.7b";
+	public override string ModuleVersion => "1.2.7c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -275,6 +275,20 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			SilentPlayers.Add((int)caller!.Index);
 			command.ReplyToCommand("SilentMode Activated");
 		}
+	}
+
+	[ConsoleCommand("css_hide")]
+	[CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+	[RequiresPermissions("@css/kick")]
+	public void OnHideCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (caller == null) return;
+
+		caller.PlayerPawn.Value!.CommitSuicide(true, false);
+		caller.ChangeTeam(CsTeam.Spectator);
+		AddTimer(1.0f, () => { caller.ChangeTeam(CsTeam.None); });
+
+		command.ReplyToCommand("You are hidden now");
 	}
 
 	[ConsoleCommand("css_who")]
