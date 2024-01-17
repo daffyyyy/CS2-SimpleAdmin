@@ -238,7 +238,7 @@ namespace CS2_SimpleAdmin
 			}
 		}
 
-		public async Task DeleteAdminBySteamId(string playerSteamId)
+		public async Task DeleteAdminBySteamId(string playerSteamId, bool globalDelete = false)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
@@ -247,11 +247,21 @@ namespace CS2_SimpleAdmin
 			await using var connection = _dbConnection;
 			await connection.OpenAsync();
 
-			string sql = "DELETE FROM sa_admins WHERE player_steamid = @PlayerSteamID";
-			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId });
+			string sql = "";
+
+			if (globalDelete)
+			{
+				sql = "DELETE FROM sa_admins WHERE player_steamid = @PlayerSteamID";
+			}
+			else
+			{
+				sql = "DELETE FROM sa_admins WHERE player_steamid = @PlayerSteamID AND server_id = @ServerId";
+			}
+
+			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId, ServerId = CS2_SimpleAdmin.ServerId });
 		}
 
-		public async Task AddAdminBySteamId(string playerSteamId, string playerName, string flags, int immunity = 0, int time = 0)
+		public async Task AddAdminBySteamId(string playerSteamId, string playerName, string flags, int immunity = 0, int time = 0, bool globalAdmin = false)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
@@ -270,6 +280,8 @@ namespace CS2_SimpleAdmin
 			var sql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `flags`, `immunity`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @playerName, @flags, @immunity, @ends, @created, @serverid)";
 
+			int? serverId = globalAdmin ? null : CS2_SimpleAdmin.ServerId;
+
 			await connection.ExecuteAsync(sql, new
 			{
 				playerSteamId,
@@ -278,7 +290,7 @@ namespace CS2_SimpleAdmin
 				immunity,
 				ends = futureTime,
 				created = now,
-				serverid = CS2_SimpleAdmin.ServerId
+				serverid = serverId
 			});
 		}
 

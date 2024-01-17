@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
     <RootNamespace>CS2_SimpleAdmin</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.146" />
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.147" />
     <PackageReference Include="Dapper" Version="*" />
     <PackageReference Include="MySqlConnector" Version="*" />
   </ItemGroup>

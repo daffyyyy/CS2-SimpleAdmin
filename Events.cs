@@ -338,6 +338,11 @@ public partial class CS2_SimpleAdmin
 			}
 		}
 
+		if (SilentPlayers.Contains((int)player.Index))
+		{
+			SilentPlayers.Remove((int)player.Index);
+		}
+
 		if (GodPlayers.Contains((int)player.Index))
 		{
 			GodPlayers.Remove((int)player.Index);
