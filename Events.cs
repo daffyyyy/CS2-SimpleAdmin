@@ -55,7 +55,7 @@ public partial class CS2_SimpleAdmin
 
 	private HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
 	{
-		GodPlayers.Clear();
+		godPlayers.Clear();
 		return HookResult.Continue;
 	}
 
@@ -132,6 +132,9 @@ public partial class CS2_SimpleAdmin
 		if (player == null || !player.IsValid || player.IpAddress == null || loadedPlayers.Contains((int)player.Index) || player.IsBot || player.IsHLTV)
 			return;
 
+		if (bannedPlayers.Contains(player.IpAddress) || player.AuthorizedSteamID != null && bannedPlayers.Contains(player.AuthorizedSteamID.SteamId64.ToString()))
+			Helper.KickPlayer((ushort)player.UserId!, "Banned");
+
 		PlayerInfo playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId,
@@ -150,8 +153,11 @@ public partial class CS2_SimpleAdmin
 				if (player == null || !player.IsValid) return;
 				if (isBanned)
 				{
+					if (player.IpAddress != null && !bannedPlayers.Contains(player.IpAddress))
+						bannedPlayers.Add(player.IpAddress);
+					if (player.AuthorizedSteamID != null && !bannedPlayers.Contains(player.AuthorizedSteamID.SteamId64.ToString()))
+						bannedPlayers.Add(player.AuthorizedSteamID.SteamId64.ToString());
 					Helper.KickPlayer((ushort)player.UserId!, "Banned");
-					return;
 				}
 			});
 		});
@@ -163,6 +169,12 @@ public partial class CS2_SimpleAdmin
 
 		if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
 			return;
+
+		if (
+			player.IpAddress != null && bannedPlayers.Contains(player.IpAddress) ||
+			player.AuthorizedSteamID != null && bannedPlayers.Contains(player.AuthorizedSteamID.SteamId64.ToString())
+			)
+			Helper.KickPlayer((ushort)player.UserId!, "Banned");
 
 		PlayerInfo playerInfo = new PlayerInfo
 		{
@@ -189,6 +201,11 @@ public partial class CS2_SimpleAdmin
 				if (player == null || !player.IsValid) return;
 				if (isBanned)
 				{
+					if (player.IpAddress != null && !bannedPlayers.Contains(player.IpAddress))
+						bannedPlayers.Add(player.IpAddress);
+					if (player.AuthorizedSteamID != null && !bannedPlayers.Contains(player.AuthorizedSteamID.SteamId64.ToString()))
+						bannedPlayers.Add(player.AuthorizedSteamID.SteamId64.ToString());
+
 					Helper.KickPlayer((ushort)player.UserId!, "Banned");
 					return;
 				}
@@ -259,6 +276,7 @@ public partial class CS2_SimpleAdmin
 								{
 									if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
+									/*
 									if (mutedPlayers.Contains((int)player.Index))
 									{
 										if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
@@ -266,6 +284,7 @@ public partial class CS2_SimpleAdmin
 											mutedPlayers.Add(removedItem);
 										}
 									}
+									*/
 
 									player.VoiceFlags = VoiceFlags.Normal;
 
@@ -330,6 +349,7 @@ public partial class CS2_SimpleAdmin
 			}
 		}
 
+		/*
 		if (mutedPlayers.Contains((int)player.Index))
 		{
 			if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
@@ -337,15 +357,16 @@ public partial class CS2_SimpleAdmin
 				mutedPlayers.Add(removedItem);
 			}
 		}
+		*/
 
-		if (SilentPlayers.Contains((int)player.Index))
+		if (silentPlayers.Contains((int)player.Index))
 		{
-			SilentPlayers.Remove((int)player.Index);
+			silentPlayers.Remove((int)player.Index);
 		}
 
-		if (GodPlayers.Contains((int)player.Index))
+		if (godPlayers.Contains((int)player.Index))
 		{
-			GodPlayers.Remove((int)player.Index);
+			godPlayers.Remove((int)player.Index);
 		}
 
 		if (loadedPlayers.Contains((int)player.Index))
@@ -361,13 +382,14 @@ public partial class CS2_SimpleAdmin
 		}
 
 		if (TagsDetected)
-			NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index.ToString()}");
+			NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index}");
 	}
 
 	private void OnMapStart(string mapName)
 	{
 		AdminSQLManager _adminManager = new(dbConnectionString);
 
+		AddTimer(60.0f, bannedPlayers.Clear, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 		AddTimer(120.0f, () =>
 		{
 			BanManager _banManager = new(dbConnectionString);
@@ -411,7 +433,7 @@ public partial class CS2_SimpleAdmin
 		if (player == null || !player.IsValid)
 			return HookResult.Continue;
 
-		if (GodPlayers.Contains((int)player.Index) && player.PawnIsAlive)
+		if (godPlayers.Contains((int)player.Index) && player.PawnIsAlive)
 		{
 			player.Health = 100;
 			player.PlayerPawn.Value!.Health = 100;
