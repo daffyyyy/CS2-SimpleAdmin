@@ -1,5 +1,8 @@
 # CS2-SimpleAdmin
 
+### Do you appreciate what I do? Buy me a cup of tea ❤️
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y4THKXG)
+
 ### Description
 Manage your Counter-Strike 2 server by simple commands :) 
 
