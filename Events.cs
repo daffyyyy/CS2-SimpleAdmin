@@ -36,7 +36,7 @@ public partial class CS2_SimpleAdmin
 		PlayerInfo playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId,
-			Index = (int)player.Index,
+			Index = (ushort)player.UserId,
 			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
 			Name = player?.PlayerName,
 			IpAddress = player?.IpAddress?.Split(":")[0]
@@ -63,7 +63,7 @@ public partial class CS2_SimpleAdmin
 	{
 		if (player == null || !player.IsValid || info.GetArg(1).Length == 0) return HookResult.Continue;
 
-		if (gaggedPlayers.Contains((int)player.Index))
+		if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
 		{
 			return HookResult.Handled;
 		}
@@ -75,7 +75,7 @@ public partial class CS2_SimpleAdmin
 	{
 		if (player == null || !player.IsValid || info.GetArg(1).Length == 0) return HookResult.Continue;
 
-		if (gaggedPlayers.Contains((int)player.Index))
+		if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
 		{
 			return HookResult.Handled;
 		}
@@ -129,7 +129,7 @@ public partial class CS2_SimpleAdmin
 	{
 		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
-		if (player == null || !player.IsValid || player.IpAddress == null || loadedPlayers.Contains((int)player.Index) || player.IsBot || player.IsHLTV)
+		if (player == null || !player.IsValid || player.IpAddress == null || player.UserId == null || loadedPlayers.Contains((ushort)player.UserId) || player.IsBot || player.IsHLTV)
 			return;
 
 		if (bannedPlayers.Contains(player.IpAddress) || player.AuthorizedSteamID != null && bannedPlayers.Contains(player.AuthorizedSteamID.SteamId64.ToString()))
@@ -138,7 +138,7 @@ public partial class CS2_SimpleAdmin
 		PlayerInfo playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId,
-			Index = (int)player.Index,
+			Index = (ushort)player.UserId,
 			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
 			Name = player?.PlayerName,
 			IpAddress = player?.IpAddress.Split(":")[0]
@@ -179,7 +179,7 @@ public partial class CS2_SimpleAdmin
 		PlayerInfo playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId,
-			Index = (int)player.Index,
+			Index = (ushort)player.Index,
 			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
 			Name = player?.PlayerName,
 			IpAddress = player?.IpAddress?.Split(":")[0]
@@ -223,11 +223,11 @@ public partial class CS2_SimpleAdmin
 						if (muteType == "GAG")
 						{
 							// Chat mute
-							if (!gaggedPlayers.Any(index => index == player.Index))
-								gaggedPlayers.Add((int)player.Index);
+							if (player.UserId != null && !gaggedPlayers.Any(index => index == (ushort)player.UserId))
+								gaggedPlayers.Add((ushort)player.UserId);
 
 							if (TagsDetected)
-								NativeAPI.IssueServerCommand($"css_tag_mute {player.Index}");
+								NativeAPI.IssueServerCommand($"css_tag_mute {player.UserId}");
 
 							if (durationInSeconds != 0 && duration.Minutes >= 0 && duration.Minutes <= 30)
 							{
@@ -235,16 +235,16 @@ public partial class CS2_SimpleAdmin
 								{
 									if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
-									if (gaggedPlayers.Contains((int)player.Index))
+									if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
 									{
-										if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+										if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (int)player.UserId)
 										{
 											gaggedPlayers.Add(removedItem);
 										}
 									}
 
 									if (TagsDetected)
-										NativeAPI.IssueServerCommand($"css_tag_unmute {player.Index}");
+										NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
 
 									MuteManager _muteManager = new(dbConnectionString);
 									_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
@@ -277,9 +277,9 @@ public partial class CS2_SimpleAdmin
 									if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
 									/*
-									if (mutedPlayers.Contains((int)player.Index))
+									if (mutedPlayers.Contains((ushort)player.UserId))
 									{
-										if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+										if (mutedPlayers.TryTake(out int removedItem) && removedItem != (ushort)player.UserId)
 										{
 											mutedPlayers.Add(removedItem);
 										}
@@ -329,8 +329,8 @@ public partial class CS2_SimpleAdmin
 			}
 				*/
 
-				if (!loadedPlayers.Contains((int)player.Index))
-					loadedPlayers.Add((int)player.Index);
+				if (player.UserId != null && !loadedPlayers.Contains((ushort)player.UserId))
+					loadedPlayers.Add((ushort)player.UserId);
 			});
 		});
 	}
@@ -341,36 +341,36 @@ public partial class CS2_SimpleAdmin
 
 		if (player == null || !player.IsValid || player.IsBot || player.IsHLTV) return;
 
-		if (gaggedPlayers.Contains((int)player.Index))
+		if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
 		{
-			if (gaggedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+			if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
 			{
 				gaggedPlayers.Add(removedItem);
 			}
 		}
 
 		/*
-		if (mutedPlayers.Contains((int)player.Index))
+		if (mutedPlayers.Contains((ushort)player.UserId))
 		{
-			if (mutedPlayers.TryTake(out int removedItem) && removedItem != (int)player.Index)
+			if (mutedPlayers.TryTake(out int removedItem) && removedItem != (ushort)player.UserId)
 			{
 				mutedPlayers.Add(removedItem);
 			}
 		}
 		*/
 
-		if (silentPlayers.Contains((int)player.Index))
+		if (player.UserId != null && silentPlayers.Contains((ushort)player.UserId))
 		{
-			silentPlayers.Remove((int)player.Index);
+			silentPlayers.Remove((ushort)player.UserId);
 		}
 
-		if (godPlayers.Contains((int)player.Index))
+		if (player.UserId != null && godPlayers.Contains((ushort)player.UserId))
 		{
-			godPlayers.Remove((int)player.Index);
+			godPlayers.Remove((ushort)player.UserId);
 		}
 
-		if (loadedPlayers.Contains((int)player.Index))
-			loadedPlayers.Remove((int)player.Index);
+		if (player.UserId != null && loadedPlayers.Contains((ushort)player.UserId))
+			loadedPlayers.Remove((ushort)player.UserId);
 
 		if (player.AuthorizedSteamID != null && AdminSQLManager._adminCacheSet.Contains(player.AuthorizedSteamID))
 		{
@@ -382,7 +382,7 @@ public partial class CS2_SimpleAdmin
 		}
 
 		if (TagsDetected)
-			NativeAPI.IssueServerCommand($"css_tag_unmute {player!.Index}");
+			NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
 	}
 
 	private void OnMapStart(string mapName)
@@ -433,7 +433,7 @@ public partial class CS2_SimpleAdmin
 		if (player == null || !player.IsValid)
 			return HookResult.Continue;
 
-		if (godPlayers.Contains((int)player.Index) && player.PawnIsAlive)
+		if (player.UserId != null && godPlayers.Contains((ushort)player.UserId) && player.PawnIsAlive)
 		{
 			player.Health = 100;
 			player.PlayerPawn.Value!.Health = 100;

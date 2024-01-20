@@ -147,7 +147,7 @@ namespace CS2_SimpleAdmin
 
 		public async Task CheckMute(PlayerInfo player)
 		{
-			if (player.Index == null) return;
+			if (player.UserId == null) return;
 
 			string steamId = player.SteamId!;
 			List<dynamic> activeMutes = await IsPlayerMuted(steamId);
@@ -162,11 +162,11 @@ namespace CS2_SimpleAdmin
 
 					if (muteType == "GAG")
 					{
-						if (!CS2_SimpleAdmin.gaggedPlayers.Any(index => index == player.Index))
-							CS2_SimpleAdmin.gaggedPlayers.Add((int)player.Index);
+						if (!CS2_SimpleAdmin.gaggedPlayers.Any(index => index == player.UserId))
+							CS2_SimpleAdmin.gaggedPlayers.Add((ushort)player.UserId);
 
 						if (CS2_SimpleAdmin.TagsDetected)
-							NativeAPI.IssueServerCommand($"css_tag_mute {player!.Index}");
+							NativeAPI.IssueServerCommand($"css_tag_mute {player!.UserId}");
 
 						/*
 						CCSPlayerController currentPlayer = player;
