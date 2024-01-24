@@ -23,11 +23,12 @@ namespace CS2_SimpleAdmin
 			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
 
+			CS2_SimpleAdminConfig config = new CS2_SimpleAdminConfig();
 			await connection.ExecuteAsync(sql, new
 			{
 				playerSteamid = player.SteamId,
 				playerName = player.Name,
-				playerIp = player.IpAddress,
+				playerIp = config.BanType == 1 ? player.IpAddress : null,
 				adminSteamid = issuer.SteamId == null ? "Console" : issuer.SteamId,
 				adminName = issuer.Name == null ? "Console" : issuer.Name,
 				banReason = reason,

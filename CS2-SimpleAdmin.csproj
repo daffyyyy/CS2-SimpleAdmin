@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.148" />
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.154" />
     <PackageReference Include="Dapper" Version="*" />
-    <PackageReference Include="MySqlConnector" Version="*" />
+    <PackageReference Include="MySqlConnector" Version="2.3.5" />
   </ItemGroup>
 
   <ItemGroup>

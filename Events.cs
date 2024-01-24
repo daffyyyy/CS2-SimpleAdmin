@@ -15,8 +15,8 @@ public partial class CS2_SimpleAdmin
 {
 	private void registerEvents()
 	{
-		RegisterListener<OnClientAuthorized>(OnClientAuthorized);
-		RegisterListener<OnClientConnected>(OnClientConnected);
+		//RegisterListener<OnClientAuthorized>(OnClientAuthorized);
+		RegisterListener<OnClientConnect>(OnClientConnect);
 		//RegisterEventHandler<EventPlayerConnectFull>(OnPlayerFullConnect);
 		RegisterListener<OnClientDisconnect>(OnClientDisconnect);
 		RegisterListener<OnMapStart>(OnMapStart);
@@ -86,7 +86,7 @@ public partial class CS2_SimpleAdmin
 
 			if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
 			{
-				sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
+				sb.Append(_localizer!["sa_adminchat_template_admin", player!.PlayerName, info.GetArg(1).Remove(0, 1)]);
 				foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 				{
 					p.PrintToChat(sb.ToString());
@@ -94,7 +94,7 @@ public partial class CS2_SimpleAdmin
 			}
 			else
 			{
-				sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
+				sb.Append(_localizer!["sa_adminchat_template_player", player!.PlayerName, info.GetArg(1).Remove(0, 1)]);
 				player.PrintToChat(sb.ToString());
 				foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 				{
@@ -125,8 +125,177 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
-	private void OnClientConnected(int playerSlot)
+	private void OnClientConnect(int playerSlot, string name, string ipAddress)
 	{
+		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
+
+		if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
+			return;
+
+		ipAddress = ipAddress.Split(":")[0];
+
+		if (
+			ipAddress != null && bannedPlayers.Contains(ipAddress) ||
+			player.SteamID.ToString() != "" && bannedPlayers.Contains(player.SteamID.ToString())
+			)
+			Helper.KickPlayer((ushort)player.UserId!, "Banned");
+
+		PlayerInfo playerInfo = new PlayerInfo
+		{
+			UserId = player.UserId,
+			Index = (ushort)player.Index,
+			SteamId = player?.SteamID.ToString(),
+			Name = player?.PlayerName,
+			IpAddress = ipAddress
+		};
+
+		Task.Run(async () =>
+		{
+			BanManager _banManager = new(dbConnectionString);
+			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
+
+			MuteManager _muteManager = new(dbConnectionString);
+			List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId!);
+
+			AdminSQLManager _adminManager = new(dbConnectionString);
+			List<(List<string>, int)> activeFlags = await _adminManager.GetAdminFlags(playerInfo.SteamId!);
+
+			Server.NextFrame(() =>
+			{
+				if (player == null || !player.IsValid) return;
+				if (isBanned)
+				{
+					if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
+						bannedPlayers.Add(playerInfo.IpAddress);
+					if (player.SteamID.ToString() != "" && !bannedPlayers.Contains(player.SteamID.ToString()))
+						bannedPlayers.Add(player.SteamID.ToString());
+
+					Helper.KickPlayer((ushort)player.UserId!, "Banned");
+					return;
+				}
+
+				//Helper.GivePlayerFlags(player, activeFlags);
+
+				if (activeMutes.Count > 0)
+				{
+					foreach (var mute in activeMutes)
+					{
+						string muteType = mute.type;
+						TimeSpan duration = mute.ends - mute.created;
+						int durationInSeconds = (int)duration.TotalSeconds;
+
+						if (muteType == "GAG")
+						{
+							// Chat mute
+							if (player.UserId != null && !gaggedPlayers.Any(index => index == (ushort)player.UserId))
+								gaggedPlayers.Add((ushort)player.UserId);
+
+							if (TagsDetected)
+								NativeAPI.IssueServerCommand($"css_tag_mute {player.UserId}");
+
+							if (durationInSeconds != 0 && duration.Minutes >= 0 && duration.Minutes <= 30)
+							{
+								AddTimer(durationInSeconds, () =>
+								{
+									if (player == null || !player.IsValid || player.SteamID.ToString() == "") return;
+
+									if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+									{
+										if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (int)player.UserId)
+										{
+											gaggedPlayers.Add(removedItem);
+										}
+									}
+
+									if (TagsDetected)
+										NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
+
+									MuteManager _muteManager = new(dbConnectionString);
+									_ = _muteManager.UnmutePlayer(player!.SteamID.ToString(), 0);
+								}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+							}
+
+							/*
+							CCSPlayerController currentPlayer = player;
+
+							if (mute.duration == 0 || durationInSeconds >= 1800) continue;
+
+							await Task.Delay(TimeSpan.FromSeconds(durationInSeconds));
+
+							if (currentPlayer != null && currentPlayer.IsValid)
+							{
+								NativeAPI.IssueServerCommand($"css_tag_unmute {currentPlayer.Index.ToString()}");
+								await UnmutePlayer(currentPlayer.AuthorizedSteamID.SteamId64.ToString(), 0);
+							}
+							*/
+						}
+						else
+						{
+							// Voice mute
+							player.VoiceFlags = VoiceFlags.Muted;
+
+							if (durationInSeconds != 0 && duration.Minutes >= 0 && duration.Minutes <= 30)
+							{
+								AddTimer(durationInSeconds, () =>
+								{
+									if (player == null || !player.IsValid || player.SteamID.ToString() == "") return;
+
+									/*
+									if (mutedPlayers.Contains((ushort)player.UserId))
+									{
+										if (mutedPlayers.TryTake(out int removedItem) && removedItem != (ushort)player.UserId)
+										{
+											mutedPlayers.Add(removedItem);
+										}
+									}
+									*/
+
+									player.VoiceFlags = VoiceFlags.Normal;
+
+									//MuteManager _muteManager = new(dbConnectionString);
+									//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
+								}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+							}
+						}
+					}
+				}
+
+				/*
+
+				if (_adminManager._adminCache != null && _adminManager._adminCache.Count > 0)
+				{
+					foreach (var flags in activeFlags)
+					{
+						if (flags == null) continue;
+						string flagsValue = flags.flags.ToString();
+
+						if (!string.IsNullOrEmpty(flagsValue))
+						{
+							string[] _flags = flagsValue.Split(",");
+
+							AddTimer(10, () =>
+							{
+								if (player == null) return;
+								foreach (var _flag in _flags)
+								{
+									if (_flag.StartsWith("@"))
+									{
+										AdminManager.AddPlayerPermissions(player, _flag);
+									}
+									if (_flag.StartsWith("3"))
+									{
+										AdminManager.AddPlayerToGroup(player, _flag);
+									}
+								}
+							});
+						}
+					}
+			}
+				*/
+			});
+		});
+
+		/*
 		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
 		if (player == null || !player.IsValid || player.IpAddress == null || player.UserId == null || loadedPlayers.Contains((ushort)player.UserId) || player.IsBot || player.IsHLTV)
@@ -161,11 +330,15 @@ public partial class CS2_SimpleAdmin
 				}
 			});
 		});
+		*/
 	}
 
 	private void OnClientAuthorized(int playerSlot, SteamID steamID)
 	{
+		return;
+#pragma warning disable CS0162
 		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
+#pragma warning restore CS0162
 
 		if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
 			return;
@@ -247,7 +420,7 @@ public partial class CS2_SimpleAdmin
 										NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
 
 									MuteManager _muteManager = new(dbConnectionString);
-									_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
+									_ = _muteManager.UnmutePlayer(player!.AuthorizedSteamID.SteamId64.ToString(), 0);
 								}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 							}
 
@@ -359,7 +532,7 @@ public partial class CS2_SimpleAdmin
 		}
 		*/
 
-		if (player.UserId != null && silentPlayers.Contains((ushort)player.UserId))
+		if (player!.UserId != null && silentPlayers.Contains((ushort)player.UserId))
 		{
 			silentPlayers.Remove((ushort)player.UserId);
 		}
