@@ -151,7 +151,7 @@ public partial class CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(dbConnectionString);
+			BanManager _banManager = new(dbConnectionString, Config);
 			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
 			MuteManager _muteManager = new(dbConnectionString);
@@ -360,7 +360,7 @@ public partial class CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(dbConnectionString);
+			BanManager _banManager = new(dbConnectionString, Config);
 			bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
 
 			MuteManager _muteManager = new(dbConnectionString);
@@ -501,9 +501,6 @@ public partial class CS2_SimpleAdmin
 					}
 			}
 				*/
-
-				if (player.UserId != null && !loadedPlayers.Contains((ushort)player.UserId))
-					loadedPlayers.Add((ushort)player.UserId);
 			});
 		});
 	}
@@ -542,9 +539,6 @@ public partial class CS2_SimpleAdmin
 			godPlayers.Remove((ushort)player.UserId);
 		}
 
-		if (player.UserId != null && loadedPlayers.Contains((ushort)player.UserId))
-			loadedPlayers.Remove((ushort)player.UserId);
-
 		if (player.AuthorizedSteamID != null && AdminSQLManager._adminCacheSet.Contains(player.AuthorizedSteamID))
 		{
 			if (AdminSQLManager._adminCacheTimestamps != null && AdminSQLManager._adminCacheTimestamps.TryGetValue(player.AuthorizedSteamID, out DateTime? expirationTime) && expirationTime.HasValue && expirationTime.Value <= DateTime.Now)
@@ -565,7 +559,7 @@ public partial class CS2_SimpleAdmin
 		AddTimer(60.0f, bannedPlayers.Clear, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 		AddTimer(120.0f, () =>
 		{
-			BanManager _banManager = new(dbConnectionString);
+			BanManager _banManager = new(dbConnectionString, Config);
 			MuteManager _muteManager = new(dbConnectionString);
 			_ = _banManager.ExpireOldBans();
 			_ = _muteManager.ExpireOldMutes();
@@ -578,23 +572,26 @@ public partial class CS2_SimpleAdmin
 			TagsDetected = true;
 		}
 
-		using (var connection = new MySqlConnection(dbConnectionString))
+		AddTimer(1.0f, () =>
 		{
-			connection.Open();
+			using (var connection = new MySqlConnection(dbConnectionString))
+			{
+				connection.Open();
 
-			connection.Execute(
-				"INSERT INTO `sa_servers` (address, hostname) VALUES (@address, @hostname) " +
-				"ON DUPLICATE KEY UPDATE hostname = @hostname",
-				new { address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}", hostname = ConVar.Find("hostname")!.StringValue });
+				connection.Execute(
+					"INSERT INTO `sa_servers` (address, hostname) VALUES (@address, @hostname) " +
+					"ON DUPLICATE KEY UPDATE hostname = @hostname",
+					new { address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}", hostname = ConVar.Find("hostname")!.StringValue });
 
-			int? serverId = connection.ExecuteScalar<int>(
-				"SELECT `id` FROM `sa_servers` WHERE `address` = @address",
-				new { address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}" });
+				int? serverId = connection.ExecuteScalar<int>(
+					"SELECT `id` FROM `sa_servers` WHERE `address` = @address",
+					new { address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}" });
 
-			ServerId = serverId;
+				ServerId = serverId;
 
-			connection.Close();
-		}
+				connection.Close();
+			}
+		});
 
 		_ = _adminManager.GiveAllFlags();
 	}

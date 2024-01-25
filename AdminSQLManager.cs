@@ -147,6 +147,8 @@ namespace CS2_SimpleAdmin
 				return flagsToCache.Cast<object>().ToList();
 			}
 			*/
+			await connection.CloseAsync();
+
 			return filteredFlagsWithImmunity;
 			//return filteredFlags.Cast<object>().ToList();
 		}
@@ -208,6 +210,8 @@ namespace CS2_SimpleAdmin
 				filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
 			}
 
+			await connection.CloseAsync();
+
 			return filteredFlagsWithImmunity;
 		}
 
@@ -259,6 +263,8 @@ namespace CS2_SimpleAdmin
 			}
 
 			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId, ServerId = CS2_SimpleAdmin.ServerId });
+
+			await connection.CloseAsync();
 		}
 
 		public async Task AddAdminBySteamId(string playerSteamId, string playerName, string flags, int immunity = 0, int time = 0, bool globalAdmin = false)
@@ -292,6 +298,8 @@ namespace CS2_SimpleAdmin
 				created = now,
 				serverid = serverId
 			});
+
+			await connection.CloseAsync();
 		}
 
 		public async Task DeleteOldAdmins()
@@ -301,6 +309,8 @@ namespace CS2_SimpleAdmin
 
 			string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+
+			await connection.CloseAsync();
 		}
 	}
 }

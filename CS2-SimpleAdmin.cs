@@ -24,7 +24,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<ushort> gaggedPlayers = new ConcurrentBag<ushort>();
 	//public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
-	public static List<int> loadedPlayers = new List<int>();
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
 	public static HashSet<ushort> godPlayers = new HashSet<ushort>();
 	public static List<ushort> silentPlayers = new List<ushort>();
@@ -303,7 +302,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
 
-		BanManager _banManager = new(dbConnectionString);
+		BanManager _banManager = new(dbConnectionString, Config);
 		MuteManager _muteManager = new(dbConnectionString);
 
 		playersToTarget.ForEach(player =>
@@ -435,7 +434,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (caller!.CanTarget(player))
 			{
-				player.Pawn.Value!.Freeze();
+				if (player.PawnIsAlive)
+				{
+					player.Pawn.Value!.Freeze();
+					player.CommitSuicide(true, true);
+				}
 
 				if (command.ArgCount >= 2)
 				{
@@ -1091,7 +1094,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			return;
 		}
 
-		BanManager _banManager = new(dbConnectionString);
+		BanManager _banManager = new(dbConnectionString, Config);
 
 		int.TryParse(command.GetArg(2), out time);
 
@@ -1102,7 +1105,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (caller!.CanTarget(player))
 			{
-				player.Pawn.Value!.Freeze();
+				if (player.PawnIsAlive)
+				{
+					player.Pawn.Value!.Freeze();
+					player.CommitSuicide(true, true);
+				}
 
 				PlayerInfo playerInfo = new PlayerInfo
 				{
@@ -1171,7 +1178,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		string reason = "Unknown";
 
-		BanManager _banManager = new(dbConnectionString);
+		BanManager _banManager = new(dbConnectionString, Config);
 
 		int.TryParse(command.GetArg(2), out time);
 
@@ -1227,7 +1234,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(dbConnectionString);
+			BanManager _banManager = new(dbConnectionString, Config);
 			await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
 		});
 
@@ -1309,7 +1316,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(dbConnectionString);
+			BanManager _banManager = new(dbConnectionString, Config);
 			await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
 		});
 
@@ -1328,7 +1335,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		string pattern = command.GetArg(1);
-		BanManager _banManager = new(dbConnectionString);
+		BanManager _banManager = new(dbConnectionString, Config);
 
 		_ = _banManager.UnbanPlayer(pattern);
 

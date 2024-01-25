@@ -44,6 +44,8 @@ namespace CS2_SimpleAdmin
 				type = muteType,
 				serverid = CS2_SimpleAdmin.ServerId
 			});
+
+			await connection.CloseAsync();
 		}
 
 		public async Task AddMuteBySteamid(string playerSteamId, PlayerInfo issuer, string reason, int time = 0, int type = 0)
@@ -75,6 +77,8 @@ namespace CS2_SimpleAdmin
 				type = muteType,
 				serverid = CS2_SimpleAdmin.ServerId
 			});
+
+			await connection.CloseAsync();
 		}
 
 		public async Task<List<dynamic>> IsPlayerMuted(string steamId)
@@ -86,6 +90,8 @@ namespace CS2_SimpleAdmin
 
 			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 			var activeMutes = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
+
+			await connection.CloseAsync();
 
 			return activeMutes;
 		}
@@ -99,6 +105,8 @@ namespace CS2_SimpleAdmin
 			string sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
 
 			muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId });
+
+			await connection.CloseAsync();
 
 			return muteCount;
 		}
@@ -134,6 +142,8 @@ namespace CS2_SimpleAdmin
 
 			string sqlUnban = "UPDATE sa_mutes SET status = 'UNMUTED' WHERE (player_steamid = @pattern OR player_name = @pattern) AND type = @muteType AND status = 'ACTIVE'";
 			await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern, muteType });
+
+			await connection.CloseAsync();
 		}
 
 		public async Task ExpireOldMutes()
@@ -143,6 +153,8 @@ namespace CS2_SimpleAdmin
 
 			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+
+			await connection.CloseAsync();
 		}
 
 		public async Task CheckMute(PlayerInfo player)
