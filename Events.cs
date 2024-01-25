@@ -16,7 +16,8 @@ public partial class CS2_SimpleAdmin
 	private void registerEvents()
 	{
 		//RegisterListener<OnClientAuthorized>(OnClientAuthorized);
-		RegisterListener<OnClientConnect>(OnClientConnect);
+		//RegisterListener<OnClientConnect>(OnClientConnect);
+		RegisterListener<OnClientPutInServer>(OnClientPutInServer);
 		//RegisterEventHandler<EventPlayerConnectFull>(OnPlayerFullConnect);
 		RegisterListener<OnClientDisconnect>(OnClientDisconnect);
 		RegisterListener<OnMapStart>(OnMapStart);
@@ -125,14 +126,14 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
-	private void OnClientConnect(int playerSlot, string name, string ipAddress)
+	private void OnClientPutInServer(int playerSlot)
 	{
 		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
 		if (player == null || !player.IsValid || player.IsBot || player.IsHLTV)
 			return;
 
-		ipAddress = ipAddress.Split(":")[0];
+		string? ipAddress = !string.IsNullOrEmpty(player.IpAddress) ? player.IpAddress.Split(":")[0] : null;
 
 		if (
 			ipAddress != null && bannedPlayers.Contains(ipAddress) ||
