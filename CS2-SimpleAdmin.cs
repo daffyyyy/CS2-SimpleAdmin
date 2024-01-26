@@ -18,7 +18,7 @@ using System.Text;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(154)]
+[MinimumApiVersion(159)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static IStringLocalizer? _localizer;
@@ -36,7 +36,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.8b";
+	public override string ModuleVersion => "1.2.8c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -510,7 +510,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (TagsDetected)
 					NativeAPI.IssueServerCommand($"css_tag_mute {player!.UserId}");
 
-				if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+				if (player != null && player.UserId != null && !gaggedPlayers.Contains((ushort)player.UserId))
 					gaggedPlayers.Add((ushort)player.UserId);
 
 				if (time > 0 && time <= 30)
@@ -1689,10 +1689,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			voteAnswers.Clear();
 			voteInProgress = false;
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
-		return;
 	}
 
+	[ConsoleCommand("css_changemap")]
 	[ConsoleCommand("css_map")]
 	[RequiresPermissions("@css/changemap")]
 	[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
@@ -1706,19 +1705,20 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			return;
 		}
 
-		AddTimer(5f, () =>
-		{
-			Server.ExecuteCommand($"changelevel {map}");
-		});
-
 		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
 		{
 			StringBuilder sb = new(_localizer!["sa_prefix"]);
 			sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
 			Server.PrintToChatAll(sb.ToString());
 		}
+
+		AddTimer(3.0f, () =>
+		{
+			Server.ExecuteCommand($"changelevel {map}");
+		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 	}
 
+	[ConsoleCommand("css_changewsmap", "Change workshop map.")]
 	[ConsoleCommand("css_wsmap", "Change workshop map.")]
 	[ConsoleCommand("css_workshop", "Change workshop map.")]
 	[CommandHelper(1, "<name or id>")]
@@ -1728,7 +1728,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		string? _command = null;
 		var map = command.GetArg(1);
 
-		_command = ulong.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
+		_command = int.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
 		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
 		{
 			StringBuilder sb = new(_localizer!["sa_prefix"]);
@@ -1736,10 +1736,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(sb.ToString());
 		}
 
-		AddTimer(5f, () =>
+		AddTimer(3.0f, () =>
 		{
 			Server.ExecuteCommand(_command);
-		});
+		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 	}
 
 	[ConsoleCommand("css_asay", "Say to all admins.")]

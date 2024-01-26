@@ -25,7 +25,7 @@ public partial class CS2_SimpleAdmin
 		RegisterEventHandler<EventRoundStart>(OnRoundStart);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
-		AddCommandListener("callvote", OnCommandCallVote);
+		//AddCommandListener("callvote", OnCommandCallVote);
 	}
 
 	/*private HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
@@ -202,7 +202,7 @@ public partial class CS2_SimpleAdmin
 
 									if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
 									{
-										if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (int)player.UserId)
+										if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
 										{
 											gaggedPlayers.Add(removedItem);
 										}
