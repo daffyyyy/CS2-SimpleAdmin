@@ -22,7 +22,7 @@ namespace CS2_SimpleAdmin;
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static IStringLocalizer? _localizer;
-	public static ConcurrentBag<ushort> gaggedPlayers = new ConcurrentBag<ushort>();
+	public static ConcurrentBag<string> gaggedPlayers = new ConcurrentBag<string>();
 	//public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
 	public static HashSet<ushort> godPlayers = new HashSet<ushort>();
@@ -36,7 +36,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.8c";
+	public override string ModuleVersion => "1.2.8d";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -508,10 +508,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				});
 
 				if (TagsDetected)
-					NativeAPI.IssueServerCommand($"css_tag_mute {player!.UserId}");
+					NativeAPI.IssueServerCommand($"css_tag_mute {player!.SteamID.ToString()}");
 
-				if (player != null && player.UserId != null && !gaggedPlayers.Contains((ushort)player.UserId))
-					gaggedPlayers.Add((ushort)player.UserId);
+				if (player != null && player.SteamID.ToString() != "" && !gaggedPlayers.Contains(player.SteamID.ToString()))
+					gaggedPlayers.Add(player.SteamID.ToString());
 
 				if (time > 0 && time <= 30)
 				{
@@ -520,11 +520,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
 						if (TagsDetected)
-							NativeAPI.IssueServerCommand($"css_tag_unmute {player.UserId}");
+							NativeAPI.IssueServerCommand($"css_tag_unmute {player!.SteamID.ToString()}");
 
-						if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+						if (player != null && player.SteamID.ToString() != "" && gaggedPlayers.Contains(player.SteamID.ToString()))
 						{
-							if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
+							if (gaggedPlayers.TryTake(out string? removedItem) && removedItem != player.SteamID.ToString())
 							{
 								gaggedPlayers.Add(removedItem);
 							}
@@ -631,7 +631,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 
 				if (TagsDetected)
-					NativeAPI.IssueServerCommand($"css_tag_mute {player!.UserId}");
+					NativeAPI.IssueServerCommand($"css_tag_mute {player!.SteamID.ToString()}");
 
 				if (time > 0 && time <= 30)
 				{
@@ -640,11 +640,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
 						if (TagsDetected)
-							NativeAPI.IssueServerCommand($"css_tag_unmute {player.UserId}");
+							NativeAPI.IssueServerCommand($"css_tag_unmute {player!.SteamID.ToString()}");
 
-						if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+						if (player != null && player.SteamID.ToString() != "" && gaggedPlayers.Contains(player.SteamID.ToString()))
 						{
-							if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
+							if (gaggedPlayers.TryTake(out string? removedItem) && removedItem != player.SteamID.ToString())
 							{
 								gaggedPlayers.Add(removedItem);
 							}
@@ -654,8 +654,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
 
-				if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
-					gaggedPlayers.Add((ushort)player.UserId);
+				if (player != null && player.SteamID.ToString() != "" && gaggedPlayers.Contains(player.SteamID.ToString()))
+					gaggedPlayers.Add(player.SteamID.ToString());
 			}
 		}
 		_ = _muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 0);
@@ -686,16 +686,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				CCSPlayerController? player = matches.FirstOrDefault();
 				if (player != null && player.IsValid)
 				{
-					if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+					if (player != null && player.SteamID.ToString() != "" && gaggedPlayers.Contains(player.SteamID.ToString()))
 					{
-						if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
+						if (gaggedPlayers.TryTake(out string? removedItem) && removedItem != player.SteamID.ToString())
 						{
 							gaggedPlayers.Add(removedItem);
 						}
 					}
 
 					if (TagsDetected)
-						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
+						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.SteamID.ToString()}");
 
 					found = true;
 				}
@@ -709,16 +709,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				CCSPlayerController? player = matches.FirstOrDefault();
 				if (player != null && player.IsValid)
 				{
-					if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+					if (player != null && player.SteamID.ToString() != "" && gaggedPlayers.Contains(player.SteamID.ToString()))
 					{
-						if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
+						if (gaggedPlayers.TryTake(out string? removedItem) && removedItem != player.SteamID.ToString())
 						{
 							gaggedPlayers.Add(removedItem);
 						}
 					}
 
 					if (TagsDetected)
-						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
+						NativeAPI.IssueServerCommand($"css_tag_unmute {player!.SteamID.ToString()}");
 
 					pattern = player!.AuthorizedSteamID!.SteamId64.ToString();
 
@@ -746,9 +746,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			playersToTarget.ForEach(player =>
 			{
-				if (player != null && player.UserId != null && gaggedPlayers.Contains((ushort)player.UserId))
+				if (player != null && player.SteamID.ToString() != "" && gaggedPlayers.Contains(player.SteamID.ToString()))
 				{
-					if (gaggedPlayers.TryTake(out ushort removedItem) && removedItem != (ushort)player.UserId)
+					if (gaggedPlayers.TryTake(out string? removedItem) && removedItem != player.SteamID.ToString())
 					{
 						gaggedPlayers.Add(removedItem);
 					}
@@ -758,7 +758,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0); // Unmute by type 0 (gag)
 
 				if (TagsDetected)
-					NativeAPI.IssueServerCommand($"css_tag_unmute {player!.UserId}");
+					NativeAPI.IssueServerCommand($"css_tag_unmute {player!.SteamID.ToString()}");
 			});
 
 			command.ReplyToCommand($"Ungaged player with pattern {pattern}.");
@@ -1697,12 +1697,32 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		string map = command.GetArg(1);
+		string _command = string.Empty;
+		string? map = command.GetCommandString.Split(" ")[1];
 
-		if (!Server.IsMapValid(map))
+		if (map.StartsWith("ws:"))
 		{
-			command.ReplyToCommand($"Map {map} not found.");
-			return;
+			if (long.TryParse(map.Replace("ws:", ""), out long mapId))
+			{
+				_command = $"host_workshop_map {mapId}";
+			}
+			else
+			{
+				_command = $"ds_workshop_changelevel {map.Replace("ws:", "")}";
+			}
+
+			AddTimer(2.0f, () =>
+			{
+				Server.ExecuteCommand(_command);
+			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+		}
+		else
+		{
+			if (!Server.IsMapValid(map))
+			{
+				command.ReplyToCommand($"Map {map} not found.");
+				return;
+			}
 		}
 
 		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
@@ -1712,10 +1732,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(sb.ToString());
 		}
 
-		AddTimer(3.0f, () =>
+		if (!map.StartsWith("ws:"))
 		{
-			Server.ExecuteCommand($"changelevel {map}");
-		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+			AddTimer(2.0f, () =>
+			{
+				Server.ExecuteCommand($"changelevel {map}");
+			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+		}
 	}
 
 	[ConsoleCommand("css_changewsmap", "Change workshop map.")]
@@ -1725,10 +1748,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/changemap")]
 	public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		string? _command = null;
-		var map = command.GetArg(1);
+		string _command = string.Empty;
+		string? map = command.GetArg(1);
 
-		_command = int.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
+		if (long.TryParse(map, out long mapId))
+		{
+			_command = $"host_workshop_map {mapId}";
+		}
+		else
+		{
+			_command = $"ds_workshop_changelevel {map}";
+		}
+
 		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
 		{
 			StringBuilder sb = new(_localizer!["sa_prefix"]);
@@ -1736,7 +1767,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToChatAll(sb.ToString());
 		}
 
-		AddTimer(3.0f, () =>
+		AddTimer(2.0f, () =>
 		{
 			Server.ExecuteCommand(_command);
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);

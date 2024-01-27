@@ -174,11 +174,11 @@ namespace CS2_SimpleAdmin
 
 					if (muteType == "GAG")
 					{
-						if (!CS2_SimpleAdmin.gaggedPlayers.Any(index => index == player.UserId))
-							CS2_SimpleAdmin.gaggedPlayers.Add((ushort)player.UserId);
+						if (!CS2_SimpleAdmin.gaggedPlayers.Any(steamid => steamid == player.SteamId!.ToString()))
+							CS2_SimpleAdmin.gaggedPlayers.Add(player.SteamId!.ToString());
 
 						if (CS2_SimpleAdmin.TagsDetected)
-							NativeAPI.IssueServerCommand($"css_tag_mute {player!.UserId}");
+							NativeAPI.IssueServerCommand($"css_tag_mute {player!.SteamId!.ToString()}");
 
 						/*
 						CCSPlayerController currentPlayer = player;
