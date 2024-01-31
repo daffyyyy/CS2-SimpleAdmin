@@ -23,10 +23,10 @@ namespace CS2_SimpleAdmin.Menus
 			CenterHtmlMenu menu = new CenterHtmlMenu("Simple Admin");
 			ChatMenuOptionData[] options = new[]
 			{
-				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin))
-				//new ChatMenuOptionData("Manage Server", () => GiveXp.OpenMenu(admin, false)),
-				//new ChatMenuOptionData("Fun actions", () => GiveXp.OpenMenu(admin, true)),
-				//new ChatMenuOptionData("Manage Admins", () => GiveLevels.OpenMenu(admin, false))
+				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin)),
+				new ChatMenuOptionData("Manage Server", null),
+				new ChatMenuOptionData("Fun actions", null),
+				new ChatMenuOptionData("Manage Admins", null)
 			};
 
 			foreach (ChatMenuOptionData menuOptionData in options)
