@@ -44,13 +44,13 @@ namespace CS2_SimpleAdmin.Menus
 
 			if (hasBan)
 			{
-				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, "Ban", player, Ban))));
+				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, "Ban", player, BanMenu))));
 			}
 
 			if (hasChat)
 			{
-				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, "Gag", player, Gag))));
-				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, "Mute", player, Mute))));
+				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, "Gag", player, GagMenu))));
+				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, "Mute", player, MuteMenu))));
 			}
 
 			if (hasKick)
@@ -110,19 +110,83 @@ namespace CS2_SimpleAdmin.Menus
 			CS2_SimpleAdmin.Instance.Kick(admin, player);
 		}
 
-		private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration)
+		private static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
-			// TODO: Ban
+			CenterHtmlMenu menu = new CenterHtmlMenu($"Ban {player.PlayerName}");
+			List<string> options = new()
+			{
+				"Hacking",
+				"Voice Abuse",
+				"Chat Abuse",
+				"Admin disrespect",
+				"Other"
+			};
+
+			foreach (string option in options)
+			{
+				menu.AddMenuOption(option, (_, _) => { Ban(admin, player, duration, option); });
+			}
+
+			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
 		}
 
-		private static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration)
+		private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
 		{
-			// TODO: Gag
+			CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason);
 		}
 
-		private static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration)
+		private static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
-			// TODO: Mute
+			CenterHtmlMenu menu = new CenterHtmlMenu($"Gag {player.PlayerName}");
+			List<string> options = new()
+			{
+				"Advertising",
+				"Spamming",
+				"Spectator camera abuse",
+				"Hate",
+				"Admin disrespect",
+				"Other"
+			};
+
+			foreach (string option in options)
+			{
+				menu.AddMenuOption(option, (_, _) => { Gag(admin, player, duration, option); });
+			}
+
+			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+		}
+
+		private static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
+		{
+			CS2_SimpleAdmin.Instance.Gag(admin, player, duration, reason);
+		}
+
+		private static void MuteMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
+		{
+			CenterHtmlMenu menu = new CenterHtmlMenu($"Mute {player.PlayerName}");
+			List<string> options = new()
+			{
+				"Shouting",
+				"Playing music",
+				"Advertising",
+				"Spamming",
+				"Spectator camera abuse",
+				"Hate",
+				"Admin disrespect",
+				"Other"
+			};
+
+			foreach (string option in options)
+			{
+				menu.AddMenuOption(option, (_, _) => { Mute(admin, player, duration, option); });
+			}
+
+			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+		}
+
+		private static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
+		{
+			CS2_SimpleAdmin.Instance.Mute(admin, player, duration, reason);
 		}
 
 		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player)
