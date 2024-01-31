@@ -3,7 +3,7 @@ using MySqlConnector;
 
 namespace CS2_SimpleAdmin
 {
-	internal class BanManager
+	public class BanManager
 	{
 		private readonly MySqlConnection _dbConnection;
 		private readonly CS2_SimpleAdminConfig _config;

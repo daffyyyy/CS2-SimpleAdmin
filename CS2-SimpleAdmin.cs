@@ -306,13 +306,67 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		TargetResult? targets = GetTarget(command);
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
-
+		
+		BanManager banManager = new(dbConnectionString, Config);
+		MuteManager muteManager = new(dbConnectionString);
+		
 		playersToTarget.ForEach(player =>
 		{
 			if (caller!.CanTarget(player))
 			{
-				ManagePlayersMenu.WhoIs(caller, player);
+				Who(caller, player, banManager, muteManager);
 			}
+		});
+	}
+
+	public void Who(CCSPlayerController? caller, CCSPlayerController player, BanManager banManager = null, MuteManager muteManager = null)
+	{
+		banManager ??= new(dbConnectionString, Config);
+		muteManager ??= new(dbConnectionString);
+		
+		PlayerInfo playerInfo = new PlayerInfo
+		{
+			UserId = player.UserId,
+			Index = (int)player.Index,
+			SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+			Name = player?.PlayerName,
+			IpAddress = player?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			int totalBans = 0;
+			int totalMutes = 0;
+
+			totalBans = await banManager.GetPlayerBans(playerInfo);
+			totalMutes = await muteManager.GetPlayerMutes(playerInfo.SteamId!);
+
+			Server.NextFrame(() =>
+			{
+				Action<string> printMethod = caller == null ? Server.PrintToConsole : caller.PrintToConsole;
+				printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
+
+				printMethod($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+				printMethod($"• UserID: \"{playerInfo.UserId}\"");
+				if (playerInfo.SteamId != null)
+					printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
+				if (player.AuthorizedSteamID != null)
+				{
+					printMethod($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
+					printMethod($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
+				}
+
+				if (playerInfo.IpAddress != null)
+					printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
+				printMethod($"• Ping: \"{player.Ping}\"");
+				if (player.AuthorizedSteamID != null)
+				{
+					printMethod($"• Total Bans: \"{totalBans}\"");
+					printMethod($"• Total Mutes: \"{totalMutes}\"");
+				}
+
+				printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+			});
 		});
 	}
 
