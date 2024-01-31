@@ -19,8 +19,6 @@ namespace CS2_SimpleAdmin.Menus
 				return;
 			}
 
-			//bool xpRights = AdminManager.PlayerHasPermissions(admin, "@wcs/xp");
-
 			CenterHtmlMenu menu = new CenterHtmlMenu("Manage Players");
 			List<ChatMenuOptionData> options = new();
 
@@ -69,88 +67,111 @@ namespace CS2_SimpleAdmin.Menus
 			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
 		}
 
-		public static void WhoIs(CCSPlayerController admin, CCSPlayerController player)
+		private static void WhoIs(CCSPlayerController admin, CCSPlayerController player)
 		{
 			BanManager banManager = new(CS2_SimpleAdmin.Instance.dbConnectionString, CS2_SimpleAdmin.Instance.Config);
 			MuteManager muteManager = new(CS2_SimpleAdmin.Instance.dbConnectionString);
-			
+
 			PlayerInfo playerInfo = new PlayerInfo
+			{
+				UserId = player.UserId,
+				Index = (int)player.Index,
+				SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
+
+			Task.Run(async () =>
+			{
+				int totalBans = 0;
+				int totalMutes = 0;
+
+				totalBans = await banManager.GetPlayerBans(playerInfo);
+				totalMutes = await muteManager.GetPlayerMutes(playerInfo.SteamId!);
+
+				Server.NextFrame(() =>
 				{
-					UserId = player.UserId,
-					Index = (int)player.Index,
-					SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
-					Name = player?.PlayerName,
-					IpAddress = player?.IpAddress?.Split(":")[0]
-				};
+					Action<string> printMethod = admin == null ? Server.PrintToConsole : admin.PrintToConsole;
+					printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
 
-				Task.Run(async () =>
-				{
-					int totalBans = 0;
-					int totalMutes = 0;
-
-					totalBans = await banManager.GetPlayerBans(playerInfo);
-					totalMutes = await muteManager.GetPlayerMutes(playerInfo.SteamId!);
-
-					Server.NextFrame(() =>
+					printMethod($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+					printMethod($"• UserID: \"{playerInfo.UserId}\"");
+					if (playerInfo.SteamId != null)
+						printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
+					if (player.AuthorizedSteamID != null)
 					{
-						Action<string> printMethod = admin == null ? Server.PrintToConsole : admin.PrintToConsole;
-						printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
+						printMethod($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
+						printMethod($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
+					}
 
-						printMethod($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
-						printMethod($"• UserID: \"{playerInfo.UserId}\"");
-						if (playerInfo.SteamId != null)
-							printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
-						if (player.AuthorizedSteamID != null)
-						{
-							printMethod($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
-							printMethod($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
-						}
+					if (playerInfo.IpAddress != null)
+						printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
+					printMethod($"• Ping: \"{player.Ping}\"");
+					if (player.AuthorizedSteamID != null)
+					{
+						printMethod($"• Total Bans: \"{totalBans}\"");
+						printMethod($"• Total Mutes: \"{totalMutes}\"");
+					}
 
-						if (playerInfo.IpAddress != null)
-							printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
-						printMethod($"• Ping: \"{player.Ping}\"");
-						if (player.AuthorizedSteamID != null)
-						{
-							printMethod($"• Total Bans: \"{totalBans}\"");
-							printMethod($"• Total Mutes: \"{totalMutes}\"");
-						}
-
-						printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
-					});
+					printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
 				});
+			});
 		}
 
-		public static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
+		private static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			// TODO: Slap
+			CenterHtmlMenu menu = new CenterHtmlMenu($"Slap {player.PlayerName}");
+			List<ChatMenuOptionData> options = new();
+
+			// options added in order
+			options.Add(new ChatMenuOptionData("0 hp", () => ApplySlapAndKeepMenu(admin, player, 0)));
+			options.Add(new ChatMenuOptionData("1 hp", () => ApplySlapAndKeepMenu(admin, player, 1)));
+			options.Add(new ChatMenuOptionData("5 hp", () => ApplySlapAndKeepMenu(admin, player, 5)));
+			options.Add(new ChatMenuOptionData("10 hp", () => ApplySlapAndKeepMenu(admin, player, 10)));
+			options.Add(new ChatMenuOptionData("50 hp", () => ApplySlapAndKeepMenu(admin, player, 50)));
+			options.Add(new ChatMenuOptionData("100 hp", () => ApplySlapAndKeepMenu(admin, player, 100)));
+
+			foreach (ChatMenuOptionData menuOptionData in options)
+			{
+				string menuName = menuOptionData.name;
+				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
+			}
+
+			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
 		}
 
-		public static void Slay(CCSPlayerController admin, CCSPlayerController player)
+		private static void ApplySlapAndKeepMenu(CCSPlayerController admin, CCSPlayerController player, int i)
+		{
+			CS2_SimpleAdmin.Instance.Slap(admin, player, i);
+			SlapMenu(admin, player);
+		}
+
+		private static void Slay(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: Slay
 		}
 
-		public static void Kick(CCSPlayerController admin, CCSPlayerController player)
+		private static void Kick(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: Kick
 		}
 
-		public static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration)
+		private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Ban
 		}
 
-		public static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration)
+		private static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Gag
 		}
 
-		public static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration)
+		private static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Mute
 		}
 
-		public static void ForceTeam(CCSPlayerController admin, CCSPlayerController player)
+		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: ForceTeam
 		}

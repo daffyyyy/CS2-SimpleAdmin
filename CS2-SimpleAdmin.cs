@@ -1486,16 +1486,21 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (caller!.CanTarget(player))
 			{
-				player!.Pawn.Value!.Slap(damage);
-				StringBuilder sb = new(_localizer!["sa_prefix"]);
-
-				if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
-				{
-					sb.Append(_localizer["sa_admin_slap_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
-					Server.PrintToChatAll(sb.ToString());
-				}
+				Slap(caller, player, damage);
 			}
 		});
+	}
+	
+	public void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage)
+	{
+		player.Pawn.Value!.Slap(damage);
+		StringBuilder sb = new(_localizer!["sa_prefix"]);
+
+		if (caller == null || caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
+		{
+			sb.Append(_localizer["sa_admin_slap_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		}
 	}
 
 	[ConsoleCommand("css_team")]
