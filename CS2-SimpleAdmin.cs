@@ -404,7 +404,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		string reason = "Unknown";
+		string reason = null;
 
 		TargetResult? targets = GetTarget(command);
 		if (targets == null) return;
@@ -422,30 +422,35 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (caller!.CanTarget(player))
 			{
-				if (player.PawnIsAlive)
-				{
-					player.Pawn.Value!.Freeze();
-					player.CommitSuicide(true, true);
-				}
-
-				if (command.ArgCount >= 2)
-				{
-					player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason));
-				}
-				else
-				{
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
-				}
-
-				if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_kick_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
-					Server.PrintToChatAll(sb.ToString());
-				}
+				Kick(caller, player, reason);
 			}
 		});
+	}
+
+	public void Kick(CCSPlayerController? caller, CCSPlayerController player, string reason = null)
+	{
+		if (player.PawnIsAlive)
+		{
+			player.Pawn.Value!.Freeze();
+			player.CommitSuicide(true, true);
+		}
+
+		if (string.IsNullOrEmpty(reason) == false)
+		{
+			player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
+			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason));
+		}
+		else
+		{
+			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
+		}
+
+		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
+		{
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_kick_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+			Server.PrintToChatAll(sb.ToString());
+		}
 	}
 
 	[ConsoleCommand("css_gag")]
@@ -1341,15 +1346,20 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		playersToTarget.ForEach(player =>
 		{
-			player.CommitSuicide(false, true);
-
-			if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
-			{
-				StringBuilder sb = new(_localizer!["sa_prefix"]);
-				sb.Append(_localizer["sa_admin_slay_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
-				Server.PrintToChatAll(sb.ToString());
-			}
+			Slay(caller, player);
 		});
+	}
+
+	public void Slay(CCSPlayerController? caller, CCSPlayerController player)
+	{
+		player.CommitSuicide(false, true);
+
+		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
+		{
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_slay_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName]);
+			Server.PrintToChatAll(sb.ToString());
+		}
 	}
 
 	[ConsoleCommand("css_give")]

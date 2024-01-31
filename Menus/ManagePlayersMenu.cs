@@ -102,12 +102,12 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void Slay(CCSPlayerController admin, CCSPlayerController player)
 		{
-			// TODO: Slay
+			CS2_SimpleAdmin.Instance.Slay(admin, player);
 		}
 
 		private static void Kick(CCSPlayerController admin, CCSPlayerController player)
 		{
-			// TODO: Kick
+			CS2_SimpleAdmin.Instance.Kick(admin, player);
 		}
 
 		private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration)
