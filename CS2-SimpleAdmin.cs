@@ -157,9 +157,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		_localizer = Localizer;
 	}
 
-	[ConsoleCommand("css_admin")]
+	[ConsoleCommand("css_adminhelp")]
 	[RequiresPermissions("@css/generic")]
-	public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
+	public void OnAdminHelpCommand(CCSPlayerController? caller, CommandInfo command)
 	{
 		if (caller == null || !caller.IsValid) return;
 
@@ -169,6 +169,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			caller.PrintToChat(Helper.ReplaceTags($" {line}"));
 		}
+	}
+	
+	[ConsoleCommand("css_admin")]
+	[RequiresPermissions("@css/generic")]
+	public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (caller == null || caller.IsValid == false)
+			return;
+
+		AdminMenu.OpenMenu(caller);
 	}
 
 	[ConsoleCommand("css_addadmin")]
