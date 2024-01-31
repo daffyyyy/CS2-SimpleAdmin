@@ -6,6 +6,7 @@ namespace CS2_SimpleAdmin.Menus
 {
 	public static class DurationMenu
 	{
+		// TODO: Localize
 		public static Tuple<string, int>[] _durations = new[]
 		{
 			new Tuple<string, int>("1 minute", 1),

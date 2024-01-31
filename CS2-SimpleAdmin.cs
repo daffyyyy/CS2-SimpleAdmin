@@ -1627,39 +1627,46 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				break;
 		}
 
+		bool kill = command.GetArg(3)?.ToLower().Equals("-k") ?? false;
+		
 		playersToTarget.ForEach(player =>
 		{
-			if (!teamName.Equals("swap"))
-			{
-				if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !command.GetArg(3).ToLower().Equals("-k"))
-					player.SwitchTeam(teamNum);
-				else
-					player.ChangeTeam(teamNum);
-			}
+			ChangeTeam(caller, player, _teamName, teamNum, kill);	
+		});
+	}
+
+	public void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill)
+	{
+		if (!teamName.Equals("swap"))
+		{
+			if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill)
+				player.SwitchTeam(teamNum);
 			else
+				player.ChangeTeam(teamNum);
+		}
+		else
+		{
+			if (player.TeamNum != (byte)CsTeam.Spectator)
 			{
-				if (player.TeamNum != (byte)CsTeam.Spectator)
+				teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+				teamName = teamNum == CsTeam.Terrorist ? "TT" : "CT";
+				if (player.PawnIsAlive && !kill)
 				{
-					CsTeam teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
-					_teamName = teamNum == CsTeam.Terrorist ? "TT" : "CT";
-					if (player.PawnIsAlive && !command.GetArg(3).ToLower().Equals("-k"))
-					{
-						player.SwitchTeam(teamNum);
-					}
-					else
-					{
-						player.ChangeTeam(teamNum);
-					}
+					player.SwitchTeam(teamNum);
+				}
+				else
+				{
+					player.ChangeTeam(teamNum);
 				}
 			}
+		}
 
-			if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
-			{
-				StringBuilder sb = new(_localizer!["sa_prefix"]);
-				sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, _teamName]);
-				Server.PrintToChatAll(sb.ToString());
-			}
-		});
+		if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
+		{
+			StringBuilder sb = new(_localizer!["sa_prefix"]);
+			sb.Append(_localizer["sa_admin_team_message", caller == null ? "Console" : caller.PlayerName, player.PlayerName, teamName]);
+			Server.PrintToChatAll(sb.ToString());
+		}
 	}
 
 	[ConsoleCommand("css_vote")]

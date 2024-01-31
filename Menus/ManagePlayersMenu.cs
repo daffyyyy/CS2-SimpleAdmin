@@ -28,6 +28,7 @@ namespace CS2_SimpleAdmin.Menus
 			bool hasBan = AdminManager.PlayerHasPermissions(admin, "@css/ban");
 			bool hasChat = AdminManager.PlayerHasPermissions(admin, "@css/chat");
 
+			// TODO: Localize options
 			// options added in order
 			options.Add(new ChatMenuOptionData("Who Is", () => PlayersMenu.OpenMenu(admin, "Who is", WhoIs)));
 
@@ -55,7 +56,7 @@ namespace CS2_SimpleAdmin.Menus
 
 			if (hasKick)
 			{
-				options.Add(new ChatMenuOptionData("Force Team", () => PlayersMenu.OpenMenu(admin, "Force Team", ForceTeam)));
+				options.Add(new ChatMenuOptionData("Force Team", () => PlayersMenu.OpenMenu(admin, "Force Team", ForceTeamMenu)));
 			}
 
 			foreach (ChatMenuOptionData menuOptionData in options)
@@ -137,6 +138,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
+			// TODO: Localize and make options in config?
 			CenterHtmlMenu menu = new CenterHtmlMenu($"Gag {player.PlayerName}");
 			List<string> options = new()
 			{
@@ -163,6 +165,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void MuteMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
+			// TODO: Localize and make options in config?
 			CenterHtmlMenu menu = new CenterHtmlMenu($"Mute {player.PlayerName}");
 			List<string> options = new()
 			{
@@ -189,7 +192,26 @@ namespace CS2_SimpleAdmin.Menus
 			CS2_SimpleAdmin.Instance.Mute(admin, player, duration, reason);
 		}
 
-		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player)
+		private static void ForceTeamMenu(CCSPlayerController admin, CCSPlayerController player)
+		{
+			// TODO: Localize
+			CenterHtmlMenu menu = new CenterHtmlMenu($"Force {player.PlayerName}'s Team");
+			List<ChatMenuOptionData> options = new();
+			options.Add(new ChatMenuOptionData("CT", () => ForceTeam(admin, player, "ct")));
+			options.Add(new ChatMenuOptionData("T", () => ForceTeam(admin, player, "t")));
+			options.Add(new ChatMenuOptionData("Swap", () => ForceTeam(admin, player, "swap")));
+			options.Add(new ChatMenuOptionData("Spectator", () => ForceTeam(admin, player, "spec")));
+
+			foreach (ChatMenuOptionData menuOptionData in options)
+			{
+				string menuName = menuOptionData.name;
+				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
+			}
+
+			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+		}
+
+		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player, string teamName)
 		{
 			// TODO: ForceTeam
 		}
