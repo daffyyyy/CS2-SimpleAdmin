@@ -21,6 +21,8 @@ namespace CS2_SimpleAdmin;
 [MinimumApiVersion(159)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
+	public static CS2_SimpleAdmin Instance { get; private set; }
+	
 	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<string> gaggedPlayers = new ConcurrentBag<string>();
 	//public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
@@ -42,6 +44,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public override void Load(bool hotReload)
 	{
+		Instance = this;
+		
 		registerEvents();
 
 		if (hotReload)
