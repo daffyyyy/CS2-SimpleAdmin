@@ -1,3 +1,4 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Menu;
@@ -30,7 +31,7 @@ namespace CS2_SimpleAdmin.Menus
 			bool hasChat = AdminManager.PlayerHasPermissions(admin, "@css/chat");
 
 			// options added in order
-			options.Add(new ChatMenuOptionData("Who is", () => PlayersMenu.OpenMenu(admin, "Who is", WhoIs)));
+			options.Add(new ChatMenuOptionData("Who Is", () => PlayersMenu.OpenMenu(admin, "Who is", WhoIs)));
 
 			if (hasSlay)
 			{
@@ -68,42 +69,88 @@ namespace CS2_SimpleAdmin.Menus
 			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
 		}
 
-		private static void WhoIs(CCSPlayerController admin, CCSPlayerController player)
+		public static void WhoIs(CCSPlayerController admin, CCSPlayerController player)
 		{
-			// TODO: WhoIs
+			BanManager banManager = new(CS2_SimpleAdmin.Instance.dbConnectionString, CS2_SimpleAdmin.Instance.Config);
+			MuteManager muteManager = new(CS2_SimpleAdmin.Instance.dbConnectionString);
+			
+			PlayerInfo playerInfo = new PlayerInfo
+				{
+					UserId = player.UserId,
+					Index = (int)player.Index,
+					SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
+					Name = player?.PlayerName,
+					IpAddress = player?.IpAddress?.Split(":")[0]
+				};
+
+				Task.Run(async () =>
+				{
+					int totalBans = 0;
+					int totalMutes = 0;
+
+					totalBans = await banManager.GetPlayerBans(playerInfo);
+					totalMutes = await muteManager.GetPlayerMutes(playerInfo.SteamId!);
+
+					Server.NextFrame(() =>
+					{
+						Action<string> printMethod = admin == null ? Server.PrintToConsole : admin.PrintToConsole;
+						printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
+
+						printMethod($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+						printMethod($"• UserID: \"{playerInfo.UserId}\"");
+						if (playerInfo.SteamId != null)
+							printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
+						if (player.AuthorizedSteamID != null)
+						{
+							printMethod($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
+							printMethod($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
+						}
+
+						if (playerInfo.IpAddress != null)
+							printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
+						printMethod($"• Ping: \"{player.Ping}\"");
+						if (player.AuthorizedSteamID != null)
+						{
+							printMethod($"• Total Bans: \"{totalBans}\"");
+							printMethod($"• Total Mutes: \"{totalMutes}\"");
+						}
+
+						printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+					});
+				});
 		}
 
-		private static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
+		public static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: Slap
 		}
 
-		private static void Slay(CCSPlayerController admin, CCSPlayerController player)
+		public static void Slay(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: Slay
 		}
 
-		private static void Kick(CCSPlayerController admin, CCSPlayerController player)
+		public static void Kick(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: Kick
 		}
 
-		private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration)
+		public static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Ban
 		}
 
-		private static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration)
+		public static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Gag
 		}
 
-		private static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration)
+		public static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Mute
 		}
 
-		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player)
+		public static void ForceTeam(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: ForceTeam
 		}

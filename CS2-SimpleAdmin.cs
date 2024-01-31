@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using System.Collections.Concurrent;
 using System.Text;
+using CS2_SimpleAdmin.Menus;
 
 namespace CS2_SimpleAdmin;
 
@@ -306,82 +307,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
 
-		BanManager _banManager = new(dbConnectionString, Config);
-		MuteManager _muteManager = new(dbConnectionString);
-
 		playersToTarget.ForEach(player =>
 		{
 			if (caller!.CanTarget(player))
 			{
-				PlayerInfo playerInfo = new PlayerInfo
-				{
-					UserId = player.UserId,
-					Index = (int)player.Index,
-					SteamId = player?.AuthorizedSteamID?.SteamId64.ToString(),
-					Name = player?.PlayerName,
-					IpAddress = player?.IpAddress?.Split(":")[0]
-				};
-
-				Task.Run(async () =>
-				{
-					int totalBans = 0;
-					int totalMutes = 0;
-
-					totalBans = await _banManager.GetPlayerBans(playerInfo);
-					totalMutes = await _muteManager.GetPlayerMutes(playerInfo.SteamId!);
-
-					Server.NextFrame(() =>
-					{
-						if (caller != null)
-						{
-							caller!.PrintToConsole($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
-
-							caller!.PrintToConsole($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
-							caller!.PrintToConsole($"• UserID: \"{playerInfo.UserId}\"");
-							if (playerInfo.SteamId != null)
-								caller!.PrintToConsole($"• SteamID64: \"{playerInfo.SteamId}\"");
-							if (player.AuthorizedSteamID != null)
-							{
-								caller!.PrintToConsole($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
-								caller!.PrintToConsole($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
-							}
-							if (playerInfo.IpAddress != null)
-								caller!.PrintToConsole($"• IP Address: \"{playerInfo.IpAddress}\"");
-							caller!.PrintToConsole($"• Ping: \"{player.Ping}\"");
-							if (player.AuthorizedSteamID != null)
-							{
-								caller!.PrintToConsole($"• Total Bans: \"{totalBans}\"");
-								caller!.PrintToConsole($"• Total Mutes: \"{totalMutes}\"");
-							}
-
-							caller!.PrintToConsole($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
-						}
-						else
-						{
-							Server.PrintToConsole($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
-
-							Server.PrintToConsole($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
-							Server.PrintToConsole($"• UserID: \"{playerInfo.UserId}\"");
-							if (playerInfo.SteamId != null)
-								Server.PrintToConsole($"• SteamID64: \"{playerInfo.SteamId}\"");
-							if (player.AuthorizedSteamID != null)
-							{
-								Server.PrintToConsole($"• SteamID2: \"{player.AuthorizedSteamID.SteamId2}\"");
-								Server.PrintToConsole($"• Community link: \"{player.AuthorizedSteamID.ToCommunityUrl()}\"");
-							}
-							if (playerInfo.IpAddress != null)
-								Server.PrintToConsole($"• IP Address: \"{playerInfo.IpAddress}\"");
-							Server.PrintToConsole($"• Ping: \"{player.Ping}\"");
-							if (player.AuthorizedSteamID != null)
-							{
-								Server.PrintToConsole($"• Total Bans: \"{totalBans}\"");
-								Server.PrintToConsole($"• Total Mutes: \"{totalMutes}\"");
-							}
-
-							Server.PrintToConsole($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
-						}
-					});
-				});
+				ManagePlayersMenu.WhoIs(caller, player);
 			}
 		});
 	}

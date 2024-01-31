@@ -14,7 +14,7 @@ namespace CS2_SimpleAdmin.Menus
 			foreach (CCSPlayerController player in players)
 			{
 				string optionName = player.PlayerName;
-				menu.AddMenuOption(optionName, (_, _) => { onSelectAction?.Invoke(admin, player); });
+				menu.AddMenuOption(optionName, (_, _) => { onSelectAction?.Invoke(admin, player); }, admin.CanTarget(player) == false);
 			}
 
 			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
