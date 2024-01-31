@@ -22,7 +22,7 @@ namespace CS2_SimpleAdmin;
 [MinimumApiVersion(159)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
-	public static CS2_SimpleAdmin Instance { get; private set; }
+	public static CS2_SimpleAdmin Instance { get; private set; } = null;
 	
 	public static IStringLocalizer? _localizer;
 	public static ConcurrentBag<string> gaggedPlayers = new ConcurrentBag<string>();
