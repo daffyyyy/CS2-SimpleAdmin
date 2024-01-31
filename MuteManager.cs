@@ -5,7 +5,7 @@ using System.Data;
 
 namespace CS2_SimpleAdmin
 {
-	public class MuteManager
+	internal class MuteManager
 	{
 		private readonly MySqlConnection _dbConnection;
 

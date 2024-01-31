@@ -329,7 +329,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
-	public void Who(CCSPlayerController? caller, CCSPlayerController player, BanManager banManager = null, MuteManager muteManager = null)
+	internal void Who(CCSPlayerController? caller, CCSPlayerController player, BanManager banManager = null, MuteManager muteManager = null)
 	{
 		banManager ??= new(dbConnectionString, Config);
 		muteManager ??= new(dbConnectionString);
@@ -496,7 +496,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
-	public void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null)
+	internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null)
 	{
 		reason ??= "Unknown";
 		muteManager ??= new(dbConnectionString);
@@ -810,7 +810,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
-	public void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null)
+	internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null)
 	{
 		reason ??= "Unknown";
 		muteManager ??= new(dbConnectionString);
@@ -1127,7 +1127,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
-	public void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, BanManager banManager = null)
+	internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, BanManager banManager = null)
 	{
 		reason ??= "Unknown";
 		banManager ??= new(dbConnectionString, Config);
