@@ -14,6 +14,8 @@ using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
+using System;
+using System.Runtime.InteropServices;
 using System.Collections.Concurrent;
 using System.Text;
 
@@ -39,7 +41,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleAuthor => "daffyy";
 	public override string ModuleVersion => "1.2.9d";
 
-	private MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? CBasePlayerController_SetPawnFunc;
+	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerController_SetPawnFunc = new(
+		RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "\x55\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x49\x89\xFC\x53\x48\x89\xF3\x48\x81\xEC\xC8\x00\x00\x00" : "\\x44\\x88\\x4C\\x24\\x2A\\x55\\x57"
+	);
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -51,8 +55,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			OnMapStart(string.Empty);
 		}
-
-		CBasePlayerController_SetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(@"\x55\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x49\x89\xFC\x53\x48\x89\xF3\x48\x81\xEC\xC8\x00\x00\x00");
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
