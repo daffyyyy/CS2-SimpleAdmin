@@ -1968,10 +1968,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		sb.Append(_localizer!["sa_adminsay_prefix", utf8String]);
 		Server.PrintToChatAll(sb.ToString());
 		if (Config.DiscordWebhook.Length > 0 && _localizer != null)
-		{
-			LocalizedString localizedMessage = _localizer["sa_adminsay_prefix", utf8String];
-			_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
-		}
+			_ = SendWebhookMessage($"ASAY: {caller!.PlayerName}: {utf8String}");
 	}
 
 	[ConsoleCommand("css_psay", "Private message a player.")]
