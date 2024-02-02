@@ -30,7 +30,7 @@ jobs:
     - name: Restore
       run: dotnet restore
     - name: Build
-      run: dotnet build ${{ env.PROJECT_PATH }} -c CS2-SimpleAdmin -o ${{ env.OUTPUT_PATH }} --configuration Release
+      run: dotnet build ${{ env.PROJECT_PATH }} -c CS2-SimpleAdmin -o ${{ env.OUTPUT_PATH }}
 
   publish:
     if: github.event_name == 'push'
@@ -46,7 +46,7 @@ jobs:
     - name: Restore
       run: dotnet restore
     - name: Build
-      run: dotnet build ${{ env.PROJECT_PATH }} -c CS2-SimpleAdmin -o ${{ env.OUTPUT_PATH }} --configuration Release
+      run: dotnet build ${{ env.PROJECT_PATH }} -c CS2-SimpleAdmin -o ${{ env.OUTPUT_PATH }}
     - name: Clean files
       run: |
         rm -f \
