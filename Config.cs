@@ -5,7 +5,7 @@ namespace CS2_SimpleAdmin
 {
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		public override int Version { get; set; } = 3;
+		public override int Version { get; set; } = 4;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";
@@ -30,6 +30,9 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("BanType")]
 		public int BanType { get; set; } = 1;
+
+		[JsonPropertyName("DiscordWebhook")]
+		public string DiscordWebhook { get; set; } = "";
 
 	}
 }
