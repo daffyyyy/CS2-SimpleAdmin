@@ -59,7 +59,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 	}
 
-	public async void OnConfigParsed(CS2_SimpleAdminConfig config)
+	public void OnConfigParsed(CS2_SimpleAdminConfig config)
 	{
 		if (config.DatabaseHost.Length < 1 || config.DatabaseName.Length < 1 || config.DatabaseUser.Length < 1)
 		{
@@ -77,16 +77,19 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		dbConnectionString = builder.ConnectionString;
 
-		try
+		Task.Run(async () =>
 		{
-			_database = new(dbConnectionString);
-
-			using (var connection = _database.GetConnection())
+			try
 			{
-				using var transaction = await connection.BeginTransactionAsync();
-				try
+
+				_database = new(dbConnectionString);
+
+				using (var connection = _database.GetConnection())
 				{
-					string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
+					using var transaction = await connection.BeginTransactionAsync();
+					try
+					{
+						string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
                                 `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                 `player_steamid` VARCHAR(64),
                                 `player_name` VARCHAR(128),
@@ -102,9 +105,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
 
-					await connection.QueryAsync(sql, transaction: transaction);
+						await connection.QueryAsync(sql, transaction: transaction);
 
-					sql = @"CREATE TABLE IF NOT EXISTS `sa_mutes` (
+						sql = @"CREATE TABLE IF NOT EXISTS `sa_mutes` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `player_steamid` varchar(64) NOT NULL,
 						 `player_name` varchar(128) NULL,
@@ -120,9 +123,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
-					await connection.QueryAsync(sql, transaction: transaction);
+						await connection.QueryAsync(sql, transaction: transaction);
 
-					sql = @"CREATE TABLE IF NOT EXISTS `sa_admins` (
+						sql = @"CREATE TABLE IF NOT EXISTS `sa_admins` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `player_steamid` varchar(64) NOT NULL,
 						 `player_name` varchar(128) NOT NULL,
@@ -134,9 +137,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
-					await connection.QueryAsync(sql, transaction: transaction);
+						await connection.QueryAsync(sql, transaction: transaction);
 
-					sql = @"CREATE TABLE IF NOT EXISTS `sa_servers` (
+						sql = @"CREATE TABLE IF NOT EXISTS `sa_servers` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `address` varchar(64) NOT NULL,
 						 `hostname` varchar(64) NOT NULL,
@@ -145,22 +148,23 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 						";
 
-					await connection.QueryAsync(sql, transaction: transaction);
+						await connection.QueryAsync(sql, transaction: transaction);
 
-					await transaction.CommitAsync();
-				}
-				catch (Exception)
-				{
-					await transaction.RollbackAsync();
-					throw;
+						await transaction.CommitAsync();
+					}
+					catch (Exception)
+					{
+						await transaction.RollbackAsync();
+						throw;
+					}
 				}
 			}
-		}
-		catch (Exception)
-		{
-			Logger.LogError("Unable to connect to the database!");
-			throw new Exception("[CS2-SimpleAdmin] Unable to connect to the Database!");
-		}
+			catch (Exception)
+			{
+				Logger.LogError("Unable to connect to the database!");
+				throw new Exception("[CS2-SimpleAdmin] Unable to connect to the Database!");
+			}
+		});
 
 		Config = config;
 		_localizer = Localizer;

@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Text;
 using static CounterStrikeSharp.API.Core.Listeners;

@@ -1,5 +1,6 @@
 ﻿using MySqlConnector;
 
+namespace CS2_SimpleAdmin;
 public class Database
 {
 	private readonly string _dbConnectionString;
