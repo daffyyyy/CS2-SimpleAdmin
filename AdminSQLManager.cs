@@ -1,20 +1,19 @@
 ﻿using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
-using MySqlConnector;
 
 namespace CS2_SimpleAdmin
 {
-	internal class AdminSQLManager
+	public class AdminSQLManager
 	{
-		private readonly MySqlConnection _dbConnection;
+		private readonly Database _database;
 		// Unused for now
 		//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
 		public static readonly HashSet<SteamID> _adminCacheSet = new HashSet<SteamID>();
 		public static readonly Dictionary<SteamID, DateTime?> _adminCacheTimestamps = new Dictionary<SteamID, DateTime?>();
 
-		public AdminSQLManager(string connectionString)
+		public AdminSQLManager(Database database)
 		{
-			_dbConnection = new MySqlConnection(connectionString);
+			_database = database;
 		}
 
 		/*
@@ -26,7 +25,7 @@ namespace CS2_SimpleAdmin
 			}
 			else
 			{
-				await using var connection = _dbConnection;
+				await using var connection = _database.GetConnection();
 				await connection.OpenAsync();
 
 				DateTime now = DateTime.Now;
@@ -48,16 +47,9 @@ namespace CS2_SimpleAdmin
 
 		public async Task<List<(List<string>, int)>> GetAdminFlags(string steamId)
 		{
-			/* Unused for now
-			if (_adminCache.TryGetValue(steamId, out ConcurrentBag<string>? cachedFlags))
-			{
-				return cachedFlags.ToList<object>();
-			}
-			*/
 			DateTime now = DateTime.Now;
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
 			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
@@ -147,8 +139,6 @@ namespace CS2_SimpleAdmin
 				return flagsToCache.Cast<object>().ToList();
 			}
 			*/
-			await connection.CloseAsync();
-
 			return filteredFlagsWithImmunity;
 			//return filteredFlags.Cast<object>().ToList();
 		}
@@ -157,8 +147,7 @@ namespace CS2_SimpleAdmin
 		{
 			DateTime now = DateTime.Now;
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
 			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
@@ -210,8 +199,6 @@ namespace CS2_SimpleAdmin
 				filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
 			}
 
-			await connection.CloseAsync();
-
 			return filteredFlagsWithImmunity;
 		}
 
@@ -248,8 +235,7 @@ namespace CS2_SimpleAdmin
 
 			//_adminCache.TryRemove(playerSteamId, out _);
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			string sql = "";
 
@@ -263,8 +249,6 @@ namespace CS2_SimpleAdmin
 			}
 
 			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId, ServerId = CS2_SimpleAdmin.ServerId });
-
-			await connection.CloseAsync();
 		}
 
 		public async Task AddAdminBySteamId(string playerSteamId, string playerName, string flags, int immunity = 0, int time = 0, bool globalAdmin = false)
@@ -280,8 +264,7 @@ namespace CS2_SimpleAdmin
 			else
 				futureTime = null;
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			var sql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `flags`, `immunity`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @playerName, @flags, @immunity, @ends, @created, @serverid)";
@@ -298,19 +281,14 @@ namespace CS2_SimpleAdmin
 				created = now,
 				serverid = serverId
 			});
-
-			await connection.CloseAsync();
 		}
 
 		public async Task DeleteOldAdmins()
 		{
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
-
-			await connection.CloseAsync();
 		}
 	}
 }

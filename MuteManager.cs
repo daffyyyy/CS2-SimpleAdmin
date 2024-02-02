@@ -1,25 +1,22 @@
 ﻿using CounterStrikeSharp.API.Core;
 using Dapper;
-using MySqlConnector;
-using System.Data;
 
 namespace CS2_SimpleAdmin
 {
 	public class MuteManager
 	{
-		private readonly MySqlConnection _dbConnection;
+		private readonly Database _database;
 
-		public MuteManager(string connectionString)
+		public MuteManager(Database database)
 		{
-			_dbConnection = new MySqlConnection(connectionString);
+			_database = database;
 		}
 
 		public async Task MutePlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0, int type = 0)
 		{
 			if (player == null || player.SteamId == null) return;
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
@@ -44,16 +41,13 @@ namespace CS2_SimpleAdmin
 				type = muteType,
 				serverid = CS2_SimpleAdmin.ServerId
 			});
-
-			await connection.CloseAsync();
 		}
 
 		public async Task AddMuteBySteamid(string playerSteamId, PlayerInfo issuer, string reason, int time = 0, int type = 0)
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
@@ -77,36 +71,28 @@ namespace CS2_SimpleAdmin
 				type = muteType,
 				serverid = CS2_SimpleAdmin.ServerId
 			});
-
-			await connection.CloseAsync();
 		}
 
 		public async Task<List<dynamic>> IsPlayerMuted(string steamId)
 		{
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			DateTime now = DateTime.Now;
 
 			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 			var activeMutes = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
 
-			await connection.CloseAsync();
-
 			return activeMutes;
 		}
 
 		public async Task<int> GetPlayerMutes(string steamId)
 		{
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			int muteCount;
 			string sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
 
 			muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId });
-
-			await connection.CloseAsync();
 
 			return muteCount;
 		}
@@ -118,18 +104,12 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			if (type == 2)
 			{
 				string _unbanSql = "UPDATE sa_mutes SET status = 'UNMUTED' WHERE (player_steamid = @pattern OR player_name = @pattern) AND status = 'ACTIVE'";
 				await connection.ExecuteAsync(_unbanSql, new { pattern = playerPattern });
-
-				if (connection.State != ConnectionState.Closed)
-				{
-					connection.Close();
-				}
 
 				return;
 			}
@@ -142,19 +122,14 @@ namespace CS2_SimpleAdmin
 
 			string sqlUnban = "UPDATE sa_mutes SET status = 'UNMUTED' WHERE (player_steamid = @pattern OR player_name = @pattern) AND type = @muteType AND status = 'ACTIVE'";
 			await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern, muteType });
-
-			await connection.CloseAsync();
 		}
 
 		public async Task ExpireOldMutes()
 		{
-			await using var connection = _dbConnection;
-			await connection.OpenAsync();
+			await using var connection = _database.GetConnection();
 
 			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
-
-			await connection.CloseAsync();
 		}
 
 		public async Task CheckMute(PlayerInfo player)

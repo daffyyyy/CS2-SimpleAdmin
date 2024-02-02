@@ -11,12 +11,18 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
+using Dapper;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
+<<<<<<< Updated upstream
 using System;
 using System.Runtime.InteropServices;
+=======
+using Newtonsoft.Json;
+>>>>>>> Stashed changes
 using System.Collections.Concurrent;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CS2_SimpleAdmin;
@@ -36,14 +42,22 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static int? ServerId = null;
 
 	internal string dbConnectionString = string.Empty;
-	public override string ModuleName => "CS2-SimpleAdmin";
-	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
-	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.2.9d";
+	internal Database? _database;
 
 	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerController_SetPawnFunc = new(
 		RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "\x55\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x49\x89\xFC\x53\x48\x89\xF3\x48\x81\xEC\xC8\x00\x00\x00" : "\\x44\\x88\\x4C\\x24\\x2A\\x55\\x57"
 	);
+	public override string ModuleName => "CS2-SimpleAdmin";
+	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
+	public override string ModuleAuthor => "daffyy";
+	public override string ModuleVersion => "1.2.9a";
+
+<<<<<<< Updated upstream
+	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerController_SetPawnFunc = new(
+		RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "\x55\x48\x89\xE5\x41\x57\x41\x56\x41\x55\x41\x54\x49\x89\xFC\x53\x48\x89\xF3\x48\x81\xEC\xC8\x00\x00\x00" : "\\x44\\x88\\x4C\\x24\\x2A\\x55\\x57"
+	);
+=======
+>>>>>>> Stashed changes
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -57,7 +71,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 	}
 
-	public void OnConfigParsed(CS2_SimpleAdminConfig config)
+	public async void OnConfigParsed(CS2_SimpleAdminConfig config)
 	{
 		if (config.DatabaseHost.Length < 1 || config.DatabaseName.Length < 1 || config.DatabaseUser.Length < 1)
 		{
@@ -77,11 +91,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		try
 		{
-			using (var connection = new MySqlConnection(dbConnectionString))
-			{
-				connection.Open();
+			_database = new(dbConnectionString);
 
-				string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
+			using (var connection = _database.GetConnection())
+			{
+				using var transaction = await connection.BeginTransactionAsync();
+				try
+				{
+					string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
                                 `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                                 `player_steamid` VARCHAR(64),
                                 `player_name` VARCHAR(128),
@@ -96,13 +113,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                                 `status` ENUM('ACTIVE', 'UNBANNED', 'EXPIRED', '') NOT NULL DEFAULT 'ACTIVE'
                             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 
-				MySqlCommand command = new MySqlCommand(sql, connection);
-				command.ExecuteNonQuery();
 
-				sql = @"CREATE TABLE IF NOT EXISTS `sa_mutes` (
+					await connection.QueryAsync(sql, transaction: transaction);
+
+					sql = @"CREATE TABLE IF NOT EXISTS `sa_mutes` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `player_steamid` varchar(64) NOT NULL,
-						 `player_name` varchar(128) NOT NULL,
+						 `player_name` varchar(128) NULL,
 						 `admin_steamid` varchar(64) NOT NULL,
 						 `admin_name` varchar(128) NOT NULL,
 						 `reason` varchar(255) NOT NULL,
@@ -115,10 +132,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
-				command = new MySqlCommand(sql, connection);
-				command.ExecuteNonQuery();
+					await connection.QueryAsync(sql, transaction: transaction);
 
-				sql = @"CREATE TABLE IF NOT EXISTS `sa_admins` (
+					sql = @"CREATE TABLE IF NOT EXISTS `sa_admins` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `player_steamid` varchar(64) NOT NULL,
 						 `player_name` varchar(128) NOT NULL,
@@ -130,10 +146,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
 
-				command = new MySqlCommand(sql, connection);
-				command.ExecuteNonQuery();
+					await connection.QueryAsync(sql, transaction: transaction);
 
-				sql = @"CREATE TABLE IF NOT EXISTS `sa_servers` (
+					sql = @"CREATE TABLE IF NOT EXISTS `sa_servers` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `address` varchar(64) NOT NULL,
 						 `hostname` varchar(64) NOT NULL,
@@ -142,17 +157,21 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 						) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 						";
 
-				command = new MySqlCommand(sql, connection);
-				command.ExecuteNonQuery();
+					await connection.QueryAsync(sql, transaction: transaction);
 
-				connection.Close();
+					await transaction.CommitAsync();
+				}
+				catch (Exception)
+				{
+					await transaction.RollbackAsync();
+					throw;
+				}
 			}
 		}
-		catch (Exception ex)
+		catch (Exception)
 		{
-			Logger.LogError("Unable to connect to database!");
-			Logger.LogDebug(ex.Message);
-			throw new Exception("[CS2-SimpleAdmin] Unable to connect to Database!");
+			Logger.LogError("Unable to connect to the database!");
+			throw new Exception("[CS2-SimpleAdmin] Unable to connect to the Database!");
 		}
 
 		Config = config;
@@ -178,6 +197,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/root")]
 	public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		if (!Helper.IsValidSteamID64(command.GetArg(1)))
 		{
 			command.ReplyToCommand($"Invalid SteamID64.");
@@ -203,7 +224,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		int.TryParse(command.GetArg(5), out time);
 
-		AdminSQLManager _adminManager = new(dbConnectionString);
+		AdminSQLManager _adminManager = new(_database);
 		_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time, globalAdmin);
 
 		command.ReplyToCommand($"Added '{flags}' flags to '{name}' ({steamid})");
@@ -214,6 +235,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/root")]
 	public void OnDelAdminCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		if (!Helper.IsValidSteamID64(command.GetArg(1)))
 		{
 			command.ReplyToCommand($"Invalid SteamID64.");
@@ -223,7 +246,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		string steamid = command.GetArg(1);
 		bool globalDelete = command.GetArg(2).ToLower().Equals("-g");
 
-		AdminSQLManager _adminManager = new(dbConnectionString);
+		AdminSQLManager _adminManager = new(_database);
 		_ = _adminManager.DeleteAdminBySteamId(steamid, globalDelete);
 
 		AddTimer(2, () =>
@@ -239,7 +262,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				AdminManager.ClearPlayerPermissions(steamId);
 				AdminManager.RemovePlayerAdminData(steamId);
 			}
-		});
+		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 		command.ReplyToCommand($"Removed flags from '{steamid}'");
 	}
@@ -249,6 +272,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/root")]
 	public void OnRelAdminCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		foreach (SteamID steamId in AdminSQLManager._adminCacheSet)
 		{
 			if (AdminSQLManager._adminCacheSet.Contains(steamId))
@@ -261,7 +286,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			AdminManager.RemovePlayerAdminData(steamId);
 		}
 
-		AdminSQLManager _adminManager = new(dbConnectionString);
+		AdminSQLManager _adminManager = new(_database);
 		_ = _adminManager.GiveAllFlags();
 
 		command.ReplyToCommand("Reloaded sql admins");
@@ -278,8 +303,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (silentPlayers.Contains((ushort)caller.UserId))
 		{
 			silentPlayers.Remove((ushort)caller.UserId);
-			caller.ChangeTeam(CsTeam.Spectator);
 			caller.PrintToChat($"You aren't hidden now!");
+			caller.ChangeTeam(CsTeam.Spectator);
 			if (Config.DiscordWebhook.Length > 0 && _localizer != null)
 				_ = SendWebhookMessage($"{caller.PlayerName} isn't hidden now.");
 		}
@@ -292,8 +317,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
 					caller.PlayerPawn.Value.CommitSuicide(true, false);
 
-				AddTimer(1.0f, () => { caller.ChangeTeam(CsTeam.Spectator); });
-				AddTimer(1.1f, () => { caller.ChangeTeam(CsTeam.None); });
+				AddTimer(1.0f, () => { caller.ChangeTeam(CsTeam.Spectator); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				AddTimer(1.1f, () => { caller.ChangeTeam(CsTeam.None); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				caller.PrintToChat($"You are hidden now!");
 				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
 					_ = SendWebhookMessage($"{caller.PlayerName} is hidden now.");
@@ -310,12 +335,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/generic")]
 	public void OnWhoCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		TargetResult? targets = GetTarget(command);
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && !player.IsBot && !player.IsHLTV).ToList();
 
-		BanManager _banManager = new(dbConnectionString, Config);
-		MuteManager _muteManager = new(dbConnectionString);
+		Database database = new Database(dbConnectionString);
+		BanManager _banManager = new(database, Config);
+		MuteManager _muteManager = new(_database);
 
 		playersToTarget.ForEach(player =>
 		{
@@ -434,7 +462,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 		{
 			return;
 		}
@@ -455,11 +483,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (command.ArgCount >= 2)
 				{
 					player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason));
+					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
 				else
 				{
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
+					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
 
 				if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
@@ -483,6 +511,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnGagCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		int time = 0;
 		string reason = "Unknown";
 
@@ -490,7 +520,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 		{
 			return;
 		}
@@ -500,7 +530,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
 
-		MuteManager _muteManager = new(dbConnectionString);
+		MuteManager _muteManager = new(_database);
 
 		playersToTarget.ForEach(player =>
 		{
@@ -548,7 +578,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 							}
 						}
 
-						//MuteManager _muteManager = new(dbConnectionString);
+						//MuteManager _muteManager = new(_database);
 						//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 0);
 					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
@@ -594,6 +624,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnAddGagCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
 		if (command.ArgCount < 2)
 			return;
 		if (string.IsNullOrEmpty(command.GetArg(1))) return;
@@ -609,7 +640,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		string reason = "Unknown";
 
-		MuteManager _muteManager = new(dbConnectionString);
+		MuteManager _muteManager = new(_database);
 
 		int.TryParse(command.GetArg(2), out time);
 
@@ -705,6 +736,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnUngagCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		if (command.GetArg(1).Length <= 1)
 		{
 			command.ReplyToCommand($"Too short pattern to search.");
@@ -714,7 +747,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		bool found = false;
 
 		string pattern = command.GetArg(1);
-		MuteManager _muteManager = new(dbConnectionString);
+		MuteManager _muteManager = new(_database);
 
 		if (Helper.IsValidSteamID64(pattern))
 		{
@@ -775,7 +808,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 		{
 			return;
 		}
@@ -811,6 +844,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnMuteCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		int time = 0;
 		string reason = "Unknown";
 
@@ -818,7 +853,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 		{
 			return;
 		}
@@ -828,7 +863,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 			reason = command.GetArg(3);
 
-		MuteManager _muteManager = new(dbConnectionString);
+		MuteManager _muteManager = new(_database);
 
 		playersToTarget.ForEach(player =>
 		{
@@ -867,7 +902,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					{
 						if (player == null || !player.IsValid || player.AuthorizedSteamID == null) return;
 
-						//MuteManager _muteManager = new(dbConnectionString);
+						//MuteManager _muteManager = new(_database);
 						//_ = _muteManager.UnmutePlayer(player.AuthorizedSteamID.SteamId64.ToString(), 1);
 
 						/*
@@ -925,6 +960,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnAddMuteCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		if (command.ArgCount < 2)
 			return;
 		if (string.IsNullOrEmpty(command.GetArg(1))) return;
@@ -940,7 +977,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		string reason = "Unknown";
 
-		MuteManager _muteManager = new(dbConnectionString);
+		MuteManager _muteManager = new(_database);
 
 		int.TryParse(command.GetArg(2), out time);
 
@@ -1036,6 +1073,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnUnmuteCommand(CCSPlayerController? caller, CommandInfo command)
 	{
+		if (_database == null) return;
+
 		if (command.GetArg(1).Length <= 1)
 		{
 			command.ReplyToCommand($"Too short pattern to search.");
@@ -1044,7 +1083,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		string pattern = command.GetArg(1);
 		bool found = false;
-		MuteManager _muteManager = new(dbConnectionString);
+		MuteManager _muteManager = new(_database);
 
 		if (Helper.IsValidSteamID64(pattern))
 		{
@@ -1104,7 +1143,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		TargetResult? targets = GetTarget(command);
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 		{
 			return;
 		}
@@ -1151,12 +1190,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		if (targets == null) return;
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid).ToList();
 
-		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands)
+		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 		{
 			return;
 		}
 
-		BanManager _banManager = new(dbConnectionString, Config);
+		Database database = new Database(dbConnectionString);
+
+		BanManager _banManager = new(database, Config);
 
 		int.TryParse(command.GetArg(2), out time);
 
@@ -1192,7 +1233,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					await _banManager.BanPlayer(playerInfo, adminInfo, reason, time);
 				});
 
-				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player!.UserId!));
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player!.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 				if (time == 0)
 				{
@@ -1250,7 +1291,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		int time = 0;
 		string reason = "Unknown";
 
-		BanManager _banManager = new(dbConnectionString, Config);
+		Database database = new Database(dbConnectionString);
+
+		BanManager _banManager = new(database, Config);
 
 		int.TryParse(command.GetArg(2), out time);
 
@@ -1277,7 +1320,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 
 				player!.Pawn.Value!.Freeze();
-				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!));
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 				if (time == 0)
 				{
@@ -1316,7 +1359,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(dbConnectionString, Config);
+			Database database = new Database(dbConnectionString);
+
+			BanManager _banManager = new(database, Config);
 			await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
 		});
 
@@ -1402,13 +1447,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					}
 				}
 
-				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, "Banned"));
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, "Banned"), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 		}
 
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(dbConnectionString, Config);
+			Database database = new Database(dbConnectionString);
+
+			BanManager _banManager = new(database, Config);
 			await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
 		});
 
@@ -1427,7 +1474,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		string pattern = command.GetArg(1);
-		BanManager _banManager = new(dbConnectionString, Config);
+
+		Database database = new Database(dbConnectionString);
+
+		BanManager _banManager = new(database, Config);
 
 		_ = _banManager.UnbanPlayer(pattern);
 
@@ -1945,10 +1995,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		StringBuilder sb = new();
 		sb.Append(_localizer!["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, utf8String]);
 		if (Config.DiscordWebhook.Length > 0 && _localizer != null)
-		{
-			LocalizedString localizedMessage = _localizer["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, utf8String];
-			_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
-		}
+			_ = SendWebhookMessage($"ASAY: {caller!.PlayerName}: {utf8String}");
 
 		foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot && !p.IsHLTV && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 		{
@@ -2075,7 +2122,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				player!.Pawn.Value!.Freeze();
 
 				if (time > 0)
-					AddTimer(time, () => player.Pawn.Value!.Unfreeze());
+					AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 				if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains((ushort)caller.UserId))
 				{
@@ -2225,7 +2272,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				content = message
 			};
 
-			var jsonPayload = Newtonsoft.Json.JsonConvert.SerializeObject(payload);
+			var jsonPayload = JsonConvert.SerializeObject(payload);
 			var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
 
 			var response = await httpClient.PostAsync(Config.DiscordWebhook, content);

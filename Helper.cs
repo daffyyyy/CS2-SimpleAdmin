@@ -59,7 +59,7 @@ namespace CS2_SimpleAdmin
 				}
 
 				//Console.WriteLine($"Setting immunity for SteamID {steamid} to {immunity}");
-				AdminManager.SetPlayerImmunity(steamid, (uint)immunity);
+
 
 				if (flags != null)
 				{
@@ -81,6 +81,7 @@ namespace CS2_SimpleAdmin
 							}
 						}
 					}
+					AdminManager.SetPlayerImmunity(steamid, (uint)immunity);
 				}
 			}
 			catch (Exception)
