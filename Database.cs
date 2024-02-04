@@ -17,11 +17,3 @@ public class Database
 		return connection;
 	}
 }
-
-public static class DatabaseExtension
-{
-	public static string WithConnectionPooling(this string connectionString)
-	{
-		return $"{connectionString};Pooling=true;MinimumPoolSize=1;MaximumPoolSize=15";
-	}
-}

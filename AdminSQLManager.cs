@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
+using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin
 {
@@ -8,8 +9,8 @@ namespace CS2_SimpleAdmin
 		private readonly Database _database;
 		// Unused for now
 		//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
-		public static readonly HashSet<SteamID> _adminCacheSet = new HashSet<SteamID>();
-		public static readonly Dictionary<SteamID, DateTime?> _adminCacheTimestamps = new Dictionary<SteamID, DateTime?>();
+		public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCache = new ConcurrentDictionary<SteamID, DateTime?>();
+		//public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCacheTimestamps = new ConcurrentDictionary<SteamID, DateTime?>();
 
 		public AdminSQLManager(Database database)
 		{
@@ -216,10 +217,10 @@ namespace CS2_SimpleAdmin
 
 				if (!string.IsNullOrEmpty(steamIdStr) && SteamID.TryParse(steamIdStr, out var steamId) && steamId != null)
 				{
-					if (!_adminCacheSet.Contains(steamId))
+					if (!_adminCache.ContainsKey(steamId))
 					{
-						_adminCacheSet.Add(steamId);
-						_adminCacheTimestamps.Add(steamId, ends);
+						_adminCache.TryAdd(steamId, ends);
+						//_adminCacheTimestamps.Add(steamId, ends);
 					}
 
 					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
