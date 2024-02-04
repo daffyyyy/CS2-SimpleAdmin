@@ -95,9 +95,9 @@ namespace CS2_SimpleAdmin.Menus
 			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
 		}
 
-		private static void ApplySlapAndKeepMenu(CCSPlayerController admin, CCSPlayerController player, int i)
+		private static void ApplySlapAndKeepMenu(CCSPlayerController admin, CCSPlayerController player, int damage)
 		{
-			CS2_SimpleAdmin.Instance.Slap(admin, player, i);
+			CS2_SimpleAdmin.Instance.Slap(admin, player, damage);
 			SlapMenu(admin, player);
 		}
 
