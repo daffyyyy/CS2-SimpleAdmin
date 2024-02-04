@@ -473,6 +473,8 @@ public partial class CS2_SimpleAdmin: BasePlugin, IPluginConfig<CS2_SimpleAdminC
 
 	public void Kick(CCSPlayerController? caller, CCSPlayerController player, string reason = null)
 	{
+		reason ??= "Unknown";
+		
 		if (player.PawnIsAlive)
 		{
 			player.Pawn.Value!.Freeze();
