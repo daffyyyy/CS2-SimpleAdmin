@@ -116,7 +116,7 @@ namespace CS2_SimpleAdmin
 
 		public static void KickPlayer(ushort userId, string? reason = null)
 		{
-			NativeAPI.IssueServerCommand($"kickid {userId} {reason}");
+			Server.ExecuteCommand($"kickid {userId} {reason}");
 		}
 
 		public static void PrintToCenterAll(string message)
@@ -148,8 +148,12 @@ namespace CS2_SimpleAdmin
 
 		internal static void handleVotes(CCSPlayerController player, ChatMenuOption option)
 		{
-			if (CS2_SimpleAdmin.voteInProgress)
+			if (CS2_SimpleAdmin.voteInProgress && !CS2_SimpleAdmin.votePlayers.Contains(player.Slot))
+			{
+				CS2_SimpleAdmin.votePlayers.Add(player.Slot);
 				CS2_SimpleAdmin.voteAnswers[option.Text]++;
+				option.Disabled = true;
+			}
 		}
 	}
 }

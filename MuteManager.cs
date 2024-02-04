@@ -75,14 +75,25 @@ namespace CS2_SimpleAdmin
 
 		public async Task<List<dynamic>> IsPlayerMuted(string steamId)
 		{
+			if (string.IsNullOrEmpty(steamId))
+			{
+				return new List<dynamic>();
+			}
+
 			await using var connection = _database.GetConnection();
-
-			DateTime now = DateTime.Now;
-
+			DateTime currentTimeUtc = DateTime.UtcNow;
 			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
-			var activeMutes = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now })).ToList();
 
-			return activeMutes;
+			try
+			{
+				var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTimeUtc };
+				var activeMutes = (await connection.QueryAsync(sql, parameters)).ToList();
+				return activeMutes;
+			}
+			catch (Exception)
+			{
+				return new List<dynamic>();
+			}
 		}
 
 		public async Task<int> GetPlayerMutes(string steamId)
@@ -134,9 +145,9 @@ namespace CS2_SimpleAdmin
 
 		public async Task CheckMute(PlayerInfo player)
 		{
-			if (player.UserId == null) return;
+			if (player.UserId == null || player.SteamId == null) return;
 
-			string steamId = player.SteamId!;
+			string steamId = player.SteamId;
 			List<dynamic> activeMutes = await IsPlayerMuted(steamId);
 
 			if (activeMutes.Count > 0)
@@ -149,11 +160,13 @@ namespace CS2_SimpleAdmin
 
 					if (muteType == "GAG")
 					{
-						if (!CS2_SimpleAdmin.gaggedPlayers.Any(steamid => steamid == player.SteamId!.ToString()))
-							CS2_SimpleAdmin.gaggedPlayers.Add(player.SteamId!.ToString());
+						if (player.Slot.HasValue && !CS2_SimpleAdmin.gaggedPlayers.Contains(player.Slot.Value))
+						{
+							CS2_SimpleAdmin.gaggedPlayers.Add(player.Slot.Value);
+						}
 
 						if (CS2_SimpleAdmin.TagsDetected)
-							NativeAPI.IssueServerCommand($"css_tag_mute {player!.SteamId!.ToString()}");
+							NativeAPI.IssueServerCommand($"css_tag_mute {player!.SteamId}");
 
 						/*
 						CCSPlayerController currentPlayer = player;

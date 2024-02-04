@@ -90,26 +90,35 @@ namespace CS2_SimpleAdmin
 
 		public async Task<bool> IsPlayerBanned(PlayerInfo player)
 		{
-			DateTime now = DateTime.Now;
-
-			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
-
-			int banCount;
-
-			await using var connection = _database.GetConnection();
-
-			if (!string.IsNullOrEmpty(player.IpAddress))
+			if (player == null)
 			{
-				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = player.SteamId, PlayerIP = player.IpAddress, CurrentTime = now });
+				return false;
 			}
-			else
+
+			DateTime currentTimeUtc = DateTime.UtcNow;
+			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
+			int banCount = 0;
+
+			try
 			{
-				banCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = player.SteamId, PlayerIP = DBNull.Value, CurrentTime = now });
+				await using var connection = _database.GetConnection();
+
+				var parameters = new
+				{
+					PlayerSteamID = player.SteamId,
+					PlayerIP = !string.IsNullOrEmpty(player.IpAddress) ? player.IpAddress : (object)DBNull.Value,
+					CurrentTime = currentTimeUtc
+				};
+
+				banCount = await connection.ExecuteScalarAsync<int>(sql, parameters);
+			}
+			catch (Exception)
+			{
+				return false;
 			}
 
 			return banCount > 0;
 		}
-
 		public async Task<int> GetPlayerBans(PlayerInfo player)
 		{
 			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)";
