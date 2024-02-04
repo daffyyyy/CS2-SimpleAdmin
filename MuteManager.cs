@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Core;
 using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin
 {
@@ -16,7 +17,7 @@ namespace CS2_SimpleAdmin
 		{
 			if (player == null || player.SteamId == null) return;
 
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
@@ -47,7 +48,7 @@ namespace CS2_SimpleAdmin
 		{
 			if (string.IsNullOrEmpty(playerSteamId)) return;
 
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
@@ -80,12 +81,12 @@ namespace CS2_SimpleAdmin
 				return new List<dynamic>();
 			}
 
-			await using var connection = _database.GetConnection();
-			DateTime currentTimeUtc = DateTime.UtcNow;
-			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
-
 			try
 			{
+				using var connection = await _database.GetConnection();
+				DateTime currentTimeUtc = DateTime.UtcNow;
+				string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
+
 				var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTimeUtc };
 				var activeMutes = (await connection.QueryAsync(sql, parameters)).ToList();
 				return activeMutes;
@@ -98,7 +99,7 @@ namespace CS2_SimpleAdmin
 
 		public async Task<int> GetPlayerMutes(string steamId)
 		{
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			int muteCount;
 			string sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
@@ -115,7 +116,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			if (type == 2)
 			{
@@ -137,10 +138,18 @@ namespace CS2_SimpleAdmin
 
 		public async Task ExpireOldMutes()
 		{
-			await using var connection = _database.GetConnection();
+			try
+			{
+				using var connection = await _database.GetConnection();
 
-			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+				string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
+				await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+			}
+			catch (Exception)
+			{
+				if (CS2_SimpleAdmin._logger != null)
+					CS2_SimpleAdmin._logger.LogCritical("Unable to remove expired mutes");
+			}
 		}
 
 		public async Task CheckMute(PlayerInfo player)

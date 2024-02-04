@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
+using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin
@@ -50,7 +51,7 @@ namespace CS2_SimpleAdmin
 		{
 			DateTime now = DateTime.Now;
 
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
 			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
@@ -148,59 +149,66 @@ namespace CS2_SimpleAdmin
 		{
 			DateTime now = DateTime.Now;
 
-			await using var connection = _database.GetConnection();
-
-			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
-			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
-
-			if (activeFlags == null)
+			try
 			{
-				return new List<(string, List<string>, int, DateTime?)>();
-			}
+				using var connection = await _database.GetConnection();
 
-			List<(string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = new List<(string, List<string>, int, DateTime?)>();
+				string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
+				List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
 
-			foreach (dynamic flags in activeFlags)
-			{
-				if (flags is not IDictionary<string, object> flagsDict)
+				if (activeFlags == null)
 				{
-					continue;
+					return new List<(string, List<string>, int, DateTime?)>();
 				}
 
-				if (!flagsDict.TryGetValue("player_steamid", out var steamIdObj) ||
-					!flagsDict.TryGetValue("flags", out var flagsValueObj) ||
-					!flagsDict.TryGetValue("immunity", out var immunityValueObj) ||
-					!flagsDict.TryGetValue("ends", out var endsObj))
-				{
-					//Console.WriteLine("One or more required keys are missing.");
-					continue;
-				}
+				List<(string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = new List<(string, List<string>, int, DateTime?)>();
 
-				DateTime? ends = null;
-
-				if (endsObj != null) // Check if "ends" is not null
+				foreach (dynamic flags in activeFlags)
 				{
-					if (!DateTime.TryParse(endsObj.ToString(), out var parsedEnds))
+					if (flags is not IDictionary<string, object> flagsDict)
 					{
-						//Console.WriteLine("Failed to parse 'ends' value.");
 						continue;
 					}
 
-					ends = parsedEnds;
+					if (!flagsDict.TryGetValue("player_steamid", out var steamIdObj) ||
+						!flagsDict.TryGetValue("flags", out var flagsValueObj) ||
+						!flagsDict.TryGetValue("immunity", out var immunityValueObj) ||
+						!flagsDict.TryGetValue("ends", out var endsObj))
+					{
+						//Console.WriteLine("One or more required keys are missing.");
+						continue;
+					}
+
+					DateTime? ends = null;
+
+					if (endsObj != null) // Check if "ends" is not null
+					{
+						if (!DateTime.TryParse(endsObj.ToString(), out var parsedEnds))
+						{
+							//Console.WriteLine("Failed to parse 'ends' value.");
+							continue;
+						}
+
+						ends = parsedEnds;
+					}
+
+					if (!(steamIdObj is string steamId) ||
+						!(flagsValueObj is string flagsValue) ||
+						!int.TryParse(immunityValueObj.ToString(), out var immunityValue))
+					{
+						//Console.WriteLine("Failed to parse one or more values.");
+						continue;
+					}
+
+					filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
 				}
 
-				if (!(steamIdObj is string steamId) ||
-					!(flagsValueObj is string flagsValue) ||
-					!int.TryParse(immunityValueObj.ToString(), out var immunityValue))
-				{
-					//Console.WriteLine("Failed to parse one or more values.");
-					continue;
-				}
-
-				filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
+				return filteredFlagsWithImmunity;
 			}
-
-			return filteredFlagsWithImmunity;
+			catch (Exception)
+			{
+				return new List<(string, List<string>, int, DateTime?)>();
+			}
 		}
 
 		public async Task GiveAllFlags()
@@ -236,7 +244,7 @@ namespace CS2_SimpleAdmin
 
 			//_adminCache.TryRemove(playerSteamId, out _);
 
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			string sql = "";
 
@@ -265,7 +273,7 @@ namespace CS2_SimpleAdmin
 			else
 				futureTime = null;
 
-			await using var connection = _database.GetConnection();
+			using var connection = await _database.GetConnection();
 
 			var sql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `flags`, `immunity`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @playerName, @flags, @immunity, @ends, @created, @serverid)";
@@ -286,10 +294,19 @@ namespace CS2_SimpleAdmin
 
 		public async Task DeleteOldAdmins()
 		{
-			await using var connection = _database.GetConnection();
+			try
+			{
+				using var connection = await _database.GetConnection();
 
-			string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+				string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
+				await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+			}
+			catch (Exception)
+			{
+				if (CS2_SimpleAdmin._logger != null)
+					CS2_SimpleAdmin._logger.LogCritical("Unable to remove expired admins");
+			}
+
 		}
 	}
 }

@@ -41,13 +41,15 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	internal string dbConnectionString = string.Empty;
 	internal static Database? _database;
 
+	internal static ILogger? _logger;
+
 	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerController_SetPawnFunc = new(
 		RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "\\x55\\x48\\x89\\xE5\\x41\\x57\\x41\\x56\\x41\\x55\\x41\\x54\\x49\\x89\\xFC\\x53\\x48\\x89\\xF3\\x48\\x81\\xEC\\xC8\\x00\\x00\\x00" : "\\x44\\x88\\x4C\\x24\\x2A\\x55\\x57"
 	);
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.3.0a";
+	public override string ModuleVersion => "1.3.0b";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -59,6 +61,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			OnMapStart(string.Empty);
 		}
+
+		_logger = Logger;
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
@@ -85,69 +89,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			try
 			{
-				using (var connection = _database.GetConnection())
+				using (var connection = await _database.GetConnection())
 				{
 					using var transaction = await connection.BeginTransactionAsync();
+
 					try
 					{
-						string sql = @"CREATE TABLE IF NOT EXISTS `sa_bans` (
-                                `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                `player_steamid` VARCHAR(64),
-                                `player_name` VARCHAR(128),
-                                `player_ip` VARCHAR(128),
-                                `admin_steamid` VARCHAR(64) NOT NULL,
-                                `admin_name` VARCHAR(128) NOT NULL,
-                                `reason` VARCHAR(255) NOT NULL,
-                                `duration` INT NOT NULL,
-                                `ends` TIMESTAMP NOT NULL,
-                                `created` TIMESTAMP NOT NULL,
-								`server_id` INT NULL,
-                                `status` ENUM('ACTIVE', 'UNBANNED', 'EXPIRED', '') NOT NULL DEFAULT 'ACTIVE'
-                            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
-
-
-						await connection.QueryAsync(sql, transaction: transaction);
-
-						sql = @"CREATE TABLE IF NOT EXISTS `sa_mutes` (
-						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `player_steamid` varchar(64) NOT NULL,
-						 `player_name` varchar(128) NULL,
-						 `admin_steamid` varchar(64) NOT NULL,
-						 `admin_name` varchar(128) NOT NULL,
-						 `reason` varchar(255) NOT NULL,
-						 `duration` int(11) NOT NULL,
-						 `ends` timestamp NOT NULL,
-						 `created` timestamp NOT NULL,
-						 `type` enum('GAG','MUTE','') NOT NULL DEFAULT 'GAG',
-						 `server_id` INT NULL,
-						 `status` enum('ACTIVE','UNMUTED','EXPIRED','') NOT NULL DEFAULT 'ACTIVE',
-						 PRIMARY KEY (`id`)
-						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
-
-						await connection.QueryAsync(sql, transaction: transaction);
-
-						sql = @"CREATE TABLE IF NOT EXISTS `sa_admins` (
-						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `player_steamid` varchar(64) NOT NULL,
-						 `player_name` varchar(128) NOT NULL,
-						 `flags` TEXT NOT NULL,
-						 `immunity` varchar(64) NOT NULL DEFAULT '0',
-						 `server_id` INT NULL,
-						 `ends` timestamp NULL,
-						 `created` timestamp NOT NULL,
-						 PRIMARY KEY (`id`)
-						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci";
-
-						await connection.QueryAsync(sql, transaction: transaction);
-
-						sql = @"CREATE TABLE IF NOT EXISTS `sa_servers` (
-						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `address` varchar(64) NOT NULL,
-						 `hostname` varchar(64) NOT NULL,
-						 PRIMARY KEY (`id`),
-						 UNIQUE KEY `address` (`address`)
-						) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
-						";
+						string sqlFilePath = ModuleDirectory + "/database_setup.sql";
+						string sql = await File.ReadAllTextAsync(sqlFilePath);
 
 						await connection.QueryAsync(sql, transaction: transaction);
 
@@ -163,7 +112,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			catch (Exception)
 			{
 				Logger.LogError("Unable to connect to the database!");
-				throw new Exception("[CS2-SimpleAdmin] Unable to connect to the Database!");
+				throw;
 			}
 		});
 
@@ -311,14 +260,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					caller.PlayerPawn.Value.CommitSuicide(true, false);
 
 				AddTimer(1.0f, () => { caller.ChangeTeam(CsTeam.Spectator); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-				AddTimer(1.05f, () => { caller.ChangeTeam(CsTeam.None); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				AddTimer(1.1f, () => { caller.ChangeTeam(CsTeam.None); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				caller.PrintToChat($"You are hidden now!");
 				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
 					_ = SendWebhookMessage($"{caller.PlayerName} is hidden now.");
 			});
 			Server.NextFrame(() =>
 			{
-				AddTimer(1.1f, () => { Server.ExecuteCommand("sv_disable_teamselect_menu 0"); });
+				AddTimer(1.2f, () => { Server.ExecuteCommand("sv_disable_teamselect_menu 0"); });
 			});
 		}
 	}
@@ -420,16 +369,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/generic")]
 	public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		TargetResult? targets = GetTarget(command);
-		if (targets == null) return;
-		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.Connected == PlayerConnectedState.PlayerConnected && !player.IsHLTV).ToList();
+		List<CCSPlayerController> playersToTarget = Utilities.GetPlayers().Where(player => caller!.CanTarget(player) && player != null && player.IsValid && player.Connected == PlayerConnectedState.PlayerConnected && !player.IsHLTV).ToList();
 
 		if (caller != null)
 		{
 			caller!.PrintToConsole($"--------- PLAYER LIST ---------");
 			playersToTarget.ForEach(player =>
 			{
-				caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
+				caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
 			});
 			caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
 		}
@@ -438,7 +385,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Server.PrintToConsole($"--------- PLAYER LIST ---------");
 			playersToTarget.ForEach(player =>
 			{
-				Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.AuthorizedSteamID?.SteamId64}\")");
+				Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
 			});
 			Server.PrintToConsole($"--------- END PLAYER LIST ---------");
 		}
@@ -475,10 +422,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (command.ArgCount >= 2)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
 				else
@@ -565,9 +513,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
+					if (!player!.IsBot && !player.IsHLTV)
 					{
-						player!.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 					}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
@@ -590,9 +541,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
+					if (!player!.IsBot && !player.IsHLTV)
 					{
-						player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 					}
 
 					if (caller == null || caller != null && caller != null && !silentPlayers.Contains(caller.Slot))
@@ -666,10 +620,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -691,10 +646,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -883,10 +839,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -908,10 +865,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
 						foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
@@ -984,10 +942,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
 						foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
@@ -1008,10 +967,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
 						foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
@@ -1215,10 +1175,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -1240,10 +1201,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
 						foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
@@ -1319,10 +1281,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
 						foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
@@ -1343,10 +1306,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -1428,10 +1392,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 				if (time == 0)
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+						}
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -1453,10 +1418,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				}
 				else
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-					}
+					if (!player.IsBot && !player.IsHLTV)
+						using (new WithTemporaryCulture(player.GetLanguage()))
+						{
+							player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+						}
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
 						foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
@@ -2425,4 +2391,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			var response = await httpClient.PostAsync(Config.DiscordWebhook, content);
 		}
 	}
+
+	private static void RemoveFromConcurrentBag(ConcurrentBag<int> bag, int value)
+	{
+		if (bag.Count > 0)
+		{
+			if (bag.Contains(value))
+			{
+				bag = new ConcurrentBag<int>(bag.Where(item => item != value));
+			}
+		}
+	}
+
 }

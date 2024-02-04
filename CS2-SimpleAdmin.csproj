@@ -17,6 +17,10 @@
 
   <ItemGroup>
     <None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup> 
+  
+  <ItemGroup>
+    <None Update="database_setup.sql" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

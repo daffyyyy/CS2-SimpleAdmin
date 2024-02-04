@@ -1,19 +1,31 @@
-﻿using MySqlConnector;
+﻿using Microsoft.Extensions.Logging;
+using MySqlConnector;
 
-namespace CS2_SimpleAdmin;
-public class Database
+namespace CS2_SimpleAdmin
 {
-	private readonly string _dbConnectionString;
-
-	public Database(string dbConnectionString)
+	public class Database
 	{
-		_dbConnectionString = dbConnectionString;
-	}
+		private readonly string _dbConnectionString;
 
-	public MySqlConnection GetConnection()
-	{
-		var connection = new MySqlConnection(_dbConnectionString);
-		connection.Open();
-		return connection;
+		public Database(string dbConnectionString)
+		{
+			_dbConnectionString = dbConnectionString;
+		}
+
+		public async Task<MySqlConnection> GetConnection()
+		{
+			try
+			{
+				var connection = new MySqlConnection(_dbConnectionString);
+				await connection.OpenAsync();
+				return connection;
+			}
+			catch (Exception)
+			{
+				if (CS2_SimpleAdmin._logger != null)
+					CS2_SimpleAdmin._logger.LogCritical("Unable to connect to database");
+				throw;
+			}
+		}
 	}
 }
