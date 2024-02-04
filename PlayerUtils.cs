@@ -2,6 +2,7 @@
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
+using CounterStrikeSharp.API;
 
 namespace CS2_SimpleAdmin;
 
@@ -115,6 +116,7 @@ public static class PlayerUtils
 			return;
 
 		pawn.Health -= damage;
+		Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iHealth");
 
 		if (pawn.Health <= 0)
 			pawn.CommitSuicide(true, true);
