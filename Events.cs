@@ -8,7 +8,6 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Text;
-using static CounterStrikeSharp.API.Core.Listeners;
 
 namespace CS2_SimpleAdmin;
 
@@ -18,10 +17,10 @@ public partial class CS2_SimpleAdmin
 	{
 		//RegisterListener<OnClientAuthorized>(OnClientAuthorized);
 		//RegisterListener<OnClientConnect>(OnClientConnect);
-		//RegisterListener<OnClientPutInServer>(OnClientPutInServer);
+		RegisterListener<Listeners.OnClientPutInServer>(OnClientPutInServer);
 		//RegisterListener<OnClientDisconnect>(OnClientDisconnect);
 		//RegisterEventHandler<EventPlayerConnectFull>(OnPlayerFullConnect);
-		RegisterListener<OnMapStart>(OnMapStart);
+		RegisterListener<Listeners.OnMapStart>(OnMapStart);
 		//RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
 		//RegisterEventHandler<EventRoundStart>(OnRoundStart);
 		AddCommandListener("say", OnCommandSay);
@@ -113,20 +112,17 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
-	[GameEventHandler]
-	public HookResult OnPlayerConnect(EventPlayerConnectFull @event, GameEventInfo info)
+	public void OnClientPutInServer(int playerSlot)
 	{
-		CCSPlayerController? player = @event.Userid;
+		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 #if DEBUG
 		Logger.LogCritical("[OnPlayerConnect] Before check");
-#endif
-		if (_database == null || player is null || !player.IsValid || player.UserId == null || player.SteamID.ToString().Length != 17 || !@event.Userid.PlayerPawn.IsValid || player.IsBot || player.IsHLTV)
-			return HookResult.Continue;
 
+#endif
+		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV) return;
 #if DEBUG
 		Logger.LogCritical("[OnPlayerConnect] After Check");
 #endif
-
 		string? ipAddress = !string.IsNullOrEmpty(player.IpAddress) ? player.IpAddress.Split(":")[0] : null;
 
 		if (
@@ -134,12 +130,12 @@ public partial class CS2_SimpleAdmin
 			bannedPlayers.Contains(player.SteamID.ToString())
 			)
 		{
-			Server.NextFrame(() =>
-			{
-				Helper.KickPlayer((ushort)player.UserId!, "Banned");
-			});
-			return HookResult.Continue;
+			Helper.KickPlayer((ushort)player.UserId!, "Banned");
+			return;
 		}
+
+		if (_database == null)
+			return;
 
 		PlayerInfo playerInfo = new PlayerInfo
 		{
@@ -151,13 +147,11 @@ public partial class CS2_SimpleAdmin
 			IpAddress = ipAddress
 		};
 
+		BanManager _banManager = new(_database, Config);
+		MuteManager _muteManager = new(_database);
+
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(_database, Config);
-
-			MuteManager _muteManager = new(_database);
-			List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
-
 			if (await _banManager.IsPlayerBanned(playerInfo))
 			{
 				if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
@@ -174,6 +168,8 @@ public partial class CS2_SimpleAdmin
 
 				return;
 			}
+
+			List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
 
 			if (activeMutes.Count > 0)
 			{
@@ -198,20 +194,39 @@ public partial class CS2_SimpleAdmin
 					{
 						Server.NextFrame(() =>
 						{
-							player.VoiceFlags = VoiceFlags.Muted;
+							if (player.IsValid)
+								player.VoiceFlags = VoiceFlags.Muted;
 						});
+					}
+					else
+					{
+						if (playerInfo.Slot.HasValue && !gaggedPlayers.Contains(playerInfo.Slot.Value))
+							gaggedPlayers.Add(playerInfo.Slot.Value);
+
+						Server.NextFrame(() =>
+						{
+							if (player.IsValid)
+							{
+								if (TagsDetected)
+								{
+									Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
+								}
+								player.VoiceFlags = VoiceFlags.Muted;
+							}
+						});
+
 					}
 				}
 			}
 		});
 
-		return HookResult.Continue;
+		return;
 	}
 
 	[GameEventHandler]
 	public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
 	{
-		if (@event.Userid is null || !@event.Userid.IsValid || @event.Userid.IsBot)
+		if (@event.Userid is null || !@event.Userid.IsValid)
 			return HookResult.Continue;
 
 		CCSPlayerController? player = @event.Userid;
@@ -220,8 +235,7 @@ public partial class CS2_SimpleAdmin
 		Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
-		if (player == null || player.IsBot || player.IsHLTV || player.Connected == PlayerConnectedState.PlayerConnecting)
-			return HookResult.Continue;
+		if (player.IsBot || player.IsHLTV) return HookResult.Continue;
 
 #if DEBUG
 		Logger.LogCritical("[OnClientDisconnect] After Check");
@@ -250,8 +264,9 @@ public partial class CS2_SimpleAdmin
 		godPlayers.Clear();
 		silentPlayers.Clear();
 
-		if (_database == null) return;
+		_database = new(dbConnectionString);
 
+		if (_database == null) return;
 
 		AddTimer(60.0f, bannedPlayers.Clear, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 		AddTimer(130.0f, async () =>
@@ -284,7 +299,7 @@ public partial class CS2_SimpleAdmin
 				AdminSQLManager _adminManager = new(_database);
 				try
 				{
-					using (var connection = await _database.GetConnection())
+					await using (var connection = await _database.GetConnectionAsync())
 					{
 						bool addressExists = await connection.ExecuteScalarAsync<bool>(
 							"SELECT COUNT(*) FROM sa_servers WHERE address = @address",
@@ -318,6 +333,16 @@ public partial class CS2_SimpleAdmin
 				await _adminManager.GiveAllFlags();
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+		ConVar? botQuota = ConVar.Find("bot_quota");
+
+		if (botQuota != null && botQuota.GetPrimitiveValue<int>() > 0)
+		{
+			Logger.LogInformation("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
+			Logger.LogWarning("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
+			Logger.LogCritical("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
+		}
+
 	}
 
 	[GameEventHandler]

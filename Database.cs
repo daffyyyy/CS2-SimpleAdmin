@@ -12,7 +12,7 @@ namespace CS2_SimpleAdmin
 			_dbConnectionString = dbConnectionString;
 		}
 
-		public async Task<MySqlConnection> GetConnection()
+		public async Task<MySqlConnection> GetConnectionAsync()
 		{
 			try
 			{

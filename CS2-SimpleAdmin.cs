@@ -89,7 +89,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			try
 			{
-				using (var connection = await _database.GetConnection())
+				using (var connection = await _database.GetConnectionAsync())
 				{
 					using var transaction = await connection.BeginTransactionAsync();
 
@@ -244,10 +244,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		if (silentPlayers.Contains(caller.Slot))
 		{
-			silentPlayers = new ConcurrentBag<int>(silentPlayers.Where(item => item != caller.Slot));
+			RemoveFromConcurrentBag(silentPlayers, caller.Slot);
 			caller.PrintToChat($"You aren't hidden now!");
 			caller.ChangeTeam(CsTeam.Spectator);
-			if (Config.DiscordWebhook.Length > 0 && _localizer != null)
+			if (Config.DiscordWebhook.Length > 0)
 				_ = SendWebhookMessage($"{caller.PlayerName} isn't hidden now.");
 		}
 		else
@@ -260,14 +260,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					caller.PlayerPawn.Value.CommitSuicide(true, false);
 
 				AddTimer(1.0f, () => { caller.ChangeTeam(CsTeam.Spectator); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-				AddTimer(1.1f, () => { caller.ChangeTeam(CsTeam.None); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				AddTimer(1.15f, () => { caller.ChangeTeam(CsTeam.None); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				caller.PrintToChat($"You are hidden now!");
-				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
+				if (Config.DiscordWebhook.Length > 0)
 					_ = SendWebhookMessage($"{caller.PlayerName} is hidden now.");
-			});
-			Server.NextFrame(() =>
-			{
-				AddTimer(1.2f, () => { Server.ExecuteCommand("sv_disable_teamselect_menu 0"); });
+				AddTimer(1.22f, () => { Server.ExecuteCommand("sv_disable_teamselect_menu 0"); });
 			});
 		}
 	}
