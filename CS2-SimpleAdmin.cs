@@ -18,12 +18,11 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(159)]
+[MinimumApiVersion(163)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static IStringLocalizer? _localizer;
@@ -43,13 +42,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	internal static ILogger? _logger;
 
-	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool> CBasePlayerController_SetPawnFunc = new(
-		RuntimeInformation.IsOSPlatform(OSPlatform.Linux) ? "\\x55\\x48\\x89\\xE5\\x41\\x57\\x41\\x56\\x41\\x55\\x41\\x54\\x49\\x89\\xFC\\x53\\x48\\x89\\xF3\\x48\\x81\\xEC\\xC8\\x00\\x00\\x00" : "\\x44\\x88\\x4C\\x24\\x2A\\x55\\x57"
-	);
+	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? CBasePlayerController_SetPawnFunc = null;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.3.0b";
+	public override string ModuleVersion => "1.3.0c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -61,6 +58,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			OnMapStart(string.Empty);
 		}
+
+		CBasePlayerController_SetPawnFunc = new(GameData.GetSignature("CBasePlayerController_SetPawn"));
 
 		_logger = Logger;
 	}
