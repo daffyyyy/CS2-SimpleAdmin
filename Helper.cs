@@ -21,8 +21,7 @@ namespace CS2_SimpleAdmin
 		public static List<CCSPlayerController> GetPlayerFromSteamid64(string steamid)
 		{
 			return Utilities.GetPlayers().FindAll(x =>
-				x.AuthorizedSteamID != null &&
-				x.AuthorizedSteamID.SteamId64.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase)
+				x.SteamID.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase)
 			);
 		}
 
@@ -59,7 +58,6 @@ namespace CS2_SimpleAdmin
 				}
 
 				//Console.WriteLine($"Setting immunity for SteamID {steamid} to {immunity}");
-
 
 				if (flags != null)
 				{
@@ -150,9 +148,9 @@ namespace CS2_SimpleAdmin
 		{
 			if (CS2_SimpleAdmin.voteInProgress && !CS2_SimpleAdmin.votePlayers.Contains(player.Slot))
 			{
+				option.Disabled = true;
 				CS2_SimpleAdmin.votePlayers.Add(player.Slot);
 				CS2_SimpleAdmin.voteAnswers[option.Text]++;
-				option.Disabled = true;
 			}
 		}
 	}

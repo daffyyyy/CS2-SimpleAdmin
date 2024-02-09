@@ -31,6 +31,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static HashSet<int> votePlayers = new HashSet<int>();
 	public static ConcurrentBag<int> godPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
+	public static ConcurrentBag<int> commsPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> silentPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<string> bannedPlayers = new ConcurrentBag<string>();
 	public static bool TagsDetected = false;
@@ -46,7 +47,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.3.0c";
+	public override string ModuleVersion => "1.3.0d";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -1885,22 +1886,21 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			for (int i = 2; i <= answersCount - 1; i++)
 			{
 				voteAnswers.Add(command.GetArg(i), 0);
+				voteMenu.AddMenuOption(command.GetArg(i), Helper.handleVotes);
 			}
 
 			foreach (CCSPlayerController _player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV))
 			{
+
 				using (new WithTemporaryCulture(_player.GetLanguage()))
 				{
-					MenuManager.OpenChatMenu(_player, voteMenu);
-					for (int i = 2; i <= answersCount - 1; i++)
-					{
-						voteMenu.AddMenuOption(command.GetArg(i), Helper.handleVotes);
-					}
 					Helper.PrintToCenterAll(_localizer!["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 					StringBuilder sb = new(_localizer!["sa_prefix"]);
 					sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 					_player.PrintToChat(sb.ToString());
 				}
+
+				MenuManager.OpenChatMenu(_player, voteMenu);
 			}
 
 			if (Config.DiscordWebhook.Length > 0 && _localizer != null)
@@ -1908,6 +1908,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				LocalizedString localizedMessage = _localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question];
 				_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
 			}
+
 			voteInProgress = true;
 		}
 
