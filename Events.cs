@@ -334,15 +334,18 @@ public partial class CS2_SimpleAdmin
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-		ConVar? botQuota = ConVar.Find("bot_quota");
 
-		if (botQuota != null && botQuota.GetPrimitiveValue<int>() > 0)
+		AddTimer(2.0f, () =>
 		{
-			Logger.LogInformation("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
-			Logger.LogWarning("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
-			Logger.LogCritical("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
-		}
+			ConVar? botQuota = ConVar.Find("bot_quota");
 
+			if (botQuota != null && botQuota.GetPrimitiveValue<int>() > 0)
+			{
+				Logger.LogInformation("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
+				Logger.LogWarning("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
+				Logger.LogCritical("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
+			}
+		});
 	}
 
 	[GameEventHandler]
