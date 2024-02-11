@@ -109,6 +109,31 @@ public static class PlayerUtils
 		}
 	}
 
+	public static void Rename(this CCSPlayerController controller, string newName = "Unknown")
+	{
+		if (CS2_SimpleAdmin._plugin == null)
+			return;
+
+		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
+		playerName.Set(newName + " ");
+
+		CS2_SimpleAdmin._plugin.AddTimer(0.25f, () =>
+		{
+			Utilities.SetStateChanged(controller, "CCSPlayerController", "m_szClan");
+			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
+		});
+
+		CS2_SimpleAdmin._plugin.AddTimer(0.3f, () =>
+		{
+			playerName.Set(newName);
+		});
+
+		CS2_SimpleAdmin._plugin.AddTimer(0.4f, () =>
+		{
+			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
+		});
+	}
+
 	private static void PerformSlap(CBasePlayerPawn pawn, int damage = 0)
 	{
 		if (pawn.LifeState != (int)LifeState_t.LIFE_ALIVE)

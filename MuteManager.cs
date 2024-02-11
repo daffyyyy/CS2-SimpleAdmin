@@ -25,6 +25,8 @@ namespace CS2_SimpleAdmin
 			string muteType = "GAG";
 			if (type == 1)
 				muteType = "MUTE";
+			else if (type == 2)
+				muteType = "SILENCE";
 
 			var sql = "INSERT INTO `sa_mutes` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
 				"VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @type, @serverid)";
@@ -56,6 +58,8 @@ namespace CS2_SimpleAdmin
 			string muteType = "GAG";
 			if (type == 1)
 				muteType = "MUTE";
+			else if (type == 2)
+				muteType = "SILENCE";
 
 			var sql = "INSERT INTO `sa_mutes` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
 				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @type, @serverid)";
@@ -136,6 +140,8 @@ namespace CS2_SimpleAdmin
 			{
 				muteType = "MUTE";
 			}
+			else if (type == 2)
+				muteType = "SILENCE";
 
 			string sqlUnban = "UPDATE sa_mutes SET status = 'UNMUTED' WHERE (player_steamid = @pattern OR player_name = @pattern) AND type = @muteType AND status = 'ACTIVE'";
 			await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern, muteType });
@@ -174,11 +180,6 @@ namespace CS2_SimpleAdmin
 
 					if (muteType == "GAG")
 					{
-						if (player.Slot.HasValue && !CS2_SimpleAdmin.gaggedPlayers.Contains(player.Slot.Value))
-						{
-							CS2_SimpleAdmin.gaggedPlayers.Add(player.Slot.Value);
-						}
-
 						if (CS2_SimpleAdmin.TagsDetected)
 							NativeAPI.IssueServerCommand($"css_tag_mute {player!.SteamId}");
 
