@@ -8,6 +8,11 @@
 	"sa_player_gag_message_perm": "Has sido silenciado permanentemente por {lightred}{0}{default} por {lightred}{1}{default}.",
 	"sa_player_mute_message_time": "Has sido silenciado por {lightred}{0}{default} durante {lightred}{1}{default} minutos por {lightred}{2}{default}.",
 	"sa_player_mute_message_perm": "Has sido silenciado permanentemente por {lightred}{0}{default} por {lightred}{1}{default}.",
+	"sa_player_silence_message_time": "Has sido silenciado por {lightred}{0}{default} durante {lightred}{1}{default} minutos por {lightred}{2}{default}.",
+	"sa_player_silence_message_perm": "Has sido silenciado permanentemente por {lightred}{0}{default} por {lightred}{1}{default}.",
+	"sa_admin_silence_message_time": "El administrador {lightred}{0}{default} ha silenciado a {lightred}{1}{default} por {lightred}{2}{default} durante {lightred}{3}{default} minutos.",
+	"sa_admin_silence_message_perm": "El administrador {lightred}{0}{default} ha silenciado a {lightred}{1}{default} permanentemente por {lightred}{2}{default}.",
+	"sa_admin_rename_message": "El administrador {lightred}{0}{default} ha cambiado el nombre de {lightred}{1}{default} a {lightred}{2}{default}."
 	"sa_admin_ban_message_time": "El administrador {lightred}{0}{default} ha baneado a {lightred}{1}{default} por {lightred}{2}{default} durante {lightred}{3}{default} minutos.",
 	"sa_admin_ban_message_perm": "El administrador {lightred}{0}{default} ha baneado a {lightred}{1}{default} permanentemente por {lightred}{2}{default}.",
 	"sa_admin_kick_message": "El administrador {lightred}{0}{default} ha expulsado a {lightred}{1}{default} por {lightred}{2}{default}.",
