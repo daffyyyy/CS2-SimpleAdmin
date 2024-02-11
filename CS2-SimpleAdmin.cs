@@ -48,7 +48,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.3.0d";
+	public override string ModuleVersion => "1.3.0e";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -119,6 +119,34 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Config = config;
 		_localizer = Localizer;
+	}
+
+	[ConsoleCommand("css_sa_upgrade")]
+	[CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+	public void OnSaUpgradeCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		if (caller != null || _database == null) return;
+
+		Task.Run(async () =>
+		{
+			try
+			{
+				using (var connection = await _database.GetConnectionAsync())
+				{
+					var commandText = "ALTER TABLE `sa_mutes` CHANGE `type` `type` ENUM('GAG','MUTE', 'SILENCE', '') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'GAG';";
+
+					using (var command = connection.CreateCommand())
+					{
+						command.CommandText = commandText;
+						await command.ExecuteNonQueryAsync();
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError($"{ex.Message}");
+			}
+		});
 	}
 
 	[ConsoleCommand("css_admin")]

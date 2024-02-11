@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS `sa_mutes` (
 						 `duration` int(11) NOT NULL,
 						 `ends` timestamp NOT NULL,
 						 `created` timestamp NOT NULL,
-						 `type` enum('GAG','MUTE','') NOT NULL DEFAULT 'GAG',
+						 `type` enum('GAG','MUTE','SILENCE','') NOT NULL DEFAULT 'GAG',
 						 `server_id` INT NULL,
 						 `status` enum('ACTIVE','UNMUTED','EXPIRED','') NOT NULL DEFAULT 'ACTIVE',
 						 PRIMARY KEY (`id`)
