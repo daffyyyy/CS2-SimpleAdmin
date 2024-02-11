@@ -15,29 +15,10 @@ public partial class CS2_SimpleAdmin
 {
 	private void registerEvents()
 	{
-		//RegisterListener<OnClientAuthorized>(OnClientAuthorized);
-		//RegisterListener<OnClientConnect>(OnClientConnect);
 		RegisterListener<Listeners.OnClientPutInServer>(OnClientPutInServer);
-		//RegisterListener<OnClientDisconnect>(OnClientDisconnect);
-		//RegisterEventHandler<EventPlayerConnectFull>(OnPlayerFullConnect);
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
-		RegisterListener<Listeners.OnClientVoice>(OnClientVoice);
-		//RegisterEventHandler<EventPlayerHurt>(OnPlayerHurt);
-		//RegisterEventHandler<EventRoundStart>(OnRoundStart);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
-	}
-
-	private void OnClientVoice(int playerSlot)
-	{
-		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
-		if (!playerPenaltyManager.IsSlotInPenalties(playerSlot)) return;
-
-		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
-		if (player is null || !player.IsValid) return;
-
-		if (playerPenaltyManager.IsPenalized(playerSlot, PenaltyType.Mute) || playerPenaltyManager.IsPenalized(playerSlot, PenaltyType.Silence))
-			player.VoiceFlags = VoiceFlags.Muted;
 	}
 
 	[GameEventHandler]
@@ -136,6 +117,7 @@ public partial class CS2_SimpleAdmin
 
 		BanManager _banManager = new(_database, Config);
 		MuteManager _muteManager = new(_database);
+		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
 		Task.Run(async () =>
 		{
@@ -160,48 +142,41 @@ public partial class CS2_SimpleAdmin
 
 			if (activeMutes.Count > 0)
 			{
-				PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
-				foreach (var mute in activeMutes)
+				foreach (dynamic mute in activeMutes)
 				{
 					string muteType = mute.type;
+					DateTime ends = mute.ends;
+					int duration = mute.duration;
 
 					if (muteType == "GAG")
 					{
-						/*
-						if (playerInfo.Slot.HasValue && !gaggedPlayers.Contains(playerInfo.Slot.Value))
-							gaggedPlayers.Add(playerInfo.Slot.Value);
-						*/
-						playerPenaltyManager.AddPenalty(1, PenaltyType.Gag, DateTime.Parse(mute.ends), mute.duration);
-
-						if (TagsDetected)
+						playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Gag, ends, duration);
+						Server.NextFrame(() =>
 						{
-							Server.NextFrame(() =>
+							if (TagsDetected)
 							{
 								Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
-							});
-						}
+							}
+						});
 					}
 					else if (muteType == "MUTE")
 					{
-						playerPenaltyManager.AddPenalty(1, PenaltyType.Mute, DateTime.Parse(mute.ends), mute.duration);
+						playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Mute, ends, duration);
+						Server.NextFrame(() =>
+						{
+							player.VoiceFlags = VoiceFlags.Muted;
+						});
 
 					}
 					else
 					{
-						/*
-						 * if (playerInfo.Slot.HasValue && !gaggedPlayers.Contains(playerInfo.Slot.Value))
-							gaggedPlayers.Add(playerInfo.Slot.Value);
-						*/
-						playerPenaltyManager.AddPenalty(1, PenaltyType.Silence, DateTime.Parse(mute.ends), mute.duration);
-
+						playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Silence, ends, duration);
 						Server.NextFrame(() =>
 						{
-							if (player.IsValid)
+							player.VoiceFlags = VoiceFlags.Muted;
+							if (TagsDetected)
 							{
-								if (TagsDetected)
-								{
-									Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
-								}
+								Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
 							}
 						});
 					}

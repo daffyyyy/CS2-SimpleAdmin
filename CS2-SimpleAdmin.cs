@@ -27,12 +27,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 {
 	public static BasePlugin? _plugin = null;
 	public static IStringLocalizer? _localizer;
-	//public static ConcurrentBag<int> mutedPlayers = new ConcurrentBag<int>();
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
 	public static HashSet<int> votePlayers = new HashSet<int>();
 	public static ConcurrentBag<int> godPlayers = new ConcurrentBag<int>();
-	//public static ConcurrentBag<int> gaggedPlayers = new ConcurrentBag<int>();
-	//public static ConcurrentBag<int> commsPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> silentPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<string> bannedPlayers = new ConcurrentBag<string>();
 	public static bool TagsDetected = false;
@@ -48,7 +45,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.3.0e";
+	public override string ModuleVersion => "1.3.0f";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -425,7 +422,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		string reason = "Unknown";
 
 		TargetResult? targets = GetTarget(command);
-		if (targets == null) return;
+
+		if (targets == null)
+			return;
+
 		List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && !player.IsHLTV).ToList();
 
 		if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
@@ -443,13 +443,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 			if (caller!.CanTarget(player))
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length == 17)
-					return;
-
 				if (player.PawnIsAlive)
 				{
 					player.Pawn.Value!.Freeze();
-					player.CommitSuicide(true, true);
 				}
 
 				if (command.ArgCount >= 2)
@@ -1454,7 +1450,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				if (player.PawnIsAlive)
 				{
 					player.Pawn.Value!.Freeze();
-					player.CommitSuicide(true, true);
 				}
 
 				PlayerInfo playerInfo = new PlayerInfo

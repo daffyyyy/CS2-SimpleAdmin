@@ -23,14 +23,14 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetPlayerFromSteamid64(string steamid)
 		{
-			return Utilities.GetPlayers().FindAll(x =>
+			return GetValidPlayers().FindAll(x =>
 				x.SteamID.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase)
 			);
 		}
 
 		public static List<CCSPlayerController> GetPlayerFromIp(string ipAddress)
 		{
-			return Utilities.GetPlayers().FindAll(x =>
+			return GetValidPlayers().FindAll(x =>
 				x.IpAddress != null &&
 				x.IpAddress.Split(":")[0].Equals(ipAddress)
 			);
