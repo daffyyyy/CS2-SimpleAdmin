@@ -369,7 +369,7 @@ namespace CS2_SimpleAdmin
 			if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
 				reason = command.GetArg(2);
 
-			targets.Players.ForEach(player =>
+			playersToTarget.ForEach(player =>
 			{
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
 					return;
