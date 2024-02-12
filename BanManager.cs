@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin
 {
@@ -18,7 +19,7 @@ namespace CS2_SimpleAdmin
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
 
-			await using var connection = _database.GetConnection();
+			await using var connection = await _database.GetConnectionAsync();
 
 			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -45,7 +46,7 @@ namespace CS2_SimpleAdmin
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
 
-			await using var connection = _database.GetConnection();
+			await using var connection = await _database.GetConnectionAsync();
 
 			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -70,7 +71,7 @@ namespace CS2_SimpleAdmin
 			DateTime now = DateTime.Now;
 			DateTime futureTime = now.AddMinutes(time);
 
-			await using var connection = _database.GetConnection();
+			await using var connection = await _database.GetConnectionAsync();
 
 			var sql = "INSERT INTO `sa_bans` (`player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -90,10 +91,15 @@ namespace CS2_SimpleAdmin
 
 		public async Task<bool> IsPlayerBanned(PlayerInfo player)
 		{
-			if (player == null)
+			if (player.SteamId == null && player.IpAddress == null)
 			{
 				return false;
 			}
+
+#if DEBUG
+			if (CS2_SimpleAdmin._logger != null)
+				CS2_SimpleAdmin._logger.LogCritical($"IsPlayerBanned for {player.Name}");
+#endif
 
 			DateTime currentTimeUtc = DateTime.UtcNow;
 			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
@@ -101,7 +107,7 @@ namespace CS2_SimpleAdmin
 
 			try
 			{
-				await using var connection = _database.GetConnection();
+				await using var connection = await _database.GetConnectionAsync();
 
 				var parameters = new
 				{
@@ -119,12 +125,13 @@ namespace CS2_SimpleAdmin
 
 			return banCount > 0;
 		}
+
 		public async Task<int> GetPlayerBans(PlayerInfo player)
 		{
 			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)";
 			int banCount;
 
-			await using var connection = _database.GetConnection();
+			await using var connection = await _database.GetConnectionAsync();
 
 			if (!string.IsNullOrEmpty(player.IpAddress))
 			{
@@ -145,7 +152,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			await using var connection = _database.GetConnection();
+			await using var connection = await _database.GetConnectionAsync();
 
 			string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern AND status = 'ACTIVE'";
 			await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern });
@@ -153,10 +160,18 @@ namespace CS2_SimpleAdmin
 
 		public async Task ExpireOldBans()
 		{
-			await using var connection = _database.GetConnection();
+			try
+			{
+				await using var connection = await _database.GetConnectionAsync();
 
-			string sql = "UPDATE sa_bans SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+				string sql = "UPDATE sa_bans SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
+				await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+			}
+			catch (Exception)
+			{
+				if (CS2_SimpleAdmin._logger != null)
+					CS2_SimpleAdmin._logger.LogCritical("Unable to remove expired bans");
+			}
 		}
 	}
 }

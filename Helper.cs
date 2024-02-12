@@ -2,9 +2,12 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace CS2_SimpleAdmin
@@ -20,19 +23,24 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetPlayerFromSteamid64(string steamid)
 		{
-			return Utilities.GetPlayers().FindAll(x =>
-				x.AuthorizedSteamID != null &&
-				x.AuthorizedSteamID.SteamId64.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase)
+			return GetValidPlayers().FindAll(x =>
+				x.SteamID.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase)
 			);
 		}
 
 		public static List<CCSPlayerController> GetPlayerFromIp(string ipAddress)
 		{
-			return Utilities.GetPlayers().FindAll(x =>
+			return GetValidPlayers().FindAll(x =>
 				x.IpAddress != null &&
 				x.IpAddress.Split(":")[0].Equals(ipAddress)
 			);
 		}
+
+		public static List<CCSPlayerController> GetValidPlayers()
+		{
+			return Utilities.GetPlayers().FindAll(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV);
+		}
+
 
 		public static bool IsValidSteamID64(string input)
 		{
@@ -59,7 +67,6 @@ namespace CS2_SimpleAdmin
 				}
 
 				//Console.WriteLine($"Setting immunity for SteamID {steamid} to {immunity}");
-
 
 				if (flags != null)
 				{
@@ -150,10 +157,33 @@ namespace CS2_SimpleAdmin
 		{
 			if (CS2_SimpleAdmin.voteInProgress && !CS2_SimpleAdmin.votePlayers.Contains(player.Slot))
 			{
+				option.Disabled = true;
 				CS2_SimpleAdmin.votePlayers.Add(player.Slot);
 				CS2_SimpleAdmin.voteAnswers[option.Text]++;
-				option.Disabled = true;
 			}
+		}
+	}
+
+	public class SchemaString<SchemaClass> : NativeObject where SchemaClass : NativeObject
+	{
+		public SchemaString(SchemaClass instance, string member) : base(Schema.GetSchemaValue<nint>(instance.Handle, typeof(SchemaClass).Name!, member))
+		{ }
+
+		public unsafe void Set(string str)
+		{
+			byte[] bytes = this.GetStringBytes(str);
+
+			for (int i = 0; i < bytes.Length; i++)
+			{
+				Unsafe.Write((void*)(this.Handle.ToInt64() + i), bytes[i]);
+			}
+
+			Unsafe.Write((void*)(this.Handle.ToInt64() + bytes.Length), 0);
+		}
+
+		private byte[] GetStringBytes(string str)
+		{
+			return Encoding.ASCII.GetBytes(str);
 		}
 	}
 }

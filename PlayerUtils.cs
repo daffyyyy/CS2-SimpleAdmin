@@ -1,5 +1,8 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
 using CounterStrikeSharp.API;
@@ -23,7 +26,9 @@ public static class PlayerUtils
 	public static bool CanTarget(this CCSPlayerController controller, CCSPlayerController target)
 	{
 		if (target.IsBot) return true;
-		return AdminManager.CanPlayerTarget(controller, target);
+		if (controller is null) return true;
+
+		return AdminManager.CanPlayerTarget(controller, target) || AdminManager.CanPlayerTarget(new SteamID(controller.SteamID), new SteamID(target.SteamID));
 	}
 
 	public static void SetSpeed(this CCSPlayerController controller, float speed)
@@ -81,19 +86,56 @@ public static class PlayerUtils
 	public static void Freeze(this CBasePlayerPawn pawn)
 	{
 		pawn.MoveType = MoveType_t.MOVETYPE_OBSOLETE;
+		Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 1); // obsolete
+		Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
 	}
 
 	public static void Unfreeze(this CBasePlayerPawn pawn)
 	{
 		pawn.MoveType = MoveType_t.MOVETYPE_WALK;
+		Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 2); // walk
+		Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
 	}
 
 	public static void ToggleNoclip(this CBasePlayerPawn pawn)
 	{
 		if (pawn.MoveType == MoveType_t.MOVETYPE_NOCLIP)
+		{
 			pawn.MoveType = MoveType_t.MOVETYPE_WALK;
+			Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 2); // walk
+			Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
+		}
 		else
+		{
 			pawn.MoveType = MoveType_t.MOVETYPE_NOCLIP;
+			Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 8); // noclip
+			Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
+		}
+	}
+
+	public static void Rename(this CCSPlayerController controller, string newName = "Unknown")
+	{
+		if (CS2_SimpleAdmin._plugin == null)
+			return;
+
+		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
+		playerName.Set(newName + " ");
+
+		CS2_SimpleAdmin._plugin.AddTimer(0.25f, () =>
+		{
+			Utilities.SetStateChanged(controller, "CCSPlayerController", "m_szClan");
+			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
+		});
+
+		CS2_SimpleAdmin._plugin.AddTimer(0.3f, () =>
+		{
+			playerName.Set(newName);
+		});
+
+		CS2_SimpleAdmin._plugin.AddTimer(0.4f, () =>
+		{
+			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
+		});
 	}
 
 	private static void PerformSlap(CBasePlayerPawn pawn, int damage = 0)

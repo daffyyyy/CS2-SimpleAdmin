@@ -30,6 +30,9 @@ Manage your Counter-Strike 2 server by simple commands :)
 - css_mute <#userid or name> [time in minutes/0 perm] [reason] - Mute player // @css/chat
 - css_addmute <steamid> [time in minutes/0 perm] [reason] - Mute player via steamid64 // @css/chat
 - css_unmute <steamid or name> - Unmute player // @css/chat
+- css_silence <#userid or name> [time in minutes/0 perm] [reason] - Silence player // @css/chat
+- css_addsilence <steamid> [time in minutes/0 perm] [reason] - Silence player via steamid64 // @css/chat
+- css_unsilence <steamid or name> - Unsilence player // @css/chat
 - css_give <#userid or name> <weapon> - Give weapon to player // @css/cheats
 - css_strip <#userid or name> - Takes all of the player weapons // @css/slay
 - css_hp <#userid or name> [health] - Set player health // @css/slay
@@ -49,6 +52,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 - css_noclip <#userid or name> - Toggle noclip for player // @css/cheats
 - css_freeze <#userid or name> [duration] - Freeze player // @css/slay
 - css_unfreeze <#userid or name> - Unfreeze player // @css/slay
+- css_rename <#userid or name> <new name> - Rename player // @css/kick
 - css_respawn <#userid or name> - Respawn player // @css/cheats
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon
@@ -58,7 +62,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 ```
 
 ### Requirments
-- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v159**
+- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v163**
 - MySQL **tested on MySQL (MariaDB) Server version: 10.11.4-MariaDB-1~deb12u1 Debian 12**
 
 
