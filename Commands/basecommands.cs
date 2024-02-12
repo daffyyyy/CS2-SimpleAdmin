@@ -47,6 +47,7 @@ namespace CS2_SimpleAdmin
 
 		[ConsoleCommand("css_admin")]
 		[RequiresPermissions("@css/generic")]
+		[CommandHelper(minArgs: 0, usage: "", whoCanExecute: CommandUsage.CLIENT_ONLY)]
 		public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (caller == null || caller.IsValid == false)
