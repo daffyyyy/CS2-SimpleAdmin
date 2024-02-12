@@ -453,48 +453,56 @@ namespace CS2_SimpleAdmin
 					break;
 			}
 
+			bool kill = command.GetArg(3).ToLower().Equals("-k");
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
-					return;
-
-				if (!teamName.Equals("swap"))
-				{
-					if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !command.GetArg(3).ToLower().Equals("-k") && Config.TeamSwitchType == 1)
-						player.SwitchTeam(teamNum);
-					else
-						player.ChangeTeam(teamNum);
-				}
-				else
-				{
-					if (player.TeamNum != (byte)CsTeam.Spectator)
-					{
-						CsTeam teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
-						_teamName = teamNum == CsTeam.Terrorist ? "TT" : "CT";
-						if (player.PawnIsAlive && !command.GetArg(3).ToLower().Equals("-k") && Config.TeamSwitchType == 1)
-						{
-							player.SwitchTeam(teamNum);
-						}
-						else
-						{
-							player.ChangeTeam(teamNum);
-						}
-					}
-				}
-
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_team_message", callerName, player.PlayerName, _teamName]);
-							_player.PrintToChat(sb.ToString());
-						}
-					}
-				}
+				ChangeTeam(caller, player, teamName, teamNum, kill, callerName);
 			});
+		}
+
+		public void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, string callerName = null)
+		{
+			if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				return;
+
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			
+			if (!teamName.Equals("swap"))
+			{
+				if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill && Config.TeamSwitchType == 1)
+					player.SwitchTeam(teamNum);
+				else
+					player.ChangeTeam(teamNum);
+			}
+			else
+			{
+				if (player.TeamNum != (byte)CsTeam.Spectator)
+				{
+					CsTeam _teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+					teamName = _teamNum == CsTeam.Terrorist ? "TT" : "CT";
+					if (player.PawnIsAlive && !kill && Config.TeamSwitchType == 1)
+					{
+						player.SwitchTeam(_teamNum);
+					}
+					else
+					{
+						player.ChangeTeam(_teamNum);
+					}
+				}
+			}
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_team_message", callerName, player.PlayerName, teamName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_rename", "Rename a player.")]

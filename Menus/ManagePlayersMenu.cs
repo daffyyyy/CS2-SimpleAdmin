@@ -2,6 +2,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Menu;
+using CounterStrikeSharp.API.Modules.Utils;
 
 namespace CS2_SimpleAdmin.Menus
 {
@@ -100,7 +101,7 @@ namespace CS2_SimpleAdmin.Menus
 		{
 			CS2_SimpleAdmin.Instance.Slay(admin, player);
 		}
-		
+
 		private static void KickMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
 			BaseMenu menu = AdminMenu.CreateMenu($"Kick: {player.PlayerName}");
@@ -205,7 +206,7 @@ namespace CS2_SimpleAdmin.Menus
 		{
 			CS2_SimpleAdmin.Instance.Mute(admin, player, duration, reason);
 		}
-		
+
 		private static void SilenceMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
@@ -229,7 +230,7 @@ namespace CS2_SimpleAdmin.Menus
 
 			AdminMenu.OpenMenu(admin, menu);
 		}
-		
+
 		private static void Silence(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
 		{
 			CS2_SimpleAdmin.Instance.Silence(admin, player, duration, reason);
@@ -240,10 +241,10 @@ namespace CS2_SimpleAdmin.Menus
 			// TODO: Localize
 			BaseMenu menu = AdminMenu.CreateMenu($"Force {player.PlayerName}'s Team");
 			List<ChatMenuOptionData> options = new();
-			options.Add(new ChatMenuOptionData("CT", () => ForceTeam(admin, player, "ct")));
-			options.Add(new ChatMenuOptionData("T", () => ForceTeam(admin, player, "t")));
-			options.Add(new ChatMenuOptionData("Swap", () => ForceTeam(admin, player, "swap")));
-			options.Add(new ChatMenuOptionData("Spectator", () => ForceTeam(admin, player, "spec")));
+			options.Add(new ChatMenuOptionData("CT", () => ForceTeam(admin, player, "ct", CsTeam.CounterTerrorist)));
+			options.Add(new ChatMenuOptionData("T", () => ForceTeam(admin, player, "t", CsTeam.Terrorist)));
+			options.Add(new ChatMenuOptionData("Swap", () => ForceTeam(admin, player, "swap", CsTeam.Spectator)));
+			options.Add(new ChatMenuOptionData("Spectator", () => ForceTeam(admin, player, "spec", CsTeam.Spectator)));
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{
@@ -254,9 +255,9 @@ namespace CS2_SimpleAdmin.Menus
 			AdminMenu.OpenMenu(admin, menu);
 		}
 
-		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player, string teamName)
+		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player, string teamName, CsTeam teamNum)
 		{
-			// TODO: ForceTeam
+			CS2_SimpleAdmin.Instance.ChangeTeam(admin, player, teamName, teamNum, true);
 		}
 	}
 }
