@@ -40,12 +40,9 @@ namespace CS2_SimpleAdmin.Menus
 			{
 				options.Add(new ChatMenuOptionData("Strip All Weapons", () => PlayersMenu.OpenMenu(admin, "Strip All Weapons", StripWeapons)));
 				options.Add(new ChatMenuOptionData("Freeze", () => PlayersMenu.OpenMenu(admin, "Freeze", Freeze)));
-				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenMenu(admin, "HP", HP)));
-				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenMenu(admin, "Speed", Speed)));
+				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenMenu(admin, "HP", SetHpMenu)));
+				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenMenu(admin, "Speed", SetSpeedMenu)));
 			}
-
-
-			options.Add(new ChatMenuOptionData("Restart Game", () => CS2_SimpleAdmin.Instance.RestartGame(admin)));
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{
@@ -57,20 +54,97 @@ namespace CS2_SimpleAdmin.Menus
 		}
 
 
-		private static void GodMode(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void GodMode(CCSPlayerController admin, CCSPlayerController player)
+		{
+			CS2_SimpleAdmin.Instance.God(admin, player);
+		}
 
-		private static void NoClip(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void NoClip(CCSPlayerController admin, CCSPlayerController player)
+		{
+			CS2_SimpleAdmin.Instance.NoClip(admin, player);
+		}
 
-		private static void Respawn(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void Respawn(CCSPlayerController admin, CCSPlayerController player)
+		{
+			CS2_SimpleAdmin.Instance.Respawn(admin, player);
+		}
 
-		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player)
+		{
+			// TODO: show weapon menu
+		}
 
-		private static void StripWeapons(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void StripWeapons(CCSPlayerController admin, CCSPlayerController player)
+		{
+			CS2_SimpleAdmin.Instance.StripWeapons(admin, player);
+		}
 
-		private static void Freeze(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void Freeze(CCSPlayerController admin, CCSPlayerController player)
+		{
+			if (player.PlayerPawn.Value.MoveType == MoveType_t.MOVETYPE_OBSOLETE)
+				CS2_SimpleAdmin.Instance.Freeze(admin, player, -1);
+			else
+				CS2_SimpleAdmin.Instance.Unfreeze(admin, player);
+		}
 
-		private static void HP(CCSPlayerController admin, CCSPlayerController player) { }
+		private static void SetHpMenu(CCSPlayerController admin, CCSPlayerController player)
+		{
+			Tuple<string, int>[] _hpArray = new[]
+			{
+				new Tuple<string, int>("1", 1),
+				new Tuple<string, int>("10", 10),
+				new Tuple<string, int>("25", 25),
+				new Tuple<string, int>("50", 50),
+				new Tuple<string, int>("100", 100),
+				new Tuple<string, int>("200", 200),
+				new Tuple<string, int>("500", 500),
+				new Tuple<string, int>("999", 999)
+			};
 
-		private static void Speed(CCSPlayerController admin, CCSPlayerController player) { }
+			BaseMenu menu = AdminMenu.CreateMenu("Set HP");
+
+			foreach (Tuple<string, int> hpTuple in _hpArray)
+			{
+				string optionName = hpTuple.Item1;
+				menu.AddMenuOption(optionName, (_, _) => { SetHP(admin, player, hpTuple.Item2); });
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void SetHP(CCSPlayerController admin, CCSPlayerController player, int hp)
+		{
+			CS2_SimpleAdmin.Instance.SetHp(admin, player, hp);
+		}
+
+		private static void SetSpeedMenu(CCSPlayerController admin, CCSPlayerController player)
+		{
+			Tuple<string, float>[] _speedArray = new[]
+			{
+				new Tuple<string, float>("0.1", .1f),
+				new Tuple<string, float>("0.25", .25f),
+				new Tuple<string, float>("0.5", .5f),
+				new Tuple<string, float>("0.75", .75f),
+				new Tuple<string, float>("1", 1),
+				new Tuple<string, float>("2", 2),
+				new Tuple<string, float>("3", 3),
+				new Tuple<string, float>("4", 4),
+			};
+
+			BaseMenu menu = AdminMenu.CreateMenu("Set Speed");
+
+			foreach (Tuple<string, float> speedTuple in _speedArray)
+			{
+				string optionName = speedTuple.Item1;
+				menu.AddMenuOption(optionName, (_, _) => { SetSpeed(admin, player, speedTuple.Item2); });
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void SetSpeed(CCSPlayerController admin, CCSPlayerController player, float speed)
+		{
+			CS2_SimpleAdmin.Instance.SetSpeed(admin, player, speed);
+		}
 	}
 }

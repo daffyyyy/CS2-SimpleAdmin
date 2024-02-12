@@ -31,22 +31,28 @@ namespace CS2_SimpleAdmin
 			{
 				if (caller!.CanTarget(player))
 				{
-					player!.Pawn.Value!.ToggleNoclip();
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_noclip_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					NoClip(caller, player, callerName);
 				}
 			});
+		}
+
+		public void NoClip(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			player!.Pawn.Value!.ToggleNoclip();
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_noclip_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_freeze", "Freeze a player.")]
@@ -73,25 +79,32 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					player!.Pawn.Value!.Freeze();
-
-					if (time > 0)
-						AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_freeze_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					Freeze(caller, player, time, callerName);
 				}
 			});
+		}
+
+		public void Freeze(CCSPlayerController? caller, CCSPlayerController player, int time, string callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			player!.Pawn.Value!.Freeze();
+
+			if (time > 0)
+				AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_freeze_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_unfreeze", "Unfreeze a player.")]
@@ -115,21 +128,28 @@ namespace CS2_SimpleAdmin
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
 					return;
 
-				player!.Pawn.Value!.Unfreeze();
+				Unfreeze(caller, player, callerName);
+			});
+		}
 
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			player!.Pawn.Value!.Unfreeze();
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_unfreeze_message", callerName, player.PlayerName]);
-							_player.PrintToChat(sb.ToString());
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_unfreeze_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-			});
+			}
 		}
 	}
 }
