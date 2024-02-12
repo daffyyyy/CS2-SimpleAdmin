@@ -172,7 +172,9 @@ public static class PlayerExtensions
 		vel.Y += ((random.Next(180) + 50) * ((random.Next(2) == 1) ? -1 : 1));
 		vel.Z += random.Next(200) + 100;
 
-		pawn.Teleport(pawn.AbsOrigin!, pawn.AbsRotation!, vel);
+		pawn.AbsVelocity.X = vel.X;
+		pawn.AbsVelocity.Y = vel.Y;
+		pawn.AbsVelocity.Z = vel.Z;
 
 		if (damage <= 0)
 			return;
