@@ -49,7 +49,7 @@ namespace CS2_SimpleAdmin.Menus
 			CenterHtmlMenu menu = new CenterHtmlMenu($"Change Map");
 			List<ChatMenuOptionData> options = new();
 
-			string[] maps = Server.GetMapList();
+			List<string> maps = CS2_SimpleAdmin.Instance.Config.DefaultMaps;//Server.GetMapList();
 			foreach (string map in maps)
 			{
 				options.Add(new ChatMenuOptionData(map, () => ExecuteChangeMap(admin, map, false)));

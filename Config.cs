@@ -45,6 +45,9 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("Discord")]
 		public Discord Discord { get; set; } = new Discord();
 		
+		[JsonPropertyName("DefaultMaps")]
+		public List<string> DefaultMaps { get; set; } = new List<string>();
+		
 		[JsonPropertyName("WorkshopMaps")]
 		public List<string> WorkshopMaps { get; set; } = new List<string>();
 	}
