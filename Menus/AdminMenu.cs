@@ -42,7 +42,7 @@ namespace CS2_SimpleAdmin.Menus
 			{
 				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Manage Server", () => ManageServerMenu.OpenMenu(admin)),
-				new ChatMenuOptionData("Fun actions", null),
+				new ChatMenuOptionData("Fun actions", () => FunActionsMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Manage Admins", null)
 			};
 
