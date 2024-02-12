@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using CS2_SimpleAdmin.Menus;
 using Discord.Rest;
 
 namespace CS2_SimpleAdmin
@@ -47,6 +48,16 @@ namespace CS2_SimpleAdmin
 		[ConsoleCommand("css_admin")]
 		[RequiresPermissions("@css/generic")]
 		public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (caller == null || caller.IsValid == false)
+				return;
+
+			AdminMenu.OpenMenu(caller);
+		}
+		
+		[ConsoleCommand("css_adminhelp")]
+		[RequiresPermissions("@css/generic")]
+		public void OnAdminHelpCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (caller == null || !caller.IsValid) return;
 
