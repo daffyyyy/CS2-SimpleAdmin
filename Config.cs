@@ -3,7 +3,15 @@ using System.Text.Json.Serialization;
 
 namespace CS2_SimpleAdmin
 {
-	public class CS2_SimpleAdminConfig: BasePluginConfig
+	public class Discord
+	{
+		[JsonPropertyName("DiscordLogWebhook")]
+		public string DiscordLogWebhook { get; set; } = "";
+		[JsonPropertyName("DiscordPenaltyWebhook")]
+		public string DiscordPenaltyWebhook { get; set; } = "";
+	}
+
+	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
 		public override int Version { get; set; } = 6;
 
@@ -34,9 +42,9 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("TeamSwitchType")]
 		public int TeamSwitchType { get; set; } = 1;
 
-		[JsonPropertyName("DiscordWebhook")]
-		public string DiscordWebhook { get; set; } = "";
-
+		[JsonPropertyName("Discord")]
+		public Discord Discord { get; set; } = new Discord();
+		
 		[JsonPropertyName("WorkshopMaps")]
 		public List<string> WorkshopMaps { get; set; } = new List<string>();
 	}
