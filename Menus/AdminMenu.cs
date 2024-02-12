@@ -38,13 +38,15 @@ namespace CS2_SimpleAdmin.Menus
 			//bool xpRights = AdminManager.PlayerHasPermissions(admin, "@wcs/xp");
 
 			BaseMenu menu = AdminMenu.CreateMenu("Simple Admin");
-			ChatMenuOptionData[] options = new[]
+			List<ChatMenuOptionData> options = new()
 			{
 				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Manage Server", () => ManageServerMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Fun actions", () => FunActionsMenu.OpenMenu(admin)),
-				new ChatMenuOptionData("Manage Admins", null)
 			};
+			
+			if (AdminManager.PlayerHasPermissions(admin, "@css/root"))
+				options.Add(new ChatMenuOptionData("Manage Admins", () => ManageAdminsMenu.OpenMenu(admin)));
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{
