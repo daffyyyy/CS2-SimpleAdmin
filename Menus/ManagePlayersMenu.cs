@@ -44,14 +44,14 @@ namespace CS2_SimpleAdmin.Menus
 
 			if (hasBan)
 			{
-				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, "Ban", player, BanMenu))));
+				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"Ban: {player.PlayerName}", player, BanMenu))));
 			}
 
 			if (hasChat)
 			{
-				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, "Gag", player, GagMenu))));
-				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, "Mute", player, MuteMenu))));
-				options.Add(new ChatMenuOptionData("Silence", () => PlayersMenu.OpenMenu(admin, "Silence", (admin, player) => DurationMenu.OpenMenu(admin, "Silence", player, SilenceMenu))));
+				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"Gag: {player.PlayerName}", player, GagMenu))));
+				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"Mute: {player.PlayerName}", player, MuteMenu))));
+				options.Add(new ChatMenuOptionData("Silence", () => PlayersMenu.OpenMenu(admin, "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"Silence: {player.PlayerName}", player, SilenceMenu))));
 			}
 
 			if (hasKick)
@@ -70,7 +70,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			BaseMenu menu = AdminMenu.CreateMenu($"Slap {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Slap: {player.PlayerName}");
 			List<ChatMenuOptionData> options = new();
 
 			// options added in order
@@ -108,7 +108,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
-			BaseMenu menu = AdminMenu.CreateMenu($"Ban {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Ban: {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Hacking",
@@ -134,7 +134,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
-			BaseMenu menu = AdminMenu.CreateMenu($"Gag {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Gag: {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Advertising",
@@ -161,7 +161,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void MuteMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
-			BaseMenu menu = AdminMenu.CreateMenu($"Mute {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Mute: {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Shouting",
@@ -190,7 +190,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void SilenceMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
-			BaseMenu menu = AdminMenu.CreateMenu($"Silence {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Silence: {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Shouting",

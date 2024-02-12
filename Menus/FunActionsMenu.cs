@@ -92,7 +92,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			BaseMenu menu = AdminMenu.CreateMenu("Give Weapon");
+			BaseMenu menu = AdminMenu.CreateMenu($"Give Weapon: {player.PlayerName}");
 			
 			foreach (KeyValuePair<int, CsItem> weapon in GetWeaponsCache)
 			{
@@ -134,7 +134,7 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, int>("999", 999)
 			};
 
-			BaseMenu menu = AdminMenu.CreateMenu("Set HP");
+			BaseMenu menu = AdminMenu.CreateMenu($"Set HP: {player.PlayerName}");
 
 			foreach (Tuple<string, int> hpTuple in _hpArray)
 			{
@@ -164,7 +164,7 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, float>("4", 4)
 			};
 
-			BaseMenu menu = AdminMenu.CreateMenu("Set Speed");
+			BaseMenu menu = AdminMenu.CreateMenu($"Set Speed: {player.PlayerName}");
 
 			foreach (Tuple<string, float> speedTuple in _speedArray)
 			{
