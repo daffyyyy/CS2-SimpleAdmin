@@ -1,11 +1,32 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin.Menus
 {
 	public static class FunActionsMenu
 	{
+		private static Dictionary<int, CsItem> _weaponsCache = null;
+		private static Dictionary<int, CsItem> GetWeaponsCache
+		{
+			get
+			{
+				if (_weaponsCache == null)
+				{
+					Array weaponsArray = Enum.GetValues(typeof(CsItem));
+					
+					// avoid duplicates in the menu
+					_weaponsCache = new();
+					foreach (CsItem item in weaponsArray)
+					{
+						_weaponsCache[(int)item] = item;
+					}
+				}
+
+				return _weaponsCache;
+			}
+		}
 		public static void OpenMenu(CCSPlayerController admin)
 		{
 			if (admin == null || admin.IsValid == false)
@@ -71,7 +92,21 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			// TODO: show weapon menu
+			BaseMenu menu = AdminMenu.CreateMenu("Give Weapon");
+
+			
+
+			foreach (KeyValuePair<int, CsItem> weapon in GetWeaponsCache)
+			{
+				menu.AddMenuOption(weapon.Value.ToString(), (_, _) => { GiveWeapon(admin, player, weapon.Value); });
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void GiveWeapon(CCSPlayerController admin, CCSPlayerController player, CsItem weaponValue)
+		{
+			CS2_SimpleAdmin.Instance.GiveWeapon(admin, player, weaponValue);
 		}
 
 		private static void StripWeapons(CCSPlayerController admin, CCSPlayerController player)
@@ -128,7 +163,7 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, float>("1", 1),
 				new Tuple<string, float>("2", 2),
 				new Tuple<string, float>("3", 3),
-				new Tuple<string, float>("4", 4),
+				new Tuple<string, float>("4", 4)
 			};
 
 			BaseMenu menu = AdminMenu.CreateMenu("Set Speed");

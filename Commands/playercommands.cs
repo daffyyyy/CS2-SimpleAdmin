@@ -9,6 +9,7 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Collections.Concurrent;
 using System.Text;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace CS2_SimpleAdmin
 {
@@ -108,21 +109,36 @@ namespace CS2_SimpleAdmin
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
 					return;
 
-				player.GiveNamedItem(weaponName);
+				GiveWeapon(caller, player, weaponName, callerName);
+			});
+		}
 
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string callerName = null)
+		{
+			player.GiveNamedItem(weapon);
+			SubGiveWeapon(caller, player, weapon.ToString(), callerName);
+		}
+		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string callerName = null)
+		{
+			player.GiveNamedItem(weaponName);
+			SubGiveWeapon(caller, player, weaponName, callerName);
+		}
+		public void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_give_message", callerName, player.PlayerName, weaponName]);
-							_player.PrintToChat(sb.ToString());
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_give_message", callerName, player.PlayerName, weaponName]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-			});
+			}
 		}
 
 		[ConsoleCommand("css_strip")]
