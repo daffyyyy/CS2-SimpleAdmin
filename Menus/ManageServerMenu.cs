@@ -55,7 +55,7 @@ namespace CS2_SimpleAdmin.Menus
 				options.Add(new ChatMenuOptionData(map, () => ExecuteChangeMap(admin, map, false)));
 			}
 
-			List<string> wsMaps = new(); // TODO: Get from config to add workshopmaps
+			List<string> wsMaps = CS2_SimpleAdmin.Instance.Config.WorkshopMaps;
 			foreach (string map in wsMaps)
 			{
 				options.Add(new ChatMenuOptionData($"{map} (WS)", () => ExecuteChangeMap(admin, map, true)));
