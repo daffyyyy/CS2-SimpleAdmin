@@ -527,15 +527,16 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (caller!.CanTarget(player))
 			{
-				Gag(caller, player, time, reason, _muteManager);
+				Gag(caller, player, time, reason, _muteManager, playerPenaltyManager);
 			}
 		});
 	}
 
-	internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null)
+	internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null, PlayerPenaltyManager playerPenaltyManager = null)
 	{
 		reason ??= "Unknown";
 		muteManager ??= new(_database);
+		playerPenaltyManager ??= new PlayerPenaltyManager();
 
 		PlayerInfo playerInfo = new PlayerInfo
 		{
@@ -544,80 +545,79 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = player?.IpAddress?.Split(":")[0]
 		};
 
-				PlayerInfo adminInfo = new PlayerInfo
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.SteamID.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		Task.Run(async () =>
+		{
+			await muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
+		});
+
+		if (TagsDetected)
+			Server.ExecuteCommand($"css_tag_mute {player!.SteamID}");
+
+		playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Gag, DateTime.Now.AddMinutes(time), time);
+
+		if (time == 0)
+		{
+			if (!player!.IsBot && !player.IsHLTV)
+			{
+				using (new WithTemporaryCulture(player.GetLanguage()))
 				{
-					SteamId = caller?.SteamID.ToString(),
-					Name = caller?.PlayerName,
-					IpAddress = caller?.IpAddress?.Split(":")[0]
-				};
+					player.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+				}
+			}
 
-				Task.Run(async () =>
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
-				});
-
-				if (TagsDetected)
-					Server.ExecuteCommand($"css_tag_mute {player!.SteamID}");
-
-				playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Gag, DateTime.Now.AddMinutes(time), time);
-
-				if (time == 0)
-				{
-					if (!player!.IsBot && !player.IsHLTV)
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						using (new WithTemporaryCulture(player.GetLanguage()))
-						{
-							player.PrintToCenter(_localizer!["sa_player_gag_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-						}
-					}
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_gag_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-						if (Config.DiscordWebhook.Length > 0 && _localizer != null)
-						{
-							LocalizedString localizedMessage = _localizer["sa_admin_gag_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason];
-							_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_gag_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-				else
+				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
 				{
-					if (!player!.IsBot && !player.IsHLTV)
-					{
-						using (new WithTemporaryCulture(player.GetLanguage()))
-						{
-							player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-						}
-					}
+					LocalizedString localizedMessage = _localizer["sa_admin_gag_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason];
+					_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
+				}
+			}
+		}
+		else
+		{
+			if (!player!.IsBot && !player.IsHLTV)
+			{
+				using (new WithTemporaryCulture(player.GetLanguage()))
+				{
+					player!.PrintToCenter(_localizer!["sa_player_gag_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+				}
+			}
 
-					if (caller == null || caller != null && caller != null && !silentPlayers.Contains(caller.Slot))
+			if (caller == null || caller != null && caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_gag_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-						if (Config.DiscordWebhook.Length > 0 && _localizer != null)
-						{
-							LocalizedString localizedMessage = _localizer["sa_admin_gag_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time];
-							_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_gag_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-			
+				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
+				{
+					LocalizedString localizedMessage = _localizer["sa_admin_gag_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time];
+					_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
+				}
+			}
+		}
 	}
 
 	[ConsoleCommand("css_addgag")]
@@ -860,10 +860,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		});
 	}
 
-	internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null)
+	internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason = null, MuteManager muteManager = null, PlayerPenaltyManager playerPenaltyManager = null)
 	{
 		reason ??= "Unknown";
 		muteManager ??= new(_database);
+		playerPenaltyManager ??= new PlayerPenaltyManager();
 
 		PlayerInfo playerInfo = new PlayerInfo
 		{
@@ -872,73 +873,73 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			IpAddress = player?.IpAddress?.Split(":")[0]
 		};
 
-				PlayerInfo adminInfo = new PlayerInfo
+		PlayerInfo adminInfo = new PlayerInfo
+		{
+			SteamId = caller?.SteamID.ToString(),
+			Name = caller?.PlayerName,
+			IpAddress = caller?.IpAddress?.Split(":")[0]
+		};
+
+		player!.VoiceFlags = VoiceFlags.Muted;
+
+		Task.Run(async () =>
+		{
+			await muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
+		});
+
+		playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Mute, DateTime.Now.AddMinutes(time), time);
+
+		if (time == 0)
+		{
+			if (!player.IsBot && !player.IsHLTV)
+				using (new WithTemporaryCulture(player.GetLanguage()))
 				{
-					SteamId = caller?.SteamID.ToString(),
-					Name = caller?.PlayerName,
-					IpAddress = caller?.IpAddress?.Split(":")[0]
-				};
+					player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
+				}
 
-				player!.VoiceFlags = VoiceFlags.Muted;
-
-				Task.Run(async () =>
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
-				});
-
-				playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Mute, DateTime.Now.AddMinutes(time), time);
-
-				if (time == 0)
-				{
-					if (!player.IsBot && !player.IsHLTV)
-						using (new WithTemporaryCulture(player.GetLanguage()))
-						{
-							player!.PrintToCenter(_localizer!["sa_player_mute_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-						}
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_mute_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-						if (Config.DiscordWebhook.Length > 0 && _localizer != null)
-						{
-							LocalizedString localizedMessage = _localizer["sa_admin_mute_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason];
-							_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_mute_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-				else
+				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
 				{
-					if (!player.IsBot && !player.IsHLTV)
-						using (new WithTemporaryCulture(player.GetLanguage()))
-						{
-							player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-						}
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+					LocalizedString localizedMessage = _localizer["sa_admin_mute_message_perm", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason];
+					_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
+				}
+			}
+		}
+		else
+		{
+			if (!player.IsBot && !player.IsHLTV)
+				using (new WithTemporaryCulture(player.GetLanguage()))
+				{
+					player!.PrintToCenter(_localizer!["sa_player_mute_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+				}
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_mute_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-						if (Config.DiscordWebhook.Length > 0 && _localizer != null)
-						{
-							LocalizedString localizedMessage = _localizer["sa_admin_mute_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time];
-							_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_mute_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
+				if (Config.DiscordWebhook.Length > 0 && _localizer != null)
+				{
+					LocalizedString localizedMessage = _localizer["sa_admin_mute_message_time", caller == null ? "Console" : caller.PlayerName, player.PlayerName, reason, time];
+					_ = SendWebhookMessage(localizedMessage.ToString().Replace("", "").Replace("", ""));
+				}
+			}
+		}
 	}
 
 	[ConsoleCommand("css_addmute")]
@@ -1509,7 +1510,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Task.Run(async () =>
 		{
-			await _banManager.BanPlayer(playerInfo, adminInfo, reason, time);
+			await banManager.BanPlayer(playerInfo, adminInfo, reason, time);
 		});
 
 		AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player!.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
