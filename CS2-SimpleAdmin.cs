@@ -16,7 +16,6 @@ namespace CS2_SimpleAdmin;
 public partial class CS2_SimpleAdmin: BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = null;
-	public static BasePlugin? _plugin = null;
 
 	public static IStringLocalizer? _localizer;
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
@@ -47,7 +46,6 @@ public partial class CS2_SimpleAdmin: BasePlugin, IPluginConfig<CS2_SimpleAdminC
 	public override void Load(bool hotReload)
 	{
 		Instance = this;
-		_plugin = this;
 
 		registerEvents();
 

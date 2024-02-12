@@ -100,24 +100,24 @@ public static class PlayerExtensions
 
 	public static void Rename(this CCSPlayerController controller, string newName = "Unknown")
 	{
-		if (CS2_SimpleAdmin._plugin == null)
+		if (CS2_SimpleAdmin.Instance == null)
 			return;
 
 		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
 		playerName.Set(newName + " ");
 
-		CS2_SimpleAdmin._plugin.AddTimer(0.25f, () =>
+		CS2_SimpleAdmin.Instance.AddTimer(0.25f, () =>
 		{
 			Utilities.SetStateChanged(controller, "CCSPlayerController", "m_szClan");
 			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
 		});
 
-		CS2_SimpleAdmin._plugin.AddTimer(0.3f, () =>
+		CS2_SimpleAdmin.Instance.AddTimer(0.3f, () =>
 		{
 			playerName.Set(newName);
 		});
 
-		CS2_SimpleAdmin._plugin.AddTimer(0.4f, () =>
+		CS2_SimpleAdmin.Instance.AddTimer(0.4f, () =>
 		{
 			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
 		});
