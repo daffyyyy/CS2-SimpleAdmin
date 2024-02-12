@@ -16,7 +16,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/cheats")]
 		public void OnNoclipCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && player.PawnIsAlive && !player.IsHLTV).ToList();
@@ -24,7 +24,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			playersToTarget.ForEach(player =>
@@ -40,7 +40,7 @@ namespace CS2_SimpleAdmin
 							using (new WithTemporaryCulture(_player.GetLanguage()))
 							{
 								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_noclip_message", playerName]);
+								sb.Append(_localizer["sa_admin_noclip_message", callerName, player.PlayerName]);
 								_player.PrintToChat(sb.ToString());
 							}
 						}
@@ -54,7 +54,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/slay")]
 		public void OnFreezeCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			int.TryParse(command.GetArg(2), out int time);
 
 			TargetResult? targets = GetTarget(command);
@@ -63,7 +63,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			playersToTarget.ForEach(player =>
@@ -85,7 +85,7 @@ namespace CS2_SimpleAdmin
 							using (new WithTemporaryCulture(_player.GetLanguage()))
 							{
 								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_freeze_message", playerName]);
+								sb.Append(_localizer["sa_admin_freeze_message", callerName, player.PlayerName]);
 								_player.PrintToChat(sb.ToString());
 							}
 						}
@@ -99,7 +99,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/slay")]
 		public void OnUnfreezeCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
@@ -107,7 +107,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			playersToTarget.ForEach(player =>
@@ -124,7 +124,7 @@ namespace CS2_SimpleAdmin
 						using (new WithTemporaryCulture(_player.GetLanguage()))
 						{
 							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_unfreeze_message", playerName]);
+							sb.Append(_localizer["sa_admin_unfreeze_message", callerName, player.PlayerName]);
 							_player.PrintToChat(sb.ToString());
 						}
 					}

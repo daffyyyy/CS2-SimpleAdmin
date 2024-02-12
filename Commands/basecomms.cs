@@ -18,7 +18,7 @@ namespace CS2_SimpleAdmin
 		public void OnGagCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			int time = 0;
 			string reason = "Unknown";
@@ -35,7 +35,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			int.TryParse(command.GetArg(2), out time);
@@ -91,7 +91,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_gag_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_gag_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -114,7 +114,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_gag_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_gag_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -130,7 +130,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddGagCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.ArgCount < 2)
 				return;
@@ -148,7 +148,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			int time = 0;
@@ -196,7 +196,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_gag_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_gag_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -217,7 +217,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_gag_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_gag_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -240,7 +240,7 @@ namespace CS2_SimpleAdmin
 		public void OnUngagCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.GetArg(1).Length <= 1)
 			{
@@ -251,7 +251,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			bool found = false;
@@ -337,7 +337,7 @@ namespace CS2_SimpleAdmin
 		public void OnMuteCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			int time = 0;
 			string reason = "Unknown";
@@ -354,7 +354,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			int.TryParse(command.GetArg(2), out time);
@@ -407,7 +407,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_mute_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_mute_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -427,7 +427,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_mute_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_mute_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -443,7 +443,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddMuteCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.ArgCount < 2)
 				return;
@@ -460,7 +460,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			int time = 0;
@@ -509,7 +509,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_mute_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_mute_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -529,7 +529,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_mute_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_mute_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -547,7 +547,7 @@ namespace CS2_SimpleAdmin
 		public void OnUnmuteCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.GetArg(1).Length <= 1)
 			{
@@ -558,7 +558,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string pattern = command.GetArg(1);
@@ -633,7 +633,7 @@ namespace CS2_SimpleAdmin
 		public void OnSilenceCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			int time = 0;
 			string reason = "Unknown";
@@ -650,7 +650,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			int.TryParse(command.GetArg(2), out time);
@@ -706,7 +706,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_silence_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_silence_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -729,7 +729,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_silence_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_silence_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -745,7 +745,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddSilenceCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.ArgCount < 2)
 				return;
@@ -762,7 +762,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			int time = 0;
@@ -814,7 +814,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_silence_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_silence_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -834,7 +834,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_silence_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_silence_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -852,7 +852,7 @@ namespace CS2_SimpleAdmin
 		public void OnUnsilenceCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.GetArg(1).Length <= 1)
 			{
@@ -863,7 +863,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string pattern = command.GetArg(1);

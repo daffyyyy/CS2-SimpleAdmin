@@ -66,7 +66,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (!Helper.IsValidSteamID64(command.GetArg(1)))
 			{
@@ -87,7 +87,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string steamid = command.GetArg(1);
@@ -111,7 +111,7 @@ namespace CS2_SimpleAdmin
 		public void OnDelAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (!Helper.IsValidSteamID64(command.GetArg(1)))
 			{
@@ -122,7 +122,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string steamid = command.GetArg(1);
@@ -207,7 +207,7 @@ namespace CS2_SimpleAdmin
 		public void OnWhoCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
@@ -215,7 +215,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
@@ -333,7 +333,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string reason = "Unknown";
 
 			TargetResult? targets = GetTarget(command);
@@ -351,7 +351,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
@@ -390,7 +390,7 @@ namespace CS2_SimpleAdmin
 							using (new WithTemporaryCulture(_player.GetLanguage()))
 							{
 								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_kick_message", playerName, reason]);
+								sb.Append(_localizer["sa_admin_kick_message", callerName, player.PlayerName, reason]);
 								_player.PrintToChat(sb.ToString());
 							}
 						}
@@ -405,7 +405,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string _command = string.Empty;
 			string? map = command.GetCommandString.Split(" ")[1];
 
@@ -423,7 +423,7 @@ namespace CS2_SimpleAdmin
 				if (_discordWebhookClientLog != null && _localizer != null)
 				{
 					string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 				}
 
 				AddTimer(2.0f, () =>
@@ -469,7 +469,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/changemap")]
 		public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string _command = string.Empty;
 			string? map = command.GetArg(1);
 
@@ -498,7 +498,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			AddTimer(2.0f, () =>
@@ -513,7 +513,7 @@ namespace CS2_SimpleAdmin
 		public void OnCvarCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			var cvar = ConVar.Find(command.GetArg(1));
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (cvar == null)
 			{
@@ -530,15 +530,15 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			var value = command.GetArg(2);
 
 			Server.ExecuteCommand($"{cvar.Name} {value}");
 
-			command.ReplyToCommand($"{playerName} changed cvar {cvar.Name} to {value}.");
-			Logger.LogInformation($"{playerName} changed cvar {cvar.Name} to {value}.");
+			command.ReplyToCommand($"{callerName} changed cvar {cvar.Name} to {value}.");
+			Logger.LogInformation($"{callerName} changed cvar {cvar.Name} to {value}.");
 		}
 
 		[ConsoleCommand("css_rcon", "Run a server console command.")]
@@ -546,17 +546,17 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/rcon")]
 		public void OnRconCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			Server.ExecuteCommand(command.ArgString);
-			command.ReplyToCommand($"{playerName} executed command {command.ArgString}.");
-			Logger.LogInformation($"{playerName} executed command ({command.ArgString}).");
+			command.ReplyToCommand($"{callerName} executed command {command.ArgString}.");
+			Logger.LogInformation($"{callerName} executed command ({command.ArgString}).");
 		}
 	}
 }

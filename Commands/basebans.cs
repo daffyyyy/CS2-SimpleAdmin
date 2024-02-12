@@ -16,7 +16,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
 
@@ -34,7 +34,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			Database database = new Database(dbConnectionString);
@@ -96,7 +96,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -116,7 +116,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -131,7 +131,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
@@ -147,7 +147,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string reason = "Unknown";
@@ -197,7 +197,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -218,7 +218,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -243,7 +243,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<ip> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnBanIp(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.ArgCount < 2)
 				return;
@@ -260,7 +260,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string reason = "Unknown";
@@ -306,7 +306,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_perm", playerName, reason]);
+									sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -326,7 +326,7 @@ namespace CS2_SimpleAdmin
 								using (new WithTemporaryCulture(_player.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_time", playerName, reason, time]);
+									sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
 									_player.PrintToChat(sb.ToString());
 								}
 							}
@@ -353,7 +353,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<steamid or name or ip>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnUnbanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.GetArg(1).Length <= 1)
 			{
 				command.ReplyToCommand($"Too short pattern to search.");
@@ -363,7 +363,7 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string pattern = command.GetArg(1);

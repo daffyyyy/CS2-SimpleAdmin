@@ -16,14 +16,14 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 2, usage: "<question> [... options ...]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnVoteCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string playerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName= caller == null ? "Console" : caller.PlayerName;
 			if (command.GetArg(1) == null || command.GetArg(1).Length < 0 || command.ArgCount < 2)
 				return;
 
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{playerName}]({communityUrl})", command.GetCommandString]));
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			voteAnswers.Clear();
