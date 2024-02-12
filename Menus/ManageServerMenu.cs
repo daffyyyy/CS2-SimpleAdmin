@@ -73,7 +73,9 @@ namespace CS2_SimpleAdmin.Menus
 		private static void ExecuteChangeMap(CCSPlayerController admin, string mapName, bool workshop)
 		{
 			if (workshop)
-				CS2_SimpleAdmin.Instance.ChangeWSMap(admin, mapName);
+				CS2_SimpleAdmin.Instance.ChangeWorkshopMap(admin, mapName);
+			else
+				CS2_SimpleAdmin.Instance.ChangeMap(admin, mapName);
 		}
 	}
 }

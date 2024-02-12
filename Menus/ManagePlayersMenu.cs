@@ -67,11 +67,6 @@ namespace CS2_SimpleAdmin.Menus
 			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
 		}
 
-		private static void WhoIs(CCSPlayerController admin, CCSPlayerController player)
-		{
-			CS2_SimpleAdmin.Instance.Who(admin, player);
-		}
-
 		private static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
 			CenterHtmlMenu menu = new CenterHtmlMenu($"Slap {player.PlayerName}");

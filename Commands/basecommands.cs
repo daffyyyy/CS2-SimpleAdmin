@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Discord.Rest;
 
 namespace CS2_SimpleAdmin
 {
@@ -364,39 +365,45 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					if (player.PawnIsAlive)
-					{
-						player.Pawn.Value!.Freeze();
-					}
-
-					if (command.ArgCount >= 2)
-					{
-						if (!player.IsBot && !player.IsHLTV)
-							using (new WithTemporaryCulture(player.GetLanguage()))
-							{
-								player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
-							}
-						AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-					}
-					else
-					{
-						AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-					}
-
-					if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_kick_message", callerName, player.PlayerName, reason]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					Kick(caller, player, reason, callerName);
 				}
 			});
+		}
+
+		public void Kick(CCSPlayerController? caller, CCSPlayerController player, string reason = "Unknown", string callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			if (player.PawnIsAlive)
+			{
+				player.Pawn.Value!.Freeze();
+			}
+
+			if (string.IsNullOrEmpty(reason) == false)
+			{
+				if (!player.IsBot && !player.IsHLTV)
+					using (new WithTemporaryCulture(player.GetLanguage()))
+					{
+						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
+					}
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+			}
+			else
+			{
+				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+			}
+
+			if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_kick_message", callerName, player.PlayerName, reason]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_changemap")]
@@ -405,9 +412,14 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
+			string? map = command.GetCommandString.Split(" ")[1];
+			ChangeMap(caller, map, command);
+		}
+
+		public void ChangeMap(CCSPlayerController caller, string map, CommandInfo? command = null)
+		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string _command = string.Empty;
-			string? map = command.GetCommandString.Split(" ")[1];
 
 			if (map.StartsWith("ws:"))
 			{
@@ -423,7 +435,8 @@ namespace CS2_SimpleAdmin
 				if (_discordWebhookClientLog != null && _localizer != null)
 				{
 					string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+					string commandName = command?.GetCommandString ?? "css_changemap";
+					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
 				}
 
 				AddTimer(2.0f, () =>
@@ -435,7 +448,13 @@ namespace CS2_SimpleAdmin
 			{
 				if (!Server.IsMapValid(map))
 				{
-					command.ReplyToCommand($"Map {map} not found.");
+					string msg = $"Map {map} not found.";
+					if (command != null)
+						command.ReplyToCommand(msg);
+					else if (caller != null && caller.IsValid)
+						caller.PrintToChat(msg);
+					else
+						Server.PrintToConsole(msg);
 					return;
 				}
 			}
@@ -469,9 +488,14 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/changemap")]
 		public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
+			string? map = command.GetArg(1);
+			ChangeWorkshopMap(caller, map, command);
+		}
+
+		public void ChangeWorkshopMap(CCSPlayerController caller, string map, CommandInfo? command = null)
+		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string _command = string.Empty;
-			string? map = command.GetArg(1);
 
 			if (long.TryParse(map, out long mapId))
 			{
@@ -498,7 +522,8 @@ namespace CS2_SimpleAdmin
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+				string commandName = command?.GetCommandString ?? "css_changewsmap";
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
 			}
 
 			AddTimer(2.0f, () =>
@@ -557,6 +582,25 @@ namespace CS2_SimpleAdmin
 			Server.ExecuteCommand(command.ArgString);
 			command.ReplyToCommand($"{callerName} executed command {command.ArgString}.");
 			Logger.LogInformation($"{callerName} executed command ({command.ArgString}).");
+		}
+		
+		[ConsoleCommand("css_rr")]
+		[ConsoleCommand("css_rg")]
+		[ConsoleCommand("css_restart")]
+		[ConsoleCommand("css_restartgame")]
+		[RequiresPermissions("@css/generic")]
+		[CommandHelper(minArgs: 1, usage: "", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		public void OnRestartCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			RestartGame(caller);
+		}
+
+		public void RestartGame(CCSPlayerController admin)
+		{
+			// TODO: Localize
+			var name = admin == null ? "Console" : admin.PlayerName;
+			Server.PrintToChatAll($"[SimpleAdmin] {name}: Restarting game...");
+			Server.ExecuteCommand("mp_restartgame 2");
 		}
 	}
 }

@@ -50,80 +50,88 @@ namespace CS2_SimpleAdmin
 			{
 				if (caller!.CanTarget(player))
 				{
-					if (player.PawnIsAlive)
+					Ban(caller, player, time, reason, callerName, _banManager);
+				}
+			});
+		}
+
+		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string callerName = null, BanManager banManager = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			banManager ??= new BanManager(_database, Config);
+			
+			if (player.PawnIsAlive)
+			{
+				player.Pawn.Value!.Freeze();
+			}
+
+			PlayerInfo playerInfo = new PlayerInfo
+			{
+				SteamId = player?.SteamID.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
+
+			PlayerInfo adminInfo = new PlayerInfo
+			{
+				SteamId = caller?.SteamID.ToString(),
+				Name = caller?.PlayerName,
+				IpAddress = caller?.IpAddress?.Split(":")[0]
+			};
+
+			Task.Run(async () =>
+			{
+				await banManager.BanPlayer(playerInfo, adminInfo, reason, time);
+			});
+
+			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player!.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+			if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
+				bannedPlayers.Add(playerInfo.IpAddress);
+			if (!bannedPlayers.Contains(player!.SteamID.ToString()))
+				bannedPlayers.Add(player.SteamID.ToString());
+
+			if (time == 0)
+			{
+				if (!player.IsBot && !player.IsHLTV)
+					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
-						player.Pawn.Value!.Freeze();
+						player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
 
-					PlayerInfo playerInfo = new PlayerInfo
+				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+				{
+					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 					{
-						SteamId = player?.SteamID.ToString(),
-						Name = player?.PlayerName,
-						IpAddress = player?.IpAddress?.Split(":")[0]
-					};
-
-					PlayerInfo adminInfo = new PlayerInfo
-					{
-						SteamId = caller?.SteamID.ToString(),
-						Name = caller?.PlayerName,
-						IpAddress = caller?.IpAddress?.Split(":")[0]
-					};
-
-					Task.Run(async () =>
-					{
-						await _banManager.BanPlayer(playerInfo, adminInfo, reason, time);
-					});
-
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player!.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
-					if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
-						bannedPlayers.Add(playerInfo.IpAddress);
-					if (!bannedPlayers.Contains(player!.SteamID.ToString()))
-						bannedPlayers.Add(player.SteamID.ToString());
-
-					if (time == 0)
-					{
-						if (!player.IsBot && !player.IsHLTV)
-							using (new WithTemporaryCulture(player.GetLanguage()))
-							{
-								player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-							}
-
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+						using (new WithTemporaryCulture(_player.GetLanguage()))
 						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
-								{
-									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
-									_player.PrintToChat(sb.ToString());
-								}
-							}
-						}
-					}
-					else
-					{
-						if (!player.IsBot && !player.IsHLTV)
-							using (new WithTemporaryCulture(player.GetLanguage()))
-							{
-								player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-							}
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
-								{
-									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
-									_player.PrintToChat(sb.ToString());
-								}
-							}
+							StringBuilder sb = new(_localizer!["sa_prefix"]);
+							sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
+							_player.PrintToChat(sb.ToString());
 						}
 					}
 				}
-			});
+			}
+			else
+			{
+				if (!player.IsBot && !player.IsHLTV)
+					using (new WithTemporaryCulture(player.GetLanguage()))
+					{
+						player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+					}
+				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+				{
+					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					{
+						using (new WithTemporaryCulture(_player.GetLanguage()))
+						{
+							StringBuilder sb = new(_localizer!["sa_prefix"]);
+							sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
+							_player.PrintToChat(sb.ToString());
+						}
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_addban")]

@@ -33,25 +33,32 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
-					return;
+				Slay(caller, player, callerName);
+			});
+		}
 
-				player.CommitSuicide(false, true);
+		public void Slay(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		{
+			if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				return;
 
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			
+			player.CommitSuicide(false, true);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
 
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_slay_message", callerName, player.PlayerName]);
-							_player.PrintToChat(sb.ToString());
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_slay_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-			});
+			}
 		}
 
 		[ConsoleCommand("css_give")]
@@ -339,22 +346,28 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					player!.Pawn.Value!.Slap(damage);
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_slap_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					Slap(caller, player, damage);
 				}
 			});
+		}
+
+		public void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage, string callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			player!.Pawn.Value!.Slap(damage);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_slap_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_team")]

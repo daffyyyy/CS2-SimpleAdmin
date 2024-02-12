@@ -9,13 +9,11 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using System.Collections.Concurrent;
-using System.Text;
-using CS2_SimpleAdmin.Menus;
 
 namespace CS2_SimpleAdmin;
 
 [MinimumApiVersion(163)]
-public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
+public partial class CS2_SimpleAdmin: BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = null;
 	public static BasePlugin? _plugin = null;
@@ -29,6 +27,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static bool TagsDetected = false;
 	public static bool voteInProgress = false;
 	public static int? ServerId = null;
+
+	public static DiscordWebhookClient? _discordWebhookClientLog;
+	public static DiscordWebhookClient? _discordWebhookClientPenalty;
 
 	internal string dbConnectionString = string.Empty;
 	internal static Database? _database;
@@ -49,7 +50,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		_plugin = this;
 
 		registerEvents();
-		
+
 		if (hotReload)
 		{
 			OnMapStart(string.Empty);
@@ -73,7 +74,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			UserID = config.DatabaseUser,
 			Password = config.DatabasePassword,
 			Port = (uint)config.DatabasePort,
-			Pooling = true,
+			Pooling = true
 		};
 
 		dbConnectionString = builder.ConnectionString;
@@ -83,9 +84,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			try
 			{
-				using (var connection = await _database.GetConnectionAsync())
+				using (MySqlConnection connection = await _database.GetConnectionAsync())
 				{
-					using var transaction = await connection.BeginTransactionAsync();
+					using MySqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try
 					{
@@ -142,7 +143,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public static void RemoveFromConcurrentBag(ConcurrentBag<int> bag, int playerSlot)
 	{
-		var tempList = new List<int>();
+		List<int> tempList = new List<int>();
 		while (!bag.IsEmpty)
 		{
 			if (bag.TryTake(out int item) && item != playerSlot)
@@ -150,10 +151,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				tempList.Add(item);
 			}
 		}
-		foreach (var item in tempList)
+
+		foreach (int item in tempList)
 		{
 			bag.Add(item);
 		}
 	}
-
 }
