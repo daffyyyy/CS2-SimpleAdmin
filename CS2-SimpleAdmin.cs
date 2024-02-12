@@ -85,7 +85,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 					try
 					{
-						string sqlFilePath = ModuleDirectory + "Database/database_setup.sql";
+						string sqlFilePath = ModuleDirectory + "/Database/database_setup.sql";
 						string sql = await File.ReadAllTextAsync(sqlFilePath);
 
 						await connection.QueryAsync(sql, transaction: transaction);
