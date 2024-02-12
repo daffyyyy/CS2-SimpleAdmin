@@ -114,7 +114,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void Freeze(CCSPlayerController admin, CCSPlayerController player)
 		{
-			if (player.PlayerPawn.Value.MoveType == MoveType_t.MOVETYPE_OBSOLETE)
+			if (player.PlayerPawn.Value.MoveType != MoveType_t.MOVETYPE_OBSOLETE)
 				CS2_SimpleAdmin.Instance.Freeze(admin, player, -1);
 			else
 				CS2_SimpleAdmin.Instance.Unfreeze(admin, player);
