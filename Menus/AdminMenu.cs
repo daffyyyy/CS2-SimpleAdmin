@@ -6,6 +6,23 @@ namespace CS2_SimpleAdmin.Menus
 {
 	public static class AdminMenu
 	{
+		public static BaseMenu CreateMenu(string title)
+		{
+			return CS2_SimpleAdmin.Instance.Config.UseChatMenu ? new ChatMenu(title) : new CenterHtmlMenu(title);
+		}
+
+		public static void OpenMenu(CCSPlayerController player, BaseMenu menu)
+		{
+			if (menu is CenterHtmlMenu centerHtmlMenu)
+			{
+				MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, player, centerHtmlMenu);
+			}
+			else if (menu is ChatMenu chatMenu)
+			{
+				MenuManager.OpenChatMenu(player, chatMenu);
+			}
+		}
+		
 		public static void OpenMenu(CCSPlayerController admin)
 		{
 			if (admin == null || admin.IsValid == false)
@@ -20,7 +37,7 @@ namespace CS2_SimpleAdmin.Menus
 
 			//bool xpRights = AdminManager.PlayerHasPermissions(admin, "@wcs/xp");
 
-			CenterHtmlMenu menu = new CenterHtmlMenu("Simple Admin");
+			BaseMenu menu = AdminMenu.CreateMenu("Simple Admin");
 			ChatMenuOptionData[] options = new[]
 			{
 				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin)),
@@ -35,7 +52,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			OpenMenu(admin, menu);
 		}
 	}
 }

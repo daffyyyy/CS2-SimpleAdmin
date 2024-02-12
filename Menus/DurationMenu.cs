@@ -19,7 +19,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		public static void OpenMenu(CCSPlayerController admin, string menuName, CCSPlayerController player, Action<CCSPlayerController, CCSPlayerController, int> onSelectAction)
 		{
-			CenterHtmlMenu menu = new CenterHtmlMenu(menuName);
+			BaseMenu menu = AdminMenu.CreateMenu(menuName);
 
 			foreach (Tuple<string, int> duration in _durations)
 			{
@@ -27,7 +27,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(optionName, (_, _) => { onSelectAction?.Invoke(admin, player, duration.Item2); });
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 	}
 }

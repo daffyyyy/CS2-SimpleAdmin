@@ -30,6 +30,9 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("DatabaseName")]
 		public string DatabaseName { get; set; } = "";
 
+		[JsonPropertyName("UseChatMenu")]
+		public bool UseChatMenu { get; set; } = false;
+
 		[JsonPropertyName("KickTime")]
 		public int KickTime { get; set; } = 5;
 

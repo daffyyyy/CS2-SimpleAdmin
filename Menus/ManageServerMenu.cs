@@ -19,7 +19,7 @@ namespace CS2_SimpleAdmin.Menus
 				return;
 			}
 
-			CenterHtmlMenu menu = new CenterHtmlMenu("Manage Server");
+			BaseMenu menu = AdminMenu.CreateMenu("Manage Server");
 			List<ChatMenuOptionData> options = new();
 
 			// permissions
@@ -41,12 +41,12 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		public static void ChangeMapMenu(CCSPlayerController admin)
 		{
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Change Map");
+			BaseMenu menu = AdminMenu.CreateMenu($"Change Map");
 			List<ChatMenuOptionData> options = new();
 
 			List<string> maps = CS2_SimpleAdmin.Instance.Config.DefaultMaps;//Server.GetMapList();
@@ -67,7 +67,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void ExecuteChangeMap(CCSPlayerController admin, string mapName, bool workshop)

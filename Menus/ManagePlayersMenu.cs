@@ -19,7 +19,7 @@ namespace CS2_SimpleAdmin.Menus
 				return;
 			}
 
-			CenterHtmlMenu menu = new CenterHtmlMenu("Manage Players");
+			BaseMenu menu = AdminMenu.CreateMenu("Manage Players");
 			List<ChatMenuOptionData> options = new();
 
 			// permissions
@@ -65,12 +65,12 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void SlapMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Slap {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Slap {player.PlayerName}");
 			List<ChatMenuOptionData> options = new();
 
 			// options added in order
@@ -87,7 +87,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void ApplySlapAndKeepMenu(CCSPlayerController admin, CCSPlayerController player, int damage)
@@ -108,7 +108,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Ban {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Ban {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Hacking",
@@ -123,7 +123,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(option, (_, _) => { Ban(admin, player, duration, option); });
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
@@ -134,7 +134,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Gag {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Gag {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Advertising",
@@ -150,7 +150,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(option, (_, _) => { Gag(admin, player, duration, option); });
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void Gag(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
@@ -161,7 +161,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void MuteMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Mute {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Mute {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Shouting",
@@ -179,7 +179,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(option, (_, _) => { Mute(admin, player, duration, option); });
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
@@ -190,7 +190,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void SilenceMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
 		{
 			// TODO: Localize and make options in config?
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Silence {player.PlayerName}");
+			BaseMenu menu = AdminMenu.CreateMenu($"Silence {player.PlayerName}");
 			List<string> options = new()
 			{
 				"Shouting",
@@ -208,7 +208,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(option, (_, _) => { Silence(admin, player, duration, option); });
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 		
 		private static void Silence(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
@@ -219,7 +219,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void ForceTeamMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
 			// TODO: Localize
-			CenterHtmlMenu menu = new CenterHtmlMenu($"Force {player.PlayerName}'s Team");
+			BaseMenu menu = AdminMenu.CreateMenu($"Force {player.PlayerName}'s Team");
 			List<ChatMenuOptionData> options = new();
 			options.Add(new ChatMenuOptionData("CT", () => ForceTeam(admin, player, "ct")));
 			options.Add(new ChatMenuOptionData("T", () => ForceTeam(admin, player, "t")));
@@ -232,7 +232,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 
 		private static void ForceTeam(CCSPlayerController admin, CCSPlayerController player, string teamName)

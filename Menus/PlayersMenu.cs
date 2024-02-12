@@ -8,7 +8,7 @@ namespace CS2_SimpleAdmin.Menus
 	{
 		public static void OpenMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction)
 		{
-			CenterHtmlMenu menu = new CenterHtmlMenu(menuName);
+			BaseMenu menu = AdminMenu.CreateMenu(menuName);
 
 			IEnumerable<CCSPlayerController> players = Utilities.GetPlayers().Where(p => p.Connected == PlayerConnectedState.PlayerConnected);
 			foreach (CCSPlayerController player in players)
@@ -17,7 +17,7 @@ namespace CS2_SimpleAdmin.Menus
 				menu.AddMenuOption(optionName, (_, _) => { onSelectAction?.Invoke(admin, player); }, admin.CanTarget(player) == false);
 			}
 
-			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+			AdminMenu.OpenMenu(admin, menu);
 		}
 	}
 }
