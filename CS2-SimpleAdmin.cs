@@ -2345,6 +2345,25 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 	}
 
+	[ConsoleCommand("css_rr")]
+	[ConsoleCommand("css_rg")]
+	[ConsoleCommand("css_restart")]
+	[ConsoleCommand("css_restartgame")]
+	[RequiresPermissions("@css/generic")]
+	[CommandHelper(minArgs: 1, usage: "", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+	public void OnRestartCommand(CCSPlayerController? caller, CommandInfo command)
+	{
+		RestartGame(caller);
+	}
+
+	public void RestartGame(CCSPlayerController admin)
+	{
+		// TODO: Localize
+		var name = admin == null ? "Console" : admin.PlayerName;
+		Server.PrintToChatAll($"[SimpleAdmin] {name}: Restarting game...");
+		Server.ExecuteCommand("mp_restartgame 2");
+	}
+	
 	[ConsoleCommand("css_changemap")]
 	[ConsoleCommand("css_map")]
 	[RequiresPermissions("@css/changemap")]
