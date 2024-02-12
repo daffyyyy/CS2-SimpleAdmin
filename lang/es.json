@@ -30,7 +30,7 @@
 	"sa_admin_noclip_message": "El administrador {lightred}{0}{default} ha activado noclip para {lightred}{1}{default}.",
 	"sa_admin_freeze_message": "El administrador {lightred}{0}{default} ha congelado a {lightred}{1}{default}.",
 	"sa_admin_unfreeze_message": "El administrador {lightred}{0}{default} ha descongelado a {lightred}{1}{default}.",
-	"sa_admin_rename_message": "El administrador {lightred}{0}{default} ha cambiado el nombre de {lightred}{1}{default} a {lightred}{2}{default}."
+	"sa_admin_rename_message": "El administrador {lightred}{0}{default} ha cambiado el nombre de {lightred}{1}{default} a {lightred}{2}{default}.",
 	"sa_admin_respawn_message": "El administrador {lightred}{0}{default} ha respawnado a {lightred}{1}{default}.",
 	"sa_admin_team_message": "El administrador {lightred}{0}{default} ha transferido a {lightred}{1}{default} a {lightred}{2}{default}.",
 	"sa_admin_vote_menu_title": "{lime}VOTACIÓN PARA {gold}{0}",

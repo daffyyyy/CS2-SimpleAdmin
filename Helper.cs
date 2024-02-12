@@ -1,10 +1,12 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
+using Discord;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -161,6 +163,49 @@ namespace CS2_SimpleAdmin
 				CS2_SimpleAdmin.votePlayers.Add(player.Slot);
 				CS2_SimpleAdmin.voteAnswers[option.Text]++;
 			}
+		}
+
+		public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
+		{
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+			string? address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
+
+			description = description.Replace("{hostname}", hostname ?? "Unknown");
+			description = description.Replace("{address}", address ?? "Unknown");
+
+			var embed = new EmbedBuilder
+			{
+				Title = title,
+				Description = description,
+				ThumbnailUrl = thumbnailUrl,
+				Color = color,
+			};
+
+			for (int i = 0; i < fieldNames.Length; i++)
+			{
+				fieldValues[i] = fieldValues[i].Replace("{hostname}", hostname ?? "Unknown");
+				fieldValues[i] = fieldValues[i].Replace("{address}", address ?? "Unknown");
+
+				embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
+
+				if ((i + 1) % 2 == 0 && i < fieldNames.Length - 1)
+				{
+					embed.AddField("\u200b", "\u200b", false);
+				}
+			}
+
+			return new List<Embed> { embed.Build() };
+		}
+
+		public static string GenerateMessageDiscord(string message)
+		{
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+			string? address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
+
+			message = message.Replace("HOSTNAME", hostname);
+			message = message.Replace("ADDRESS", address);
+
+			return message;
 		}
 	}
 

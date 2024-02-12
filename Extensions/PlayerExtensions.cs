@@ -3,12 +3,12 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
-using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
+using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace CS2_SimpleAdmin;
 
-public static class PlayerUtils
+public static class PlayerExtensions
 {
 	public static void Slap(this CBasePlayerPawn pawn, int damage = 0)
 	{
@@ -135,6 +135,27 @@ public static class PlayerUtils
 		{
 			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
 		});
+	}
+
+	public static void TeleportPlayer(this CCSPlayerController controller, CCSPlayerController target)
+	{
+		if (controller.PlayerPawn?.Value == null && target!.PlayerPawn?.Value == null)
+			return;
+
+		if (
+			controller?.PlayerPawn?.Value?.AbsOrigin != null &&
+			controller?.PlayerPawn?.Value?.AbsRotation != null &&
+			target?.PlayerPawn?.Value?.AbsOrigin != null &&
+			target?.PlayerPawn?.Value?.AbsRotation != null
+		)
+		{
+			controller.PlayerPawn.Value.Teleport(
+				target.PlayerPawn.Value.AbsOrigin,
+				target.PlayerPawn.Value.AbsRotation,
+				target.PlayerPawn.Value.AbsVelocity
+			);
+
+		}
 	}
 
 	private static void PerformSlap(CBasePlayerPawn pawn, int damage = 0)
