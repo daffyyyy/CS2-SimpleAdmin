@@ -10,12 +10,12 @@ namespace CS2_SimpleAdmin.Menus
 		{
 			OpenMenu(admin, menuName, onSelectAction, p => p.PawnIsAlive);
 		}
-		
+
 		public static void OpenMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool> enableFilter = null)
 		{
 			BaseMenu menu = AdminMenu.CreateMenu(menuName);
 
-			IEnumerable<CCSPlayerController> players = Utilities.GetPlayers().Where(p => p.Connected == PlayerConnectedState.PlayerConnected);
+			IEnumerable<CCSPlayerController> players = Helper.GetValidPlayers().Where(p => p.Connected == PlayerConnectedState.PlayerConnected);
 			foreach (CCSPlayerController player in players)
 			{
 				string optionName = player.PlayerName;
