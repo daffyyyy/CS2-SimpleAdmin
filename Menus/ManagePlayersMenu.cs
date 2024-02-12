@@ -30,7 +30,6 @@ namespace CS2_SimpleAdmin.Menus
 
 			// TODO: Localize options
 			// options added in order
-			//options.Add(new ChatMenuOptionData("Who Is", () => PlayersMenu.OpenMenu(admin, "Who is", WhoIs)));
 
 			if (hasSlay)
 			{

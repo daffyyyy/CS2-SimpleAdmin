@@ -24,7 +24,7 @@ namespace CS2_SimpleAdmin.Menus
 			ChatMenuOptionData[] options = new[]
 			{
 				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin)),
-				new ChatMenuOptionData("Manage Server", null),
+				new ChatMenuOptionData("Manage Server", () => ManageServerMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Fun actions", null),
 				new ChatMenuOptionData("Manage Admins", null)
 			};

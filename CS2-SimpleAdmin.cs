@@ -2370,9 +2370,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 	public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		string _command = string.Empty;
 		string? map = command.GetCommandString.Split(" ")[1];
+		ChangeMap(caller, map);
+	}
 
+	public void ChangeMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
+	{
+		string _command = string.Empty;
+		
 		if (map.StartsWith("ws:"))
 		{
 			if (long.TryParse(map.Replace("ws:", ""), out long mapId))
@@ -2393,7 +2398,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			if (!Server.IsMapValid(map))
 			{
-				command.ReplyToCommand($"Map {map} not found.");
+				string msg = $"Map {map} not found.";
+				if (command != null)
+					command.ReplyToCommand(msg);
+				else if (caller != null && caller.IsValid)
+					caller.PrintToChat(msg);
+				else
+					Server.PrintToConsole(msg);
 				return;
 			}
 		}
@@ -2433,8 +2444,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	[RequiresPermissions("@css/changemap")]
 	public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
 	{
-		string _command = string.Empty;
 		string? map = command.GetArg(1);
+		ChangeWSMap(caller, map);
+	}
+
+	public void ChangeWSMap(CCSPlayerController? caller, string map)
+	{
+		string _command = string.Empty;
 
 		if (long.TryParse(map, out long mapId))
 		{
