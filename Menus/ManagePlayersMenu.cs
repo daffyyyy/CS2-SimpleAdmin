@@ -39,7 +39,7 @@ namespace CS2_SimpleAdmin.Menus
 
 			if (hasKick)
 			{
-				options.Add(new ChatMenuOptionData("Kick", () => PlayersMenu.OpenMenu(admin, "Kick", Kick)));
+				options.Add(new ChatMenuOptionData("Kick", () => PlayersMenu.OpenMenu(admin, "Kick", KickMenu)));
 			}
 
 			if (hasBan)
@@ -100,10 +100,29 @@ namespace CS2_SimpleAdmin.Menus
 		{
 			CS2_SimpleAdmin.Instance.Slay(admin, player);
 		}
-
-		private static void Kick(CCSPlayerController admin, CCSPlayerController player)
+		
+		private static void KickMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			CS2_SimpleAdmin.Instance.Kick(admin, player);
+			BaseMenu menu = AdminMenu.CreateMenu($"Kick: {player.PlayerName}");
+			List<string> options = new()
+			{
+				"Voice Abuse",
+				"Chat Abuse",
+				"Admin disrespect",
+				"Other"
+			};
+
+			foreach (string option in options)
+			{
+				menu.AddMenuOption(option, (_, _) => { Kick(admin, player, option); });
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void Kick(CCSPlayerController admin, CCSPlayerController player, string reason)
+		{
+			CS2_SimpleAdmin.Instance.Kick(admin, player, reason);
 		}
 
 		private static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
