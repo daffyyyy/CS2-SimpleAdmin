@@ -111,10 +111,21 @@ namespace CS2_SimpleAdmin
 			int time = 0;
 			int.TryParse(command.GetArg(5), out time);
 
+			AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin);
+		}
+
+		public void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
+		{
 			AdminSQLManager _adminManager = new(_database);
 			_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time, globalAdmin);
 
-			command.ReplyToCommand($"Added '{flags}' flags to '{name}' ({steamid})");
+			string msg = $"Added '{flags}' flags to '{name}' ({steamid})";
+			if (command != null)
+				command.ReplyToCommand(msg);
+			else if (caller != null && caller.IsValid)
+				caller.PrintToChat(msg);
+			else
+				Server.PrintToConsole(msg);
 		}
 
 		[ConsoleCommand("css_deladmin")]
@@ -140,6 +151,11 @@ namespace CS2_SimpleAdmin
 			string steamid = command.GetArg(1);
 			bool globalDelete = command.GetArg(2).ToLower().Equals("-g");
 
+			RemoveAdmin(caller, steamid, globalDelete);
+		}
+
+		public void RemoveAdmin(CCSPlayerController? caller, string steamid, bool globalDelete = false, CommandInfo? command = null)
+		{
 			AdminSQLManager _adminManager = new(_database);
 			_ = _adminManager.DeleteAdminBySteamId(steamid, globalDelete);
 
@@ -156,8 +172,14 @@ namespace CS2_SimpleAdmin
 					AdminManager.RemovePlayerAdminData(steamId);
 				}
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
-			command.ReplyToCommand($"Removed flags from '{steamid}'");
+			
+			string msg = $"Removed flags from '{steamid}'";
+			if (command != null)
+				command.ReplyToCommand(msg);
+			else if (caller != null && caller.IsValid)
+				caller.PrintToChat(msg);
+			else
+				Server.PrintToConsole(msg);
 		}
 
 		[ConsoleCommand("css_reladmin")]
@@ -167,6 +189,13 @@ namespace CS2_SimpleAdmin
 		{
 			if (_database == null) return;
 
+			ReloadAdmins();
+
+			command.ReplyToCommand("Reloaded sql admins");
+		}
+
+		public void ReloadAdmins()
+		{
 			foreach (SteamID steamId in AdminSQLManager._adminCache.Keys.ToList())
 			{
 				if (AdminSQLManager._adminCache.TryRemove(steamId, out _))
@@ -178,8 +207,6 @@ namespace CS2_SimpleAdmin
 
 			AdminSQLManager _adminManager = new(_database);
 			_ = _adminManager.GiveAllFlags();
-
-			command.ReplyToCommand("Reloaded sql admins");
 		}
 
 		[ConsoleCommand("css_stealth")]
