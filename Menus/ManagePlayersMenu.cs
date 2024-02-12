@@ -51,6 +51,7 @@ namespace CS2_SimpleAdmin.Menus
 			{
 				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, "Gag", player, GagMenu))));
 				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, "Mute", player, MuteMenu))));
+				options.Add(new ChatMenuOptionData("Silence", () => PlayersMenu.OpenMenu(admin, "Silence", (admin, player) => DurationMenu.OpenMenu(admin, "Silence", player, SilenceMenu))));
 			}
 
 			if (hasKick)
@@ -184,6 +185,35 @@ namespace CS2_SimpleAdmin.Menus
 		private static void Mute(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
 		{
 			CS2_SimpleAdmin.Instance.Mute(admin, player, duration, reason);
+		}
+		
+		private static void SilenceMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
+		{
+			// TODO: Localize and make options in config?
+			CenterHtmlMenu menu = new CenterHtmlMenu($"Silence {player.PlayerName}");
+			List<string> options = new()
+			{
+				"Shouting",
+				"Playing music",
+				"Advertising",
+				"Spamming",
+				"Spectator camera abuse",
+				"Hate",
+				"Admin disrespect",
+				"Other"
+			};
+
+			foreach (string option in options)
+			{
+				menu.AddMenuOption(option, (_, _) => { Silence(admin, player, duration, option); });
+			}
+
+			MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, admin, menu);
+		}
+		
+		private static void Silence(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)
+		{
+			CS2_SimpleAdmin.Instance.Silence(admin, player, duration, reason);
 		}
 
 		private static void ForceTeamMenu(CCSPlayerController admin, CCSPlayerController player)

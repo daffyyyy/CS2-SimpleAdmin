@@ -683,78 +683,87 @@ namespace CS2_SimpleAdmin
 			{
 				if (caller!.CanTarget(player))
 				{
-					PlayerInfo playerInfo = new PlayerInfo
+					Silence(caller, player, time, reason, callerName, _muteManager, playerPenaltyManager);
+				}
+			});
+		}
+
+		internal void Silence(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string callerName = null, MuteManager muteManager = null, PlayerPenaltyManager playerPenaltyManager = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			muteManager ??= new MuteManager(_database);
+			playerPenaltyManager ??= new PlayerPenaltyManager();
+			
+			PlayerInfo playerInfo = new PlayerInfo
+			{
+				SteamId = player?.SteamID.ToString(),
+				Name = player?.PlayerName,
+				IpAddress = player?.IpAddress?.Split(":")[0]
+			};
+
+			PlayerInfo adminInfo = new PlayerInfo
+			{
+				SteamId = caller?.SteamID.ToString(),
+				Name = caller?.PlayerName,
+				IpAddress = caller?.IpAddress?.Split(":")[0]
+			};
+
+			Task.Run(async () =>
+			{
+				await muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2);
+			});
+
+			if (TagsDetected)
+				Server.ExecuteCommand($"css_tag_mute {player!.SteamID}");
+
+			playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Silence, DateTime.Now.AddMinutes(time), time);
+
+			if (time == 0)
+			{
+				if (!player!.IsBot && !player.IsHLTV)
+				{
+					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
-						SteamId = player?.SteamID.ToString(),
-						Name = player?.PlayerName,
-						IpAddress = player?.IpAddress?.Split(":")[0]
-					};
-
-					PlayerInfo adminInfo = new PlayerInfo
-					{
-						SteamId = caller?.SteamID.ToString(),
-						Name = caller?.PlayerName,
-						IpAddress = caller?.IpAddress?.Split(":")[0]
-					};
-
-					Task.Run(async () =>
-					{
-						await _muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2);
-					});
-
-					if (TagsDetected)
-						Server.ExecuteCommand($"css_tag_mute {player!.SteamID}");
-
-					playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Silence, DateTime.Now.AddMinutes(time), time);
-
-					if (time == 0)
-					{
-						if (!player!.IsBot && !player.IsHLTV)
-						{
-							using (new WithTemporaryCulture(player.GetLanguage()))
-							{
-								player.PrintToCenter(_localizer!["sa_player_silence_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
-							}
-						}
-
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
-								{
-									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_silence_message_perm", callerName, player.PlayerName, reason]);
-									_player.PrintToChat(sb.ToString());
-								}
-							}
-						}
+						player.PrintToCenter(_localizer!["sa_player_silence_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
-					else
-					{
-						if (!player!.IsBot && !player.IsHLTV)
-						{
-							using (new WithTemporaryCulture(player.GetLanguage()))
-							{
-								player!.PrintToCenter(_localizer!["sa_player_silence_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
-							}
-						}
+				}
 
-						if (caller == null || caller != null && caller != null && !silentPlayers.Contains(caller.Slot))
+				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+				{
+					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					{
+						using (new WithTemporaryCulture(_player.GetLanguage()))
 						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
-								{
-									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_silence_message_time", callerName, player.PlayerName, reason, time]);
-									_player.PrintToChat(sb.ToString());
-								}
-							}
+							StringBuilder sb = new(_localizer!["sa_prefix"]);
+							sb.Append(_localizer["sa_admin_silence_message_perm", callerName, player.PlayerName, reason]);
+							_player.PrintToChat(sb.ToString());
 						}
 					}
 				}
-			});
+			}
+			else
+			{
+				if (!player!.IsBot && !player.IsHLTV)
+				{
+					using (new WithTemporaryCulture(player.GetLanguage()))
+					{
+						player!.PrintToCenter(_localizer!["sa_player_silence_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
+					}
+				}
+
+				if (caller == null || caller != null && caller != null && !silentPlayers.Contains(caller.Slot))
+				{
+					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					{
+						using (new WithTemporaryCulture(_player.GetLanguage()))
+						{
+							StringBuilder sb = new(_localizer!["sa_prefix"]);
+							sb.Append(_localizer["sa_admin_silence_message_time", callerName, player.PlayerName, reason, time]);
+							_player.PrintToChat(sb.ToString());
+						}
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_addsilence")]
