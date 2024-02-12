@@ -51,18 +51,18 @@ namespace CS2_SimpleAdmin.Menus
 
 			if (hasCheats)
 			{
-				options.Add(new ChatMenuOptionData("God Mode", () => PlayersMenu.OpenMenu(admin, "God Mode", GodMode)));
-				options.Add(new ChatMenuOptionData("No Clip", () => PlayersMenu.OpenMenu(admin, "No Clip", NoClip)));
-				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenMenu(admin, "Respawn", Respawn)));
-				options.Add(new ChatMenuOptionData("Give Weapon", () => PlayersMenu.OpenMenu(admin, "Give Weapon", GiveWeaponMenu)));
+				options.Add(new ChatMenuOptionData("God Mode", () => PlayersMenu.OpenAliveMenu(admin, "God Mode", GodMode)));
+				options.Add(new ChatMenuOptionData("No Clip", () => PlayersMenu.OpenAliveMenu(admin, "No Clip", NoClip)));
+				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenAliveMenu(admin, "Respawn", Respawn)));
+				options.Add(new ChatMenuOptionData("Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, "Give Weapon", GiveWeaponMenu)));
 			}
 
 			if (hasSlay)
 			{
-				options.Add(new ChatMenuOptionData("Strip All Weapons", () => PlayersMenu.OpenMenu(admin, "Strip All Weapons", StripWeapons)));
-				options.Add(new ChatMenuOptionData("Freeze", () => PlayersMenu.OpenMenu(admin, "Freeze", Freeze)));
-				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenMenu(admin, "HP", SetHpMenu)));
-				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenMenu(admin, "Speed", SetSpeedMenu)));
+				options.Add(new ChatMenuOptionData("Strip All Weapons", () => PlayersMenu.OpenAliveMenu(admin, "Strip All Weapons", StripWeapons)));
+				options.Add(new ChatMenuOptionData("Freeze", () => PlayersMenu.OpenAliveMenu(admin, "Freeze", Freeze)));
+				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenAliveMenu(admin, "HP", SetHpMenu)));
+				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenAliveMenu(admin, "Speed", SetSpeedMenu)));
 			}
 
 			foreach (ChatMenuOptionData menuOptionData in options)
@@ -93,9 +93,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
 			BaseMenu menu = AdminMenu.CreateMenu("Give Weapon");
-
 			
-
 			foreach (KeyValuePair<int, CsItem> weapon in GetWeaponsCache)
 			{
 				menu.AddMenuOption(weapon.Value.ToString(), (_, _) => { GiveWeapon(admin, player, weapon.Value); });
