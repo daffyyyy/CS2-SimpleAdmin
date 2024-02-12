@@ -14,7 +14,7 @@ env:
   BUILD_NUMBER: ${{ github.run_number }}
   PROJECT_PATH: "CS2-SimpleAdmin.csproj"
   PROJECT_NAME: "CS2-SimpleAdmin"
-  OUTPUT_PATH: "./CS2-SimpleAdmin/build"
+  OUTPUT_PATH: "./CS2-SimpleAdmin"
 
 jobs:
   build:
