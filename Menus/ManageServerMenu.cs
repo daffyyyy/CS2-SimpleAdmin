@@ -1,4 +1,3 @@
-using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Menu;
@@ -33,7 +32,7 @@ namespace CS2_SimpleAdmin.Menus
 				options.Add(new ChatMenuOptionData("Change Map", () => ChangeMapMenu(admin)));
 			}
 
-			options.Add(new ChatMenuOptionData("Restart Game", () => CS2_SimpleAdmin.Instance.RestartGame(admin)));
+			options.Add(new ChatMenuOptionData("Restart Game", () => CS2_SimpleAdmin.RestartGame(admin)));
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{

@@ -22,7 +22,7 @@ namespace CS2_SimpleAdmin.Menus
 				MenuManager.OpenChatMenu(player, chatMenu);
 			}
 		}
-		
+
 		public static void OpenMenu(CCSPlayerController admin)
 		{
 			if (admin == null || admin.IsValid == false)
@@ -44,7 +44,7 @@ namespace CS2_SimpleAdmin.Menus
 				new ChatMenuOptionData("Manage Server", () => ManageServerMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Fun actions", () => FunActionsMenu.OpenMenu(admin)),
 			};
-			
+
 			if (AdminManager.PlayerHasPermissions(admin, "@css/root"))
 				options.Add(new ChatMenuOptionData("Manage Admins", () => ManageAdminsMenu.OpenMenu(admin)));
 

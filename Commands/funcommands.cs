@@ -36,7 +36,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void NoClip(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		public void NoClip(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.ToggleNoclip();
@@ -84,7 +84,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Freeze(CCSPlayerController? caller, CCSPlayerController player, int time, string callerName = null)
+		public void Freeze(CCSPlayerController? caller, CCSPlayerController player, int time, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
@@ -132,7 +132,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 

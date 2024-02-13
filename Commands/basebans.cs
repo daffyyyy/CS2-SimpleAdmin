@@ -55,11 +55,12 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string callerName = null, BanManager banManager = null)
+		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, BanManager? banManager = null)
 		{
+			if (_database == null) return;
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			banManager ??= new BanManager(_database, Config);
-			
+
 			if (player.PawnIsAlive)
 			{
 				player.Pawn.Value!.Freeze();

@@ -7,7 +7,7 @@ namespace CS2_SimpleAdmin.Menus
 {
 	public static class FunActionsMenu
 	{
-		private static Dictionary<int, CsItem> _weaponsCache = null;
+		private static Dictionary<int, CsItem>? _weaponsCache = null;
 		private static Dictionary<int, CsItem> GetWeaponsCache
 		{
 			get
@@ -15,11 +15,13 @@ namespace CS2_SimpleAdmin.Menus
 				if (_weaponsCache == null)
 				{
 					Array weaponsArray = Enum.GetValues(typeof(CsItem));
-					
+
 					// avoid duplicates in the menu
 					_weaponsCache = new();
 					foreach (CsItem item in weaponsArray)
 					{
+						if (item == CsItem.Tablet) continue;
+
 						_weaponsCache[(int)item] = item;
 					}
 				}
@@ -93,7 +95,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
 			BaseMenu menu = AdminMenu.CreateMenu($"Give Weapon: {player.PlayerName}");
-			
+
 			foreach (KeyValuePair<int, CsItem> weapon in GetWeaponsCache)
 			{
 				menu.AddMenuOption(weapon.Value.ToString(), (_, _) => { GiveWeapon(admin, player, weapon.Value); });
@@ -114,6 +116,8 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void Freeze(CCSPlayerController admin, CCSPlayerController player)
 		{
+			if (!(player.PlayerPawn?.Value?.IsValid ?? false)) return;
+
 			if (player.PlayerPawn.Value.MoveType != MoveType_t.MOVETYPE_OBSOLETE)
 				CS2_SimpleAdmin.Instance.Freeze(admin, player, -1);
 			else

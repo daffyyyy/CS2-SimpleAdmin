@@ -55,12 +55,13 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string callerName = null, MuteManager muteManager = null, PlayerPenaltyManager playerPenaltyManager = null)
+		internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, PlayerPenaltyManager? playerPenaltyManager = null)
 		{
+			if (_database == null) return;
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			muteManager ??= new MuteManager(_database);
 			playerPenaltyManager ??= new PlayerPenaltyManager();
-			
+
 			PlayerInfo playerInfo = new PlayerInfo
 			{
 				SteamId = player?.SteamID.ToString(),
@@ -383,12 +384,13 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string callerName = null, MuteManager muteManager = null, PlayerPenaltyManager playerPenaltyManager = null)
+		internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, PlayerPenaltyManager? playerPenaltyManager = null)
 		{
+			if (_database == null) return;
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			muteManager ??= new MuteManager(_database);
 			playerPenaltyManager ??= new PlayerPenaltyManager();
-			
+
 			PlayerInfo playerInfo = new PlayerInfo
 			{
 				SteamId = player?.SteamID.ToString(),
@@ -688,12 +690,13 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		internal void Silence(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string callerName = null, MuteManager muteManager = null, PlayerPenaltyManager playerPenaltyManager = null)
+		internal void Silence(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, PlayerPenaltyManager? playerPenaltyManager = null)
 		{
+			if (_database == null) return;
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			muteManager ??= new MuteManager(_database);
 			playerPenaltyManager ??= new PlayerPenaltyManager();
-			
+
 			PlayerInfo playerInfo = new PlayerInfo
 			{
 				SteamId = player?.SteamID.ToString(),
@@ -715,6 +718,8 @@ namespace CS2_SimpleAdmin
 
 			if (TagsDetected)
 				Server.ExecuteCommand($"css_tag_mute {player!.SteamID}");
+
+			player!.VoiceFlags = VoiceFlags.Muted;
 
 			playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Silence, DateTime.Now.AddMinutes(time), time);
 

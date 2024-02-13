@@ -5,11 +5,11 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Collections.Concurrent;
 using System.Text;
-using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace CS2_SimpleAdmin
 {
@@ -38,13 +38,13 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Slay(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		public void Slay(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
 		{
 			if (!player.IsBot && player.SteamID.ToString().Length != 17)
 				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			player.CommitSuicide(false, true);
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
@@ -113,20 +113,20 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string callerName = null)
+		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string? callerName = null)
 		{
 			player.GiveNamedItem(weapon);
 			SubGiveWeapon(caller, player, weapon.ToString(), callerName);
 		}
-		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string callerName = null)
+		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
 		{
 			player.GiveNamedItem(weaponName);
 			SubGiveWeapon(caller, player, weaponName, callerName);
 		}
-		public void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string callerName = null)
+		public void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
@@ -167,10 +167,10 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void StripWeapons(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		public void StripWeapons(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			if (!player.IsBot && player.SteamID.ToString().Length != 17)
 				return;
 
@@ -219,10 +219,12 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void SetHp(CCSPlayerController? caller, CCSPlayerController player, int health, string callerName = null)
+		public void SetHp(CCSPlayerController? caller, CCSPlayerController player, int health, string? callerName = null)
 		{
 			if (!player.IsBot && player.SteamID.ToString().Length != 17)
 				return;
+
+			callerName = caller == null ? "Console" : caller.PlayerName;
 
 			player.SetHp(health);
 
@@ -272,12 +274,12 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void SetSpeed(CCSPlayerController? caller, CCSPlayerController player, double speed, string callerName = null)
+		public void SetSpeed(CCSPlayerController? caller, CCSPlayerController player, double speed, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			player.SetSpeed((float)speed);
-			
+
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
@@ -321,10 +323,10 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void God(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		public void God(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			if (player != null)
 			{
 				if (!godPlayers.Contains(player.Slot))
@@ -388,7 +390,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage, string callerName = null)
+		public void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.Slap(damage);
@@ -414,7 +416,7 @@ namespace CS2_SimpleAdmin
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string teamName = command.GetArg(2).ToLower();
-			string _teamName;
+			string _teamName = "SPEC";
 			CsTeam teamNum = CsTeam.Spectator;
 
 			TargetResult? targets = GetTarget(command);
@@ -456,17 +458,17 @@ namespace CS2_SimpleAdmin
 			bool kill = command.GetArg(3).ToLower().Equals("-k");
 			playersToTarget.ForEach(player =>
 			{
-				ChangeTeam(caller, player, teamName, teamNum, kill, callerName);
+				ChangeTeam(caller, player, _teamName.ToLower(), teamNum, kill, callerName);
 			});
 		}
 
-		public void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, string callerName = null)
+		public void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, string? callerName = null)
 		{
 			if (!player.IsBot && player.SteamID.ToString().Length != 17)
 				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			if (!teamName.Equals("swap"))
 			{
 				if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill && Config.TeamSwitchType == 1)
@@ -578,10 +580,10 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Respawn(CCSPlayerController? caller, CCSPlayerController player, string callerName = null)
+		public void Respawn(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			
+
 			if (CBasePlayerController_SetPawnFunc == null || player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
 
 			var playerPawn = player.PlayerPawn.Value;
