@@ -43,6 +43,13 @@ namespace CS2_SimpleAdmin
 			return Utilities.GetPlayers().FindAll(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV);
 		}
 
+		public static List<CCSPlayerController> GetValidPlayersWithBots()
+		{
+			return Utilities.GetPlayers().FindAll(p =>
+			p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV ||
+			p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && p.IsBot && !p.IsHLTV
+			);
+		}
 
 		public static bool IsValidSteamID64(string input)
 		{
@@ -64,15 +71,11 @@ namespace CS2_SimpleAdmin
 			{
 				if (steamid == null || (flags == null && immunity == 0))
 				{
-					//Console.WriteLine("Invalid input: steamid is null or both flags and immunity are not provided.");
 					return;
 				}
 
-				//Console.WriteLine($"Setting immunity for SteamID {steamid} to {immunity}");
-
 				if (flags != null)
 				{
-					//Console.WriteLine($"Applying flags to SteamID {steamid}:");
 
 					foreach (var flag in flags)
 					{
@@ -96,32 +99,8 @@ namespace CS2_SimpleAdmin
 			catch (Exception)
 			{
 				return;
-				//Console.WriteLine($"An error occurred: {ex}");
 			}
 		}
-
-
-		/*
-		public static TargetResult GetTarget(string target, out CCSPlayerController? player)
-		{
-			player = null;
-
-			if (target.StartsWith("#") && int.TryParse(target.AsSpan(1), out var userid))
-			{
-				player = Utilities.GetPlayerFromUserid(userid);
-			}
-			else
-			{
-				var matches = GetPlayerFromName(target);
-				if (matches.Count > 1)
-					return TargetResult.Multiple;
-
-				player = matches.FirstOrDefault();
-			}
-
-			return player?.IsValid == true ? TargetResult.Single : TargetResult.None;
-		}
-		*/
 
 		public static void KickPlayer(ushort userId, string? reason = null)
 		{
@@ -155,7 +134,7 @@ namespace CS2_SimpleAdmin
 			return message;
 		}
 
-		internal static void handleVotes(CCSPlayerController player, ChatMenuOption option)
+		internal static void HandleVotes(CCSPlayerController player, ChatMenuOption option)
 		{
 			if (CS2_SimpleAdmin.voteInProgress && !CS2_SimpleAdmin.votePlayers.Contains(player.Slot))
 			{
@@ -216,7 +195,7 @@ namespace CS2_SimpleAdmin
 
 		public unsafe void Set(string str)
 		{
-			byte[] bytes = this.GetStringBytes(str);
+			byte[] bytes = SchemaString<SchemaClass>.GetStringBytes(str);
 
 			for (int i = 0; i < bytes.Length; i++)
 			{
@@ -226,7 +205,7 @@ namespace CS2_SimpleAdmin
 			Unsafe.Write((void*)(this.Handle.ToInt64() + bytes.Length), 0);
 		}
 
-		private byte[] GetStringBytes(string str)
+		private static byte[] GetStringBytes(string str)
 		{
 			return Encoding.ASCII.GetBytes(str);
 		}

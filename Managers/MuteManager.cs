@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin
 {
-	public class MuteManager
+	internal class MuteManager
 	{
 		private readonly Database _database;
 

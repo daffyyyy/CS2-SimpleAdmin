@@ -15,7 +15,8 @@ namespace CS2_SimpleAdmin;
 [MinimumApiVersion(163)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
-	public static BasePlugin? _plugin = null;
+	public static CS2_SimpleAdmin Instance { get; private set; } = new();
+
 	public static IStringLocalizer? _localizer;
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
 	public static HashSet<int> votePlayers = new HashSet<int>();
@@ -26,25 +27,25 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static bool voteInProgress = false;
 	public static int? ServerId = null;
 
+	public static DiscordWebhookClient? _discordWebhookClientLog;
+	public static DiscordWebhookClient? _discordWebhookClientPenalty;
+
 	internal string dbConnectionString = string.Empty;
 	internal static Database? _database;
 
 	internal static ILogger? _logger;
-	public static DiscordWebhookClient? _discordWebhookClientLog;
-	public static DiscordWebhookClient? _discordWebhookClientPenalty;
 
 	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? CBasePlayerController_SetPawnFunc = null;
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
-	public override string ModuleAuthor => "daffyy";
-	public override string ModuleVersion => "1.3.1a";
+	public override string ModuleAuthor => "daffyy & Dliix66";
+	public override string ModuleVersion => "1.3.2a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
 	public override void Load(bool hotReload)
 	{
 		registerEvents();
-		_plugin = this;
 
 		if (hotReload)
 		{
@@ -69,7 +70,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			UserID = config.DatabaseUser,
 			Password = config.DatabasePassword,
 			Port = (uint)config.DatabasePort,
-			Pooling = true,
+			Pooling = true
 		};
 
 		dbConnectionString = builder.ConnectionString;
@@ -79,9 +80,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			try
 			{
-				using (var connection = await _database.GetConnectionAsync())
+				using (MySqlConnection connection = await _database.GetConnectionAsync())
 				{
-					using var transaction = await connection.BeginTransactionAsync();
+					using MySqlTransaction transaction = await connection.BeginTransactionAsync();
 
 					try
 					{
@@ -138,7 +139,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public static void RemoveFromConcurrentBag(ConcurrentBag<int> bag, int playerSlot)
 	{
-		var tempList = new List<int>();
+		List<int> tempList = new List<int>();
 		while (!bag.IsEmpty)
 		{
 			if (bag.TryTake(out int item) && item != playerSlot)
@@ -146,10 +147,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				tempList.Add(item);
 			}
 		}
-		foreach (var item in tempList)
+
+		foreach (int item in tempList)
 		{
 			bag.Add(item);
 		}
 	}
-
 }

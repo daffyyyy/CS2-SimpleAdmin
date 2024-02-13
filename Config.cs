@@ -30,6 +30,9 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("DatabaseName")]
 		public string DatabaseName { get; set; } = "";
 
+		[JsonPropertyName("UseChatMenu")]
+		public bool UseChatMenu { get; set; } = false;
+
 		[JsonPropertyName("KickTime")]
 		public int KickTime { get; set; } = 5;
 
@@ -44,5 +47,11 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("Discord")]
 		public Discord Discord { get; set; } = new Discord();
+		
+		[JsonPropertyName("DefaultMaps")]
+		public List<string> DefaultMaps { get; set; } = new List<string>();
+		
+		[JsonPropertyName("WorkshopMaps")]
+		public List<string> WorkshopMaps { get; set; } = new List<string>();
 	}
 }

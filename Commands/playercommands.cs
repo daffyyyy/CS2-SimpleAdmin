@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Collections.Concurrent;
@@ -33,25 +34,32 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
-					return;
+				Slay(caller, player, callerName);
+			});
+		}
 
-				player.CommitSuicide(false, true);
+		public void Slay(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		{
+			if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				return;
 
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			player.CommitSuicide(false, true);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
 
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_slay_message", callerName, player.PlayerName]);
-							_player.PrintToChat(sb.ToString());
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_slay_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-			});
+			}
 		}
 
 		[ConsoleCommand("css_give")]
@@ -101,21 +109,36 @@ namespace CS2_SimpleAdmin
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
 					return;
 
-				player.GiveNamedItem(weaponName);
+				GiveWeapon(caller, player, weaponName, callerName);
+			});
+		}
 
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string? callerName = null)
+		{
+			player.GiveNamedItem(weapon);
+			SubGiveWeapon(caller, player, weapon.ToString(), callerName);
+		}
+		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
+		{
+			player.GiveNamedItem(weaponName);
+			SubGiveWeapon(caller, player, weaponName, callerName);
+		}
+		public void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_give_message", callerName, player.PlayerName, weaponName]);
-							_player.PrintToChat(sb.ToString());
-						}
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_give_message", callerName, player.PlayerName, weaponName]);
+						_player.PrintToChat(sb.ToString());
 					}
 				}
-			});
+			}
 		}
 
 		[ConsoleCommand("css_strip")]
@@ -139,25 +162,32 @@ namespace CS2_SimpleAdmin
 			{
 				if (caller!.CanTarget(player))
 				{
-					if (!player.IsBot && player.SteamID.ToString().Length != 17)
-						return;
-
-					player.RemoveWeapons();
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_strip_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					StripWeapons(caller, player, callerName);
 				}
 			});
+		}
+
+		public void StripWeapons(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				return;
+
+			player.RemoveWeapons();
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_strip_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_hp")]
@@ -184,25 +214,32 @@ namespace CS2_SimpleAdmin
 			{
 				if (caller!.CanTarget(player))
 				{
-					if (!player.IsBot && player.SteamID.ToString().Length != 17)
-						return;
-
-					player.SetHp(health);
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_hp_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					SetHp(caller, player, health, callerName);
 				}
 			});
+		}
+
+		public void SetHp(CCSPlayerController? caller, CCSPlayerController player, int health, string? callerName = null)
+		{
+			if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				return;
+
+			callerName = caller == null ? "Console" : caller.PlayerName;
+
+			player.SetHp(health);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_hp_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_speed")]
@@ -232,27 +269,29 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					/*
-					player.Speed = (float)speed;
-					player.PlayerPawn.Value!.Speed = (float)speed;
-					*/
-					player.SetSpeed((float)speed);
-
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_speed_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					SetSpeed(caller, player, speed, callerName);
 				}
 			});
+		}
+
+		public void SetSpeed(CCSPlayerController? caller, CCSPlayerController player, double speed, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			player.SetSpeed((float)speed);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_speed_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_god")]
@@ -279,33 +318,40 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					if (player != null)
+					God(caller, player, callerName);
+				}
+			});
+		}
+
+		public void God(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			if (player != null)
+			{
+				if (!godPlayers.Contains(player.Slot))
+				{
+					godPlayers.Add(player.Slot);
+				}
+				else
+				{
+					godPlayers = new ConcurrentBag<int>(godPlayers.Where(item => item != player.Slot));
+				}
+
+
+				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+				{
+					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 					{
-						if (!godPlayers.Contains(player.Slot))
+						using (new WithTemporaryCulture(_player.GetLanguage()))
 						{
-							godPlayers.Add(player.Slot);
-						}
-						else
-						{
-							godPlayers = new ConcurrentBag<int>(godPlayers.Where(item => item != player.Slot));
-						}
-
-
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
-								{
-									StringBuilder sb = new(_localizer!["sa_prefix"]);
-									sb.Append(_localizer["sa_admin_god_message", callerName, player.PlayerName]);
-									_player.PrintToChat(sb.ToString());
-								}
-							}
+							StringBuilder sb = new(_localizer!["sa_prefix"]);
+							sb.Append(_localizer["sa_admin_god_message", callerName, player.PlayerName]);
+							_player.PrintToChat(sb.ToString());
 						}
 					}
 				}
-			});
+			}
 		}
 
 		[ConsoleCommand("css_slap")]
@@ -339,22 +385,28 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					player!.Pawn.Value!.Slap(damage);
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_slap_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
+					Slap(caller, player, damage);
 				}
 			});
+		}
+
+		public void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+			player!.Pawn.Value!.Slap(damage);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_slap_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_team")]
@@ -364,7 +416,7 @@ namespace CS2_SimpleAdmin
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string teamName = command.GetArg(2).ToLower();
-			string _teamName;
+			string _teamName = "SPEC";
 			CsTeam teamNum = CsTeam.Spectator;
 
 			TargetResult? targets = GetTarget(command);
@@ -403,48 +455,56 @@ namespace CS2_SimpleAdmin
 					break;
 			}
 
+			bool kill = command.GetArg(3).ToLower().Equals("-k");
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
-					return;
-
-				if (!teamName.Equals("swap"))
-				{
-					if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !command.GetArg(3).ToLower().Equals("-k") && Config.TeamSwitchType == 1)
-						player.SwitchTeam(teamNum);
-					else
-						player.ChangeTeam(teamNum);
-				}
-				else
-				{
-					if (player.TeamNum != (byte)CsTeam.Spectator)
-					{
-						CsTeam teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
-						_teamName = teamNum == CsTeam.Terrorist ? "TT" : "CT";
-						if (player.PawnIsAlive && !command.GetArg(3).ToLower().Equals("-k") && Config.TeamSwitchType == 1)
-						{
-							player.SwitchTeam(teamNum);
-						}
-						else
-						{
-							player.ChangeTeam(teamNum);
-						}
-					}
-				}
-
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_team_message", callerName, player.PlayerName, _teamName]);
-							_player.PrintToChat(sb.ToString());
-						}
-					}
-				}
+				ChangeTeam(caller, player, _teamName.ToLower(), teamNum, kill, callerName);
 			});
+		}
+
+		public void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, string? callerName = null)
+		{
+			if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				return;
+
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			if (!teamName.Equals("swap"))
+			{
+				if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill && Config.TeamSwitchType == 1)
+					player.SwitchTeam(teamNum);
+				else
+					player.ChangeTeam(teamNum);
+			}
+			else
+			{
+				if (player.TeamNum != (byte)CsTeam.Spectator)
+				{
+					CsTeam _teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
+					teamName = _teamNum == CsTeam.Terrorist ? "TT" : "CT";
+					if (player.PawnIsAlive && !kill && Config.TeamSwitchType == 1)
+					{
+						player.SwitchTeam(_teamNum);
+					}
+					else
+					{
+						player.ChangeTeam(_teamNum);
+					}
+				}
+			}
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_team_message", callerName, player.PlayerName, teamName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
 		}
 
 		[ConsoleCommand("css_rename", "Rename a player.")]
@@ -515,28 +575,35 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					if (CBasePlayerController_SetPawnFunc == null || player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
-
-					var playerPawn = player.PlayerPawn.Value;
-					CBasePlayerController_SetPawnFunc.Invoke(player, playerPawn, true, false);
-					VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
-						GameData.GetOffset("CCSPlayerController_Respawn"))(player);
-
-					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
-					{
-						foreach (CCSPlayerController _player in Helper.GetValidPlayers())
-						{
-							using (new WithTemporaryCulture(_player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_respawn_message", callerName, player.PlayerName]);
-								_player.PrintToChat(sb.ToString());
-							}
-						}
-					}
-
+					Respawn(caller, player, callerName);
 				}
 			});
+		}
+
+		public void Respawn(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			if (CBasePlayerController_SetPawnFunc == null || player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
+
+			var playerPawn = player.PlayerPawn.Value;
+			CBasePlayerController_SetPawnFunc.Invoke(player, playerPawn, true, false);
+			VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
+															GameData.GetOffset("CCSPlayerController_Respawn"))(player);
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_respawn_message", callerName, player.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
+
 		}
 
 		[ConsoleCommand("css_tp", "Teleport to a player.")]

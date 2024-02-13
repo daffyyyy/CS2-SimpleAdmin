@@ -16,7 +16,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 2, usage: "<question> [... options ...]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnVoteCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName= caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.GetArg(1) == null || command.GetArg(1).Length < 0 || command.ArgCount < 2)
 				return;
 
@@ -38,7 +38,7 @@ namespace CS2_SimpleAdmin
 				for (int i = 2; i <= answersCount - 1; i++)
 				{
 					voteAnswers.Add(command.GetArg(i), 0);
-					voteMenu.AddMenuOption(command.GetArg(i), Helper.handleVotes);
+					voteMenu.AddMenuOption(command.GetArg(i), Helper.HandleVotes);
 				}
 
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())

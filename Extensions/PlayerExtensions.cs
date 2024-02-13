@@ -41,29 +41,15 @@ public static class PlayerExtensions
 	public static void SetHp(this CCSPlayerController controller, int health = 100)
 	{
 		if (health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null) return;
-
-		controller.Health = health;
+		
 		controller.PlayerPawn.Value.Health = health;
 
 		if (health > 100)
 		{
-			controller.MaxHealth = health;
 			controller.PlayerPawn.Value.MaxHealth = health;
 		}
 
-		CPlayer_WeaponServices? weaponServices = controller.PlayerPawn.Value!.WeaponServices;
-		if (weaponServices == null) return;
-
-		controller.GiveNamedItem("weapon_healthshot");
-
-		foreach (var weapon in weaponServices.MyWeapons)
-		{
-			if (weapon != null && weapon.IsValid && weapon.Value!.DesignerName == "weapon_healthshot")
-			{
-				weapon.Value.Remove();
-				break;
-			}
-		}
+		Utilities.SetStateChanged(controller.PlayerPawn.Value, "CBaseEntity", "m_iHealth");
 	}
 
 	public static void Bury(this CBasePlayerPawn pawn, float depth = 10f)
@@ -114,24 +100,24 @@ public static class PlayerExtensions
 
 	public static void Rename(this CCSPlayerController controller, string newName = "Unknown")
 	{
-		if (CS2_SimpleAdmin._plugin == null)
+		if (CS2_SimpleAdmin.Instance == null)
 			return;
 
 		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
 		playerName.Set(newName + " ");
 
-		CS2_SimpleAdmin._plugin.AddTimer(0.25f, () =>
+		CS2_SimpleAdmin.Instance.AddTimer(0.25f, () =>
 		{
 			Utilities.SetStateChanged(controller, "CCSPlayerController", "m_szClan");
 			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
 		});
 
-		CS2_SimpleAdmin._plugin.AddTimer(0.3f, () =>
+		CS2_SimpleAdmin.Instance.AddTimer(0.3f, () =>
 		{
 			playerName.Set(newName);
 		});
 
-		CS2_SimpleAdmin._plugin.AddTimer(0.4f, () =>
+		CS2_SimpleAdmin.Instance.AddTimer(0.4f, () =>
 		{
 			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
 		});
@@ -172,12 +158,15 @@ public static class PlayerExtensions
 		vel.Y += ((random.Next(180) + 50) * ((random.Next(2) == 1) ? -1 : 1));
 		vel.Z += random.Next(200) + 100;
 
-		pawn.Teleport(pawn.AbsOrigin!, pawn.AbsRotation!, vel);
+		pawn.AbsVelocity.X = vel.X;
+		pawn.AbsVelocity.Y = vel.Y;
+		pawn.AbsVelocity.Z = vel.Z;
 
 		if (damage <= 0)
 			return;
 
 		pawn.Health -= damage;
+		Utilities.SetStateChanged(pawn, "CBaseEntity", "m_iHealth");
 
 		if (pawn.Health <= 0)
 			pawn.CommitSuicide(true, true);
