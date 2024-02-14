@@ -76,7 +76,6 @@ namespace CS2_SimpleAdmin
 
 				if (flags != null)
 				{
-
 					foreach (var flag in flags)
 					{
 						if (!string.IsNullOrEmpty(flag))

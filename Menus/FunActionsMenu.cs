@@ -8,6 +8,7 @@ namespace CS2_SimpleAdmin.Menus
 	public static class FunActionsMenu
 	{
 		private static Dictionary<int, CsItem>? _weaponsCache = null;
+
 		private static Dictionary<int, CsItem> GetWeaponsCache
 		{
 			get
@@ -29,6 +30,7 @@ namespace CS2_SimpleAdmin.Menus
 				return _weaponsCache;
 			}
 		}
+
 		public static void OpenMenu(CCSPlayerController admin)
 		{
 			if (admin == null || admin.IsValid == false)
@@ -75,7 +77,6 @@ namespace CS2_SimpleAdmin.Menus
 
 			AdminMenu.OpenMenu(admin, menu);
 		}
-
 
 		private static void GodMode(CCSPlayerController admin, CCSPlayerController player)
 		{

@@ -53,7 +53,6 @@ namespace CS2_SimpleAdmin
 				{
 					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
-
 						StringBuilder sb = new(_localizer!["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_slay_message", callerName, player.PlayerName]);
 						_player.PrintToChat(sb.ToString());
@@ -118,11 +117,13 @@ namespace CS2_SimpleAdmin
 			player.GiveNamedItem(weapon);
 			SubGiveWeapon(caller, player, weapon.ToString(), callerName);
 		}
+
 		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
 		{
 			player.GiveNamedItem(weaponName);
 			SubGiveWeapon(caller, player, weaponName, callerName);
 		}
+
 		public void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
@@ -337,7 +338,6 @@ namespace CS2_SimpleAdmin
 				{
 					godPlayers = new ConcurrentBag<int>(godPlayers.Where(item => item != player.Slot));
 				}
-
 
 				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 				{
@@ -603,7 +603,6 @@ namespace CS2_SimpleAdmin
 					}
 				}
 			}
-
 		}
 
 		[ConsoleCommand("css_tp", "Teleport to a player.")]

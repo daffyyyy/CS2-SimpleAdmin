@@ -19,7 +19,7 @@ namespace CS2_SimpleAdmin
 		public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
-			string callerName= caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (_discordWebhookClientLog != null && _localizer != null)
 			{
@@ -48,7 +48,7 @@ namespace CS2_SimpleAdmin
 		{
 			if (command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
 
-			string callerName= caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			string utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
@@ -97,7 +97,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/chat")]
 		public void OnAdminCenterSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName= caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			string utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
@@ -115,7 +115,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/chat")]
 		public void OnAdminHudSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName= caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller == null ? "Console" : caller.PlayerName;
 			byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			string utf8String = Encoding.UTF8.GetString(utf8BytesString);
 

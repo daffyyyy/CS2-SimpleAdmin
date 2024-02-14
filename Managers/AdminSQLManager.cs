@@ -8,9 +8,11 @@ namespace CS2_SimpleAdmin
 	public class AdminSQLManager
 	{
 		private readonly Database _database;
+
 		// Unused for now
 		//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
 		public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCache = new ConcurrentDictionary<SteamID, DateTime?>();
+
 		//public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCacheTimestamps = new ConcurrentDictionary<SteamID, DateTime?>();
 
 		public AdminSQLManager(Database database)
@@ -99,7 +101,6 @@ namespace CS2_SimpleAdmin
 
 				filteredFlagsWithImmunity.Add((flagsValue.Split(',').ToList(), immunityValue));
 			}
-
 
 			/* Unused for now
 			bool shouldCache = activeFlags.Any(flags =>
@@ -306,7 +307,6 @@ namespace CS2_SimpleAdmin
 				if (CS2_SimpleAdmin._logger != null)
 					CS2_SimpleAdmin._logger.LogCritical("Unable to remove expired admins");
 			}
-
 		}
 	}
 }
