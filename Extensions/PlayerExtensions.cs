@@ -41,7 +41,7 @@ public static class PlayerExtensions
 	public static void SetHp(this CCSPlayerController controller, int health = 100)
 	{
 		if (health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null) return;
-		
+
 		controller.PlayerPawn.Value.Health = health;
 
 		if (health > 100)
@@ -140,7 +140,6 @@ public static class PlayerExtensions
 				target.PlayerPawn.Value.AbsRotation,
 				target.PlayerPawn.Value.AbsVelocity
 			);
-
 		}
 	}
 

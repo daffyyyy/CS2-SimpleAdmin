@@ -15,7 +15,7 @@ namespace CS2_SimpleAdmin;
 [MinimumApiVersion(163)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
-	public static CS2_SimpleAdmin Instance { get; private set; } = null;
+	public static CS2_SimpleAdmin Instance { get; private set; } = new();
 
 	public static IStringLocalizer? _localizer;
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
@@ -46,7 +46,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override void Load(bool hotReload)
 	{
 		Instance = this;
-		
+
 		registerEvents();
 
 		if (hotReload)
@@ -108,7 +108,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				throw;
 			}
 		});
-
 
 		Config = config;
 		_localizer = Localizer;

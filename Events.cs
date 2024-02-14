@@ -166,7 +166,6 @@ public partial class CS2_SimpleAdmin
 						{
 							player.VoiceFlags = VoiceFlags.Muted;
 						});
-
 					}
 					else
 					{
@@ -283,7 +282,6 @@ public partial class CS2_SimpleAdmin
 			});
 
 			playerPenaltyManager.RemoveExpiredPenalties();
-
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 		string? path = Path.GetDirectoryName(ModuleDirectory);
@@ -337,7 +335,6 @@ public partial class CS2_SimpleAdmin
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-
 		AddTimer(2.0f, () =>
 		{
 			ConVar? botQuota = ConVar.Find("bot_quota");
@@ -369,5 +366,4 @@ public partial class CS2_SimpleAdmin
 
 		return HookResult.Continue;
 	}
-
 }

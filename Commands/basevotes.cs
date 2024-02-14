@@ -43,7 +43,6 @@ namespace CS2_SimpleAdmin
 
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
-
 					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
 						Helper.PrintToCenterAll(_localizer!["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
