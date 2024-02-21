@@ -8,7 +8,6 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
-using System.Collections.Concurrent;
 using System.Text;
 
 namespace CS2_SimpleAdmin
@@ -46,6 +45,8 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			player.CommitSuicide(false, true);
+
+			Helper.LogCommand(caller, $"css_slay {player?.PlayerName}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -114,14 +115,18 @@ namespace CS2_SimpleAdmin
 
 		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string? callerName = null)
 		{
-			player.GiveNamedItem(weapon);
-			SubGiveWeapon(caller, player, weapon.ToString(), callerName);
+			Helper.LogCommand(caller, $"css_give {player?.PlayerName} {weapon.ToString()}");
+
+			player?.GiveNamedItem(weapon);
+			SubGiveWeapon(caller, player!, weapon.ToString(), callerName);
 		}
 
 		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
 		{
-			player.GiveNamedItem(weaponName);
-			SubGiveWeapon(caller, player, weaponName, callerName);
+			Helper.LogCommand(caller, $"css_give {player?.PlayerName} {weaponName}");
+
+			player?.GiveNamedItem(weaponName);
+			SubGiveWeapon(caller, player!, weaponName, callerName);
 		}
 
 		public void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
@@ -177,6 +182,8 @@ namespace CS2_SimpleAdmin
 
 			player.RemoveWeapons();
 
+			Helper.LogCommand(caller, $"css_strip {player?.PlayerName}");
+
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
@@ -228,6 +235,8 @@ namespace CS2_SimpleAdmin
 			callerName = caller == null ? "Console" : caller.PlayerName;
 
 			player.SetHp(health);
+
+			Helper.LogCommand(caller, $"css_hp {player?.PlayerName} {health}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -281,6 +290,8 @@ namespace CS2_SimpleAdmin
 
 			player.SetSpeed((float)speed);
 
+			Helper.LogCommand(caller, $"css_speed {player?.PlayerName} {speed}");
+
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
@@ -288,7 +299,7 @@ namespace CS2_SimpleAdmin
 					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
 						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_speed_message", callerName, player.PlayerName]);
+						sb.Append(_localizer["sa_admin_speed_message", callerName, player!.PlayerName]);
 						_player.PrintToChat(sb.ToString());
 					}
 				}
@@ -330,13 +341,15 @@ namespace CS2_SimpleAdmin
 
 			if (player != null)
 			{
+				Helper.LogCommand(caller, $"css_god {player.PlayerName}");
+
 				if (!godPlayers.Contains(player.Slot))
 				{
 					godPlayers.Add(player.Slot);
 				}
 				else
 				{
-					godPlayers = new ConcurrentBag<int>(godPlayers.Where(item => item != player.Slot));
+					RemoveFromConcurrentBag(godPlayers, player.Slot);
 				}
 
 				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
@@ -394,6 +407,8 @@ namespace CS2_SimpleAdmin
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.Slap(damage);
+
+			Helper.LogCommand(caller, $"css_slap {player?.PlayerName} {damage}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -456,9 +471,12 @@ namespace CS2_SimpleAdmin
 			}
 
 			bool kill = command.GetArg(3).ToLower().Equals("-k");
+
+			Helper.LogCommand(caller, command);
+
 			playersToTarget.ForEach(player =>
 			{
-				ChangeTeam(caller, player, _teamName.ToLower(), teamNum, kill, callerName);
+				ChangeTeam(caller, player, _teamName, teamNum, kill, callerName);
 			});
 		}
 
@@ -527,6 +545,8 @@ namespace CS2_SimpleAdmin
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
+			Helper.LogCommand(caller, command);
+
 			playersToTarget.ForEach(player =>
 			{
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
@@ -591,6 +611,8 @@ namespace CS2_SimpleAdmin
 			VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
 															GameData.GetOffset("CCSPlayerController_Respawn"))(player);
 
+			Helper.LogCommand(caller, $"css_respawn {player.PlayerName}");
+
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
@@ -628,6 +650,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			playersToTarget.ForEach(player =>
 			{
@@ -682,6 +706,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			playersToTarget.ForEach(player =>
 			{

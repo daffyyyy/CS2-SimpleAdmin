@@ -116,6 +116,8 @@ namespace CS2_SimpleAdmin
 			AdminSQLManager _adminManager = new(_database);
 			_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time, globalAdmin);
 
+			Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
+
 			string msg = $"Added '{flags}' flags to '{name}' ({steamid})";
 			if (command != null)
 				command.ReplyToCommand(msg);
@@ -171,6 +173,8 @@ namespace CS2_SimpleAdmin
 				}
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
+			Helper.LogCommand(caller, $"css_deladmin {steamid}");
+
 			string msg = $"Removed flags from '{steamid}'";
 			if (command != null)
 				command.ReplyToCommand(msg);
@@ -195,6 +199,7 @@ namespace CS2_SimpleAdmin
 		public void ReloadAdmins()
 		{
 			if (_database == null) return;
+
 			foreach (SteamID steamId in AdminSQLManager._adminCache.Keys.ToList())
 			{
 				if (AdminSQLManager._adminCache.TryRemove(steamId, out _))
@@ -216,6 +221,8 @@ namespace CS2_SimpleAdmin
 		{
 			if (caller == null) return;
 
+			Helper.LogCommand(caller, command);
+
 			if (silentPlayers.Contains(caller.Slot))
 			{
 				RemoveFromConcurrentBag(silentPlayers, caller.Slot);
@@ -226,16 +233,14 @@ namespace CS2_SimpleAdmin
 			{
 				silentPlayers.Add(caller.Slot);
 				Server.ExecuteCommand("sv_disable_teamselect_menu 1");
-				Server.NextFrame(() =>
-				{
-					if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
-						caller.PlayerPawn.Value.CommitSuicide(true, false);
 
-					AddTimer(1.0f, () => { caller.ChangeTeam(CsTeam.Spectator); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-					AddTimer(1.15f, () => { caller.ChangeTeam(CsTeam.None); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-					caller.PrintToChat($"You are hidden now!");
-					AddTimer(1.22f, () => { Server.ExecuteCommand("sv_disable_teamselect_menu 0"); });
-				});
+				if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
+					caller.PlayerPawn.Value.CommitSuicide(true, false);
+
+				AddTimer(1.0f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				AddTimer(1.4f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				caller.PrintToChat($"You are hidden now!");
+				AddTimer(2.0f, () => { Server.NextFrame(() => Server.ExecuteCommand("sv_disable_teamselect_menu 0")); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 		}
 
@@ -390,6 +395,8 @@ namespace CS2_SimpleAdmin
 				player.Pawn.Value!.Freeze();
 			}
 
+			Helper.LogCommand(caller, $"css_kick {player.PlayerName} {reason}");
+
 			if (string.IsNullOrEmpty(reason) == false)
 			{
 				if (!player.IsBot && !player.IsHLTV)
@@ -450,6 +457,8 @@ namespace CS2_SimpleAdmin
 					string commandName = command?.GetCommandString ?? "css_changemap";
 					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
 				}
+				if (command is not null)
+					Helper.LogCommand(caller, command);
 
 				AddTimer(2.0f, () =>
 				{
@@ -537,6 +546,8 @@ namespace CS2_SimpleAdmin
 				string commandName = command?.GetCommandString ?? "css_changewsmap";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
 			}
+			if (command is not null)
+				Helper.LogCommand(caller, command);
 
 			AddTimer(2.0f, () =>
 			{
@@ -570,6 +581,8 @@ namespace CS2_SimpleAdmin
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
+			Helper.LogCommand(caller, command);
+
 			var value = command.GetArg(2);
 
 			Server.ExecuteCommand($"{cvar.Name} {value}");
@@ -591,6 +604,8 @@ namespace CS2_SimpleAdmin
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
+			Helper.LogCommand(caller, command);
+
 			Server.ExecuteCommand(command.ArgString);
 			command.ReplyToCommand($"{callerName} executed command {command.ArgString}.");
 			Logger.LogInformation($"{callerName} executed command ({command.ArgString}).");
@@ -609,9 +624,11 @@ namespace CS2_SimpleAdmin
 
 		public static void RestartGame(CCSPlayerController? admin)
 		{
+			Helper.LogCommand(admin, "css_restartgame");
+
 			// TODO: Localize
 			var name = admin == null ? "Console" : admin.PlayerName;
-			Server.PrintToChatAll($"[SimpleAdmin] {name}: Restarting game...");
+			Server.PrintToChatAll($"[SA] {name}: Restarting game...");
 			Server.ExecuteCommand("mp_restartgame 2");
 		}
 	}

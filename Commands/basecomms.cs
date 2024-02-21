@@ -76,6 +76,8 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
+			Helper.LogCommand(caller, $"css_gag {player?.SteamID} {time} {reason}");
+
 			Task.Run(async () =>
 			{
 				await muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
@@ -179,6 +181,8 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
+			Helper.LogCommand(caller, command);
+
 			List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 			if (matches.Count == 1)
 			{
@@ -263,6 +267,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			bool found = false;
 
@@ -405,6 +411,8 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
+			Helper.LogCommand(caller, $"css_mute {player?.SteamID} {time} {reason}");
+
 			player!.VoiceFlags = VoiceFlags.Muted;
 
 			Task.Run(async () =>
@@ -482,6 +490,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			int time = 0;
 			string reason = "Unknown";
@@ -580,6 +590,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			string pattern = command.GetArg(1);
 			bool found = false;
@@ -711,6 +723,8 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
+			Helper.LogCommand(caller, $"css_silence {player?.SteamID} {time} {reason}");
+
 			Task.Run(async () =>
 			{
 				await muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2);
@@ -796,6 +810,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			int time = 0;
 			string reason = "Unknown";
@@ -897,6 +913,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			string pattern = command.GetArg(1);
 			bool found = false;

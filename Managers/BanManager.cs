@@ -101,19 +101,33 @@ namespace CS2_SimpleAdmin
 				CS2_SimpleAdmin._logger.LogCritical($"IsPlayerBanned for {player.Name}");
 #endif
 
-			DateTime currentTimeUtc = DateTime.UtcNow;
-			string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 			int banCount = 0;
+
+			DateTime currentTime = DateTime.Now;
 
 			try
 			{
+				string sql = @"
+					UPDATE sa_bans
+					SET player_ip = CASE WHEN player_ip IS NULL THEN @PlayerIP ELSE player_ip END,
+						player_name = CASE WHEN player_name IS NULL THEN @PlayerName ELSE player_name END
+					WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+					AND status = 'ACTIVE'
+					AND (duration = 0 OR ends > @CurrentTime);
+
+					SELECT COUNT(*) FROM sa_bans
+					WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+					AND status = 'ACTIVE'
+					AND (duration = 0 OR ends > @CurrentTime);";
+
 				await using var connection = await _database.GetConnectionAsync();
 
 				var parameters = new
 				{
 					PlayerSteamID = player.SteamId,
 					PlayerIP = !string.IsNullOrEmpty(player.IpAddress) ? player.IpAddress : (object)DBNull.Value,
-					CurrentTime = currentTimeUtc
+					PlayerName = !string.IsNullOrEmpty(player.Name) ? player.Name : string.Empty,
+					CurrentTime = currentTime
 				};
 
 				banCount = await connection.ExecuteScalarAsync<int>(sql, parameters);

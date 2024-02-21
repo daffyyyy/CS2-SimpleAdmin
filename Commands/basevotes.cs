@@ -26,6 +26,8 @@ namespace CS2_SimpleAdmin
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
+			Helper.LogCommand(caller, command);
+
 			voteAnswers.Clear();
 
 			string question = command.GetArg(1);
@@ -33,25 +35,30 @@ namespace CS2_SimpleAdmin
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
-				ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
-
 				for (int i = 2; i <= answersCount - 1; i++)
 				{
 					voteAnswers.Add(command.GetArg(i), 0);
-					voteMenu.AddMenuOption(command.GetArg(i), Helper.HandleVotes);
 				}
 
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
 				{
 					using (new WithTemporaryCulture(_player.GetLanguage()))
 					{
+						ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
+
+						for (int i = 2; i <= answersCount - 1; i++)
+						{
+							voteMenu.AddMenuOption(command.GetArg(i), Helper.HandleVotes);
+						}
+
+						voteMenu.PostSelectAction = PostSelectAction.Close;
+						MenuManager.OpenChatMenu(_player, voteMenu);
+
 						Helper.PrintToCenterAll(_localizer!["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						StringBuilder sb = new(_localizer!["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						_player.PrintToChat(sb.ToString());
 					}
-
-					MenuManager.OpenChatMenu(_player, voteMenu);
 				}
 
 				voteInProgress = true;
@@ -84,7 +91,6 @@ namespace CS2_SimpleAdmin
 						}
 					}
 					voteAnswers.Clear();
-					votePlayers.Clear();
 					voteInProgress = false;
 				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}

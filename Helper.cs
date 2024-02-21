@@ -1,12 +1,14 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
+using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -135,12 +137,37 @@ namespace CS2_SimpleAdmin
 
 		internal static void HandleVotes(CCSPlayerController player, ChatMenuOption option)
 		{
-			if (CS2_SimpleAdmin.voteInProgress && !CS2_SimpleAdmin.votePlayers.Contains(player.Slot))
-			{
-				option.Disabled = true;
-				CS2_SimpleAdmin.votePlayers.Add(player.Slot);
-				CS2_SimpleAdmin.voteAnswers[option.Text]++;
-			}
+			if (!CS2_SimpleAdmin.voteInProgress)
+				return;
+
+			option.Disabled = true;
+			CS2_SimpleAdmin.voteAnswers[option.Text]++;
+		}
+
+		internal static void LogCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (CS2_SimpleAdmin.Instance == null || CS2_SimpleAdmin._localizer == null)
+				return;
+
+			string playerName = caller?.PlayerName ?? "Console";
+
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+
+			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
+				playerName, command.GetCommandString]}".Replace("HOSTNAME", hostname).Replace("**", ""));
+		}
+
+		internal static void LogCommand(CCSPlayerController? caller, string command)
+		{
+			if (CS2_SimpleAdmin.Instance == null || CS2_SimpleAdmin._localizer == null)
+				return;
+
+			string playerName = caller?.PlayerName ?? "Console";
+
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+
+			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
+				playerName, command]}".Replace("HOSTNAME", hostname).Replace("**", ""));
 		}
 
 		public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
@@ -206,7 +233,7 @@ namespace CS2_SimpleAdmin
 
 		private static byte[] GetStringBytes(string str)
 		{
-			return Encoding.ASCII.GetBytes(str);
+			return Encoding.UTF8.GetBytes(str);
 		}
 	}
 }

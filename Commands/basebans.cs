@@ -58,6 +58,7 @@ namespace CS2_SimpleAdmin
 		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, BanManager? banManager = null)
 		{
 			if (_database == null) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			banManager ??= new BanManager(_database, Config);
 
@@ -79,6 +80,8 @@ namespace CS2_SimpleAdmin
 				Name = caller?.PlayerName,
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
+
+			Helper.LogCommand(caller, $"css_ban {player?.SteamID} {time} {reason}");
 
 			Task.Run(async () =>
 			{
@@ -176,6 +179,8 @@ namespace CS2_SimpleAdmin
 				Name = caller?.PlayerName,
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
+
+			Helper.LogCommand(caller, command);
 
 			List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
 			if (matches.Count == 1)
@@ -281,6 +286,8 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
+			Helper.LogCommand(caller, command);
+
 			int.TryParse(command.GetArg(2), out int time);
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
@@ -374,6 +381,8 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
+			Helper.LogCommand(caller, command);
 
 			string pattern = command.GetArg(1);
 

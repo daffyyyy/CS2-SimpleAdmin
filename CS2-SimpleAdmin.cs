@@ -12,14 +12,13 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(163)]
+[MinimumApiVersion(168)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = new();
 
 	public static IStringLocalizer? _localizer;
 	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
-	public static HashSet<int> votePlayers = new HashSet<int>();
 	public static ConcurrentBag<int> godPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<int> silentPlayers = new ConcurrentBag<int>();
 	public static ConcurrentBag<string> bannedPlayers = new ConcurrentBag<string>();
@@ -39,7 +38,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.3.2b";
+	public override string ModuleVersion => "1.3.3a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 

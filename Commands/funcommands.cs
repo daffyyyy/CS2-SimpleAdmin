@@ -41,6 +41,8 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.ToggleNoclip();
 
+			Helper.LogCommand(caller, $"css_noclip {player?.PlayerName}");
+
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
 				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
@@ -90,6 +92,8 @@ namespace CS2_SimpleAdmin
 
 			player!.Pawn.Value!.Freeze();
 
+			Helper.LogCommand(caller, $"css_freeze {player?.PlayerName}");
+
 			if (time > 0)
 				AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
@@ -137,6 +141,8 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			player!.Pawn.Value!.Unfreeze();
+
+			Helper.LogCommand(caller, $"css_unfreeze {player?.PlayerName}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{

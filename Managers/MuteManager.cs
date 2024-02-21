@@ -93,10 +93,10 @@ namespace CS2_SimpleAdmin
 			try
 			{
 				await using var connection = await _database.GetConnectionAsync();
-				DateTime currentTimeUtc = DateTime.UtcNow;
+				DateTime currentTime = DateTime.Now;
 				string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 
-				var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTimeUtc };
+				var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTime };
 				var activeMutes = (await connection.QueryAsync(sql, parameters)).ToList();
 				return activeMutes;
 			}
