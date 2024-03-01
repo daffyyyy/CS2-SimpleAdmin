@@ -60,7 +60,6 @@ namespace CS2_SimpleAdmin
 			if (_database == null) return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			banManager ??= new BanManager(_database, Config);
 
 			if (player.PawnIsAlive)
 			{
@@ -85,6 +84,7 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
+				banManager ??= new BanManager(_database, Config);
 				await banManager.BanPlayer(playerInfo, adminInfo, reason, time);
 			});
 
@@ -143,6 +143,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
+			if (_database == null) return;
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
@@ -243,9 +244,7 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				Database database = new Database(dbConnectionString);
-
-				BanManager _banManager = new(database, Config);
+				BanManager _banManager = new(_database, Config);
 				await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
 			});
 
@@ -257,6 +256,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<ip> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnBanIp(CCSPlayerController? caller, CommandInfo command)
 		{
+			if (_database == null) return;
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.ArgCount < 2)
@@ -355,9 +355,7 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				Database database = new Database(dbConnectionString);
-
-				BanManager _banManager = new(database, Config);
+				BanManager _banManager = new(_database, Config);
 				await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
 			});
 
@@ -369,6 +367,8 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<steamid or name or ip>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnUnbanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
+			if (_database == null) return;
+
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.GetArg(1).Length <= 1)
 			{
@@ -386,11 +386,8 @@ namespace CS2_SimpleAdmin
 
 			string pattern = command.GetArg(1);
 
-			Database database = new Database(dbConnectionString);
-
-			BanManager _banManager = new(database, Config);
-
-			_ = _banManager.UnbanPlayer(pattern);
+			BanManager _banManager = new BanManager(_database, Config);
+			Task.Run(async () => await _banManager.UnbanPlayer(pattern));
 
 			command.ReplyToCommand($"Unbanned player with pattern {pattern}.");
 		}

@@ -55,8 +55,9 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/generic")]
 		public void OnAdminHelpCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			if (caller == null || !caller.IsValid) return;
+			//if (caller == null || !caller.IsValid) return;
 
+			/*
 			using (new WithTemporaryCulture(caller.GetLanguage()))
 			{
 				var splitMessage = _localizer!["sa_adminhelp"].ToString().Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
@@ -64,6 +65,20 @@ namespace CS2_SimpleAdmin
 				foreach (var line in splitMessage)
 				{
 					caller.PrintToChat(Helper.ReplaceTags($" {line}"));
+				}
+			} */
+
+			string[] lines = File.ReadAllLines(ModuleDirectory + "/admin_help.txt");
+
+			foreach (string line in lines)
+			{
+				if (string.IsNullOrWhiteSpace(line))
+				{
+					command.ReplyToCommand(" ");
+				}
+				else
+				{
+					command.ReplyToCommand(StringExtensions.ReplaceColorTags(line));
 				}
 			}
 		}

@@ -52,12 +52,13 @@ namespace CS2_SimpleAdmin
 						}
 
 						voteMenu.PostSelectAction = PostSelectAction.Close;
-						MenuManager.OpenChatMenu(_player, voteMenu);
 
 						Helper.PrintToCenterAll(_localizer!["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						StringBuilder sb = new(_localizer!["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						_player.PrintToChat(sb.ToString());
+
+						MenuManager.OpenChatMenu(_player, voteMenu);
 					}
 				}
 

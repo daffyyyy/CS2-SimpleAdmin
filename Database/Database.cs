@@ -20,10 +20,10 @@ namespace CS2_SimpleAdmin
 				await connection.OpenAsync();
 				return connection;
 			}
-			catch (Exception)
+			catch (Exception ex)
 			{
 				if (CS2_SimpleAdmin._logger != null)
-					CS2_SimpleAdmin._logger.LogCritical("Unable to connect to database");
+					CS2_SimpleAdmin._logger.LogCritical($"Unable to connect to database: {ex.Message}");
 				throw;
 			}
 		}

@@ -46,7 +46,7 @@ namespace CS2_SimpleAdmin
 
 			player.CommitSuicide(false, true);
 
-			Helper.LogCommand(caller, $"css_slay {player?.PlayerName}");
+			Helper.LogCommand(caller, $"css_slay {player.PlayerName}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -182,7 +182,7 @@ namespace CS2_SimpleAdmin
 
 			player.RemoveWeapons();
 
-			Helper.LogCommand(caller, $"css_strip {player?.PlayerName}");
+			Helper.LogCommand(caller, $"css_strip {player.PlayerName}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -236,7 +236,7 @@ namespace CS2_SimpleAdmin
 
 			player.SetHp(health);
 
-			Helper.LogCommand(caller, $"css_hp {player?.PlayerName} {health}");
+			Helper.LogCommand(caller, $"css_hp {player.PlayerName} {health}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -408,7 +408,7 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.Slap(damage);
 
-			Helper.LogCommand(caller, $"css_slap {player?.PlayerName} {damage}");
+			Helper.LogCommand(caller, $"css_slap {player.PlayerName} {damage}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{

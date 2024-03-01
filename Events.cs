@@ -8,14 +8,14 @@ using Dapper;
 using Microsoft.Extensions.Logging;
 using System.Data;
 using System.Text;
+using static Dapper.SqlMapper;
 
 namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-	private void registerEvents()
+	private void RegisterEvents()
 	{
-		RegisterListener<Listeners.OnClientPutInServer>(OnClientPutInServer);
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
@@ -80,30 +80,27 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
-	public void OnClientPutInServer(int playerSlot)
+	[GameEventHandler]
+	public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
 	{
-		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
+		CCSPlayerController? player = @event.Userid;
 #if DEBUG
 		Logger.LogCritical("[OnPlayerConnect] Before check");
-
 #endif
-		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV) return;
+		if (player is null || !player.IsValid || player.SteamID.ToString().Length != 17 || string.IsNullOrEmpty(player.IpAddress)) return HookResult.Continue;
 #if DEBUG
 		Logger.LogCritical("[OnPlayerConnect] After Check");
 #endif
-		string? ipAddress = !string.IsNullOrEmpty(player.IpAddress) ? player.IpAddress.Split(":")[0] : null;
+		string? ipAddress = player.IpAddress.Split(":")[0];
 
-		if (
-			ipAddress != null && bannedPlayers.Contains(ipAddress) ||
-			bannedPlayers.Contains(player.SteamID.ToString())
-			)
+		if (bannedPlayers.Contains(ipAddress) || bannedPlayers.Contains(player.SteamID.ToString()))
 		{
 			Helper.KickPlayer((ushort)player.UserId!, "Banned");
-			return;
+			return HookResult.Continue;
 		}
 
 		if (_database == null)
-			return;
+			return HookResult.Continue;
 
 		PlayerInfo playerInfo = new PlayerInfo
 		{
@@ -115,12 +112,13 @@ public partial class CS2_SimpleAdmin
 			IpAddress = ipAddress
 		};
 
-		BanManager _banManager = new(_database, Config);
-		MuteManager _muteManager = new(_database);
-		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
 		Task.Run(async () =>
 		{
+			BanManager _banManager = new(_database, Config);
+			MuteManager _muteManager = new(_database);
+			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
+
 			if (await _banManager.IsPlayerBanned(playerInfo))
 			{
 				if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
@@ -183,7 +181,7 @@ public partial class CS2_SimpleAdmin
 			}
 		});
 
-		return;
+		return HookResult.Continue;
 	}
 
 	[GameEventHandler]
@@ -198,7 +196,7 @@ public partial class CS2_SimpleAdmin
 		Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
-		if (player.IsBot || player.IsHLTV) return HookResult.Continue;
+		if (player.IsBot || player.IsHLTV || player.SteamID.ToString().Length != 17) return HookResult.Continue;
 
 #if DEBUG
 		Logger.LogCritical("[OnClientDisconnect] After Check");
@@ -224,7 +222,12 @@ public partial class CS2_SimpleAdmin
 
 	private void OnMapStart(string mapName)
 	{
-		Random random = new Random();
+		string? path = Path.GetDirectoryName(ModuleDirectory);
+		if (Directory.Exists(path + "/CS2-Tags"))
+		{
+			TagsDetected = true;
+		}
+
 		godPlayers.Clear();
 		silentPlayers.Clear();
 
@@ -235,7 +238,7 @@ public partial class CS2_SimpleAdmin
 
 		if (_database == null) return;
 
-		AddTimer(random.Next(60, 80), async () =>
+		AddTimer(60.0f, async () =>
 		{
 #if DEBUG
 			Logger.LogCritical("[OnMapStart] Expired check");
@@ -281,12 +284,6 @@ public partial class CS2_SimpleAdmin
 
 			playerPenaltyManager.RemoveExpiredPenalties();
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
-		string? path = Path.GetDirectoryName(ModuleDirectory);
-		if (Directory.Exists(path + "/CS2-Tags"))
-		{
-			TagsDetected = true;
-		}
 
 		AddTimer(3.0f, async () =>
 		{

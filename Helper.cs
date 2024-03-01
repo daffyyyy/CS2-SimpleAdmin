@@ -6,18 +6,21 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
-using CounterStrikeSharp.API.Modules.Utils;
 using Discord;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace CS2_SimpleAdmin
 {
 	internal class Helper
 	{
+		private static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name ?? "";
+		private static readonly string CfgPath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/{AssemblyName}/{AssemblyName}.json";
+
 		internal static CS2_SimpleAdminConfig? Config { get; set; }
 
 		public static List<CCSPlayerController> GetPlayerFromName(string name)
@@ -105,34 +108,25 @@ namespace CS2_SimpleAdmin
 
 		public static void KickPlayer(ushort userId, string? reason = null)
 		{
+			if (!string.IsNullOrEmpty(reason))
+			{
+				int escapeChars = reason.IndexOfAny(new char[] { ';', '|' });
+
+				if (escapeChars != -1)
+				{
+					reason = reason[..escapeChars];
+				}
+			}
+
 			Server.ExecuteCommand($"kickid {userId} {reason}");
 		}
 
 		public static void PrintToCenterAll(string message)
 		{
-			Utilities.GetPlayers().ForEach(controller =>
+			Utilities.GetPlayers().Where(p => p is not null && p.IsValid && !p.IsBot && !p.IsHLTV).ToList().ForEach(controller =>
 			{
 				controller.PrintToCenter(message);
 			});
-		}
-
-		internal static string ReplaceTags(string message)
-		{
-			if (message.Contains('{'))
-			{
-				string modifiedValue = message;
-				foreach (FieldInfo field in typeof(ChatColors).GetFields())
-				{
-					string pattern = $"{{{field.Name}}}";
-					if (message.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-					{
-						modifiedValue = modifiedValue.Replace(pattern, field.GetValue(null)!.ToString(), StringComparison.OrdinalIgnoreCase);
-					}
-				}
-				return modifiedValue;
-			}
-
-			return message;
 		}
 
 		internal static void HandleVotes(CCSPlayerController player, ChatMenuOption option)
@@ -212,6 +206,23 @@ namespace CS2_SimpleAdmin
 
 			return message;
 		}
+
+		public static void UpdateConfig<T>(T config) where T : BasePluginConfig, new()
+		{
+			// get newest config version
+			var newCfgVersion = new T().Version;
+
+			// loaded config is up to date
+			if (config.Version == newCfgVersion)
+				return;
+
+			// update the version
+			config.Version = newCfgVersion;
+
+			// serialize the updated config back to json
+			var updatedJsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+			File.WriteAllText(CfgPath, updatedJsonContent);
+		}
 	}
 
 	public class SchemaString<SchemaClass> : NativeObject where SchemaClass : NativeObject
@@ -225,10 +236,10 @@ namespace CS2_SimpleAdmin
 
 			for (int i = 0; i < bytes.Length; i++)
 			{
-				Unsafe.Write((void*)(this.Handle.ToInt64() + i), bytes[i]);
+				Unsafe.Write((void*)(Handle.ToInt64() + i), bytes[i]);
 			}
 
-			Unsafe.Write((void*)(this.Handle.ToInt64() + bytes.Length), 0);
+			Unsafe.Write((void*)(Handle.ToInt64() + bytes.Length), 0);
 		}
 
 		private static byte[] GetStringBytes(string str)
