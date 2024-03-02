@@ -24,7 +24,7 @@ namespace CS2_SimpleAdmin
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 7;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 8;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";

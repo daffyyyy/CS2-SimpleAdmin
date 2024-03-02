@@ -37,7 +37,7 @@ public class PlayerPenaltyManager
 		{
 			//Console.WriteLine($"Found penalties for player with slot {slot} and penalty type {penaltyType}");
 
-			DateTime now = DateTime.Now;
+			DateTime now = DateTime.UtcNow;
 
 			// Check if any active penalties exist
 			foreach (var penalty in penaltiesList.ToList())
@@ -115,7 +115,7 @@ public class PlayerPenaltyManager
 	// Remove all expired penalties for all players and penalty types
 	public void RemoveExpiredPenalties()
 	{
-		DateTime now = DateTime.Now;
+		DateTime now = DateTime.UtcNow;
 		foreach (var kvp in penalties.ToList()) // Use ToList to avoid modification while iterating
 		{
 			var playerSlot = kvp.Key;

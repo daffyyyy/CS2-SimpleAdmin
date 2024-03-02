@@ -78,6 +78,8 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/chat")]
 		public void OnAdminPrivateSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
+			string callerName = caller == null ? "Console" : caller.PlayerName;
+
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
@@ -92,7 +94,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				player.PrintToChat(StringExtensions.ReplaceColorTags($"({caller!.PlayerName}) {utf8String}"));
+				player.PrintToChat(StringExtensions.ReplaceColorTags($"({callerName}) {utf8String}"));
 			});
 
 			command.ReplyToCommand(StringExtensions.ReplaceColorTags($" Private message sent!"));

@@ -25,7 +25,7 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetPlayerFromName(string name)
 		{
-			return Utilities.GetPlayers().FindAll(x => x.PlayerName.Contains(name, StringComparison.OrdinalIgnoreCase));
+			return Utilities.GetPlayers().FindAll(x => x.PlayerName.Equals(name, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public static List<CCSPlayerController> GetPlayerFromSteamid64(string steamid)

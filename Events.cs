@@ -254,32 +254,37 @@ public partial class CS2_SimpleAdmin
 
 			Server.NextFrame(() =>
 			{
-				foreach (CCSPlayerController player in Helper.GetValidPlayers())
+				try
 				{
-					if (playerPenaltyManager.IsSlotInPenalties(player.Slot))
+
+					foreach (CCSPlayerController player in Helper.GetValidPlayers())
 					{
-						if (!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-							player.VoiceFlags = VoiceFlags.Normal;
-
-						if (!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+						if (playerPenaltyManager.IsSlotInPenalties(player.Slot))
 						{
-							if (TagsDetected)
-								Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
-						}
+							if (!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+								player.VoiceFlags = VoiceFlags.Normal;
 
-						if (
-							!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) &&
-							!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) &&
-							!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)
-						)
-						{
-							player.VoiceFlags = VoiceFlags.Normal;
+							if (!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+							{
+								if (TagsDetected)
+									Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
+							}
 
-							if (TagsDetected)
-								Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
+							if (
+								!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) &&
+								!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) &&
+								!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)
+							)
+							{
+								player.VoiceFlags = VoiceFlags.Normal;
+
+								if (TagsDetected)
+									Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
+							}
 						}
 					}
 				}
+				catch (Exception) { }
 			});
 
 			playerPenaltyManager.RemoveExpiredPenalties();

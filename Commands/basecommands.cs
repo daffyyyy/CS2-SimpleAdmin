@@ -29,9 +29,11 @@ namespace CS2_SimpleAdmin
 					using var connection = await _database.GetConnectionAsync();
 					var commandText = "ALTER TABLE `sa_mutes` CHANGE `type` `type` ENUM('GAG','MUTE', 'SILENCE', '') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'GAG';";
 
-					using var command = connection.CreateCommand();
-					command.CommandText = commandText;
-					await command.ExecuteNonQueryAsync();
+					using var commandSql = connection.CreateCommand();
+					commandSql.CommandText = commandText;
+					await commandSql.ExecuteNonQueryAsync();
+
+					command.ReplyToCommand("Successfully updated the database");
 				}
 				catch (Exception ex)
 				{
@@ -42,7 +44,7 @@ namespace CS2_SimpleAdmin
 
 		[ConsoleCommand("css_admin")]
 		[RequiresPermissions("@css/generic")]
-		[CommandHelper(minArgs: 0, usage: "", whoCanExecute: CommandUsage.CLIENT_ONLY)]
+		[CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
 		public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (caller == null || caller.IsValid == false)
