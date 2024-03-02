@@ -24,7 +24,7 @@ namespace CS2_SimpleAdmin
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		public override int Version { get; set; } = 7;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 7;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";
@@ -64,7 +64,7 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("WorkshopMaps")]
 		public List<string> WorkshopMaps { get; set; } = new List<string>();
-		
+
 		[JsonPropertyName("CustomServerCommands")]
 		public List<CustomServerCommandData> CustomServerCommands { get; set; } = new List<CustomServerCommandData>();
 	}
