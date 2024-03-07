@@ -17,8 +17,8 @@ internal class MuteManager
 
 		await using var connection = await _database.GetConnectionAsync();
 
-		DateTime now = DateTime.UtcNow;
-		DateTime futureTime = now.AddMinutes(time);
+		DateTime now = DateTime.UtcNow.ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
 		string muteType = "GAG";
 		if (type == 1)
@@ -50,8 +50,8 @@ internal class MuteManager
 
 		await using var connection = await _database.GetConnectionAsync();
 
-		DateTime now = DateTime.UtcNow;
-		DateTime futureTime = now.AddMinutes(time);
+		DateTime now = DateTime.UtcNow.ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
 		string muteType = "GAG";
 		if (type == 1)
@@ -84,14 +84,14 @@ internal class MuteManager
 		}
 
 #if DEBUG
-		if (CS2_SimpleAdmin._logger != null)
+		if (CS2_SimpleAdmin._logger!= null)
 			CS2_SimpleAdmin._logger.LogCritical($"IsPlayerMuted for {steamId}");
 #endif
 
 		try
 		{
 			await using var connection = await _database.GetConnectionAsync();
-			DateTime currentTime = DateTime.Now;
+			DateTime currentTime = DateTime.Now.ToLocalTime();
 			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 
 			var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTime };
@@ -152,7 +152,7 @@ internal class MuteManager
 			await using var connection = await _database.GetConnectionAsync();
 
 			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime() });
 		}
 		catch (Exception)
 		{

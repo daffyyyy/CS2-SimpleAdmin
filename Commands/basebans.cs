@@ -20,7 +20,7 @@ namespace CS2_SimpleAdmin
 			if (command.ArgCount < 2)
 				return;
 
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
@@ -68,9 +68,9 @@ namespace CS2_SimpleAdmin
 
 			PlayerInfo playerInfo = new PlayerInfo
 			{
-				SteamId = player?.SteamID.ToString(),
-				Name = player?.PlayerName,
-				IpAddress = player?.IpAddress?.Split(":")[0]
+				SteamId = player.SteamID.ToString(),
+				Name = player.PlayerName,
+				IpAddress = player.IpAddress?.Split(":")[0]
 			};
 
 			PlayerInfo adminInfo = new PlayerInfo
@@ -80,7 +80,7 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
-			Helper.LogCommand(caller, $"css_ban {player?.SteamID} {time} {reason}");
+			Helper.LogCommand(caller, $"css_ban {player.SteamID} {time} {reason}");
 
 			Task.Run(async () =>
 			{
@@ -88,7 +88,8 @@ namespace CS2_SimpleAdmin
 				await banManager.BanPlayer(playerInfo, adminInfo, reason, time);
 			});
 
-			AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player!.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+			if (player.UserId.HasValue)
+				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
 				bannedPlayers.Add(playerInfo.IpAddress);
@@ -163,7 +164,7 @@ namespace CS2_SimpleAdmin
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			Database database = new Database(dbConnectionString);
 
@@ -196,7 +197,8 @@ namespace CS2_SimpleAdmin
 					}
 
 					player!.Pawn.Value!.Freeze();
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+					if (player.UserId.HasValue)
+						AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 					if (time == 0)
 					{
@@ -277,7 +279,7 @@ namespace CS2_SimpleAdmin
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			PlayerInfo adminInfo = new PlayerInfo
 			{
@@ -349,7 +351,8 @@ namespace CS2_SimpleAdmin
 						}
 					}
 
-					AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, "Banned"), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+					if (player.UserId.HasValue)
+						AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, "Banned"), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 				}
 			}
 

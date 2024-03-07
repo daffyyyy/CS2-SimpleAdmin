@@ -57,7 +57,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/generic")]
 		public void OnAdminHelpCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			//if (caller == null || !caller.IsValid) return;
+			//if (caller == null ||!caller.IsValid) return;
 
 			/*
 			using (new WithTemporaryCulture(caller.GetLanguage()))
@@ -286,11 +286,12 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
+				if (!player.UserId.HasValue) return;
 				if (caller!.CanTarget(player))
 				{
 					PlayerInfo playerInfo = new()
 					{
-						UserId = player.UserId,
+						UserId = player.UserId.Value,
 						Index = (int)player.Index,
 						SteamId = player?.SteamID.ToString(),
 						Name = player?.PlayerName,
@@ -369,7 +370,7 @@ namespace CS2_SimpleAdmin
 		public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			TargetResult? targets = GetTarget(command);
 
@@ -412,6 +413,8 @@ namespace CS2_SimpleAdmin
 				player.Pawn.Value!.Freeze();
 			}
 
+			reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+
 			Helper.LogCommand(caller, $"css_kick {player.PlayerName} {reason}");
 
 			if (string.IsNullOrEmpty(reason) == false)
@@ -421,11 +424,13 @@ namespace CS2_SimpleAdmin
 					{
 						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
-				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				if (player.UserId.HasValue)
+					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 			else
 			{
-				AddTimer(Config.KickTime, () => Helper.KickPlayer((ushort)player.UserId!), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				if (player.UserId.HasValue)
+					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
 			if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains(caller.Slot))

@@ -106,7 +106,7 @@ namespace CS2_SimpleAdmin
 			}
 		}
 
-		public static void KickPlayer(ushort userId, string? reason = null)
+		public static void KickPlayer(int userId, string? reason = null)
 		{
 			if (!string.IsNullOrEmpty(reason))
 			{
@@ -145,7 +145,7 @@ namespace CS2_SimpleAdmin
 
 			string playerName = caller?.PlayerName ?? "Console";
 
-			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
 
 			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
 				playerName, command.GetCommandString]}".Replace("HOSTNAME", hostname).Replace("**", ""));
@@ -158,19 +158,19 @@ namespace CS2_SimpleAdmin
 
 			string playerName = caller?.PlayerName ?? "Console";
 
-			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
-			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
+			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer?["sa_discord_log_command",
 				playerName, command]}".Replace("HOSTNAME", hostname).Replace("**", ""));
 		}
 
 		public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
 		{
-			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 			string? address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 
-			description = description.Replace("{hostname}", hostname ?? "Unknown");
-			description = description.Replace("{address}", address ?? "Unknown");
+			description = description.Replace("{hostname}", hostname ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown");
+			description = description.Replace("{address}", address ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown");
 
 			var embed = new EmbedBuilder
 			{
@@ -182,8 +182,8 @@ namespace CS2_SimpleAdmin
 
 			for (int i = 0; i < fieldNames.Length; i++)
 			{
-				fieldValues[i] = fieldValues[i].Replace("{hostname}", hostname ?? "Unknown");
-				fieldValues[i] = fieldValues[i].Replace("{address}", address ?? "Unknown");
+				fieldValues[i] = fieldValues[i].Replace("{hostname}", hostname ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown");
+				fieldValues[i] = fieldValues[i].Replace("{address}", address ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown");
 
 				embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
 
@@ -198,7 +198,7 @@ namespace CS2_SimpleAdmin
 
 		public static string GenerateMessageDiscord(string message)
 		{
-			string? hostname = ConVar.Find("hostname")!.StringValue ?? "Unknown";
+			string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 			string? address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 
 			message = message.Replace("HOSTNAME", hostname);

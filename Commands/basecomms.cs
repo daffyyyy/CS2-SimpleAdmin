@@ -21,7 +21,7 @@ namespace CS2_SimpleAdmin
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			int time = 0;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
@@ -164,7 +164,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			int time = 0;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			MuteManager _muteManager = new(_database);
 			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
@@ -339,7 +339,7 @@ namespace CS2_SimpleAdmin
 			/*
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player!= null && player.IsValid && player.SteamID.ToString().Length == 17 &&!player.IsHLTV).ToList();
 
 			if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 			{
@@ -377,7 +377,7 @@ namespace CS2_SimpleAdmin
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			int time = 0;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
@@ -515,7 +515,7 @@ namespace CS2_SimpleAdmin
 			Helper.LogCommand(caller, command);
 
 			int time = 0;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			MuteManager _muteManager = new(_database);
 			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
@@ -674,7 +674,7 @@ namespace CS2_SimpleAdmin
 			/*
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player!= null && player.IsValid && player.SteamID.ToString().Length == 17 &&!player.IsHLTV).ToList();
 
 			if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 			{
@@ -707,7 +707,7 @@ namespace CS2_SimpleAdmin
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			int time = 0;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
@@ -853,7 +853,7 @@ namespace CS2_SimpleAdmin
 			Helper.LogCommand(caller, command);
 
 			int time = 0;
-			string reason = "Unknown";
+			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			MuteManager _muteManager = new(_database);
 			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
@@ -1021,7 +1021,7 @@ namespace CS2_SimpleAdmin
 			/*
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player!= null && player.IsValid && player.SteamID.ToString().Length == 17 &&!player.IsHLTV).ToList();
 
 			if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 			{

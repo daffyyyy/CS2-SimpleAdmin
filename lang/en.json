@@ -1,5 +1,7 @@
 {
 	"sa_prefix": "{lightred}[SA] {default}",
+	"sa_unknown": "Unknown",
+
 	"sa_player_ban_message_time": "You have been banned for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "You have been banned permanently for {lightred}{0}{default} by {lightred}{1}{default}!",
 	"sa_player_kick_message": "You have been kicked for {lightred}{0}{default} by {lightred}{1}{default}!",
@@ -22,6 +24,8 @@
 	"sa_admin_strip_message": "Admin {lightred}{0}{default} took all of player {lightred}{1}{default} weapons!",
 	"sa_admin_hp_message": "Admin {lightred}{0}{default} changed {lightred}{1}{default} hp amount{default}!",
 	"sa_admin_speed_message": "Admin {lightred}{0}{default} changed speed for {lightred}{1}{default}!",
+	"sa_admin_gravity_message": "Admin {lightred}{0}{default} changed gravity for {lightred}{1}{default}!",
+	"sa_admin_money_message": "Admin {lightred}{0}{default} changed money for {lightred}{1}{default}!",
 	"sa_admin_god_message": "Admin {lightred}{0}{default} changed god mode for {lightred}{1}{default}!",
 	"sa_admin_slay_message": "Admin {lightred}{0}{default} slayed {lightred}{1}{default}!",
 	"sa_admin_slap_message": "Admin {lightred}{0}{default} slapped {lightred}{1}{default}!",

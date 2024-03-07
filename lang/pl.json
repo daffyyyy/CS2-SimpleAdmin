@@ -1,5 +1,7 @@
 {
 	"sa_prefix": "{lightred}[SA] {default}",
+	"sa_unknown": "Brak",
+
 	"sa_player_ban_message_time": "Zostałeś zbanowany za {lightred}{0}{default} na {lightred}{1}{default} minut przez {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Zostałeś zbanowany na zawsze za {lightred}{0}{default} przez {lightred}{1}{default}!",
 	"sa_player_kick_message": "Zostałeś wyrzucony za {lightred}{0}{default} przez {lightred}{1}{default}!",
@@ -22,6 +24,8 @@
 	"sa_admin_strip_message": "Admin {lightred}{0}{default} zabrał wszystkie bronie {lightred}{1}{default}!",
 	"sa_admin_hp_message": "Admin {lightred}{0}{default} zmienił ilość hp dla {lightred}{1}{default}!",
 	"sa_admin_speed_message": "Admin {lightred}{0}{default} zmienił prędkość dla {lightred}{1}{default}!",
+	"sa_admin_gravity_message": "Admin {lightred}{0}{default} zmienił grawitacje dla {lightred}{1}{default}!",
+	"sa_admin_money_message": "Admin {lightred}{0}{default} zmienił pieniądze dla {lightred}{1}{default}!",
 	"sa_admin_god_message": "Admin {lightred}{0}{default} zmienił tryb Boga dla {lightred}{1}{default}!",
 	"sa_admin_slay_message": "Admin {lightred}{0}{default} zgładził {lightred}{1}{default}!",
 	"sa_admin_slap_message": "Admin {lightred}{0}{default} uderzył {lightred}{1}{default}!",
@@ -43,4 +47,5 @@
 	"sa_adminchat_template_player": "{SILVER}(GRACZ) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** użył komendy `{1}` na serwerze `HOSTNAME`"
+
 }

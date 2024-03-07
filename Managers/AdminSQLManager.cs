@@ -21,7 +21,7 @@ public class AdminSQLManager
 
 	public async Task<List<(List<string>, int)>> GetAdminFlags(string steamId)
 	{
-		DateTime now = DateTime.UtcNow;
+		DateTime now = DateTime.UtcNow.ToLocalTime();
 
 		await using var connection = await _database.GetConnectionAsync();
 
@@ -62,7 +62,7 @@ public class AdminSQLManager
 
 	public async Task<List<(string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
 	{
-		DateTime now = DateTime.UtcNow;
+		DateTime now = DateTime.UtcNow.ToLocalTime();
 
 		try
 		{
@@ -181,10 +181,10 @@ public class AdminSQLManager
 
 		flags = flags.Replace(" ", "");
 
-		DateTime now = DateTime.UtcNow;
+		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime? futureTime;
 		if (time != 0)
-			futureTime = now.AddMinutes(time);
+			futureTime = now.ToLocalTime().AddMinutes(time);
 		else
 			futureTime = null;
 
@@ -214,7 +214,7 @@ public class AdminSQLManager
 			await using var connection = await _database.GetConnectionAsync();
 
 			string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now });
+			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime() });
 		}
 		catch (Exception)
 		{

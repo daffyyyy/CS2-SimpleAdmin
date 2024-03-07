@@ -38,6 +38,24 @@ public static class PlayerExtensions
 		playerPawnValue.VelocityModifier = speed;
 	}
 
+	public static void SetGravity(this CCSPlayerController controller, float gravity)
+	{
+		CCSPlayerPawn? playerPawnValue = controller.PlayerPawn.Value;
+		if (playerPawnValue == null) return;
+
+		playerPawnValue.GravityScale = gravity;
+	}
+
+	public static void SetMoney(this CCSPlayerController controller, int money)
+	{
+		var moneyServices = controller.InGameMoneyServices;
+		if (moneyServices == null) return;
+
+		moneyServices.Account = money;
+
+		Utilities.SetStateChanged(controller, "CCSPlayerController", "m_pInGameMoneyServices");
+	}
+
 	public static void SetHp(this CCSPlayerController controller, int health = 100)
 	{
 		if (health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null) return;
@@ -102,6 +120,8 @@ public static class PlayerExtensions
 	{
 		if (CS2_SimpleAdmin.Instance == null)
 			return;
+
+		newName = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
 		playerName.Set(newName + " ");

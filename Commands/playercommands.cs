@@ -306,6 +306,114 @@ namespace CS2_SimpleAdmin
 			}
 		}
 
+		[ConsoleCommand("css_gravity")]
+		[RequiresPermissions("@css/slay")]
+		[CommandHelper(minArgs: 1, usage: "<#userid or name> <gravity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		public void OnGravityCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			string callerName = caller == null ? "Console" : caller.PlayerName;
+			double gravity = 1.0;
+			double.TryParse(command.GetArg(2), out gravity);
+
+			TargetResult? targets = GetTarget(command);
+			if (targets == null) return;
+
+			if (_discordWebhookClientLog != null && _localizer != null)
+			{
+				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+			}
+
+			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
+
+			playersToTarget.ForEach(player =>
+			{
+				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+					return;
+
+				if (caller!.CanTarget(player))
+				{
+					SetGravity(caller, player, gravity, callerName);
+				}
+			});
+		}
+
+		public void SetGravity(CCSPlayerController? caller, CCSPlayerController player, double gravity, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			player.SetGravity((float)gravity);
+
+			Helper.LogCommand(caller, $"css_gravity {player?.PlayerName} {gravity}");
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_gravity_message", callerName, player!.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
+		}
+
+		[ConsoleCommand("css_money")]
+		[RequiresPermissions("@css/slay")]
+		[CommandHelper(minArgs: 1, usage: "<#userid or name> <money>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		public void OnMoneyCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			string callerName = caller == null ? "Console" : caller.PlayerName;
+			int money = 0;
+			int.TryParse(command.GetArg(2), out money);
+
+			TargetResult? targets = GetTarget(command);
+			if (targets == null) return;
+
+			if (_discordWebhookClientLog != null && _localizer != null)
+			{
+				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+			}
+
+			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
+
+			playersToTarget.ForEach(player =>
+			{
+				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+					return;
+
+				if (caller!.CanTarget(player))
+				{
+					SetMoney(caller, player, money, callerName);
+				}
+			});
+		}
+
+		public void SetMoney(CCSPlayerController? caller, CCSPlayerController player, int money, string? callerName = null)
+		{
+			callerName ??= caller == null ? "Console" : caller.PlayerName;
+
+			player.SetMoney(money);
+
+			Helper.LogCommand(caller, $"css_money {player?.PlayerName} {money}");
+
+			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			{
+				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				{
+					using (new WithTemporaryCulture(_player.GetLanguage()))
+					{
+						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						sb.Append(_localizer["sa_admin_money_message", callerName, player!.PlayerName]);
+						_player.PrintToChat(sb.ToString());
+					}
+				}
+			}
+		}
+
 		[ConsoleCommand("css_god")]
 		[RequiresPermissions("@css/cheats")]
 		[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]

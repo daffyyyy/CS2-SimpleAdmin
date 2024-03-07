@@ -14,6 +14,9 @@
 - css_give <#userid or name> <weapon> - Give player a weapon
 - css_strip <#userid or name> <weapon> - Takes all of the player weapons
 - css_hp <#userid or name> [health] - Set player health
+- css_speed <#userid or name> [speed] - Set player speed
+- css_gravity <#userid or name> [gravity] - Set player gravity
+- css_money <#userid or name> [money] - Set player money
 - css_god <#userid or name> - Toggle player godmode
 - css_slay <#userid or name> - Kill player
 - css_slap <#userid or name> [damage] - Slap player

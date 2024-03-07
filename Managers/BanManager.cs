@@ -15,8 +15,8 @@ internal class BanManager
 
 	public async Task BanPlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0)
 	{
-		DateTime now = DateTime.UtcNow;
-		DateTime futureTime = now.AddMinutes(time);
+		DateTime now = DateTime.UtcNow.ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
 		await using var connection = await _database.GetConnectionAsync();
 
@@ -42,8 +42,8 @@ internal class BanManager
 	{
 		if (string.IsNullOrEmpty(playerSteamId)) return;
 
-		DateTime now = DateTime.UtcNow;
-		DateTime futureTime = now.AddMinutes(time);
+		DateTime now = DateTime.UtcNow.ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
 		await using var connection = await _database.GetConnectionAsync();
 
@@ -67,8 +67,8 @@ internal class BanManager
 	{
 		if (string.IsNullOrEmpty(playerIp)) return;
 
-		DateTime now = DateTime.UtcNow;
-		DateTime futureTime = now.AddMinutes(time);
+		DateTime now = DateTime.UtcNow.ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
 		await using var connection = await _database.GetConnectionAsync();
 
@@ -96,13 +96,13 @@ internal class BanManager
 		}
 
 #if DEBUG
-		if (CS2_SimpleAdmin._logger != null)
+		if (CS2_SimpleAdmin._logger!= null)
 			CS2_SimpleAdmin._logger.LogCritical($"IsPlayerBanned for {player.Name}");
 #endif
 
 		int banCount = 0;
 
-		DateTime currentTime = DateTime.Now;
+		DateTime currentTime = DateTime.Now.ToLocalTime();
 
 		try
 		{
@@ -175,7 +175,7 @@ internal class BanManager
 	{
 		try
 		{
-			DateTime currentTime = DateTime.UtcNow;
+			DateTime currentTime = DateTime.UtcNow.ToLocalTime();
 
 			await using var connection = await _database.GetConnectionAsync();
 
@@ -184,7 +184,7 @@ internal class BanManager
 			await using var connection = await _database.GetConnectionAsync();
 
 			sql = "UPDATE sa_bans SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.UtcNow });
+			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.UtcNow.ToLocalTime() });
 			*/
 
 			string sql = @"
@@ -202,7 +202,7 @@ internal class BanManager
 
 			if (_config.ExpireOldIpBans > 0)
 			{
-				DateTime ipBansTime = currentTime.AddDays(-_config.ExpireOldIpBans);
+				DateTime ipBansTime = currentTime.AddDays(-_config.ExpireOldIpBans).ToLocalTime();
 
 				sql = @"
 				UPDATE sa_bans 
