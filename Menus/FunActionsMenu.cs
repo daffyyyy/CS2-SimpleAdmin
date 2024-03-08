@@ -53,13 +53,13 @@ namespace CS2_SimpleAdmin.Menus
 			// TODO: Localize options
 			// options added in order
 
-			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_godmode"))
+			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_god"))
 				options.Add(new ChatMenuOptionData("God Mode", () => PlayersMenu.OpenAliveMenu(admin, "God Mode", GodMode)));
 			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_noclip"))
 				options.Add(new ChatMenuOptionData("No Clip", () => PlayersMenu.OpenAliveMenu(admin, "No Clip", NoClip)));
 			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_respawn"))
 				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenAliveMenu(admin, "Respawn", Respawn)));
-			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_giveweapon"))
+			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_give"))
 				options.Add(new ChatMenuOptionData("Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, "Give Weapon", GiveWeaponMenu)));
 			
 			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_strip"))
