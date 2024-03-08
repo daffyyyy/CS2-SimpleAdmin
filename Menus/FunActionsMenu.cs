@@ -53,21 +53,23 @@ namespace CS2_SimpleAdmin.Menus
 			// TODO: Localize options
 			// options added in order
 
-			if (hasCheats)
-			{
+			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_godmode"))
 				options.Add(new ChatMenuOptionData("God Mode", () => PlayersMenu.OpenAliveMenu(admin, "God Mode", GodMode)));
+			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_noclip"))
 				options.Add(new ChatMenuOptionData("No Clip", () => PlayersMenu.OpenAliveMenu(admin, "No Clip", NoClip)));
+			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_respawn"))
 				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenAliveMenu(admin, "Respawn", Respawn)));
+			if (AdminMenu.AltCheckPermissions(hasCheats, admin, "css_giveweapon"))
 				options.Add(new ChatMenuOptionData("Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, "Give Weapon", GiveWeaponMenu)));
-			}
-
-			if (hasSlay)
-			{
+			
+			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_strip"))
 				options.Add(new ChatMenuOptionData("Strip All Weapons", () => PlayersMenu.OpenAliveMenu(admin, "Strip All Weapons", StripWeapons)));
+			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_freeze"))
 				options.Add(new ChatMenuOptionData("Freeze", () => PlayersMenu.OpenAliveMenu(admin, "Freeze", Freeze)));
+			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_hp"))
 				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenAliveMenu(admin, "HP", SetHpMenu)));
+			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_speed"))
 				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenAliveMenu(admin, "Speed", SetSpeedMenu)));
-			}
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{
