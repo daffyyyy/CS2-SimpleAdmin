@@ -23,6 +23,14 @@ namespace CS2_SimpleAdmin.Menus
 			}
 		}
 
+		public static bool AltCheckPermissions(bool hasPerm, CCSPlayerController? player, string command)
+		{
+			if ((hasPerm && !AdminManager.PlayerHasCommandOverride(player, command)) ||
+			    (AdminManager.PlayerHasCommandOverride(player, command) &&
+			     AdminManager.GetPlayerCommandOverrideState(player, command))) return true;
+			return false;
+		}
+
 		public static void OpenMenu(CCSPlayerController admin)
 		{
 			if (admin == null || admin.IsValid == false)
