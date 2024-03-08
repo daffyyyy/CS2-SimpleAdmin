@@ -31,33 +31,28 @@ namespace CS2_SimpleAdmin.Menus
 			// TODO: Localize options
 			// options added in order
 
-			if (hasSlay)
-			{
+			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_slap"))
 				options.Add(new ChatMenuOptionData("Slap", () => PlayersMenu.OpenMenu(admin, "Slap", SlapMenu)));
+			if (AdminMenu.AltCheckPermissions(hasSlay, admin, "css_slay"))
 				options.Add(new ChatMenuOptionData("Slay", () => PlayersMenu.OpenMenu(admin, "Slay", Slay)));
-			}
 
-			if (hasKick)
-			{
+			if (AdminMenu.AltCheckPermissions(hasKick, admin, "css_kick"))
 				options.Add(new ChatMenuOptionData("Kick", () => PlayersMenu.OpenMenu(admin, "Kick", KickMenu)));
-			}
+			
 
-			if (hasBan)
-			{
+			if (AdminMenu.AltCheckPermissions(hasBan, admin, "css_ban"))
 				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"Ban: {player.PlayerName}", player, BanMenu))));
-			}
 
-			if (hasChat)
-			{
+			if (AdminMenu.AltCheckPermissions(hasChat, admin, "css_gag"))
 				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"Gag: {player.PlayerName}", player, GagMenu))));
+			if (AdminMenu.AltCheckPermissions(hasChat, admin, "css_mute"))
 				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"Mute: {player.PlayerName}", player, MuteMenu))));
+			if (AdminMenu.AltCheckPermissions(hasChat, admin, "css_silence"))
 				options.Add(new ChatMenuOptionData("Silence", () => PlayersMenu.OpenMenu(admin, "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"Silence: {player.PlayerName}", player, SilenceMenu))));
-			}
+			
 
-			if (hasKick)
-			{
+			if (AdminMenu.AltCheckPermissions(hasKick, admin, "css_team"))
 				options.Add(new ChatMenuOptionData("Force Team", () => PlayersMenu.OpenMenu(admin, "Force Team", ForceTeamMenu)));
-			}
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{
