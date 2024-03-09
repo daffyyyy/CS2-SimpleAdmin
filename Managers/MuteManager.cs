@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin;
+
 internal class MuteManager
 {
 	private readonly Database _database;
@@ -160,5 +161,4 @@ internal class MuteManager
 				CS2_SimpleAdmin._logger.LogCritical("Unable to remove expired mutes");
 		}
 	}
-
 }

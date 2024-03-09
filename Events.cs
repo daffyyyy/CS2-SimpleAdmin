@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
+using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using System.Data;
@@ -17,13 +18,13 @@ public partial class CS2_SimpleAdmin
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
-		RegisterListener<Listeners.OnClientConnected>(OnClientConnected);
-		RegisterListener<Listeners.OnClientDisconnectPost>(OnClientDisconnectPost);
+		//RegisterListener<Listeners.OnClientConnected>(OnClientConnected);
+		RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
 	}
 
-	private void OnClientDisconnectPost(int playerSlot)
+	private void OnClientDisconnect(int playerSlot)
 	{
 		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
 
@@ -31,7 +32,7 @@ public partial class CS2_SimpleAdmin
 		Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
-		if (player is null || player.IsBot || player.IsHLTV || player.SteamID.ToString().Length != 17) return;
+		if (player is null || !player.IsValid || string.IsNullOrEmpty(player.CrosshairCodes) || player.IsBot || player.IsHLTV || !player.UserId.HasValue) return;
 
 #if DEBUG
 		Logger.LogCritical("[OnClientDisconnect] After Check");
@@ -47,23 +48,40 @@ public partial class CS2_SimpleAdmin
 		if (godPlayers.Contains(player.Slot))
 			RemoveFromConcurrentBag(godPlayers, player.Slot);
 
-		if (player.AuthorizedSteamID == null) return;
+		SteamID? authorizedSteamID = player.AuthorizedSteamID;
 
-		if (AdminSQLManager._adminCache.TryGetValue(player.AuthorizedSteamID, out DateTime? expirationTime)
-			&& expirationTime <= DateTime.Now)
+		if (authorizedSteamID == null) return;
+
+		Task.Run(() =>
 		{
-			AdminManager.ClearPlayerPermissions(player.AuthorizedSteamID);
-			AdminManager.RemovePlayerAdminData(player.AuthorizedSteamID);
-		}
-	}
+			if (AdminSQLManager._adminCache.TryGetValue(authorizedSteamID, out DateTime? expirationTime)
+				&& expirationTime <= DateTime.Now)
+			{
+				AdminManager.ClearPlayerPermissions(authorizedSteamID);
+				AdminManager.RemovePlayerAdminData(authorizedSteamID);
+			}
+		});
 
-	private void OnClientConnected(int playerSlot)
+		//if (player.AuthorizedSteamID == null) return;
+
+		//if (AdminSQLManager._adminCache.TryGetValue(player.AuthorizedSteamID, out DateTime? expirationTime)
+		//	&& expirationTime <= DateTime.Now)
+		//{
+		//	AdminManager.ClearPlayerPermissions(player.AuthorizedSteamID);
+		//	AdminManager.RemovePlayerAdminData(player.AuthorizedSteamID);
+		//}
+	}
+	[GameEventHandler]
+	public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
 	{
-		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
+		CCSPlayerController? player = @event.Userid;
 #if DEBUG
 		Logger.LogCritical($"[OnPlayerConnect] Before check {player.PlayerName} : {player.IpAddress}");
 #endif
-		if (player is null || player.IsBot || player.IsHLTV || player.SteamID.ToString().Length != 17 || string.IsNullOrEmpty(player.IpAddress)) return;
+		if (player is null || string.IsNullOrEmpty(player.CrosshairCodes)
+			|| string.IsNullOrEmpty(player.IpAddress)
+			|| player.IsBot || player.IsHLTV || !player.UserId.HasValue) return HookResult.Continue;
+
 #if DEBUG
 		Logger.LogCritical("[OnPlayerConnect] After Check");
 #endif
@@ -71,13 +89,13 @@ public partial class CS2_SimpleAdmin
 
 		if (bannedPlayers.Contains(ipAddress) || bannedPlayers.Contains(player.SteamID.ToString()))
 		{
-			if (!player.UserId.HasValue) return;
+			if (!player.UserId.HasValue) return HookResult.Continue;
 			Helper.KickPlayer(player.UserId.Value, "Banned");
-			return;
+			return HookResult.Continue;
 		}
 
 		if (_database == null || !player.UserId.HasValue || player.UserId == null)
-			return;
+			return HookResult.Continue;
 
 		PlayerInfo playerInfo = new PlayerInfo
 		{
@@ -159,6 +177,8 @@ public partial class CS2_SimpleAdmin
 				}
 			}
 		});
+
+		return HookResult.Continue;
 	}
 
 	[GameEventHandler]
@@ -224,15 +244,12 @@ public partial class CS2_SimpleAdmin
 	[GameEventHandler]
 	public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
 	{
-
-
 		return HookResult.Continue;
 	}
 
 	[GameEventHandler]
 	public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
 	{
-
 		return HookResult.Continue;
 	}
 	*/
@@ -273,7 +290,6 @@ public partial class CS2_SimpleAdmin
 			{
 				try
 				{
-
 					foreach (CCSPlayerController player in Helper.GetValidPlayers())
 					{
 						if (playerPenaltyManager.IsSlotInPenalties(player.Slot))

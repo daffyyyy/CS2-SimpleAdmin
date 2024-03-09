@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
+
 public class AdminSQLManager
 {
 	private readonly Database _database;
