@@ -15,24 +15,28 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+	public static HashSet<int> loadedPlayers = new HashSet<int>();
+
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
 		//RegisterListener<Listeners.OnClientConnected>(OnClientConnected);
-		RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
+		//RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
 	}
 
-	private void OnClientDisconnect(int playerSlot)
+	[GameEventHandler]
+	public HookResult OnClientDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
 	{
-		CCSPlayerController? player = Utilities.GetPlayerFromSlot(playerSlot);
+		CCSPlayerController? player = @event.Userid;
 
 #if DEBUG
 		Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
-		if (player is null || !player.IsValid || string.IsNullOrEmpty(player.CrosshairCodes) || player.IsBot || player.IsHLTV || !player.UserId.HasValue) return;
+		if (player is null || !player.IsValid || string.IsNullOrEmpty(player.IpAddress) || player.IsBot || player.IsHLTV) return HookResult.Continue;
+		if (!loadedPlayers.Contains(player.Slot)) return HookResult.Continue;
 
 #if DEBUG
 		Logger.LogCritical("[OnClientDisconnect] After Check");
@@ -40,6 +44,7 @@ public partial class CS2_SimpleAdmin
 
 		PlayerPenaltyManager playerPenaltyManager = new();
 		playerPenaltyManager.RemoveAllPenalties(player.Slot);
+
 		if (TagsDetected)
 			Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 
@@ -48,9 +53,11 @@ public partial class CS2_SimpleAdmin
 		if (godPlayers.Contains(player.Slot))
 			RemoveFromConcurrentBag(godPlayers, player.Slot);
 
+		loadedPlayers.Remove(player.Slot);
+
 		SteamID? authorizedSteamID = player.AuthorizedSteamID;
 
-		if (authorizedSteamID == null) return;
+		if (authorizedSteamID == null) return HookResult.Continue;
 
 		Task.Run(() =>
 		{
@@ -62,14 +69,7 @@ public partial class CS2_SimpleAdmin
 			}
 		});
 
-		//if (player.AuthorizedSteamID == null) return;
-
-		//if (AdminSQLManager._adminCache.TryGetValue(player.AuthorizedSteamID, out DateTime? expirationTime)
-		//	&& expirationTime <= DateTime.Now)
-		//{
-		//	AdminManager.ClearPlayerPermissions(player.AuthorizedSteamID);
-		//	AdminManager.RemovePlayerAdminData(player.AuthorizedSteamID);
-		//}
+		return HookResult.Continue;
 	}
 	[GameEventHandler]
 	public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
@@ -78,8 +78,8 @@ public partial class CS2_SimpleAdmin
 #if DEBUG
 		Logger.LogCritical($"[OnPlayerConnect] Before check {player.PlayerName} : {player.IpAddress}");
 #endif
-		if (player is null || string.IsNullOrEmpty(player.CrosshairCodes)
-			|| string.IsNullOrEmpty(player.IpAddress)
+		if (player is null
+			|| string.IsNullOrEmpty(player.IpAddress) || player.IpAddress.Contains("127.0.0.1")
 			|| player.IsBot || player.IsHLTV || !player.UserId.HasValue) return HookResult.Continue;
 
 #if DEBUG
@@ -107,12 +107,12 @@ public partial class CS2_SimpleAdmin
 			IpAddress = ipAddress
 		};
 
+		BanManager _banManager = new(_database, Config);
+		MuteManager _muteManager = new(_database);
+		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
+
 		Task.Run(async () =>
 		{
-			BanManager _banManager = new(_database, Config);
-			MuteManager _muteManager = new(_database);
-			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
-
 			if (await _banManager.IsPlayerBanned(playerInfo))
 			{
 				if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
@@ -178,20 +178,24 @@ public partial class CS2_SimpleAdmin
 			}
 		});
 
+		if (!loadedPlayers.Contains(player.Slot))
+			loadedPlayers.Add(player.Slot);
+
 		return HookResult.Continue;
 	}
 
 	[GameEventHandler]
-	private HookResult OnRoundEnd(EventRoundEnd @event, GameEventInfo info)
+	public HookResult OnRoundEnd(EventRoundStart @event, GameEventInfo info)
 	{
 #if DEBUG
 		Logger.LogCritical("[OnRoundEnd]");
 #endif
+
 		godPlayers.Clear();
 		return HookResult.Continue;
 	}
 
-	private HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)
+	public HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)
 	{
 		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV || info.GetArg(1).Length == 0) return HookResult.Continue;
 
@@ -203,7 +207,7 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
-	private HookResult OnCommandTeamSay(CCSPlayerController? player, CommandInfo info)
+	public HookResult OnCommandTeamSay(CCSPlayerController? player, CommandInfo info)
 	{
 		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV || info.GetArg(1).Length == 0) return HookResult.Continue;
 
@@ -240,20 +244,6 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Continue;
 	}
 
-	/*
-	[GameEventHandler]
-	public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
-	{
-		return HookResult.Continue;
-	}
-
-	[GameEventHandler]
-	public HookResult OnPlayerDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
-	{
-		return HookResult.Continue;
-	}
-	*/
-
 	private void OnMapStart(string mapName)
 	{
 		string? path = Path.GetDirectoryName(ModuleDirectory);
@@ -272,7 +262,7 @@ public partial class CS2_SimpleAdmin
 
 		if (_database == null) return;
 
-		AddTimer(60.0f, async () =>
+		AddTimer(61.0f, async () =>
 		{
 #if DEBUG
 			Logger.LogCritical("[OnMapStart] Expired check");
@@ -323,7 +313,7 @@ public partial class CS2_SimpleAdmin
 			playerPenaltyManager.RemoveExpiredPenalties();
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-		AddTimer(3.0f, async () =>
+		AddTimer(2.0f, async () =>
 		{
 			string? address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 			string? hostname = ConVar.Find("hostname")!.StringValue;
@@ -357,9 +347,9 @@ public partial class CS2_SimpleAdmin
 
 					ServerId = serverId;
 				}
-				catch (Exception)
+				catch (Exception ex)
 				{
-					_logger?.LogCritical("Unable to create or get server_id");
+					_logger?.LogCritical("Unable to create or get server_id" + ex.Message);
 				}
 
 				await _adminManager.GiveAllFlags();
@@ -382,8 +372,7 @@ public partial class CS2_SimpleAdmin
 	{
 		CCSPlayerController? player = @event.Userid;
 
-		if (player is null || @event.Attacker is null || (LifeState_t)player.LifeState != LifeState_t.LIFE_ALIVE || player.PlayerPawn.Value == null
-		 || player.Connected != PlayerConnectedState.PlayerConnected)
+		if (player is null || @event.Attacker is null || !player.PawnIsAlive || player.PlayerPawn.Value == null)
 			return HookResult.Continue;
 
 		if (godPlayers.Contains(player.Slot))

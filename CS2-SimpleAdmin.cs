@@ -38,7 +38,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.3.6b";
+	public override string ModuleVersion => "1.3.6c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -81,24 +81,22 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			try
 			{
-				using (MySqlConnection connection = await _database.GetConnectionAsync())
+				using MySqlConnection connection = await _database.GetConnectionAsync();
+				using MySqlTransaction transaction = await connection.BeginTransactionAsync();
+
+				try
 				{
-					using MySqlTransaction transaction = await connection.BeginTransactionAsync();
+					string sqlFilePath = ModuleDirectory + "/Database/database_setup.sql";
+					string sql = await File.ReadAllTextAsync(sqlFilePath);
 
-					try
-					{
-						string sqlFilePath = ModuleDirectory + "/Database/database_setup.sql";
-						string sql = await File.ReadAllTextAsync(sqlFilePath);
+					await connection.QueryAsync(sql, transaction: transaction);
 
-						await connection.QueryAsync(sql, transaction: transaction);
-
-						await transaction.CommitAsync();
-					}
-					catch (Exception)
-					{
-						await transaction.RollbackAsync();
-						throw;
-					}
+					await transaction.CommitAsync();
+				}
+				catch (Exception)
+				{
+					await transaction.RollbackAsync();
+					throw;
 				}
 			}
 			catch (Exception ex)
