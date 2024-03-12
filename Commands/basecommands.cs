@@ -637,17 +637,14 @@ namespace CS2_SimpleAdmin
 			Logger.LogInformation($"{callerName} executed command ({command.ArgString}).");
 		}
 
-		[ConsoleCommand("css_rr")]
 		[ConsoleCommand("css_rg")]
-		[ConsoleCommand("css_restart")]
 		[ConsoleCommand("css_restartgame")]
 		[RequiresPermissions("@css/generic")]
 		[CommandHelper(minArgs: 0, usage: "", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
-		public void OnRestartCommand(CCSPlayerController? caller, CommandInfo command)
+		public void OnRestartGameCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			RestartGame(caller);
 		}
-
 		public static void RestartGame(CCSPlayerController? admin)
 		{
 			Helper.LogCommand(admin, "css_restartgame");
@@ -655,7 +652,25 @@ namespace CS2_SimpleAdmin
 			// TODO: Localize
 			var name = admin == null ? "Console" : admin.PlayerName;
 			Server.PrintToChatAll($"[SA] {name}: Restarting game...");
-			Server.ExecuteCommand("mp_restartgame 2");
+			Server.ExecuteCommand("mp_restartgame 1");
+		}
+
+		[ConsoleCommand("css_rr")]
+		[ConsoleCommand("css_restartround")]
+		[RequiresPermissions("@css/generic")]
+		[CommandHelper(minArgs: 0, usage: "", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		public void OnRestartRoundCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			RestartRound(caller);
+		}
+		public static void RestartRound(CCSPlayerController? admin)
+		{
+			Helper.LogCommand(admin, "css_restartround");
+
+			// TODO: Localize
+			var name = admin == null ? "Console" : admin.PlayerName;
+			Server.PrintToChatAll($"[SA] {name}: Restarting round...");
+			Server.ExecuteCommand("sv_cheats 1; endround; sv_cheats 0"); // Lazy solution but works
 		}
 	}
 }
