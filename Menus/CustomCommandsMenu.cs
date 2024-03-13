@@ -31,8 +31,14 @@ namespace CS2_SimpleAdmin.Menus
 				bool hasRights = AdminManager.PlayerHasPermissions(admin, customCommand.Flag);
 				if (!hasRights)
 					continue;
-
-				options.Add(new ChatMenuOptionData(customCommand.DisplayName, () => Server.ExecuteCommand(customCommand.Command)));
+				
+				options.Add(new ChatMenuOptionData(customCommand.DisplayName, () =>
+				{
+					if (customCommand.ExecuteOnClient)
+						admin.ExecuteClientCommand(customCommand.Command);
+					else
+						Server.ExecuteCommand(customCommand.Command);
+				}));
 			}
 
 			foreach (ChatMenuOptionData menuOptionData in options)
