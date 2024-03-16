@@ -47,5 +47,4 @@
 	"sa_adminchat_template_player": "{SILVER}(GRACZ) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** użył komendy `{1}` na serwerze `HOSTNAME`"
-
 }

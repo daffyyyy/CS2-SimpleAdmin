@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
+
 public enum PenaltyType
 {
 	Mute,

@@ -413,7 +413,7 @@ namespace CS2_SimpleAdmin
 				player.Pawn.Value!.Freeze();
 			}
 
-			reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+			reason = reason ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 			Helper.LogCommand(caller, $"css_kick {player.PlayerName} {reason}");
 
@@ -461,6 +461,8 @@ namespace CS2_SimpleAdmin
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string _command = string.Empty;
+
+			map = map.ToLower();
 
 			if (map.StartsWith("ws:"))
 			{
@@ -539,6 +541,8 @@ namespace CS2_SimpleAdmin
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			string _command = string.Empty;
+
+			map = map.ToLower();
 
 			if (long.TryParse(map, out long mapId))
 			{

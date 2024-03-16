@@ -358,7 +358,6 @@ namespace CS2_SimpleAdmin
 							await _muteManager.UnmutePlayer(player.SteamID.ToString(), 0); // Unmute by type 0 (gag)
 						});
 
-
 					if (TagsDetected)
 						Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
 				});
@@ -695,7 +694,6 @@ namespace CS2_SimpleAdmin
 					player.VoiceFlags = VoiceFlags.Normal;
 				});
 			*/
-
 		}
 
 		[ConsoleCommand("css_silence")]

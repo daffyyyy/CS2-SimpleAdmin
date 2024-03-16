@@ -16,8 +16,10 @@ namespace CS2_SimpleAdmin
 	{
 		[JsonPropertyName("Flag")]
 		public string Flag { get; set; } = "@css/generic";
+
 		[JsonPropertyName("DisplayName")]
 		public string DisplayName { get; set; } = "";
+
 		[JsonPropertyName("Command")]
 		public string Command { get; set; } = "";
 	}

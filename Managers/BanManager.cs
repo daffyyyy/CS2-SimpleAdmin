@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin;
+
 internal class BanManager
 {
 	private readonly Database _database;
@@ -188,14 +189,14 @@ internal class BanManager
 			*/
 
 			string sql = @"
-				UPDATE sa_bans 
-				SET 
+				UPDATE sa_bans
+				SET
 					status = 'EXPIRED'
-				WHERE 
-					status = 'ACTIVE' 
-					AND 
-					`duration` > 0 
-					AND 
+				WHERE
+					status = 'ACTIVE'
+					AND
+					`duration` > 0
+					AND
 					ends <= @currentTime";
 
 			await connection.ExecuteAsync(sql, new { currentTime });
@@ -205,17 +206,16 @@ internal class BanManager
 				DateTime ipBansTime = currentTime.AddDays(-_config.ExpireOldIpBans).ToLocalTime();
 
 				sql = @"
-				UPDATE sa_bans 
-				SET 
+				UPDATE sa_bans
+				SET
 					player_ip = NULL
-				WHERE 
-					status = 'ACTIVE' 
-					AND 
+				WHERE
+					status = 'ACTIVE'
+					AND
 					ends <= @ipBansTime";
 
 				await connection.ExecuteAsync(sql, new { ipBansTime });
 			}
-
 		}
 		catch (Exception)
 		{
