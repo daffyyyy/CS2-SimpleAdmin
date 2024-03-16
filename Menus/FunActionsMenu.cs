@@ -57,7 +57,7 @@ namespace CS2_SimpleAdmin.Menus
 			{
 				options.Add(new ChatMenuOptionData("God Mode", () => PlayersMenu.OpenAliveMenu(admin, "God Mode", GodMode)));
 				options.Add(new ChatMenuOptionData("No Clip", () => PlayersMenu.OpenAliveMenu(admin, "No Clip", NoClip)));
-				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenAliveMenu(admin, "Respawn", Respawn)));
+				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenDeadMenu(admin, "Respawn", Respawn)));
 				options.Add(new ChatMenuOptionData("Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, "Give Weapon", GiveWeaponMenu)));
 			}
 

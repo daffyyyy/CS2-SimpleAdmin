@@ -9,6 +9,11 @@ namespace CS2_SimpleAdmin.Menus
 		{
 			OpenMenu(admin, menuName, onSelectAction, p => p.PawnIsAlive);
 		}
+		
+		public static void OpenDeadMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
+		{
+			OpenMenu(admin, menuName, onSelectAction, p => p.PawnIsAlive == false);
+		}
 
 		public static void OpenMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
 		{
