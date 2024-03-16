@@ -1,10 +1,21 @@
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin.Menus
 {
 	public static class PlayersMenu
 	{
+		public static void OpenRealPlayersMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
+		{
+			OpenMenu(admin, menuName, onSelectAction, p => p.IsBot == false);
+		}
+		
+		public static void OpenAdminPlayersMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
+		{
+			OpenMenu(admin, menuName, onSelectAction, p => AdminManager.GetPlayerAdminData(p)?.Flags?.Count > 0);
+		}
+		
 		public static void OpenAliveMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
 		{
 			OpenMenu(admin, menuName, onSelectAction, p => p.PawnIsAlive);
@@ -23,9 +34,10 @@ namespace CS2_SimpleAdmin.Menus
 			foreach (CCSPlayerController player in players)
 			{
 				string optionName = player.PlayerName;
-				bool enabled = admin.CanTarget(player);
 				if (enableFilter != null && enableFilter(player) == false)
 					continue;
+				
+				bool enabled = admin.CanTarget(player);
 				menu.AddMenuOption(optionName, (_, _) => { onSelectAction?.Invoke(admin, player); }, enabled == false);
 			}
 
