@@ -21,7 +21,8 @@ namespace CS2_SimpleAdmin.Menus
 					_weaponsCache = new();
 					foreach (CsItem item in weaponsArray)
 					{
-						if (item == CsItem.Tablet) continue;
+						if (item == CsItem.Tablet)
+							continue;
 
 						_weaponsCache[(int)item] = item;
 					}
@@ -67,6 +68,8 @@ namespace CS2_SimpleAdmin.Menus
 				options.Add(new ChatMenuOptionData("Freeze", () => PlayersMenu.OpenAliveMenu(admin, "Freeze", Freeze)));
 				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenAliveMenu(admin, "HP", SetHpMenu)));
 				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenAliveMenu(admin, "Speed", SetSpeedMenu)));
+				options.Add(new ChatMenuOptionData("Gravity", () => PlayersMenu.OpenAliveMenu(admin, "Gravity", SetGravityMenu)));
+				options.Add(new ChatMenuOptionData("Set Money", () => PlayersMenu.OpenMenu(admin, "Set Money", SetMoneyMenu)));
 			}
 
 			foreach (ChatMenuOptionData menuOptionData in options)
@@ -117,7 +120,8 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void Freeze(CCSPlayerController admin, CCSPlayerController player)
 		{
-			if (!(player.PlayerPawn?.Value?.IsValid ?? false)) return;
+			if (!(player.PlayerPawn?.Value?.IsValid ?? false))
+				return;
 
 			if (player.PlayerPawn.Value.MoveType != MoveType_t.MOVETYPE_OBSOLETE)
 				CS2_SimpleAdmin.Instance.Freeze(admin, player, -1);
@@ -183,6 +187,62 @@ namespace CS2_SimpleAdmin.Menus
 		private static void SetSpeed(CCSPlayerController admin, CCSPlayerController player, float speed)
 		{
 			CS2_SimpleAdmin.Instance.SetSpeed(admin, player, speed);
+		}
+
+		private static void SetGravityMenu(CCSPlayerController admin, CCSPlayerController player)
+		{
+			Tuple<string, float>[] _gravityArray = new[]
+			{
+				new Tuple<string, float>("0.1", .1f),
+				new Tuple<string, float>("0.25", .25f),
+				new Tuple<string, float>("0.5", .5f),
+				new Tuple<string, float>("0.75", .75f),
+				new Tuple<string, float>("1", 1),
+				new Tuple<string, float>("2", 2)
+			};
+
+			BaseMenu menu = AdminMenu.CreateMenu($"Set Gravity: {player.PlayerName}");
+
+			foreach (Tuple<string, float> gravityTuple in _gravityArray)
+			{
+				string optionName = gravityTuple.Item1;
+				menu.AddMenuOption(optionName, (_, _) => { SetGravity(admin, player, gravityTuple.Item2); });
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void SetGravity(CCSPlayerController admin, CCSPlayerController player, float gravity)
+		{
+			CS2_SimpleAdmin.Instance.SetGravity(admin, player, gravity);
+		}
+
+		private static void SetMoneyMenu(CCSPlayerController admin, CCSPlayerController player)
+		{
+			Tuple<string, int>[] _moneyArray = new[]
+			{
+				new Tuple<string, int>("$0", 0),
+				new Tuple<string, int>("$1000", 1000),
+				new Tuple<string, int>("$2500", 2500),
+				new Tuple<string, int>("$5000", 5000),
+				new Tuple<string, int>("$10000", 10000),
+				new Tuple<string, int>("$16000", 16000)
+			};
+
+			BaseMenu menu = AdminMenu.CreateMenu($"Set Money: {player.PlayerName}");
+
+			foreach (Tuple<string, int> moneyTuple in _moneyArray)
+			{
+				string optionName = moneyTuple.Item1;
+				menu.AddMenuOption(optionName, (_, _) => { SetMoney(admin, player, moneyTuple.Item2); });
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void SetMoney(CCSPlayerController admin, CCSPlayerController player, int money)
+		{
+			CS2_SimpleAdmin.Instance.SetMoney(admin, player, money);
 		}
 	}
 }

@@ -24,8 +24,8 @@ namespace CS2_SimpleAdmin.Menus
 			{
 				string optionName = player.PlayerName;
 				bool enabled = admin.CanTarget(player);
-				if (enableFilter != null)
-					enabled &= enableFilter(player);
+				if (enableFilter != null && enableFilter(player) == false)
+					continue;
 				menu.AddMenuOption(optionName, (_, _) => { onSelectAction?.Invoke(admin, player); }, enabled == false);
 			}
 
