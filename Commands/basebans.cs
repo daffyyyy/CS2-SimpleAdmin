@@ -31,12 +31,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
-
 			Database database = new Database(dbConnectionString);
 
 			BanManager _banManager = new(database, Config);
@@ -80,7 +74,9 @@ namespace CS2_SimpleAdmin
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
-			Helper.LogCommand(caller, $"css_ban {player.SteamID} {time} {reason}");
+			string commandName = $"css_ban {player.SteamID} {time} {reason}";
+			Helper.LogCommand(caller, commandName);
+			Helper.TryLogCommandOnDiscord(caller, commandName);
 
 			Task.Run(async () =>
 			{

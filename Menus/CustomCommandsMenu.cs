@@ -34,6 +34,8 @@ namespace CS2_SimpleAdmin.Menus
 				
 				options.Add(new ChatMenuOptionData(customCommand.DisplayName, () =>
 				{
+					Helper.TryLogCommandOnDiscord(admin, customCommand.Command);
+					
 					if (customCommand.ExecuteOnClient)
 						admin.ExecuteClientCommand(customCommand.Command);
 					else

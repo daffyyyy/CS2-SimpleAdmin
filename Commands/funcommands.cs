@@ -21,12 +21,6 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && player.PawnIsAlive && !player.IsHLTV).ToList();
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
-
 			playersToTarget.ForEach(player =>
 			{
 				if (caller!.CanTarget(player))
@@ -41,7 +35,9 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.ToggleNoclip();
 
-			Helper.LogCommand(caller, $"css_noclip {player.PlayerName}");
+			string commandName = $"css_noclip {player.PlayerName}";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
+			Helper.LogCommand(caller, commandName);
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -68,12 +64,6 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
-
 			playersToTarget.ForEach(player =>
 			{
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
@@ -92,7 +82,9 @@ namespace CS2_SimpleAdmin
 
 			player.Pawn.Value!.Freeze();
 
-			Helper.LogCommand(caller, $"css_freeze {player.PlayerName}");
+			string commandName = $"css_freeze {player.PlayerName}";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
+			Helper.LogCommand(caller, commandName);
 
 			if (time > 0)
 				AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
@@ -121,12 +113,6 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
-
 			playersToTarget.ForEach(player =>
 			{
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
@@ -142,7 +128,9 @@ namespace CS2_SimpleAdmin
 
 			player!.Pawn.Value!.Unfreeze();
 
-			Helper.LogCommand(caller, $"css_unfreeze {player.PlayerName}");
+			string commandName = $"css_unfreeze {player.PlayerName}";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
+			Helper.LogCommand(caller, commandName);
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{

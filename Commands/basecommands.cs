@@ -109,12 +109,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
-
 			string steamid = command.GetArg(1);
 			string name = command.GetArg(2);
 			string flags = command.GetArg(3);
@@ -133,7 +127,9 @@ namespace CS2_SimpleAdmin
 			AdminSQLManager _adminManager = new(_database);
 			_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time, globalAdmin);
 
-			Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
+			string commandName = $"css_addadmin {steamid} {name} {flags} {immunity} {time}";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
+			Helper.LogCommand(caller, commandName);
 
 			string msg = $"Added '{flags}' flags to '{name}' ({steamid})";
 			if (command != null)
@@ -156,12 +152,6 @@ namespace CS2_SimpleAdmin
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
-			}
-
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
 
 			string steamid = command.GetArg(1);
@@ -190,7 +180,9 @@ namespace CS2_SimpleAdmin
 				}
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			Helper.LogCommand(caller, $"css_deladmin {steamid}");
+			string commandName = $"css_deladmin {steamid}";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
+			Helper.LogCommand(caller, commandName);
 
 			string msg = $"Removed flags from '{steamid}'";
 			if (command != null)
@@ -208,15 +200,18 @@ namespace CS2_SimpleAdmin
 		{
 			if (_database == null) return;
 
-			ReloadAdmins();
+			ReloadAdmins(caller);
 
 			command.ReplyToCommand("Reloaded sql admins");
 		}
 
-		public void ReloadAdmins()
+		public void ReloadAdmins(CCSPlayerController? caller)
 		{
 			if (_database == null) return;
-
+			
+			string commandName = "css_reladmin";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
+			
 			foreach (SteamID steamId in AdminSQLManager._adminCache.Keys.ToList())
 			{
 				if (AdminSQLManager._adminCache.TryRemove(steamId, out _))
@@ -384,12 +379,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
-
 			if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
 				reason = command.GetArg(2);
 
@@ -414,8 +403,10 @@ namespace CS2_SimpleAdmin
 			}
 
 			reason = reason ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
-
-			Helper.LogCommand(caller, $"css_kick {player.PlayerName} {reason}");
+			
+			string commandName = $"css_kick {player.PlayerName} {reason}";
+			Helper.LogCommand(caller, commandName);
+			Helper.TryLogCommandOnDiscord(caller, commandName);
 
 			if (string.IsNullOrEmpty(reason) == false)
 			{
@@ -475,12 +466,8 @@ namespace CS2_SimpleAdmin
 					_command = $"ds_workshop_changelevel {map.Replace("ws:", "")}";
 				}
 
-				if (_discordWebhookClientLog != null && _localizer != null)
-				{
-					string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-					string commandName = command?.GetCommandString ?? "css_changemap";
-					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
-				}
+				string commandName = command?.GetCommandString ?? $"css_changewsmap {map}";
+				Helper.TryLogCommandOnDiscord(caller, commandName);
 				if (command is not null)
 					Helper.LogCommand(caller, command);
 
@@ -519,6 +506,9 @@ namespace CS2_SimpleAdmin
 
 			if (!map.StartsWith("ws:"))
 			{
+				string commandName = command?.GetCommandString ?? $"css_changemap {map}";
+				Helper.TryLogCommandOnDiscord(caller, commandName);
+				
 				AddTimer(2.0f, () =>
 				{
 					Server.ExecuteCommand($"changelevel {map}");
@@ -565,13 +555,9 @@ namespace CS2_SimpleAdmin
 					}
 				}
 			}
-
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				string commandName = command?.GetCommandString ?? "css_changewsmap";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
-			}
+			
+			string commandName = command?.GetCommandString ?? $"css_changewsmap {map}";
+			Helper.TryLogCommandOnDiscord(caller, commandName);
 			if (command is not null)
 				Helper.LogCommand(caller, command);
 
@@ -650,10 +636,13 @@ namespace CS2_SimpleAdmin
 
 		public static void RestartGame(CCSPlayerController? admin)
 		{
-			Helper.LogCommand(admin, "css_restartgame");
-
 			// TODO: Localize
-			var name = admin == null ? "Console" : admin.PlayerName;
+			string name = admin == null ? "Console" : admin.PlayerName;
+			
+			string commandName = "css_restartgame";
+			Helper.TryLogCommandOnDiscord(admin, commandName);
+			Helper.LogCommand(admin, commandName);
+			
 			Server.PrintToChatAll($"[SA] {name}: Restarting game...");
 			Server.ExecuteCommand("mp_restartgame 2");
 		}
