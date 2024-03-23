@@ -662,7 +662,6 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					player.Rename(newName);
 
 					if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 					{
@@ -676,6 +675,8 @@ namespace CS2_SimpleAdmin
 							}
 						}
 					}
+
+					player.Rename(newName);
 				}
 			});
 		}
@@ -814,6 +815,7 @@ namespace CS2_SimpleAdmin
 				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 			}
+
 
 			Helper.LogCommand(caller, command);
 

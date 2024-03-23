@@ -121,7 +121,7 @@ public static class PlayerExtensions
 		if (CS2_SimpleAdmin.Instance == null)
 			return;
 
-		newName = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+		newName = newName ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
 		playerName.Set(newName + " ");

@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
@@ -12,7 +13,7 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(191)]
+[MinimumApiVersion(198)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = new();
@@ -38,7 +39,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.3.6c";
+	public override string ModuleVersion => "1.3.6d";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -71,7 +72,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			UserID = config.DatabaseUser,
 			Password = config.DatabasePassword,
 			Port = (uint)config.DatabasePort,
-			Pooling = true
+			Pooling = true,
+			MinimumPoolSize = 0,
+			MaximumPoolSize = (uint)(Server.MaxPlayers > 21 ? 640 : 210),
+			ConnectionIdleTimeout = 30
 		};
 
 		dbConnectionString = builder.ConnectionString;
