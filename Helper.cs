@@ -45,13 +45,13 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetValidPlayers()
 		{
-			return Utilities.GetPlayers().FindAll(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV);
+			return Utilities.GetPlayers().FindAll(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV);
 		}
 
 		public static List<CCSPlayerController> GetValidPlayersWithBots()
 		{
 			return Utilities.GetPlayers().FindAll(p =>
-			p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV ||
+			p != null && p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV ||
 			p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && p.IsBot && !p.IsHLTV
 			);
 		}

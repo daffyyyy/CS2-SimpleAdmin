@@ -33,7 +33,12 @@ namespace CS2_SimpleAdmin
 					commandSql.CommandText = commandText;
 					await commandSql.ExecuteNonQueryAsync();
 
-					command.ReplyToCommand("Successfully updated the database");
+					commandText = "ALTER TABLE `sa_servers` MODIFY COLUMN `hostname` varchar(128);";
+					using var commandSql1 = connection.CreateCommand();
+					commandSql1.CommandText = commandText;
+					await commandSql1.ExecuteNonQueryAsync();
+
+					command.ReplyToCommand($"Successfully updated the database - {ModuleVersion}");
 				}
 				catch (Exception ex)
 				{

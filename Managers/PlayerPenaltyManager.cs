@@ -17,17 +17,22 @@ public class PlayerPenaltyManager
 	// Add a penalty for a player
 	public void AddPenalty(int slot, PenaltyType penaltyType, DateTime endDateTime, int durationSeconds)
 	{
-		if (!penalties.ContainsKey(slot))
-		{
-			penalties[slot] = new Dictionary<PenaltyType, List<(DateTime, int)>>();
-		}
-
-		if (!penalties[slot].ContainsKey(penaltyType))
-		{
-			penalties[slot][penaltyType] = new List<(DateTime, int)>();
-		}
-
-		penalties[slot][penaltyType].Add((endDateTime, durationSeconds));
+		penalties.AddOrUpdate(slot,
+			(_) =>
+			{
+				var dict = new Dictionary<PenaltyType, List<(DateTime, int)>>();
+				dict[penaltyType] = new List<(DateTime, int)>() { (endDateTime, durationSeconds) };
+				return dict;
+			},
+			(_, existingDict) =>
+			{
+				if (!existingDict.ContainsKey(penaltyType))
+				{
+					existingDict[penaltyType] = new List<(DateTime, int)>();
+				}
+				existingDict[penaltyType].Add((endDateTime, durationSeconds));
+				return existingDict;
+			});
 	}
 
 	public bool IsPenalized(int slot, PenaltyType penaltyType)
