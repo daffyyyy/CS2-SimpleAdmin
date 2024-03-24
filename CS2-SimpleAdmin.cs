@@ -1,5 +1,4 @@
-﻿using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
@@ -74,7 +73,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Port = (uint)config.DatabasePort,
 			Pooling = true,
 			MinimumPoolSize = 0,
-			MaximumPoolSize = (uint)(Server.MaxPlayers > 21 ? 640 : 210),
+			MaximumPoolSize = 640,
 			ConnectionIdleTimeout = 30
 		};
 
