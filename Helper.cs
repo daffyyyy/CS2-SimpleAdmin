@@ -223,6 +223,19 @@ namespace CS2_SimpleAdmin
 			var updatedJsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 			File.WriteAllText(CfgPath, updatedJsonContent);
 		}
+		
+		public static void TryLogCommandOnDiscord(CCSPlayerController? caller, string commandString)
+		{
+			if (CS2_SimpleAdmin._discordWebhookClientLog == null || CS2_SimpleAdmin._localizer == null)
+				return;
+			
+			if (caller != null && caller.IsValid == false)
+				caller = null;
+
+			string callerName = caller == null ? "Console" : caller.PlayerName;
+			string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+			CS2_SimpleAdmin._discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandString]));
+		}
 	}
 
 	public class SchemaString<SchemaClass> : NativeObject where SchemaClass : NativeObject

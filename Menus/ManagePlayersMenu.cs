@@ -44,14 +44,14 @@ namespace CS2_SimpleAdmin.Menus
 
 			if (hasBan)
 			{
-				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"Ban: {player.PlayerName}", player, BanMenu))));
+				options.Add(new ChatMenuOptionData("Ban", () => PlayersMenu.OpenRealPlayersMenu(admin, "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"Ban: {player.PlayerName}", player, BanMenu))));
 			}
 
 			if (hasChat)
 			{
-				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"Gag: {player.PlayerName}", player, GagMenu))));
-				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"Mute: {player.PlayerName}", player, MuteMenu))));
-				options.Add(new ChatMenuOptionData("Silence", () => PlayersMenu.OpenMenu(admin, "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"Silence: {player.PlayerName}", player, SilenceMenu))));
+				options.Add(new ChatMenuOptionData("Gag", () => PlayersMenu.OpenRealPlayersMenu(admin, "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"Gag: {player.PlayerName}", player, GagMenu))));
+				options.Add(new ChatMenuOptionData("Mute", () => PlayersMenu.OpenRealPlayersMenu(admin, "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"Mute: {player.PlayerName}", player, MuteMenu))));
+				options.Add(new ChatMenuOptionData("Silence", () => PlayersMenu.OpenRealPlayersMenu(admin, "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"Silence: {player.PlayerName}", player, SilenceMenu))));
 			}
 
 			if (hasKick)

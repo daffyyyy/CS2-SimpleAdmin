@@ -22,6 +22,9 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("Command")]
 		public string Command { get; set; } = "";
+		
+		[JsonPropertyName("ExecuteOnClient")]
+		public bool ExecuteOnClient { get; set; } = false;
 	}
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
