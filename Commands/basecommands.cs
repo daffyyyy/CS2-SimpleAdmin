@@ -43,7 +43,10 @@ namespace CS2_SimpleAdmin
 					commandSql2.CommandText = commandText;
 					await commandSql2.ExecuteNonQueryAsync();
 
-					command.ReplyToCommand($"Successfully updated the database - {ModuleVersion}");
+					Server.NextFrame(() =>
+					{
+						command.ReplyToCommand($"Successfully updated the database - {ModuleVersion}");
+					});
 				}
 				catch (Exception ex)
 				{
