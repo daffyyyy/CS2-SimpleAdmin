@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS `sa_bans` (
                                 `admin_name` VARCHAR(128) NOT NULL,
                                 `reason` VARCHAR(255) NOT NULL,
                                 `duration` INT NOT NULL,
-                                `ends` TIMESTAMP NOT NULL,
+                                `ends` TIMESTAMP NULL,
                                 `created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 								`server_id` INT NULL,
                                 `status` ENUM('ACTIVE', 'UNBANNED', 'EXPIRED', '') NOT NULL DEFAULT 'ACTIVE'
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `sa_mutes` (
 						 `admin_name` varchar(128) NOT NULL,
 						 `reason` varchar(255) NOT NULL,
 						 `duration` int(11) NOT NULL,
-						 `ends` timestamp NOT NULL,
+						 `ends` timestamp NULL,
 						 `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						 `type` enum('GAG','MUTE','SILENCE','') NOT NULL DEFAULT 'GAG',
 						 `server_id` INT NULL,

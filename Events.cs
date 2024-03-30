@@ -121,75 +121,88 @@ public partial class CS2_SimpleAdmin
 			IpAddress = ipAddress
 		};
 
+		// Perform asynchronous database operations within a single method
 		Task.Run(async () =>
 		{
-			// Initialize BanManager, MuteManager, and PlayerPenaltyManager within the async delegate
+			// Initialize managers
 			BanManager _banManager = new(_database, Config);
 			MuteManager _muteManager = new(_database);
 			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
-			if (await _banManager.IsPlayerBanned(playerInfo))
+			try
 			{
-				if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
-					bannedPlayers.Add(playerInfo.IpAddress);
-
-				if (playerInfo.SteamId != null && !bannedPlayers.Contains(playerInfo.SteamId))
-					bannedPlayers.Add(playerInfo.SteamId);
-
-				Server.NextFrame(() =>
+				// Check if the player is banned
+				bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
+				if (isBanned)
 				{
-					var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId);
-					if (victim != null && victim.UserId.HasValue)
+					// Add player's IP and SteamID to bannedPlayers list if not already present
+					if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
+						bannedPlayers.Add(playerInfo.IpAddress);
+
+					if (playerInfo.SteamId != null && !bannedPlayers.Contains(playerInfo.SteamId))
+						bannedPlayers.Add(playerInfo.SteamId);
+
+					// Kick the player if banned
+					Server.NextFrame(() =>
 					{
-						Helper.KickPlayer(victim.UserId.Value, "Banned");
-					}
-				});
+						var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId);
+						if (victim != null && victim.UserId.HasValue)
+						{
+							Helper.KickPlayer(victim.UserId.Value, "Banned");
+						}
+					});
 
-				return;
-			}
+					return;
+				}
 
-			List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
-
-			if (activeMutes.Count > 0)
-			{
-				foreach (dynamic mute in activeMutes)
+				// Check if the player is muted
+				List<dynamic> activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
+				if (activeMutes.Count > 0)
 				{
-					string muteType = mute.type;
-					DateTime ends = mute.ends;
-					int duration = mute.duration;
+					foreach (dynamic mute in activeMutes)
+					{
+						string muteType = mute.type;
+						DateTime ends = mute.ends;
+						int duration = mute.duration;
 
-					if (muteType == "GAG")
-					{
-						playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Gag, ends, duration);
-						Server.NextFrame(() =>
+						// Apply mute penalty based on mute type
+						if (muteType == "GAG")
 						{
-							if (TagsDetected)
+							playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Gag, ends, duration);
+							Server.NextFrame(() =>
 							{
-								Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
-							}
-						});
-					}
-					else if (muteType == "MUTE")
-					{
-						playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Mute, ends, duration);
-						Server.NextFrame(() =>
+								if (TagsDetected)
+								{
+									Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
+								}
+							});
+						}
+						else if (muteType == "MUTE")
 						{
-							player.VoiceFlags = VoiceFlags.Muted;
-						});
-					}
-					else
-					{
-						playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Silence, ends, duration);
-						Server.NextFrame(() =>
-						{
-							player.VoiceFlags = VoiceFlags.Muted;
-							if (TagsDetected)
+							playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Mute, ends, duration);
+							Server.NextFrame(() =>
 							{
-								Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
-							}
-						});
+								player.VoiceFlags = VoiceFlags.Muted;
+							});
+						}
+						else
+						{
+							playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Silence, ends, duration);
+							Server.NextFrame(() =>
+							{
+								player.VoiceFlags = VoiceFlags.Muted;
+								if (TagsDetected)
+								{
+									Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
+								}
+							});
+						}
 					}
 				}
+			}
+			catch (Exception ex)
+			{
+				Logger.LogError($"Error processing player connection: {ex}");
 			}
 		});
 
@@ -375,6 +388,21 @@ public partial class CS2_SimpleAdmin
 				catch (Exception ex)
 				{
 					_logger?.LogCritical("Unable to create or get server_id" + ex.Message);
+				}
+
+				if (Config.EnableMetrics)
+				{
+					string queryString = $"?address={address}&hostname={hostname}";
+					using HttpClient client = new();
+
+					try
+					{
+						HttpResponseMessage response = await client.GetAsync($"https://api.daffyy.love/index.php{queryString}");
+					}
+					catch (HttpRequestException ex)
+					{
+						Logger.LogWarning($"Unable to make metrics call: {ex.Message}");
+					}
 				}
 
 				await _adminManager.GiveAllFlags();

@@ -12,16 +12,16 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(198)]
+[MinimumApiVersion(201)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = new();
 
 	public static IStringLocalizer? _localizer;
-	public static Dictionary<string, int> voteAnswers = new Dictionary<string, int>();
-	public static ConcurrentBag<int> godPlayers = new ConcurrentBag<int>();
-	public static ConcurrentBag<int> silentPlayers = new ConcurrentBag<int>();
-	public static ConcurrentBag<string> bannedPlayers = new ConcurrentBag<string>();
+	public static Dictionary<string, int> voteAnswers = [];
+	public static ConcurrentBag<int> godPlayers = [];
+	public static ConcurrentBag<int> silentPlayers = [];
+	public static ConcurrentBag<string> bannedPlayers = [];
 	public static bool TagsDetected = false;
 	public static bool voteInProgress = false;
 	public static int? ServerId = null;
@@ -38,7 +38,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.3.6d";
+	public override string ModuleVersion => "1.3.7a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -74,7 +74,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Pooling = true,
 			MinimumPoolSize = 0,
 			MaximumPoolSize = 640,
-			ConnectionIdleTimeout = 30
+			ConnectionReset = false
 		};
 
 		dbConnectionString = builder.ConnectionString;
@@ -93,8 +93,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 					string sql = await File.ReadAllTextAsync(sqlFilePath);
 
 					await connection.QueryAsync(sql, transaction: transaction);
-
 					await transaction.CommitAsync();
+
+					Console.WriteLine("[CS2-SimpleAdmin] Connected to database!");
 				}
 				catch (Exception)
 				{

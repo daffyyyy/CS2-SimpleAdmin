@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 
 namespace CS2_SimpleAdmin;
 
@@ -16,7 +17,7 @@ internal class MuteManager
 	{
 		if (player == null || player.SteamId == null) return;
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
@@ -49,7 +50,7 @@ internal class MuteManager
 	{
 		if (string.IsNullOrEmpty(playerSteamId)) return;
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
@@ -91,7 +92,7 @@ internal class MuteManager
 
 		try
 		{
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 			DateTime currentTime = DateTime.Now.ToLocalTime();
 			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
 
@@ -107,7 +108,7 @@ internal class MuteManager
 
 	public async Task<int> GetPlayerMutes(string steamId)
 	{
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		int muteCount;
 		string sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
@@ -124,7 +125,7 @@ internal class MuteManager
 			return;
 		}
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		if (type == 2)
 		{
@@ -150,7 +151,7 @@ internal class MuteManager
 	{
 		try
 		{
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime() });

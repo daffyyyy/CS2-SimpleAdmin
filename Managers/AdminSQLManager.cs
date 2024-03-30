@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
@@ -24,7 +25,7 @@ public class AdminSQLManager
 	{
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
 		List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
@@ -67,7 +68,7 @@ public class AdminSQLManager
 
 		try
 		{
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
 			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
@@ -160,7 +161,7 @@ public class AdminSQLManager
 
 		//_adminCache.TryRemove(playerSteamId, out _);
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		string sql = "";
 
@@ -189,7 +190,7 @@ public class AdminSQLManager
 		else
 			futureTime = null;
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		var sql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `flags`, `immunity`, `ends`, `created`, `server_id`) " +
 			"VALUES (@playerSteamid, @playerName, @flags, @immunity, @ends, @created, @serverid)";
@@ -212,7 +213,7 @@ public class AdminSQLManager
 	{
 		try
 		{
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime() });

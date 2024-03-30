@@ -26,7 +26,7 @@ namespace CS2_SimpleAdmin
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 8;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 9;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";
@@ -42,6 +42,9 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("DatabaseName")]
 		public string DatabaseName { get; set; } = "";
+
+		[JsonPropertyName("EnableMetrics")]
+		public bool EnableMetrics { get; set; } = true;
 
 		[JsonPropertyName("UseChatMenu")]
 		public bool UseChatMenu { get; set; } = false;

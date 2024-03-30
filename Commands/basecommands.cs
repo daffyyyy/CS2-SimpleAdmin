@@ -38,6 +38,11 @@ namespace CS2_SimpleAdmin
 					commandSql1.CommandText = commandText;
 					await commandSql1.ExecuteNonQueryAsync();
 
+					commandText = "ALTER TABLE `sa_bans` MODIFY `ends` TIMESTAMP NULL DEFAULT NULL;";
+					using var commandSql2 = connection.CreateCommand();
+					commandSql2.CommandText = commandText;
+					await commandSql2.ExecuteNonQueryAsync();
+
 					command.ReplyToCommand($"Successfully updated the database - {ModuleVersion}");
 				}
 				catch (Exception ex)

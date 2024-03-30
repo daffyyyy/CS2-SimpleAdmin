@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Logging;
+using MySqlConnector;
 
 namespace CS2_SimpleAdmin;
 
@@ -19,7 +20,7 @@ internal class BanManager
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		var sql = "INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 			"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -46,7 +47,7 @@ internal class BanManager
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		var sql = "INSERT INTO `sa_bans` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 			"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -71,7 +72,7 @@ internal class BanManager
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		var sql = "INSERT INTO `sa_bans` (`player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 			"VALUES (@playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -91,7 +92,7 @@ internal class BanManager
 
 	public async Task<bool> IsPlayerBanned(PlayerInfo player)
 	{
-		if (player.SteamId == null && player.IpAddress == null)
+		if (player.SteamId == null || player.IpAddress == null)
 		{
 			return false;
 		}
@@ -120,7 +121,7 @@ internal class BanManager
 					AND status = 'ACTIVE'
 					AND (duration = 0 OR ends > @CurrentTime);";
 
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			var parameters = new
 			{
@@ -145,7 +146,7 @@ internal class BanManager
 		string sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)";
 		int banCount;
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		if (!string.IsNullOrEmpty(player.IpAddress))
 		{
@@ -166,7 +167,7 @@ internal class BanManager
 			return;
 		}
 
-		await using var connection = await _database.GetConnectionAsync();
+		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 		string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern AND status = 'ACTIVE'";
 		await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern });
@@ -178,11 +179,11 @@ internal class BanManager
 		{
 			DateTime currentTime = DateTime.UtcNow.ToLocalTime();
 
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			/*
 			string sql = "";
-			await using var connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			sql = "UPDATE sa_bans SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.UtcNow.ToLocalTime() });
