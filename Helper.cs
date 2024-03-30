@@ -7,6 +7,8 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using Discord;
+using Discord.Webhook;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -194,6 +196,16 @@ namespace CS2_SimpleAdmin
 			}
 
 			return new List<Embed> { embed.Build() };
+		}
+
+		public static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
+		{
+			if (discordWebhookClientLog != null && localizer != null)
+			{
+				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				string callerName = caller != null ? caller.PlayerName : "Console";
+				discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+			}
 		}
 
 		public static string GenerateMessageDiscord(string message)
