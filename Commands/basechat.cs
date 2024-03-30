@@ -21,11 +21,7 @@ namespace CS2_SimpleAdmin
 			if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 
@@ -54,11 +50,7 @@ namespace CS2_SimpleAdmin
 			byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			string utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 
@@ -109,11 +101,7 @@ namespace CS2_SimpleAdmin
 			byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			string utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 
@@ -129,11 +117,7 @@ namespace CS2_SimpleAdmin
 			byte[] utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			string utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 

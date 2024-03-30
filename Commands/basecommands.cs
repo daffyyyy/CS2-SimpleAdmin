@@ -122,11 +122,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			string steamid = command.GetArg(1);
 			string name = command.GetArg(2);
@@ -171,11 +167,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			string steamid = command.GetArg(1);
 			bool globalDelete = command.GetArg(2).ToLower().Equals("-g");
@@ -285,11 +277,7 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
 
@@ -397,11 +385,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
 				reason = command.GetArg(2);
@@ -614,11 +598,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 
@@ -637,11 +617,7 @@ namespace CS2_SimpleAdmin
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 

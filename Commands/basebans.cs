@@ -31,11 +31,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Database database = new Database(dbConnectionString);
 
@@ -158,11 +154,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
@@ -273,11 +265,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
@@ -379,11 +367,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
-			}
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			Helper.LogCommand(caller, command);
 
