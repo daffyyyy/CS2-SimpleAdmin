@@ -70,7 +70,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 After first launch, u need to configure plugin in  addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json
 
 ### Metrics
-From version 1.3.7a, CS2-SimpleAdmin now initiates metrics data collection. This includes gathering essential information such as the `server name` and `server address`.
+From version 1.3.7a, CS2-SimpleAdmin now initiates metrics data collection. This includes gathering essential information such as the `server name`, `server address` and `country`.
 You can disable metrics by set `EnableMetrics` to false in plugin configuration.
 
 ### Colors
