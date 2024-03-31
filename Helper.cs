@@ -234,8 +234,10 @@ namespace CS2_SimpleAdmin
 				string targetName = target != null ? target.PlayerName : "Unknown";
 				string targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2.ToString() : "Unknown";
 
+				string time = duration != 0 ? ConvertMinutesToTime(duration) : "Permanent";
+
 				string[] fieldNames = ["Player:", "SteamID:", "Duration:", "Reason:", "Admin:"];
-				string[] fieldValues = [$"[{targetName}]({targetcommunityUrl})", targetSteamId, ConvertMinutesToTime(duration), reason, $"[{callerName}]({callercommunityUrl})"];
+				string[] fieldValues = [$"[{targetName}]({targetcommunityUrl})", targetSteamId, time, reason, $"[{callerName}]({callercommunityUrl})"];
 				bool[] inlineFlags = [true, true, true, false, false];
 
 				var embed = new EmbedBuilder
