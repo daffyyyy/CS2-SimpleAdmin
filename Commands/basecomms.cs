@@ -34,6 +34,8 @@ namespace CS2_SimpleAdmin
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
+
+
 			int.TryParse(command.GetArg(2), out time);
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
@@ -47,6 +49,7 @@ namespace CS2_SimpleAdmin
 				if (caller!.CanTarget(player))
 				{
 					Gag(caller, player, time, reason, callerName, _muteManager, playerPenaltyManager);
+					Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Gag, _discordWebhookClientPenalty, _localizer);
 				}
 			});
 		}
