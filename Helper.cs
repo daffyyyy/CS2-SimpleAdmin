@@ -208,6 +208,68 @@ namespace CS2_SimpleAdmin
 			}
 		}
 
+		public enum PenaltyType
+		{
+			Ban,
+			Mute,
+			Gag,
+			Silence,
+		}
+
+
+		public static string ConvertMinutesToTime(int minutes)
+		{
+			TimeSpan time = TimeSpan.FromMinutes(minutes);
+
+			return time.Days > 0 ? $"{time.Days}d {time.Hours}h {time.Minutes}m" : time.Hours > 0 ? $"{time.Hours}h {time.Minutes}m" : $"{time.Minutes}m";
+		}
+
+		public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, DiscordWebhookClient? discordWebhookClientPenalty, IStringLocalizer? localizer)
+		{
+			if (discordWebhookClientPenalty != null && localizer != null)
+			{
+				string callercommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				string targetcommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				string callerName = caller != null ? caller.PlayerName : "Console";
+				string targetName = target != null ? target.PlayerName : "Unknown";
+				string targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2.ToString() : "Unknown";
+
+				string[] fieldNames = ["Player:", "SteamID:", "Duration:", "Reason:", "Admin:"];
+				string[] fieldValues = [$"[{targetName}]({targetcommunityUrl})", targetSteamId, ConvertMinutesToTime(duration), reason, $"[{callerName}]({callercommunityUrl})"];
+				bool[] inlineFlags = [true, true, true, false, false];
+
+				var embed = new EmbedBuilder
+				{
+					Title = penalty switch
+					{
+						PenaltyType.Ban => "Ban registrered",
+						PenaltyType.Mute => "Mute registrered",
+						PenaltyType.Gag => "Gag registrered",
+						PenaltyType.Silence => "Silence registrered",
+						_ => "Unknown penalty registrered",
+					},
+
+					Color = penalty switch
+					{
+						PenaltyType.Ban => Color.Red,
+						PenaltyType.Mute => Color.Blue,
+						PenaltyType.Gag => Color.Gold,
+						PenaltyType.Silence => Color.Green,
+						_ => Color.Default,
+					},
+
+					Timestamp = DateTimeOffset.UtcNow
+				};
+
+				for (int i = 0; i < fieldNames.Length; i++)
+				{
+					embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
+				}
+
+				discordWebhookClientPenalty.SendMessageAsync(embeds: [embed.Build()]);
+			}
+		}
+
 		public static string GenerateMessageDiscord(string message)
 		{
 			string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
