@@ -133,6 +133,7 @@ namespace CS2_SimpleAdmin
 					}
 				}
 			}
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
 		}
 
 		[ConsoleCommand("css_addban")]
@@ -234,6 +235,7 @@ namespace CS2_SimpleAdmin
 						}
 					}
 				}
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -340,8 +342,15 @@ namespace CS2_SimpleAdmin
 					}
 
 					if (player.UserId.HasValue)
-						AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, "Banned"), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+					{
+						AddTimer(Config.KickTime, () =>
+						{
+							Helper.KickPlayer(player.UserId.Value, "Banned");
+						}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+					}
 				}
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
 			}
 
 			Task.Run(async () =>

@@ -86,7 +86,6 @@ namespace CS2_SimpleAdmin
 				Server.ExecuteCommand($"css_tag_mute {player!.SteamID}");
 
 			playerPenaltyManager.AddPenalty(player!.Slot, PenaltyType.Gag, DateTime.Now.AddMinutes(time), time);
-
 			if (time == 0)
 			{
 				if (!player!.IsBot && !player.IsHLTV)
@@ -393,6 +392,7 @@ namespace CS2_SimpleAdmin
 				if (caller!.CanTarget(player))
 				{
 					Mute(caller, player, time, reason, callerName, _muteManager, playerPenaltyManager);
+					Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, _discordWebhookClientPenalty, _localizer);
 				}
 			});
 		}
@@ -709,6 +709,7 @@ namespace CS2_SimpleAdmin
 			{
 				if (caller!.CanTarget(player))
 				{
+					Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Silence, _discordWebhookClientPenalty, _localizer);
 					Silence(caller, player, time, reason, callerName, _muteManager, playerPenaltyManager);
 				}
 			});
