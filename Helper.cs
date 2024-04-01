@@ -240,6 +240,8 @@ namespace CS2_SimpleAdmin
 				string[] fieldValues = [$"[{targetName}]({targetcommunityUrl})", targetSteamId, time, reason, $"[{callerName}]({callercommunityUrl})"];
 				bool[] inlineFlags = [true, true, true, false, false];
 
+				string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+
 				var embed = new EmbedBuilder
 				{
 					Title = penalty switch
@@ -259,6 +261,8 @@ namespace CS2_SimpleAdmin
 						PenaltyType.Silence => Color.Green,
 						_ => Color.Default,
 					},
+
+					Description = $"{hostname}",
 
 					Timestamp = DateTimeOffset.UtcNow
 				};
