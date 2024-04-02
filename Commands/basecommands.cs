@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Translations;
@@ -473,13 +473,6 @@ namespace CS2_SimpleAdmin
 					_command = $"ds_workshop_changelevel {map.Replace("ws:", "")}";
 				}
 
-				//if (_discordWebhookClientLog != null && _localizer != null)
-				//{
-				//	string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				//	string commandName = command?.GetCommandString ?? "css_changemap";
-				//	_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
-				//}
-
 				AddTimer(3.0f, () =>
 				{
 					Server.ExecuteCommand(_command);
@@ -564,15 +557,6 @@ namespace CS2_SimpleAdmin
 					}
 				}
 			}
-
-			//if (_discordWebhookClientLog != null && _localizer != null)
-			//{
-			//	string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-			//	string commandName = command?.GetCommandString ?? "css_changewsmap";
-			//	_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
-			//}
-			//if (command is not null)
-			//	Helper.LogCommand(caller, command);
 
 			AddTimer(3.0f, () =>
 			{
