@@ -77,9 +77,9 @@ namespace CS2_SimpleAdmin.Menus
 			CS2_SimpleAdmin.Instance.RemoveAdmin(admin, player.SteamID.ToString());
 		}
 
-		private static void ReloadAdmins()
+		private static void ReloadAdmins(CCSPlayerController admin)
 		{
-			CS2_SimpleAdmin.Instance.ReloadAdmins();
+			CS2_SimpleAdmin.Instance.ReloadAdmins(admin);
 		}
 	}
 }
