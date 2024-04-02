@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "Неизвестный",
 
+	"sa_player": "Игрок",
+	"sa_steamid": "SteamID",
+	"sa_duration": "Продолжительность",
+	"sa_reason": "Причина",
+	"sa_admin": "Администратор",
+	"sa_permanent": "Постоянный",
+
+	"sa_discord_penalty_ban": "Бан зарегистрирован",
+	"sa_discord_penalty_mute": "Мут зарегистрирован",
+	"sa_discord_penalty_gag": "Запрет зарегистрирован",
+	"sa_discord_penalty_silence": "Молчание зарегистрировано",
+	"sa_discord_penalty_unknown": "Неизвестно зарегистрировано",
+
 	"sa_player_ban_message_time": "Вы были забанены по причине {lightred}{0}{default} на {lightred}{1}{default} минут(ы) администратором {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Вас забанили навсегда по причине {lightred}{0}{default} администратором {lightred}{1}{default}!",
 	"sa_player_kick_message": "Вы были выгнаны {lightred}{0}{default} администратором {lightred}{1}{default}!",

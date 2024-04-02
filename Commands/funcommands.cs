@@ -4,7 +4,6 @@ using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
-using CounterStrikeSharp.API.Modules.Entities;
 using System.Text;
 
 namespace CS2_SimpleAdmin
@@ -113,24 +112,26 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-
 			playersToTarget.ForEach(player =>
 			{
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
 					return;
 
-				Unfreeze(caller, player, callerName);
+				Unfreeze(caller, player, callerName, command);
 			});
 		}
 
-		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			player!.Pawn.Value!.Unfreeze();
 
-			Helper.LogCommand(caller, $"css_unfreeze {player.PlayerName}");
+			if (command != null)
+			{
+				Helper.LogCommand(caller, command);
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			}
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{

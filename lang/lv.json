@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "Nezināms",
 
+	"sa_player": "Spēlētājs",
+	"sa_steamid": "Steam ID",
+	"sa_duration": "Ilgums",
+	"sa_reason": "Iemesls",
+	"sa_admin": "Admins",
+	"sa_permanent": "Pastāvīgs",
+
+	"sa_discord_penalty_ban": "Bans reģistrēts",
+	"sa_discord_penalty_mute": "Mute reģistrēts",
+	"sa_discord_penalty_gag": "Gag reģistrēts",
+	"sa_discord_penalty_silence": "Klusums reģistrēts",
+	"sa_discord_penalty_unknown": "Nezināms reģistrēts",
+
 	"sa_player_ban_message_time": "Tu esi nobanots uz {lightred}{0}{default} uz {lightred}{1}{default} minūtēm, iemesls: {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Tevis bans ir uz mūžu, iemesls: {lightred}{0}{default}, Admins: {lightred}{1}{default}!",
 	"sa_player_kick_message": "Tu esi izmests, iemesls: {lightred}{0}{default}, Admins: {lightred}{1}{default}!",

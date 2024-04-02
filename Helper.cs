@@ -216,7 +216,6 @@ namespace CS2_SimpleAdmin
 			Silence,
 		}
 
-
 		public static string ConvertMinutesToTime(int minutes)
 		{
 			TimeSpan time = TimeSpan.FromMinutes(minutes);
@@ -231,26 +230,31 @@ namespace CS2_SimpleAdmin
 				string callercommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				string targetcommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
 				string callerName = caller != null ? caller.PlayerName : "Console";
-				string targetName = target != null ? target.PlayerName : "Unknown";
-				string targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2.ToString() : "Unknown";
+				string targetName = target != null ? target.PlayerName : localizer?["sa_unknown"] ?? "Unknown";
+				string targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2.ToString() : localizer?["sa_unknown"] ?? "Unknown";
 
-				string time = duration != 0 ? ConvertMinutesToTime(duration) : "Permanent";
+				string time = duration != 0 ? ConvertMinutesToTime(duration) : localizer?["sa_permanent"] ?? "Permanent";
 
-				string[] fieldNames = ["Player:", "SteamID:", "Duration:", "Reason:", "Admin:"];
+				string[] fieldNames = [
+					localizer?["sa_player"] ?? "Player:",
+					localizer?["sa_steamid"] ?? "SteamID:",
+					localizer?["sa_duration"] ?? "Duration:",
+					localizer?["sa_reason"] ?? "Reason:",
+					localizer?["sa_admin"] ?? "Admin:"];
 				string[] fieldValues = [$"[{targetName}]({targetcommunityUrl})", targetSteamId, time, reason, $"[{callerName}]({callercommunityUrl})"];
 				bool[] inlineFlags = [true, true, true, false, false];
 
-				string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+				string? hostname = ConVar.Find("hostname")!.StringValue ?? localizer?["sa_unknown"] ?? "Unknown";
 
 				var embed = new EmbedBuilder
 				{
 					Title = penalty switch
 					{
-						PenaltyType.Ban => "Ban registrered",
-						PenaltyType.Mute => "Mute registrered",
-						PenaltyType.Gag => "Gag registrered",
-						PenaltyType.Silence => "Silence registrered",
-						_ => "Unknown penalty registrered",
+						PenaltyType.Ban => localizer?["sa_discord_penalty_ban"] ?? "Ban registrered",
+						PenaltyType.Mute => localizer?["sa_discord_penalty_mute"] ?? "Mute registrered",
+						PenaltyType.Gag => localizer?["sa_discord_penalty_gag"] ?? "Gag registrered",
+						PenaltyType.Silence => localizer?["sa_discord_penalty_silence"] ?? "Silence registrered",
+						_ => localizer?["sa_discord_penalty_unknown"] ?? "Unknown registrered",
 					},
 
 					Color = penalty switch

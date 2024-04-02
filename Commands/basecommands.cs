@@ -122,8 +122,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-
 			string steamid = command.GetArg(1);
 			string name = command.GetArg(2);
 			string flags = command.GetArg(3);
@@ -133,7 +131,7 @@ namespace CS2_SimpleAdmin
 			int time = 0;
 			int.TryParse(command.GetArg(5), out time);
 
-			AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin);
+			AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin, command);
 		}
 
 		public void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
@@ -142,6 +140,8 @@ namespace CS2_SimpleAdmin
 			AdminSQLManager _adminManager = new(_database);
 			_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time, globalAdmin);
 
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
 
 			string msg = $"Added '{flags}' flags to '{name}' ({steamid})";
@@ -167,12 +167,10 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-
 			string steamid = command.GetArg(1);
 			bool globalDelete = command.GetArg(2).ToLower().Equals("-g");
 
-			RemoveAdmin(caller, steamid, globalDelete);
+			RemoveAdmin(caller, steamid, globalDelete, command);
 		}
 
 		public void RemoveAdmin(CCSPlayerController? caller, string steamid, bool globalDelete = false, CommandInfo? command = null)
@@ -195,6 +193,8 @@ namespace CS2_SimpleAdmin
 				}
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_deladmin {steamid}");
 
 			string msg = $"Removed flags from '{steamid}'";
@@ -277,7 +277,8 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			if (targets == null) return;
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, command);
+			//Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
 
@@ -371,7 +372,7 @@ namespace CS2_SimpleAdmin
 		public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			string callerName = caller == null ? "Console" : caller.PlayerName;
-			string reason = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+			string reason = _localizer?["sa_unknown"] ?? "Unknown";
 
 			TargetResult? targets = GetTarget(command);
 
@@ -385,8 +386,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-
 			if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
 				reason = command.GetArg(2);
 
@@ -397,12 +396,12 @@ namespace CS2_SimpleAdmin
 
 				if (caller!.CanTarget(player))
 				{
-					Kick(caller, player, reason, callerName);
+					Kick(caller, player, reason, callerName, command);
 				}
 			});
 		}
 
-		public void Kick(CCSPlayerController? caller, CCSPlayerController player, string reason = "Unknown", string? callerName = null)
+		public void Kick(CCSPlayerController? caller, CCSPlayerController player, string reason = "Unknown", string? callerName = null, CommandInfo? command = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			if (player.PawnIsAlive)
@@ -410,8 +409,10 @@ namespace CS2_SimpleAdmin
 				player.Pawn.Value!.Freeze();
 			}
 
-			reason = reason ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+			reason = reason ?? _localizer?["sa_unknown"] ?? "Unknown";
 
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_kick {player.PlayerName} {reason}");
 
 			if (string.IsNullOrEmpty(reason) == false)
@@ -472,16 +473,14 @@ namespace CS2_SimpleAdmin
 					_command = $"ds_workshop_changelevel {map.Replace("ws:", "")}";
 				}
 
-				if (_discordWebhookClientLog != null && _localizer != null)
-				{
-					string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-					string commandName = command?.GetCommandString ?? "css_changemap";
-					_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
-				}
-				if (command is not null)
-					Helper.LogCommand(caller, command);
+				//if (_discordWebhookClientLog != null && _localizer != null)
+				//{
+				//	string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				//	string commandName = command?.GetCommandString ?? "css_changemap";
+				//	_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
+				//}
 
-				AddTimer(2.0f, () =>
+				AddTimer(3.0f, () =>
 				{
 					Server.ExecuteCommand(_command);
 				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
@@ -499,6 +498,11 @@ namespace CS2_SimpleAdmin
 						Server.PrintToConsole(msg);
 					return;
 				}
+
+				AddTimer(3.0f, () =>
+				{
+					Server.ExecuteCommand($"changelevel {map}");
+				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
@@ -514,12 +518,10 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
-			if (!map.StartsWith("ws:"))
+			if (command != null)
 			{
-				AddTimer(2.0f, () =>
-				{
-					Server.ExecuteCommand($"changelevel {map}");
-				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.LogCommand(caller, command);
 			}
 		}
 
@@ -563,19 +565,25 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
-			if (_discordWebhookClientLog != null && _localizer != null)
-			{
-				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-				string commandName = command?.GetCommandString ?? "css_changewsmap";
-				_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
-			}
-			if (command is not null)
-				Helper.LogCommand(caller, command);
+			//if (_discordWebhookClientLog != null && _localizer != null)
+			//{
+			//	string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+			//	string commandName = command?.GetCommandString ?? "css_changewsmap";
+			//	_discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(_localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandName]));
+			//}
+			//if (command is not null)
+			//	Helper.LogCommand(caller, command);
 
-			AddTimer(2.0f, () =>
+			AddTimer(3.0f, () =>
 			{
 				Server.ExecuteCommand(_command);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+			if (command != null)
+			{
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.LogCommand(caller, command);
+			}
 		}
 
 		[ConsoleCommand("css_cvar", "Change a cvar.")]
@@ -599,7 +607,6 @@ namespace CS2_SimpleAdmin
 			}
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-
 			Helper.LogCommand(caller, command);
 
 			var value = command.GetArg(2);
@@ -618,7 +625,6 @@ namespace CS2_SimpleAdmin
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-
 			Helper.LogCommand(caller, command);
 
 			Server.ExecuteCommand(command.ArgString);

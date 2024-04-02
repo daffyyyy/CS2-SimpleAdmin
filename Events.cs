@@ -87,7 +87,6 @@ public partial class CS2_SimpleAdmin
 		}
 	}
 
-
 	[GameEventHandler]
 	public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
 	{
@@ -226,9 +225,12 @@ public partial class CS2_SimpleAdmin
 
 	public HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)
 	{
-		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV || info.GetArg(1).Length == 0 || info.GetArg(1).StartsWith("/")
+		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV || info.GetArg(1).StartsWith("/")
 			 || info.GetArg(1).StartsWith("!") && info.GetArg(1).Length >= 12)
 			return HookResult.Continue;
+
+		if (info.GetArg(1).Length == 0)
+			return HookResult.Handled;
 
 		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
@@ -240,9 +242,12 @@ public partial class CS2_SimpleAdmin
 
 	public HookResult OnCommandTeamSay(CCSPlayerController? player, CommandInfo info)
 	{
-		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV || info.GetArg(1).Length == 0 || info.GetArg(1).StartsWith("/")
+		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV || info.GetArg(1).StartsWith("/")
 			 || info.GetArg(1).StartsWith("!") && info.GetArg(1).Length >= 12)
 			return HookResult.Continue;
+
+		if (info.GetArg(1).Length == 0)
+			return HookResult.Handled;
 
 		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
@@ -297,7 +302,6 @@ public partial class CS2_SimpleAdmin
 
 		AddTimer(61.0f, () =>
 		{
-
 #if DEBUG
 			Logger.LogCritical("[OnMapStart] Expired check");
 #endif
@@ -407,7 +411,6 @@ public partial class CS2_SimpleAdmin
 
 				await _adminManager.GiveAllFlags();
 			});
-
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 		AddTimer(3.0f, () =>

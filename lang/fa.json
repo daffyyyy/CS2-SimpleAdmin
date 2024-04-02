@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "ناشناخته",
 
+	"sa_player": "بازیکن",
+	"sa_steamid": "شناسه استیم",
+	"sa_duration": "مدت زمان",
+	"sa_reason": "دلیل",
+	"sa_admin": "مدیر",
+	"sa_permanent": "دائمی",
+
+	"sa_discord_penalty_ban": "بن انجام شده",
+	"sa_discord_penalty_mute": "سکوت انجام شده",
+	"sa_discord_penalty_gag": "بند زدن انجام شده",
+	"sa_discord_penalty_silence": "سکوت انجام شده",
+	"sa_discord_penalty_unknown": "ناشناخته انجام شده",
+
 	"sa_player_ban_message_time": "شما توسط {lightred}{2}{default} برای {lightred}{1}{default} دقیقه به دلیل {lightred}{0}{default} مسدود شده‌اید!",
 	"sa_player_ban_message_perm": "شما توسط {lightred}{1}{default} به دلیل {lightred}{0}{default} برای همیشه مسدود شده‌اید!",
 	"sa_player_kick_message": "شما توسط {lightred}{1}{default} به دلیل {lightred}{0}{default} اخراج شده‌اید!",

@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "مجهول",
 
+	"sa_player": "اللاعب",
+	"sa_steamid": "معرف البخار",
+	"sa_duration": "المدة",
+	"sa_reason": "السبب",
+	"sa_admin": "المشرف",
+	"sa_permanent": "دائم",
+
+	"sa_discord_penalty_ban": "الحظر مسجل",
+	"sa_discord_penalty_mute": "الكتم مسجل",
+	"sa_discord_penalty_gag": "الصمت مسجل",
+	"sa_discord_penalty_silence": "الصمت مسجل",
+	"sa_discord_penalty_unknown": "غير معروف مسجل",
+
 	"sa_player_ban_message_time": "تم حظرك لمدة {lightred}{0}{default} لمدة {lightred}{1}{default} دقيقة من قبل {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "تم حظرك بشكل دائم لمدة {lightred}{0}{default} من قبل {lightred}{1}{default}!",
 	"sa_player_kick_message": "تم طردك لمدة {lightred}{0}{default} من قبل {lightred}{1}{default}!",
