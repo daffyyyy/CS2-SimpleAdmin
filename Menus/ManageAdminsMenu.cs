@@ -24,9 +24,9 @@ namespace CS2_SimpleAdmin.Menus
 			// TODO: Localize options
 			// options added in order
 
-			options.Add(new ChatMenuOptionData("Add Admin", () => PlayersMenu.OpenAliveMenu(admin, "Add Admin", AddAdminMenu)));
-			options.Add(new ChatMenuOptionData("Remove Admin", () => PlayersMenu.OpenAliveMenu(admin, "Remove Admin", RemoveAdmin, player => player != admin && admin.CanTarget(player))));
-			options.Add(new ChatMenuOptionData("Reload Admins", ReloadAdmins));
+			options.Add(new ChatMenuOptionData("Add Admin", () => PlayersMenu.OpenRealPlayersMenu(admin, "Add Admin", AddAdminMenu)));
+			options.Add(new ChatMenuOptionData("Remove Admin", () => PlayersMenu.OpenAdminPlayersMenu(admin, "Remove Admin", RemoveAdmin, player => player != admin && admin.CanTarget(player))));
+			options.Add(new ChatMenuOptionData("Reload Admins", () => ReloadAdmins(admin)));
 
 			foreach (ChatMenuOptionData menuOptionData in options)
 			{
