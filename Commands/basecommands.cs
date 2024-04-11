@@ -1,4 +1,4 @@
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Translations;
@@ -27,21 +27,25 @@ namespace CS2_SimpleAdmin
 				try
 				{
 					using var connection = await _database.GetConnectionAsync();
-					var commandText = "ALTER TABLE `sa_mutes` CHANGE `type` `type` ENUM('GAG','MUTE', 'SILENCE', '') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'GAG';";
+					var commandText = "ALTER TABLE `sa_servers` ADD COLUMN `group_ids` VARCHAR(255) NULL AFTER `hostname`";
 
 					using var commandSql = connection.CreateCommand();
 					commandSql.CommandText = commandText;
 					await commandSql.ExecuteNonQueryAsync();
 
-					commandText = "ALTER TABLE `sa_servers` MODIFY COLUMN `hostname` varchar(128);";
-					using var commandSql1 = connection.CreateCommand();
-					commandSql1.CommandText = commandText;
-					await commandSql1.ExecuteNonQueryAsync();
+					var commandText2 = "ALTER TABLE `sa_admins` ADD COLUMN `group_id` INT NULL AFTER `server_id`";
 
-					commandText = "ALTER TABLE `sa_bans` MODIFY `ends` TIMESTAMP NULL DEFAULT NULL;";
 					using var commandSql2 = connection.CreateCommand();
-					commandSql2.CommandText = commandText;
+					commandSql2.CommandText = commandText2;
 					await commandSql2.ExecuteNonQueryAsync();
+
+					var commandText3 = "CREATE TABLE IF NOT EXISTS `sa_server_groups` ( `id` int(11) NOT NULL AUTO_INCREMENT, `group_name` varchar(128) NOT NULL, PRIMARY KEY(`id`) ) ENGINE = InnoDB AUTO_INCREMENT = 2 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;`";
+
+					using var commandSql3 = connection.CreateCommand();
+					commandSql3.CommandText = commandText3;
+					await commandSql3.ExecuteNonQueryAsync();
+
+
 
 					Server.NextFrame(() =>
 					{

@@ -26,6 +26,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static bool voteInProgress = false;
 	public static int? ServerId = null;
 
+	public static int[]? GroupIds = [];
+
 	public static DiscordWebhookClient? _discordWebhookClientLog;
 	public static DiscordWebhookClient? _discordWebhookClientPenalty;
 

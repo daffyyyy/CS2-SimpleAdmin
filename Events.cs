@@ -17,6 +17,27 @@ public partial class CS2_SimpleAdmin
 {
 	public static HashSet<int> loadedPlayers = new HashSet<int>();
 
+	struct ServerData
+	{
+		public int? Id { get; }
+		public int[]? GroupIds { get; }
+
+		public ServerData(int? id, string? groupIds)
+		{
+			Id = id;
+			GroupIds = ParseGroupIds(groupIds);
+		}
+
+		private int[]? ParseGroupIds(string? groupIds)
+		{
+			if (string.IsNullOrWhiteSpace(groupIds))
+				return null;
+
+			return groupIds.Split(',')
+				.Select(id => int.TryParse(id, out int result) ? result : 0)
+				.ToArray();
+		}
+	}
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -32,7 +53,7 @@ public partial class CS2_SimpleAdmin
 		CCSPlayerController? player = @event.Userid;
 
 #if DEBUG
-        Logger.LogCritical("[OnClientDisconnect] Before");
+		Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
 		if (player == null || !player.IsValid || string.IsNullOrEmpty(player.IpAddress) || player.IsBot || player.IsHLTV)
@@ -46,7 +67,7 @@ public partial class CS2_SimpleAdmin
 		}
 
 #if DEBUG
-        Logger.LogCritical("[OnClientDisconnect] After Check");
+		Logger.LogCritical("[OnClientDisconnect] After Check");
 #endif
 		try
 		{
@@ -383,11 +404,19 @@ public partial class CS2_SimpleAdmin
 							new { address, hostname });
 					}
 
-					int? serverId = await connection.ExecuteScalarAsync<int>(
-						"SELECT `id` FROM `sa_servers` WHERE `address` = @address",
-						new { address });
 
-					ServerId = serverId;
+
+					ServerData serverData = await connection.ExecuteScalarAsync<ServerData>(
+					"SELECT `id`, `group_ids` FROM `sa_servers` WHERE `address` = @address",
+					new { address });
+
+					ServerId = serverData.Id;
+					GroupIds = serverData.GroupIds;
+
+					// For testing only
+					_logger?.LogInformation($"Server ID: {ServerId}");
+					_logger?.LogInformation($"Group IDs: {GroupIds}");
+
 				}
 				catch (Exception ex)
 				{
