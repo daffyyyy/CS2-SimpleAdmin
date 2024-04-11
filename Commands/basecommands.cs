@@ -39,14 +39,6 @@ namespace CS2_SimpleAdmin
 					commandSql2.CommandText = commandText2;
 					await commandSql2.ExecuteNonQueryAsync();
 
-					var commandText3 = "CREATE TABLE IF NOT EXISTS `sa_server_groups` ( `id` int(11) NOT NULL AUTO_INCREMENT, `group_name` varchar(128) NOT NULL, PRIMARY KEY(`id`) ) ENGINE = InnoDB AUTO_INCREMENT = 2 DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci;`";
-
-					using var commandSql3 = connection.CreateCommand();
-					commandSql3.CommandText = commandText3;
-					await commandSql3.ExecuteNonQueryAsync();
-
-
-
 					Server.NextFrame(() =>
 					{
 						command.ReplyToCommand($"Successfully updated the database - {ModuleVersion}");
