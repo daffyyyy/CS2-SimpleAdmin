@@ -396,6 +396,11 @@ public partial class CS2_SimpleAdmin
 					{
 						GroupIds = groupIds?.Split(',').Select(int.Parse).ToArray();
 					}
+					else
+					{
+						// We must set it to null if it's empty to ensure reloads work properly
+						GroupIds = null;
+					}
 
 
 					// For testing only

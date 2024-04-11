@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Utils;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -27,8 +28,10 @@ public class AdminSQLManager
 
 		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
-		string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
-		List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
+		string groupId = CS2_SimpleAdmin.GroupIds != null ? string.Join("", CS2_SimpleAdmin.GroupIds) : string.Empty;
+
+		string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND ((server_id IS NULL OR server_id = @serverid) OR ((@groupid IS NOT NULL AND @groupid <> 0) AND group_id LIKE CONCAT('%', @groupid, '%')));";
+		List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId, groupid = groupId }))?.ToList();
 
 		if (activeFlags == null)
 		{
@@ -70,8 +73,10 @@ public class AdminSQLManager
 		{
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
-			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins  WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid) AND (group_id LIKE CONCAT('%', @groupid, '%'));";
-			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId, groupid = CS2_SimpleAdmin.GroupIds }))?.ToList();
+			string groupId = CS2_SimpleAdmin.GroupIds != null ? string.Join("", CS2_SimpleAdmin.GroupIds) : string.Empty;
+
+			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins  WHERE (ends IS NULL OR ends > @CurrentTime) AND ((server_id IS NULL OR server_id = @serverid) OR ((@groupid IS NOT NULL AND @groupid <> 0) AND group_id LIKE CONCAT('%', @groupid, '%')));";
+			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId, groupid = groupId }))?.ToList();
 
 			if (activeFlags == null)
 			{
@@ -116,7 +121,6 @@ public class AdminSQLManager
 					//Console.WriteLine("Failed to parse one or more values.");
 					continue;
 				}
-
 				filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
 			}
 
