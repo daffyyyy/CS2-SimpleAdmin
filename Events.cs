@@ -17,27 +17,6 @@ public partial class CS2_SimpleAdmin
 {
 	public static HashSet<int> loadedPlayers = new HashSet<int>();
 
-	struct ServerData
-	{
-		public int? Id { get; }
-		public int[]? GroupIds { get; }
-
-		public ServerData(int? id, string? groupIds)
-		{
-			Id = id;
-			GroupIds = ParseGroupIds(groupIds);
-		}
-
-		private int[]? ParseGroupIds(string? groupIds)
-		{
-			if (string.IsNullOrWhiteSpace(groupIds))
-				return null;
-
-			return groupIds.Split(',')
-				.Select(id => int.TryParse(id, out int result) ? result : 0)
-				.ToArray();
-		}
-	}
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -406,16 +385,18 @@ public partial class CS2_SimpleAdmin
 
 
 
-					ServerData serverData = await connection.ExecuteScalarAsync<ServerData>(
-					"SELECT `id`, `group_ids` FROM `sa_servers` WHERE `address` = @address",
-					new { address });
 
-					ServerId = serverData.Id;
-					GroupIds = serverData.GroupIds;
+
+					(int? serverId, string? groupIds) = await connection.QueryFirstAsync<(int?, string?)>(
+						"SELECT `id`, `group_ids` FROM `sa_servers` WHERE `address` = @address",
+						new { address });
+
+					ServerId = serverId;
+					GroupIds = groupIds?.Split(',').Select(int.Parse).ToArray();
 
 					// For testing only
 					_logger?.LogInformation($"Server ID: {ServerId}");
-					_logger?.LogInformation($"Group IDs: {GroupIds}");
+					_logger?.LogInformation($"Group IDs: {string.Join(", ", GroupIds ?? Array.Empty<int>())}");
 
 				}
 				catch (Exception ex)
