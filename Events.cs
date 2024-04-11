@@ -392,11 +392,18 @@ public partial class CS2_SimpleAdmin
 						new { address });
 
 					ServerId = serverId;
-					GroupIds = groupIds?.Split(',').Select(int.Parse).ToArray();
+					if (groupIds != null && groupIds.Length > 0)
+					{
+						GroupIds = groupIds?.Split(',').Select(int.Parse).ToArray();
+					}
+
 
 					// For testing only
 					_logger?.LogInformation($"Server ID: {ServerId}");
-					_logger?.LogInformation($"Group IDs: {string.Join(", ", GroupIds ?? Array.Empty<int>())}");
+					if (GroupIds != null)
+					{
+						_logger?.LogInformation($"Group IDs: {string.Join(", ", GroupIds)}");
+					}
 
 				}
 				catch (Exception ex)
