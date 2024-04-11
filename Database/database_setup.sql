@@ -50,9 +50,3 @@ CREATE TABLE IF NOT EXISTS `sa_servers` (
 						 PRIMARY KEY (`id`),
 						 UNIQUE KEY `address` (`address`)
 						) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `sa_server_groups` (
-						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `group_name` varchar(128) NOT NULL,
-						 PRIMARY KEY (`id`)
-						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

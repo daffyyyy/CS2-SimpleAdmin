@@ -70,8 +70,8 @@ public class AdminSQLManager
 		{
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
-			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
-			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
+			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins  WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid) AND (group_id LIKE CONCAT('%', @groupid, '%'));";
+			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId, groupid = CS2_SimpleAdmin.GroupIds }))?.ToList();
 
 			if (activeFlags == null)
 			{
