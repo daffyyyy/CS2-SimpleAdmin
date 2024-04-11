@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `sa_admins` (
 						 `flags` TEXT NOT NULL,
 						 `immunity` varchar(64) NOT NULL DEFAULT '0',
 						 `server_id` INT NULL,
-						 `group_id` INT NULL,
+						 `group_id` TEXT NULL,
 						 `ends` timestamp NULL,
 						 `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 						 PRIMARY KEY (`id`)
@@ -53,12 +53,5 @@ CREATE TABLE IF NOT EXISTS `sa_servers` (
 CREATE TABLE IF NOT EXISTS `sa_server_groups` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `group_name` varchar(128) NOT NULL,
-						 PRIMARY KEY (`id`)
-						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
-CREATE TABLE IF NOT EXISTS `sa_server_to_group` (
-						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `group_id` int(11) NOT NULL,
-						 `server_id` int(11) NOT NULL,
 						 PRIMARY KEY (`id`)
 						) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
