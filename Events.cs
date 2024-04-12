@@ -402,14 +402,6 @@ public partial class CS2_SimpleAdmin
 						GroupIds = null;
 					}
 
-
-					// For testing only
-					_logger?.LogInformation($"Server ID: {ServerId}");
-					if (GroupIds != null)
-					{
-						_logger?.LogInformation($"Group IDs: {string.Join(", ", GroupIds)}");
-					}
-
 				}
 				catch (Exception ex)
 				{
