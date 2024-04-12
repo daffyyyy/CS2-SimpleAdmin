@@ -383,10 +383,6 @@ public partial class CS2_SimpleAdmin
 							new { address, hostname });
 					}
 
-
-
-
-
 					(int? serverId, string? groupIds) = await connection.QueryFirstAsync<(int?, string?)>(
 						"SELECT `id`, `group_ids` FROM `sa_servers` WHERE `address` = @address",
 						new { address });
@@ -394,6 +390,7 @@ public partial class CS2_SimpleAdmin
 					ServerId = serverId;
 					if (groupIds != null && groupIds.Length > 0)
 					{
+						// Split the group ids by comma and parse them to integers
 						GroupIds = groupIds?.Split(',').Select(int.Parse).ToArray();
 					}
 					else
@@ -405,7 +402,7 @@ public partial class CS2_SimpleAdmin
 				}
 				catch (Exception ex)
 				{
-					_logger?.LogCritical("Unable to create or get server_id" + ex.Message);
+					_logger?.LogCritical("Unable to create or get server_id " + ex.Message);
 				}
 
 				if (Config.EnableMetrics)
