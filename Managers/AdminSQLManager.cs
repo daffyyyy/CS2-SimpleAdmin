@@ -28,7 +28,7 @@ public class AdminSQLManager
 
 		await using MySqlConnection connection = await _database.GetConnectionAsync();
 
-		string groupId = CS2_SimpleAdmin.GroupIds != null ? string.Join("", CS2_SimpleAdmin.GroupIds) : string.Empty;
+		string groupId = CS2_SimpleAdmin.GroupId != null ? string.Join("", CS2_SimpleAdmin.GroupId) : string.Empty;
 
 		string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND ((server_id IS NULL OR server_id = @serverid) OR ((@groupid IS NOT NULL AND @groupid <> 0) AND group_id LIKE CONCAT('%', @groupid, '%')));";
 		List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId, groupid = groupId }))?.ToList();
@@ -73,7 +73,7 @@ public class AdminSQLManager
 		{
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
-			string groupId = CS2_SimpleAdmin.GroupIds != null ? string.Join("", CS2_SimpleAdmin.GroupIds) : string.Empty;
+			string groupId = CS2_SimpleAdmin.GroupId != null ? string.Join("", CS2_SimpleAdmin.GroupId) : string.Empty;
 
 			string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins  WHERE (ends IS NULL OR ends > @CurrentTime) AND ((server_id IS NULL OR server_id = @serverid) OR ((@groupid IS NOT NULL AND @groupid <> 0) AND group_id LIKE CONCAT('%', @groupid, '%')));";
 			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId, groupid = groupId }))?.ToList();

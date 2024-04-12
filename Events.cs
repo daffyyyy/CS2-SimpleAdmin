@@ -383,20 +383,20 @@ public partial class CS2_SimpleAdmin
 							new { address, hostname });
 					}
 
-					(int? serverId, string? groupIds) = await connection.QueryFirstAsync<(int?, string?)>(
-						"SELECT `id`, `group_ids` FROM `sa_servers` WHERE `address` = @address",
+					(int? serverId, string? groupId) = await connection.QueryFirstAsync<(int?, string?)>(
+						"SELECT `id`, `group_id` FROM `sa_servers` WHERE `address` = @address",
 						new { address });
 
 					ServerId = serverId;
-					if (groupIds != null && groupIds.Length > 0)
+					if (groupId != null && groupId.Length > 0)
 					{
 						// Split the group ids by comma and parse them to integers
-						GroupIds = groupIds?.Split(',').Select(int.Parse).ToArray();
+						GroupId = groupId?.Split(',').Select(int.Parse).ToArray();
 					}
 					else
 					{
 						// We must set it to null if it's empty to ensure reloads work properly
-						GroupIds = null;
+						GroupId = null;
 					}
 
 				}

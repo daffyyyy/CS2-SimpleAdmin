@@ -27,7 +27,7 @@ namespace CS2_SimpleAdmin
 				try
 				{
 					using var connection = await _database.GetConnectionAsync();
-					var commandText = "ALTER TABLE `sa_servers` ADD COLUMN `group_ids` VARCHAR(255) NULL AFTER `hostname`";
+					var commandText = "ALTER TABLE `sa_servers` ADD COLUMN `group_id` VARCHAR(255) NULL AFTER `hostname`";
 
 					using var commandSql = connection.CreateCommand();
 					commandSql.CommandText = commandText;
