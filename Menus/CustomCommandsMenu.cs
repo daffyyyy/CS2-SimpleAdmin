@@ -31,13 +31,13 @@ namespace CS2_SimpleAdmin.Menus
 				bool hasRights = AdminManager.PlayerHasPermissions(admin, customCommand.Flag);
 				if (!hasRights)
 					continue;
-				
+
 				options.Add(new ChatMenuOptionData(customCommand.DisplayName, () =>
 				{
 					Helper.TryLogCommandOnDiscord(admin, customCommand.Command);
-					
+
 					if (customCommand.ExecuteOnClient)
-						admin.ExecuteClientCommand(customCommand.Command);
+						admin.ExecuteClientCommandFromServer(customCommand.Command);
 					else
 						Server.ExecuteCommand(customCommand.Command);
 				}));
