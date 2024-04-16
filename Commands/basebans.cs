@@ -49,7 +49,7 @@ namespace CS2_SimpleAdmin
 
 		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
 		{
-			if (_database == null) return;
+			if (_database == null || player is null || !player.IsValid) return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
@@ -58,14 +58,14 @@ namespace CS2_SimpleAdmin
 				player.Pawn.Value!.Freeze();
 			}
 
-			PlayerInfo playerInfo = new PlayerInfo
+			PlayerInfo playerInfo = new()
 			{
 				SteamId = player.SteamID.ToString(),
 				Name = player.PlayerName,
 				IpAddress = player.IpAddress?.Split(":")[0]
 			};
 
-			PlayerInfo adminInfo = new PlayerInfo
+			PlayerInfo adminInfo = new()
 			{
 				SteamId = caller?.SteamID.ToString(),
 				Name = caller?.PlayerName,
@@ -79,7 +79,8 @@ namespace CS2_SimpleAdmin
 			});
 
 			if (player.UserId.HasValue)
-				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value),
+					CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
 				bannedPlayers.Add(playerInfo.IpAddress);

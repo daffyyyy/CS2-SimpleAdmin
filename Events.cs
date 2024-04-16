@@ -306,14 +306,26 @@ public partial class CS2_SimpleAdmin
 			Logger.LogCritical("[OnMapStart] Expired check");
 #endif
 
+			List<CCSPlayerController> players = Helper.GetValidPlayers();
+			List<(string? IpAddress, ulong SteamID, int? UserId)> onlinePlayers = players
+				.Where(player => player.IpAddress != null && player.SteamID.ToString().Length == 17)
+				.Select(player => (player.IpAddress, player.SteamID, player.UserId))
+				.ToList();
+
 			Task.Run(async () =>
 			{
-				AdminSQLManager _adminManager = new AdminSQLManager(_database);
-				BanManager _banManager = new BanManager(_database, Config);
-				MuteManager _muteManager = new MuteManager(_database);
+				AdminSQLManager _adminManager = new(_database);
+				BanManager _banManager = new(_database, Config);
+				MuteManager _muteManager = new(_database);
 				await _banManager.ExpireOldBans();
 				await _muteManager.ExpireOldMutes();
 				await _adminManager.DeleteOldAdmins();
+
+				try
+				{
+					await _banManager.CheckOnlinePlayers(onlinePlayers);
+				}
+				catch { }
 
 				bannedPlayers.Clear();
 
@@ -321,7 +333,7 @@ public partial class CS2_SimpleAdmin
 				{
 					try
 					{
-						foreach (CCSPlayerController player in Helper.GetValidPlayers())
+						foreach (CCSPlayerController player in players)
 						{
 							if (playerPenaltyManager.IsSlotInPenalties(player.Slot))
 							{
@@ -412,16 +424,6 @@ public partial class CS2_SimpleAdmin
 				await _adminManager.GiveAllFlags();
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
-		AddTimer(3.0f, () =>
-		{
-			ConVar? botQuota = ConVar.Find("bot_quota");
-
-			if (botQuota != null && botQuota.GetPrimitiveValue<int>() > 0)
-			{
-				Logger.LogWarning("Due to bugs with bots (game bug), consider disabling bots by setting `bot_quota 0` in the gamemode config if your server crashes after a map change.");
-			}
-		});
 	}
 
 	[GameEventHandler]

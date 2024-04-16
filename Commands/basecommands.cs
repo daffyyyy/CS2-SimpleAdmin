@@ -409,7 +409,7 @@ namespace CS2_SimpleAdmin
 				player.Pawn.Value!.Freeze();
 			}
 
-			reason = reason ?? _localizer?["sa_unknown"] ?? "Unknown";
+			reason ??= _localizer?["sa_unknown"] ?? "Unknown";
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
@@ -423,12 +423,14 @@ namespace CS2_SimpleAdmin
 						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
 				if (player.UserId.HasValue)
-					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, reason), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, reason),
+						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 			else
 			{
 				if (player.UserId.HasValue)
-					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value),
+						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
 			if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains(caller.Slot))

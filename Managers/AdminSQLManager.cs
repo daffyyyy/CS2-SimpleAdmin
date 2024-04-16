@@ -12,7 +12,7 @@ public class AdminSQLManager
 
 	// Unused for now
 	//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
-	public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCache = new ConcurrentDictionary<SteamID, DateTime?>();
+	public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCache = new();
 
 	//public static readonly ConcurrentDictionary<SteamID, DateTime?> _adminCacheTimestamps = new ConcurrentDictionary<SteamID, DateTime?>();
 
