@@ -134,11 +134,13 @@ namespace CS2_SimpleAdmin
 			AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin, command);
 		}
 
-		public void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
+		public static void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
 		{
 			if (_database == null) return;
 			AdminSQLManager _adminManager = new(_database);
-			_ = _adminManager.AddAdminBySteamId(steamid, name, flags, immunity, time, globalAdmin);
+
+			List<string> flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
+			_ = _adminManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);

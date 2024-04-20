@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS `sa_bans` (
                                 `id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                                `player_steamid` VARCHAR(64),
                                 `player_name` VARCHAR(128),
+                                `player_steamid` VARCHAR(64),
                                 `player_ip` VARCHAR(128),
                                 `admin_steamid` VARCHAR(64) NOT NULL,
                                 `admin_name` VARCHAR(128) NOT NULL,
@@ -15,8 +15,8 @@ CREATE TABLE IF NOT EXISTS `sa_bans` (
 
 CREATE TABLE IF NOT EXISTS `sa_mutes` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `player_steamid` varchar(64) NOT NULL,
 						 `player_name` varchar(128) NULL,
+						 `player_steamid` varchar(64) NOT NULL,
 						 `admin_steamid` varchar(64) NOT NULL,
 						 `admin_name` varchar(128) NOT NULL,
 						 `reason` varchar(255) NOT NULL,
@@ -31,8 +31,8 @@ CREATE TABLE IF NOT EXISTS `sa_mutes` (
 
 CREATE TABLE IF NOT EXISTS `sa_admins` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `player_steamid` varchar(64) NOT NULL,
 						 `player_name` varchar(128) NOT NULL,
+						 `player_steamid` varchar(64) NOT NULL,
 						 `flags` TEXT NOT NULL,
 						 `immunity` varchar(64) NOT NULL DEFAULT '0',
 						 `server_id` INT NULL,
@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS `sa_admins` (
 
 CREATE TABLE IF NOT EXISTS `sa_servers` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
-						 `address` varchar(64) NOT NULL,
 						 `hostname` varchar(128) NOT NULL,
+						 `address` varchar(64) NOT NULL,
 						 PRIMARY KEY (`id`),
 						 UNIQUE KEY `address` (`address`)
 						) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

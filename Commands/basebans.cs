@@ -371,12 +371,14 @@ namespace CS2_SimpleAdmin
 
 		[ConsoleCommand("css_unban")]
 		[RequiresPermissions("@css/unban")]
-		[CommandHelper(minArgs: 1, usage: "<steamid or name or ip>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		[CommandHelper(minArgs: 1, usage: "<steamid or name or ip> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnUnbanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
 
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			string callerName = caller?.PlayerName ?? "Console";
+			string callerSteamId = caller?.SteamID.ToString() ?? "Console";
+
 			if (command.GetArg(1).Length <= 1)
 			{
 				command.ReplyToCommand($"Too short pattern to search.");
@@ -384,9 +386,10 @@ namespace CS2_SimpleAdmin
 			}
 
 			string pattern = command.GetArg(1);
+			string reason = command.GetArg(2);
 
 			BanManager _banManager = new(_database, Config);
-			Task.Run(async () => await _banManager.UnbanPlayer(pattern));
+			Task.Run(async () => await _banManager.UnbanPlayer(pattern, callerSteamId, reason));
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);

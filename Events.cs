@@ -51,7 +51,7 @@ public partial class CS2_SimpleAdmin
 		try
 		{
 			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
-			playerPenaltyManager.RemoveAllPenalties(player.Slot);
+			PlayerPenaltyManager.RemoveAllPenalties(player.Slot);
 
 			if (TagsDetected)
 			{
@@ -167,7 +167,7 @@ public partial class CS2_SimpleAdmin
 						// Apply mute penalty based on mute type
 						if (muteType == "GAG")
 						{
-							playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Gag, ends, duration);
+							PlayerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Gag, ends, duration);
 							Server.NextFrame(() =>
 							{
 								if (TagsDetected)
@@ -178,7 +178,7 @@ public partial class CS2_SimpleAdmin
 						}
 						else if (muteType == "MUTE")
 						{
-							playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Mute, ends, duration);
+							PlayerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Mute, ends, duration);
 							Server.NextFrame(() =>
 							{
 								player.VoiceFlags = VoiceFlags.Muted;
@@ -186,7 +186,7 @@ public partial class CS2_SimpleAdmin
 						}
 						else
 						{
-							playerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Silence, ends, duration);
+							PlayerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Silence, ends, duration);
 							Server.NextFrame(() =>
 							{
 								player.VoiceFlags = VoiceFlags.Muted;
@@ -234,7 +234,7 @@ public partial class CS2_SimpleAdmin
 
 		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
-		if (playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+		if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 			return HookResult.Handled;
 
 		return HookResult.Continue;
@@ -251,7 +251,7 @@ public partial class CS2_SimpleAdmin
 
 		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
-		if (playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+		if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 			return HookResult.Handled;
 
 		if (info.GetArg(1).StartsWith("@"))
@@ -294,7 +294,7 @@ public partial class CS2_SimpleAdmin
 		silentPlayers.Clear();
 
 		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
-		playerPenaltyManager.RemoveAllPenalties();
+		PlayerPenaltyManager.RemoveAllPenalties();
 
 		_database = new(dbConnectionString);
 
@@ -317,6 +317,7 @@ public partial class CS2_SimpleAdmin
 				AdminSQLManager _adminManager = new(_database);
 				BanManager _banManager = new(_database, Config);
 				MuteManager _muteManager = new(_database);
+
 				await _banManager.ExpireOldBans();
 				await _muteManager.ExpireOldMutes();
 				await _adminManager.DeleteOldAdmins();
@@ -335,21 +336,21 @@ public partial class CS2_SimpleAdmin
 					{
 						foreach (CCSPlayerController player in players)
 						{
-							if (playerPenaltyManager.IsSlotInPenalties(player.Slot))
+							if (PlayerPenaltyManager.IsSlotInPenalties(player.Slot))
 							{
-								if (!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+								if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 									player.VoiceFlags = VoiceFlags.Normal;
 
-								if (!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+								if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 								{
 									if (TagsDetected)
 										Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
 								}
 
 								if (
-									!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) &&
-									!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) &&
-									!playerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)
+									!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) &&
+									!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) &&
+									!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)
 								)
 								{
 									player.VoiceFlags = VoiceFlags.Normal;
@@ -360,14 +361,14 @@ public partial class CS2_SimpleAdmin
 							}
 						}
 
-						playerPenaltyManager.RemoveExpiredPenalties();
+						PlayerPenaltyManager.RemoveExpiredPenalties();
 					}
 					catch (Exception) { }
 				});
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-		AddTimer(2.5f, () =>
+		AddTimer(2.0f, () =>
 		{
 			string? address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 			string? hostname = ConVar.Find("hostname")!.StringValue;
@@ -391,7 +392,7 @@ public partial class CS2_SimpleAdmin
 					else
 					{
 						await connection.ExecuteAsync(
-							"UPDATE `sa_servers` SET hostname = @hostname WHERE address = @address",
+							"UPDATE `sa_servers` SET `hostname` = @hostname, `id` = `id` WHERE `address` = @address",
 							new { address, hostname });
 					}
 

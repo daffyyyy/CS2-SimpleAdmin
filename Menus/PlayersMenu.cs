@@ -1,7 +1,7 @@
-using System.Web;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Menu;
+using System.Web;
 
 namespace CS2_SimpleAdmin.Menus
 {
@@ -32,9 +32,13 @@ namespace CS2_SimpleAdmin.Menus
 			BaseMenu menu = AdminMenu.CreateMenu(menuName);
 
 			IEnumerable<CCSPlayerController> players = Helper.GetValidPlayersWithBots();
+			string playerName = string.Empty;
+
 			foreach (CCSPlayerController player in players)
 			{
-				string optionName = HttpUtility.HtmlEncode(player.PlayerName);
+				playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
+
+				string optionName = HttpUtility.HtmlEncode(playerName);
 				if (enableFilter != null && enableFilter(player) == false)
 					continue;
 

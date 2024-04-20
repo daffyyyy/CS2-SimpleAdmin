@@ -3,7 +3,6 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
-using Dapper;
 using Discord.Webhook;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
@@ -38,7 +37,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.3.8b";
+	public override string ModuleVersion => "1.3.9a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -54,7 +53,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		CBasePlayerController_SetPawnFunc = new(GameData.GetSignature("CBasePlayerController_SetPawn"));
-		_logger = Logger;
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
@@ -64,7 +62,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			throw new Exception("[CS2-SimpleAdmin] You need to setup Database credentials in config!");
 		}
 
-		MySqlConnectionStringBuilder builder = new MySqlConnectionStringBuilder
+		Instance = this;
+		_logger = Logger;
+
+		MySqlConnectionStringBuilder builder = new()
 		{
 			Server = config.DatabaseHost,
 			Database = config.DatabaseName,
@@ -74,12 +75,21 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			Pooling = true,
 			MinimumPoolSize = 0,
 			MaximumPoolSize = 640,
-			ConnectionReset = false
 		};
 
 		dbConnectionString = builder.ConnectionString;
 		_database = new(dbConnectionString);
 
+		if (!_database.CheckDatabaseConnection())
+		{
+			Logger.LogError("Unable connect to database!");
+			Unload(false);
+			return;
+		}
+
+		Task.Run(() => _database.DatabaseMigration());
+
+		/*
 		Task.Run(async () =>
 		{
 			try
@@ -109,6 +119,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 				throw;
 			}
 		});
+		*/
 
 		Config = config;
 		Helper.UpdateConfig(config);
@@ -143,7 +154,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public static void RemoveFromConcurrentBag(ConcurrentBag<int> bag, int playerSlot)
 	{
-		List<int> tempList = new List<int>();
+		List<int> tempList = [];
 		while (!bag.IsEmpty)
 		{
 			if (bag.TryTake(out int item) && item != playerSlot)

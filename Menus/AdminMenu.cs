@@ -8,7 +8,7 @@ namespace CS2_SimpleAdmin.Menus
 	{
 		public static BaseMenu CreateMenu(string title)
 		{
-			return CS2_SimpleAdmin.Instance.Config.UseChatMenu ? new ChatMenu(title) : new CenterHtmlMenu(title);
+			return CS2_SimpleAdmin.Instance.Config.UseChatMenu ? new ChatMenu(title) : new CenterHtmlMenu(title, CS2_SimpleAdmin.Instance);
 		}
 
 		public static void OpenMenu(CCSPlayerController player, BaseMenu menu)
@@ -44,7 +44,7 @@ namespace CS2_SimpleAdmin.Menus
 				new ChatMenuOptionData("Manage Server", () => ManageServerMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Fun actions", () => FunActionsMenu.OpenMenu(admin)),
 			};
-			
+
 			List<CustomServerCommandData> customCommands = CS2_SimpleAdmin.Instance.Config.CustomServerCommands;
 			if (customCommands.Count > 0)
 			{

@@ -69,7 +69,7 @@ namespace CS2_SimpleAdmin.Menus
 		private static void AddAdmin(CCSPlayerController admin, CCSPlayerController player, string flag)
 		{
 			// TODO: Change default immunity?
-			CS2_SimpleAdmin.Instance.AddAdmin(admin, player.SteamID.ToString(), player.PlayerName, flag, 10);
+			CS2_SimpleAdmin.AddAdmin(admin, player.SteamID.ToString(), player.PlayerName, flag, 10);
 		}
 
 		private static void RemoveAdmin(CCSPlayerController admin, CCSPlayerController player)

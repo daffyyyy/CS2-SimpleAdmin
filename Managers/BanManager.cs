@@ -173,7 +173,7 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 		return 0;
 	}
 
-	public async Task UnbanPlayer(string playerPattern)
+	public async Task UnbanPlayer(string playerPattern, string adminSteamId, string reason)
 	{
 		if (playerPattern == null || playerPattern.Length <= 1)
 		{
@@ -183,8 +183,43 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 		{
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
+			string sqlRetrieveBans = "SELECT id FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE'";
+			var bans = await connection.QueryAsync(sqlRetrieveBans, new { pattern = playerPattern });
+
+			if (!bans.Any())
+				return;
+
+			string sqlAdmin = "SELECT id FROM sa_admins WHERE player_steamid = @adminSteamId";
+			string sqlInsertUnban = "INSERT INTO sa_unbans (ban_id, admin_id, reason) VALUES (@banId, @adminId, @reason); SELECT LAST_INSERT_ID();";
+
+			int? sqlAdminId = await connection.ExecuteScalarAsync<int?>(sqlAdmin, new { adminSteamId });
+			int adminId = sqlAdminId ?? 0;
+
+			foreach (var ban in bans)
+			{
+				int banId = ban.id;
+				int? unbanId;
+
+				// Insert into sa_unbans
+				if (reason != null)
+				{
+					unbanId = await connection.ExecuteScalarAsync<int>(sqlInsertUnban, new { banId, adminId, reason });
+				}
+				else
+				{
+					sqlInsertUnban = "INSERT INTO sa_unbans (ban_id, admin_id) VALUES (@banId, @adminId); SELECT LAST_INSERT_ID();";
+					unbanId = await connection.ExecuteScalarAsync<int>(sqlInsertUnban, new { banId, adminId });
+				}
+
+				// Update sa_bans to set unban_id
+				string sqlUpdateBan = "UPDATE sa_bans SET status = 'UNBANNED', unban_id = @unbanId WHERE id = @banId";
+				await connection.ExecuteAsync(sqlUpdateBan, new { unbanId, banId });
+			}
+
+			/*
 			string sqlUnban = "UPDATE sa_bans SET status = 'UNBANNED' WHERE player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern AND status = 'ACTIVE'";
 			await connection.ExecuteAsync(sqlUnban, new { pattern = playerPattern });
+			*/
 
 		}
 		catch { }
