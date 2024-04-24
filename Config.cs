@@ -59,7 +59,7 @@ namespace CS2_SimpleAdmin
 		public bool DisableDangerousCommands { get; set; } = true;
 
 		[JsonPropertyName("MaxBanDuration")]
-		public int MaxBanDuration { get; set; } = 60 * 24 * 7; // 7 days
+		public int MaxBanDuration { get; set; } = 60 * 24; // 1 day
 		
 		[JsonPropertyName("BanType")]
 		public int BanType { get; set; } = 1;
