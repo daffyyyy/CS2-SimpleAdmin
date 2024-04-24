@@ -58,5 +58,8 @@
 	"sa_adminchat_template_admin": "{LIME}(管理员) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(玩家) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上执行了命令 `{1}`！"
+	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上执行了命令 `{1}`！",
+
+  "sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
+  "sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

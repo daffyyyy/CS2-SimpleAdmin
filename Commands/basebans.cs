@@ -387,14 +387,14 @@ namespace CS2_SimpleAdmin
 			if (duration > Config.MaxBanDuration && canPermBan == false)
 			{
 				if (validCaller)
-					caller.PrintToChat($"[Simple Admin] Ban duration cannot exceed {Config.MaxBanDuration} minutes.");
+					caller.PrintToChat($"{_localizer["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.MaxBanDuration]}");
 				return false;
 			}
 
 			if (duration == 0 && canPermBan == false)
 			{
 				if (validCaller)
-					caller.PrintToChat($"[Simple Admin] You do not have the right to permanently ban.");
+					caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_perm_restricted"]}");
 				return false;
 			}
 

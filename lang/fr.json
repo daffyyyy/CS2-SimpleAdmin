@@ -59,5 +59,8 @@
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default} : {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(JOUEUR) {lightred}{0}{default} : {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`",
+
+  "sa_ban_max_duration_exceeded": "La durée d'un bannissement ne peut dépasser {lightred}{0}{default} minutes.",
+  "sa_ban_perm_restricted": "Tu ne peux pas bannir de manière permanente"
 }

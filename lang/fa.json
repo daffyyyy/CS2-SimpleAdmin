@@ -59,5 +59,8 @@
 	"sa_adminchat_template_admin": "{LIME}(مدیر) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(بازیکن) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** دستور `{1}` را در سرور `HOSTNAME` اجرا کرد"
+	"sa_discord_log_command": "**{0}** دستور `{1}` را در سرور `HOSTNAME` اجرا کرد",
+
+	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
+	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

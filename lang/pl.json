@@ -59,5 +59,8 @@
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(GRACZ) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** użył komendy `{1}` na serwerze `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** użył komendy `{1}` na serwerze `HOSTNAME`",
+
+	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
+	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

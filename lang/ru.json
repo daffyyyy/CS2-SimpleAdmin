@@ -58,5 +58,8 @@
 	"sa_adminchat_template_admin": "{LIME}(АДМИНИСТРАТОР) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(ИГРОК) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** выполнил команду `{1}` на сервере `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** выполнил команду `{1}` на сервере `HOSTNAME`",
+
+	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
+	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }
