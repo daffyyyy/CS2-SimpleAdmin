@@ -382,16 +382,19 @@ namespace CS2_SimpleAdmin
 		{
 			bool validCaller = caller != null && caller.IsValid;
 			
-			if (duration > Config.MaxBanDuration)
+			bool canPermBan = validCaller && AdminManager.PlayerHasPermissions(caller, "@css/permban");
+			
+			if (duration > Config.MaxBanDuration && canPermBan == false)
 			{
 				if (validCaller)
 					caller.PrintToChat($"[Simple Admin] Ban duration cannot exceed {Config.MaxBanDuration} minutes.");
 				return false;
 			}
 
-			if (duration == 0 && validCaller && AdminManager.PlayerHasPermissions(caller, "@css/permban") == false)
+			if (duration == 0 && canPermBan == false)
 			{
-				caller.PrintToChat($"[Simple Admin] You do not have the right to permanently ban.");
+				if (validCaller)
+					caller.PrintToChat($"[Simple Admin] You do not have the right to permanently ban.");
 				return false;
 			}
 
