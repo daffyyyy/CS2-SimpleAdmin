@@ -50,6 +50,9 @@ namespace CS2_SimpleAdmin
 		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
 		{
 			if (_database == null || player is null || !player.IsValid) return;
+			
+			if (CheckValidBan(caller, time) == false) 
+				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
@@ -143,6 +146,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
+			
 			string callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
@@ -162,6 +166,9 @@ namespace CS2_SimpleAdmin
 			BanManager _banManager = new(database, Config);
 
 			int.TryParse(command.GetArg(2), out int time);
+			
+			if (CheckValidBan(caller, time) == false) 
+				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
@@ -283,6 +290,8 @@ namespace CS2_SimpleAdmin
 			};
 
 			int.TryParse(command.GetArg(2), out int time);
+			if (CheckValidBan(caller, time) == false) 
+				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
@@ -367,6 +376,26 @@ namespace CS2_SimpleAdmin
 			}
 
 			command?.ReplyToCommand($"Banned player with IP address {ipAddress}.");
+		}
+		
+		private bool CheckValidBan(CCSPlayerController? caller, int duration)
+		{
+			bool validCaller = caller != null && caller.IsValid;
+			
+			if (duration > Config.MaxBanDuration)
+			{
+				if (validCaller)
+					caller.PrintToChat($"[Simple Admin] Ban duration cannot exceed {Config.MaxBanDuration} minutes.");
+				return false;
+			}
+
+			if (duration == 0 && validCaller && AdminManager.PlayerHasPermissions(caller, "@css/permban") == false)
+			{
+				caller.PrintToChat($"[Simple Admin] You do not have the right to permanently ban.");
+				return false;
+			}
+
+			return true;
 		}
 
 		[ConsoleCommand("css_unban")]
