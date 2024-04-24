@@ -7,6 +7,8 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using Discord;
+using Discord.Webhook;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -45,13 +47,13 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetValidPlayers()
 		{
-			return Utilities.GetPlayers().FindAll(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV);
+			return Utilities.GetPlayers().FindAll(p => p != null && p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV);
 		}
 
 		public static List<CCSPlayerController> GetValidPlayersWithBots()
 		{
 			return Utilities.GetPlayers().FindAll(p =>
-			p != null && p.IsValid && p.SteamID.ToString().Length == 17 && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV ||
+			p != null && p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsBot && !p.IsHLTV ||
 			p != null && p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && p.IsBot && !p.IsHLTV
 			);
 		}
@@ -196,6 +198,88 @@ namespace CS2_SimpleAdmin
 			return new List<Embed> { embed.Build() };
 		}
 
+		public static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
+		{
+			if (discordWebhookClientLog != null && localizer != null)
+			{
+				string communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				string callerName = caller != null ? caller.PlayerName : "Console";
+				discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+			}
+		}
+
+		public enum PenaltyType
+		{
+			Ban,
+			Mute,
+			Gag,
+			Silence,
+		}
+
+		public static string ConvertMinutesToTime(int minutes)
+		{
+			TimeSpan time = TimeSpan.FromMinutes(minutes);
+
+			return time.Days > 0 ? $"{time.Days}d {time.Hours}h {time.Minutes}m" : time.Hours > 0 ? $"{time.Hours}h {time.Minutes}m" : $"{time.Minutes}m";
+		}
+
+		public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, DiscordWebhookClient? discordWebhookClientPenalty, IStringLocalizer? localizer)
+		{
+			if (discordWebhookClientPenalty != null && localizer != null)
+			{
+				string callercommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				string targetcommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+				string callerName = caller != null ? caller.PlayerName : "Console";
+				string targetName = target != null ? target.PlayerName : localizer?["sa_unknown"] ?? "Unknown";
+				string targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2.ToString() : localizer?["sa_unknown"] ?? "Unknown";
+
+				string time = duration != 0 ? ConvertMinutesToTime(duration) : localizer?["sa_permanent"] ?? "Permanent";
+
+				string[] fieldNames = [
+					localizer?["sa_player"] ?? "Player:",
+					localizer?["sa_steamid"] ?? "SteamID:",
+					localizer?["sa_duration"] ?? "Duration:",
+					localizer?["sa_reason"] ?? "Reason:",
+					localizer?["sa_admin"] ?? "Admin:"];
+				string[] fieldValues = [$"[{targetName}]({targetcommunityUrl})", targetSteamId, time, reason, $"[{callerName}]({callercommunityUrl})"];
+				bool[] inlineFlags = [true, true, true, false, false];
+
+				string? hostname = ConVar.Find("hostname")!.StringValue ?? localizer?["sa_unknown"] ?? "Unknown";
+
+				var embed = new EmbedBuilder
+				{
+					Title = penalty switch
+					{
+						PenaltyType.Ban => localizer?["sa_discord_penalty_ban"] ?? "Ban registrered",
+						PenaltyType.Mute => localizer?["sa_discord_penalty_mute"] ?? "Mute registrered",
+						PenaltyType.Gag => localizer?["sa_discord_penalty_gag"] ?? "Gag registrered",
+						PenaltyType.Silence => localizer?["sa_discord_penalty_silence"] ?? "Silence registrered",
+						_ => localizer?["sa_discord_penalty_unknown"] ?? "Unknown registrered",
+					},
+
+					Color = penalty switch
+					{
+						PenaltyType.Ban => Color.Red,
+						PenaltyType.Mute => Color.Blue,
+						PenaltyType.Gag => Color.Gold,
+						PenaltyType.Silence => Color.Green,
+						_ => Color.Default,
+					},
+
+					Description = $"{hostname}",
+
+					Timestamp = DateTimeOffset.UtcNow
+				};
+
+				for (int i = 0; i < fieldNames.Length; i++)
+				{
+					embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
+				}
+
+				discordWebhookClientPenalty.SendMessageAsync(embeds: [embed.Build()]);
+			}
+		}
+
 		public static string GenerateMessageDiscord(string message)
 		{
 			string? hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
@@ -223,12 +307,12 @@ namespace CS2_SimpleAdmin
 			var updatedJsonContent = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true, Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
 			File.WriteAllText(CfgPath, updatedJsonContent);
 		}
-		
+
 		public static void TryLogCommandOnDiscord(CCSPlayerController? caller, string commandString)
 		{
 			if (CS2_SimpleAdmin._discordWebhookClientLog == null || CS2_SimpleAdmin._localizer == null)
 				return;
-			
+
 			if (caller != null && caller.IsValid == false)
 				caller = null;
 

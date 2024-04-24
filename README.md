@@ -61,13 +61,17 @@ Manage your Counter-Strike 2 server by simple commands :)
 - team_chat @Message - Say message to all admins // @css/chat
 ```
 
-### Requirments
-- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v168**
+### Requirements
+- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v201**
 - MySQL **tested on MySQL (MariaDB) Server version: 10.11.4-MariaDB-1~deb12u1 Debian 12**
 
 
 ### Configuration
 After first launch, u need to configure plugin in  addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json
+
+### Metrics
+From version 1.3.7a, CS2-SimpleAdmin now initiates metrics data collection. This includes gathering essential information such as the `server name`, `server address` and `country`.
+You can disable metrics by set `EnableMetrics` to false in plugin configuration.
 
 ### Colors
 ```

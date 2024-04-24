@@ -1,10 +1,9 @@
-﻿using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
-using CounterStrikeSharp.API.Modules.Entities;
 using System.Text;
 
 namespace CS2_SimpleAdmin
@@ -21,6 +20,8 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && player.PawnIsAlive && !player.IsHLTV).ToList();
 
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+
 			playersToTarget.ForEach(player =>
 			{
 				if (caller!.CanTarget(player))
@@ -35,9 +36,7 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.ToggleNoclip();
 
-			string commandName = $"css_noclip {player.PlayerName}";
-			Helper.TryLogCommandOnDiscord(caller, commandName);
-			Helper.LogCommand(caller, commandName);
+			Helper.LogCommand(caller, $"css_noclip {player.PlayerName}");
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{
@@ -64,6 +63,8 @@ namespace CS2_SimpleAdmin
 			TargetResult? targets = GetTarget(command);
 			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
 
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+
 			playersToTarget.ForEach(player =>
 			{
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
@@ -82,9 +83,7 @@ namespace CS2_SimpleAdmin
 
 			player.Pawn.Value!.Freeze();
 
-			string commandName = $"css_freeze {player.PlayerName}";
-			Helper.TryLogCommandOnDiscord(caller, commandName);
-			Helper.LogCommand(caller, commandName);
+			Helper.LogCommand(caller, $"css_freeze {player.PlayerName}");
 
 			if (time > 0)
 				AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
@@ -118,19 +117,21 @@ namespace CS2_SimpleAdmin
 				if (!player.IsBot && player.SteamID.ToString().Length != 17)
 					return;
 
-				Unfreeze(caller, player, callerName);
+				Unfreeze(caller, player, callerName, command);
 			});
 		}
 
-		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			player!.Pawn.Value!.Unfreeze();
 
-			string commandName = $"css_unfreeze {player.PlayerName}";
-			Helper.TryLogCommandOnDiscord(caller, commandName);
-			Helper.LogCommand(caller, commandName);
+			if (command != null)
+			{
+				Helper.LogCommand(caller, command);
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			}
 
 			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
 			{

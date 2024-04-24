@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "Desconhecido",
 
+	"sa_player": "Jogador",
+	"sa_steamid": "SteamID",
+	"sa_duration": "Duração",
+	"sa_reason": "Motivo",
+	"sa_admin": "Admin",
+	"sa_permanent": "Permanente",
+
+	"sa_discord_penalty_ban": "Banimento registrado",
+	"sa_discord_penalty_mute": "Mute registrado",
+	"sa_discord_penalty_gag": "Gag registrado",
+	"sa_discord_penalty_silence": "Silêncio registrado",
+	"sa_discord_penalty_unknown": "Desconhecido registrado",
+
 	"sa_player_ban_message_time": "Você foi banido por {lightred}{0}{default} por {lightred}{1}{default} minutos por {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Você foi banido permanentemente por {lightred}{0}{default} por {lightred}{1}{default}!",
 	"sa_player_kick_message": "Você foi expulso por {lightred}{0}{default} por {lightred}{1}{default}!",

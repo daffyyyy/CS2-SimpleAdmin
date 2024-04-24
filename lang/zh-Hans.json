@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "未知",
 
+	"sa_player": "玩家",
+	"sa_steamid": "SteamID",
+	"sa_duration": "持续时间",
+	"sa_reason": "原因",
+	"sa_admin": "管理员",
+	"sa_permanent": "永久",
+
+	"sa_discord_penalty_ban": "封禁已记录",
+	"sa_discord_penalty_mute": "禁言已记录",
+	"sa_discord_penalty_gag": "禁言已记录",
+	"sa_discord_penalty_silence": "禁声已记录",
+	"sa_discord_penalty_unknown": "未知已记录",
+
 	"sa_player_ban_message_time": "你因为{lightred}{0}{default}的原因被{lightred}{1}{default}禁止{lightred}{2}{default}分钟！",
 	"sa_player_ban_message_perm": "你因为{lightred}{0}{default}的原因被{lightred}{1}{default}永久禁止！",
 	"sa_player_kick_message": "你因为{lightred}{0}{default}的原因被{lightred}{1}{default}踢出！",

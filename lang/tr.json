@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "Bilinmeyen",
 
+	"sa_player": "Oyuncu",
+	"sa_steamid": "SteamID",
+	"sa_duration": "Süre",
+	"sa_reason": "Neden",
+	"sa_admin": "Yönetici",
+	"sa_permanent": "Kalıcı",
+
+	"sa_discord_penalty_ban": "Yasak kaydedildi",
+	"sa_discord_penalty_mute": "Susturma kaydedildi",
+	"sa_discord_penalty_gag": "Susturma kaydedildi",
+	"sa_discord_penalty_silence": "Sessizlik kaydedildi",
+	"sa_discord_penalty_unknown": "Bilinmeyen kaydedildi",
+
 	"sa_player_ban_message_time": "Senaryo nedeniyle {lightred}{0}{default} dakika boyunca {lightred}{1}{default} tarafından yasaklandınız!",
 	"sa_player_ban_message_perm": "Senaryo nedeniyle kalıcı olarak {lightred}{0}{default} tarafından yasaklandınız!",
 	"sa_player_kick_message": "Senaryo nedeniyle {lightred}{0}{default} tarafından atıldınız!",

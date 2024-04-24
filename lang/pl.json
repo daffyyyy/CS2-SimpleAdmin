@@ -2,6 +2,19 @@
 	"sa_prefix": "{lightred}[SA] {default}",
 	"sa_unknown": "Brak",
 
+	"sa_player": "Gracz",
+	"sa_steamid": "SteamID",
+	"sa_duration": "Czas trwania",
+	"sa_reason": "Powód",
+	"sa_admin": "Administrator",
+	"sa_permanent": "Na zawsze",
+
+	"sa_discord_penalty_ban": "Nowy ban",
+	"sa_discord_penalty_mute": "Nowe wyciszenie",
+	"sa_discord_penalty_gag": "Nowe zakneblowanie",
+	"sa_discord_penalty_silence": "Nowe uciszenie",
+	"sa_discord_penalty_unknown": "Nowa nieznana blokada",
+
 	"sa_player_ban_message_time": "Zostałeś zbanowany za {lightred}{0}{default} na {lightred}{1}{default} minut przez {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Zostałeś zbanowany na zawsze za {lightred}{0}{default} przez {lightred}{1}{default}!",
 	"sa_player_kick_message": "Zostałeś wyrzucony za {lightred}{0}{default} przez {lightred}{1}{default}!",
