@@ -422,6 +422,7 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
+				await _adminManager.GiveAllGroupsFlags();
 				await _adminManager.GiveAllFlags();
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);

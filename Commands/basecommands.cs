@@ -208,7 +208,97 @@ namespace CS2_SimpleAdmin
 				Server.PrintToConsole(msg);
 		}
 
-		[ConsoleCommand("css_reladmin")]
+		[ConsoleCommand("css_addgroup")]
+		[CommandHelper(minArgs: 3, usage: "<group_name> <flags> <immunity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		[RequiresPermissions("@css/root")]
+		public void OnAddGroup(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (_database == null) return;
+
+			if (!command.GetArg(1).StartsWith("#"))
+			{
+				command.ReplyToCommand($"Group name must start with #.");
+				return;
+			}
+
+			if (!command.GetArg(2).StartsWith("@") && !command.GetArg(2).StartsWith("#"))
+			{
+				command.ReplyToCommand($"Invalid flag or group.");
+				return;
+			}
+
+			string groupName = command.GetArg(1);
+			string flags = command.GetArg(2);
+			int immunity = 0;
+			int.TryParse(command.GetArg(3), out immunity);
+
+			AddGroup(caller, groupName, flags, immunity, command);
+		}
+
+		public static void AddGroup(CCSPlayerController? caller, string name, string flags, int immunity, CommandInfo? command = null)
+		{
+			if (_database == null) return;
+			AdminSQLManager _adminManager = new(_database);
+
+			List<string> flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
+			_ = _adminManager.AddGroup(name, flagsList, immunity);
+
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, $"css_addgroup {name} {flags} {immunity}");
+
+			string msg = $"Created group '{name}' with flags '{flags}'";
+			if (command != null)
+				command.ReplyToCommand(msg);
+			else if (caller != null && caller.IsValid)
+				caller.PrintToChat(msg);
+			else
+				Server.PrintToConsole(msg);
+		}
+
+		[ConsoleCommand("css_delgroup")]
+		[CommandHelper(minArgs: 1, usage: "<group_name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		[RequiresPermissions("@css/root")]
+		public void OnDelGroupCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (_database == null) return;
+
+			if (!command.GetArg(1).StartsWith("#"))
+			{
+				command.ReplyToCommand($"Group name must start with #.");
+				return;
+			}
+
+			string groupName = command.GetArg(1);
+
+			RemoveGroup(caller, groupName, command);
+		}
+
+		public void RemoveGroup(CCSPlayerController? caller, string name, CommandInfo? command = null)
+		{
+			if (_database == null) return;
+			AdminSQLManager _adminManager = new(_database);
+			_ = _adminManager.DeleteGroup(name);
+
+			AddTimer(2, () =>
+			{
+				ReloadAdmins(caller);
+			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, $"css_delgroup {name}");
+
+			string msg = $"Removed group '{name}'";
+			if (command != null)
+				command.ReplyToCommand(msg);
+			else if (caller != null && caller.IsValid)
+				caller.PrintToChat(msg);
+			else
+				Server.PrintToConsole(msg);
+		}
+
+		[ConsoleCommand("css_reloadadmins")]
 		[CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		[RequiresPermissions("@css/root")]
 		public void OnRelAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -217,7 +307,7 @@ namespace CS2_SimpleAdmin
 
 			ReloadAdmins(caller);
 
-			command.ReplyToCommand("Reloaded sql admins");
+			command.ReplyToCommand("Reloaded sql admins and groups");
 		}
 
 		public void ReloadAdmins(CCSPlayerController? caller)
@@ -234,6 +324,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			AdminSQLManager _adminManager = new(_database);
+			_ = _adminManager.GiveAllGroupsFlags();
 			_ = _adminManager.GiveAllFlags();
 		}
 

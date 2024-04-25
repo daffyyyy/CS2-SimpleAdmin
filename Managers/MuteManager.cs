@@ -97,9 +97,19 @@ internal class MuteManager(Database database)
 		{
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 			DateTime currentTime = DateTime.Now.ToLocalTime();
-			string sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
+			string sql = "";
 
-			var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTime };
+			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
+			{
+				sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime) " +
+					"AND server_id = @serverid";
+			}
+			else
+			{
+				sql = "SELECT * FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)";
+			}
+
+			var parameters = new { PlayerSteamID = steamId, CurrentTime = currentTime, serverid = CS2_SimpleAdmin.ServerId };
 			var activeMutes = (await connection.QueryAsync(sql, parameters)).ToList();
 			return activeMutes;
 		}
@@ -116,9 +126,18 @@ internal class MuteManager(Database database)
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			int muteCount;
-			string sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
+			string sql = "";
 
-			muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId });
+			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
+			{
+				sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND server_id = @serverid";
+			}
+			else
+			{
+				sql = "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID";
+			}
+
+			muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
 			return muteCount;
 		}
 		catch (Exception)
@@ -146,8 +165,20 @@ internal class MuteManager(Database database)
 			else if (type == 2)
 				muteType = "SILENCE";
 
-			string sqlRetrieveMutes = "SELECT id FROM sa_mutes WHERE (player_steamid = @pattern OR player_name = @pattern) AND type = @muteType AND status = 'ACTIVE'";
-			var mutes = await connection.QueryAsync(sqlRetrieveMutes, new { pattern = playerPattern, muteType });
+			string sqlRetrieveMutes = "";
+
+			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
+			{
+				sqlRetrieveMutes = "SELECT id FROM sa_mutes WHERE (player_steamid = @pattern OR player_name = @pattern) AND " +
+					"type = @muteType AND status = 'ACTIVE' AND server_id = @serverid";
+			}
+			else
+			{
+				sqlRetrieveMutes = "SELECT id FROM sa_mutes WHERE (player_steamid = @pattern OR player_name = @pattern) AND " +
+					"type = @muteType AND status = 'ACTIVE'";
+			}
+
+			var mutes = await connection.QueryAsync(sqlRetrieveMutes, new { pattern = playerPattern, muteType, serverid = CS2_SimpleAdmin.ServerId });
 
 			if (!mutes.Any())
 				return;
@@ -191,8 +222,17 @@ internal class MuteManager(Database database)
 		{
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
-			string sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime() });
+			string sql = "";
+			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
+			{
+				sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime AND server_id = @serverid";
+			}
+			else
+			{
+				sql = "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
+			}
+
+			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime(), serverid = CS2_SimpleAdmin.ServerId });
 		}
 		catch (Exception)
 		{

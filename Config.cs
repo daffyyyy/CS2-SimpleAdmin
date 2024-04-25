@@ -22,7 +22,7 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("Command")]
 		public string Command { get; set; } = "";
-		
+
 		[JsonPropertyName("ExecuteOnClient")]
 		public bool ExecuteOnClient { get; set; } = false;
 	}
@@ -60,6 +60,8 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("BanType")]
 		public int BanType { get; set; } = 1;
+		[JsonPropertyName("MultiServerMode")]
+		public bool MultiServerMode { get; set; } = true;
 
 		[JsonPropertyName("ExpireOldIpBans")]
 		public int ExpireOldIpBans { get; set; } = 0;

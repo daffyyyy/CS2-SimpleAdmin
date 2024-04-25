@@ -136,6 +136,101 @@ public class AdminSQLManager(Database database)
 		}
 	}
 
+	public async Task<Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>>> GetAllGroupsFlags()
+	{
+		try
+		{
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
+
+			string sql = "SELECT group_id FROM sa_groups_servers WHERE server_id = @serverid";
+			var groupIds = connection.Query<int>(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
+
+			sql = @"
+            SELECT g.group_id, f.flag 
+            FROM sa_groups_flags f
+            JOIN sa_groups_servers g ON f.group_id = g.group_id
+            WHERE g.server_id = @serverid";
+
+			var groupFlagData = connection.Query(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
+
+			if (groupIds.Count == 0 || groupFlagData.Count == 0)
+			{
+				return [];
+			}
+
+			var groupInfoDictionary = new Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>>();
+
+			foreach (var groupId in groupIds)
+			{
+				groupInfoDictionary[groupId] = new Tuple<List<string>, List<Tuple<string, DateTime?>>, int>([], [], 0);
+			}
+
+			foreach (var row in groupFlagData)
+			{
+				var groupId = (int)row.group_id;
+				var flag = (string)row.flag;
+
+				groupInfoDictionary[groupId].Item1.Add(flag);
+			}
+
+			sql = @"
+            SELECT a.group_id, a.player_steamid, a.ends, g.immunity 
+            FROM sa_admins a
+            JOIN sa_groups g ON a.group_id = g.id
+            WHERE a.group_id IN @groupIds";
+
+			var playerData = (await connection.QueryAsync(sql, new { groupIds })).ToList();
+
+			foreach (var row in playerData)
+			{
+				var groupId = (int)row.group_id;
+				var playerSteamid = (string)row.player_steamid;
+				var ends = row.ends as DateTime?;
+				var immunity = (int)row.immunity;
+
+				groupInfoDictionary[groupId].Item2.Add(new Tuple<string, DateTime?>(playerSteamid, ends));
+				groupInfoDictionary[groupId] = new Tuple<List<string>, List<Tuple<string, DateTime?>>, int>(groupInfoDictionary[groupId].Item1, groupInfoDictionary[groupId].Item2, immunity);
+			}
+
+			return groupInfoDictionary;
+		}
+		catch { }
+
+		return [];
+	}
+
+
+
+	public async Task GiveAllGroupsFlags()
+	{
+		Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>> groupFlags = await GetAllGroupsFlags();
+
+		foreach (var kvp in groupFlags)
+		{
+			var flags = kvp.Value.Item1;
+			var players = kvp.Value.Item2;
+			int immunity = kvp.Value.Item3;
+
+			foreach (var playerTuple in players)
+			{
+				var steamIdStr = playerTuple.Item1;
+				var ends = playerTuple.Item2;
+
+				if (!string.IsNullOrEmpty(steamIdStr) && SteamID.TryParse(steamIdStr, out var steamId) && steamId != null)
+				{
+					if (!_adminCache.ContainsKey(steamId))
+					{
+						_adminCache.TryAdd(steamId, ends);
+					}
+
+					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
+					// Often need to call 2 times
+					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
+				}
+			}
+		}
+	}
+
 	public async Task GiveAllFlags()
 	{
 		List<(string, List<string>, int, DateTime?)> allPlayers = await GetAllPlayersFlags();
@@ -221,7 +316,22 @@ public class AdminSQLManager(Database database)
 			// Insert flags into sa_admins_flags table
 			foreach (var flag in flagsList)
 			{
-				Console.WriteLine(flag);
+				if (flag.StartsWith("#"))
+				{
+					string sql = "SELECT id FROM `sa_groups` WHERE name = @groupName";
+					int? groupId = await connection.QuerySingleOrDefaultAsync<int?>(sql, new { groupName = flag });
+
+					if (groupId != null)
+					{
+						var updateAdminGroup = "UPDATE `sa_admins` SET group_id = @groupId WHERE id = @adminId";
+						await connection.ExecuteAsync(updateAdminGroup, new
+						{
+							groupId,
+							adminId
+						});
+					}
+				}
+
 				var insertFlagsSql = "INSERT INTO `sa_admins_flags` (`admin_id`, `flag`) " +
 									 "VALUES (@adminId, @flag)";
 
@@ -231,6 +341,66 @@ public class AdminSQLManager(Database database)
 					flag
 				});
 			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.ToString());
+		}
+	}
+
+	public async Task AddGroup(string groupName, List<string> flagsList, int immunity = 0)
+	{
+		if (string.IsNullOrEmpty(groupName) || flagsList == null || flagsList.Count == 0) return;
+
+		try
+		{
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
+
+			// Insert group into sa_groups table
+			var insertGroup = "INSERT INTO `sa_groups` (`name`, `immunity`) " +
+								 "VALUES (@groupName, @immunity); SELECT LAST_INSERT_ID();";
+			int groupId = await connection.ExecuteScalarAsync<int>(insertGroup, new
+			{
+				groupName,
+				immunity
+			});
+
+			// Insert flags into sa_groups_flags table
+			foreach (var flag in flagsList)
+			{
+				var insertFlagsSql = "INSERT INTO `sa_groups_flags` (`group_id`, `flag`) " +
+									 "VALUES (@groupId, @flag)";
+
+				await connection.ExecuteAsync(insertFlagsSql, new
+				{
+					groupId,
+					flag
+				});
+			}
+
+			if (CS2_SimpleAdmin.ServerId != null)
+			{
+				string insertGroupServer = "INSERT INTO `sa_groups_servers` (`group_id`, `server_id`) " +
+										 "VALUES (@groupId, @server_id)";
+				await connection.ExecuteAsync(insertGroupServer, new { groupId, server_id = CS2_SimpleAdmin.ServerId });
+			}
+		}
+		catch (Exception ex)
+		{
+			Console.WriteLine(ex.ToString());
+		}
+	}
+
+	public async Task DeleteGroup(string groupName)
+	{
+		if (string.IsNullOrEmpty(groupName)) return;
+
+		try
+		{
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
+
+			string sql = "DELETE FROM `sa_groups` WHERE name = @groupName";
+			await connection.ExecuteAsync(sql, new { groupName });
 		}
 		catch (Exception ex)
 		{
