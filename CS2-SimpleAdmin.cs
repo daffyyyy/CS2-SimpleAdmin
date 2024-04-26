@@ -11,7 +11,7 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(201)]
+[MinimumApiVersion(215)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = new();
