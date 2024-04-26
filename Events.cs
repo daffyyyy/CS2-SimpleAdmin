@@ -422,8 +422,14 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
-				await _adminManager.GiveAllGroupsFlags();
-				await _adminManager.GiveAllFlags();
+				//await _adminManager.GiveAllGroupsFlags();
+				//await _adminManager.GiveAllFlags();
+
+				await _adminManager.CrateGroupsJsonFile();
+				await _adminManager.CreateAdminsJsonFile();
+
+				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 	}

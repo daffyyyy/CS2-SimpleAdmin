@@ -37,7 +37,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin";
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.0b";
+	public override string ModuleVersion => "1.4.1a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -123,6 +123,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		Config = config;
 		Helper.UpdateConfig(config);
+
+		if (!Directory.Exists(ModuleDirectory + "/data"))
+		{
+			Directory.CreateDirectory(ModuleDirectory + "/data");
+		}
 
 		_localizer = Localizer;
 

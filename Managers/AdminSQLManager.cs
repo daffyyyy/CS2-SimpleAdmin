@@ -2,7 +2,9 @@
 using Dapper;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
+using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using static Dapper.SqlMapper;
 
 namespace CS2_SimpleAdmin;
 
@@ -57,7 +59,7 @@ public class AdminSQLManager(Database database)
 	}
 	*/
 
-	public async Task<List<(string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
+	public async Task<List<(string, string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
 	{
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 
@@ -66,7 +68,7 @@ public class AdminSQLManager(Database database)
 			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
 			string sql = @"
-            SELECT sa_admins.player_steamid, sa_admins_flags.flag, sa_admins.immunity, sa_admins.ends
+            SELECT sa_admins.player_steamid, sa_admins.player_name, sa_admins_flags.flag, sa_admins.immunity, sa_admins.ends
             FROM sa_admins_flags
             JOIN sa_admins ON sa_admins_flags.admin_id = sa_admins.id
             WHERE (sa_admins.ends IS NULL OR sa_admins.ends > @CurrentTime)
@@ -80,8 +82,9 @@ public class AdminSQLManager(Database database)
 				return [];
 			}
 
-			List<(string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = [];
+			List<(string, string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = [];
 			string currentSteamId = string.Empty;
+			string currentPlayerName = string.Empty;
 			List<string> currentFlags = [];
 			int immunityValue = 0;
 			DateTime? ends = null;
@@ -94,6 +97,7 @@ public class AdminSQLManager(Database database)
 				}
 
 				if (!flagInfoDict.TryGetValue("player_steamid", out var steamIdObj) ||
+					!flagInfoDict.TryGetValue("player_name", out var playerNameObj) ||
 					!flagInfoDict.TryGetValue("flag", out var flagObj) ||
 					!flagInfoDict.TryGetValue("immunity", out var immunityValueObj) ||
 					!flagInfoDict.TryGetValue("ends", out var endsObj))
@@ -102,6 +106,7 @@ public class AdminSQLManager(Database database)
 				}
 
 				if (steamIdObj is not string steamId ||
+					playerNameObj is not string playerName ||
 					flagObj is not string flag ||
 					!int.TryParse(immunityValueObj.ToString(), out immunityValue))
 				{
@@ -115,17 +120,18 @@ public class AdminSQLManager(Database database)
 
 				if (currentSteamId != steamId && !string.IsNullOrEmpty(currentSteamId))
 				{
-					filteredFlagsWithImmunity.Add((currentSteamId, currentFlags, immunityValue, ends));
+					filteredFlagsWithImmunity.Add((currentSteamId, currentPlayerName, currentFlags, immunityValue, ends));
 					currentFlags = [];
 				}
 
 				currentSteamId = steamId;
+				currentPlayerName = playerName;
 				currentFlags.Add(flag);
 			}
 
 			if (!string.IsNullOrEmpty(currentSteamId))
 			{
-				filteredFlagsWithImmunity.Add((currentSteamId, currentFlags, immunityValue, ends));
+				filteredFlagsWithImmunity.Add((currentSteamId, currentPlayerName, currentFlags, immunityValue, ends));
 			}
 
 			return filteredFlagsWithImmunity;
@@ -136,6 +142,7 @@ public class AdminSQLManager(Database database)
 		}
 	}
 
+	/*
 	public async Task<Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>>> GetAllGroupsFlags()
 	{
 		try
@@ -174,7 +181,7 @@ public class AdminSQLManager(Database database)
 			}
 
 			sql = @"
-            SELECT a.group_id, a.player_steamid, a.ends, g.immunity 
+            SELECT a.group_id, a.player_steamid, a.ends, g.immunity, g.name  
             FROM sa_admins a
             JOIN sa_groups g ON a.group_id = g.id
             WHERE a.group_id IN @groupIds";
@@ -198,9 +205,79 @@ public class AdminSQLManager(Database database)
 
 		return [];
 	}
+	*/
 
+	public async Task<Dictionary<string, (List<string>, int)>> GetAllGroupsData()
+	{
+		try
+		{
+			await using MySqlConnection connection = await _database.GetConnectionAsync();
 
+			string sql = "SELECT group_id FROM sa_groups_servers WHERE server_id = @serverid";
+			var groupDataSql = connection.Query<int>(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
 
+			sql = @"
+				SELECT g.group_id, sg.name AS group_name, sg.immunity, f.flag
+				FROM sa_groups_flags f
+				JOIN sa_groups_servers g ON f.group_id = g.group_id
+				JOIN sa_groups sg ON sg.id = g.group_id
+				WHERE g.server_id = @serverid";
+
+			var groupData = connection.Query(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
+
+			if (groupDataSql.Count == 0 || groupData.Count == 0)
+			{
+				return [];
+			}
+
+			var groupInfoDictionary = new Dictionary<string, (List<string>, int)>();
+
+			foreach (var row in groupData)
+			{
+				var groupName = (string)row.group_name;
+				var flag = (string)row.flag;
+				var immunity = (int)row.immunity;
+
+				// Check if the group name already exists in the dictionary
+				if (!groupInfoDictionary.TryGetValue(groupName, out (List<string>, int) value))
+				{
+					value = (new List<string>(), immunity);
+					// If it doesn't exist, add a new entry with an empty list of flags and immunity
+					groupInfoDictionary[groupName] = value;
+				}
+
+				value.Item1.Add(flag);
+			}
+
+			return groupInfoDictionary;
+		}
+		catch { }
+
+		return [];
+	}
+
+	public async Task CrateGroupsJsonFile()
+	{
+		Dictionary<string, (List<string>, int)> groupsData = await GetAllGroupsData();
+
+		var jsonStructure = new Dictionary<string, object>();
+
+		foreach (var kvp in groupsData)
+		{
+			var groupData = new Dictionary<string, object>
+			{
+				["flags"] = kvp.Value.Item1,
+				["immunity"] = kvp.Value.Item2
+			};
+
+			jsonStructure[kvp.Key] = groupData;
+		}
+
+		string json = JsonConvert.SerializeObject(jsonStructure, Formatting.Indented);
+		File.WriteAllText(CS2_SimpleAdmin.Instance.ModuleDirectory + "/data/groups.json", json);
+	}
+
+	/*
 	public async Task GiveAllGroupsFlags()
 	{
 		Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>> groupFlags = await GetAllGroupsFlags();
@@ -230,10 +307,11 @@ public class AdminSQLManager(Database database)
 			}
 		}
 	}
-
+	*/
+	/*
 	public async Task GiveAllFlags()
 	{
-		List<(string, List<string>, int, DateTime?)> allPlayers = await GetAllPlayersFlags();
+		List<(string, string, List<string>, int, DateTime?)> allPlayers = await GetAllPlayersFlags();
 
 		foreach (var record in allPlayers)
 		{
@@ -256,6 +334,44 @@ public class AdminSQLManager(Database database)
 				Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
 			}
 		}
+	}
+	*/
+
+	public async Task CreateAdminsJsonFile()
+	{
+		List<(string identity, string name, List<string> flags, int immunity, DateTime? ends)> allPlayers = await GetAllPlayersFlags();
+
+		var jsonData = allPlayers
+			.Select(player =>
+			{
+				SteamID? steamId = null;
+
+				if (!string.IsNullOrEmpty(player.identity) && SteamID.TryParse(player.identity, out var id) && id != null)
+				{
+					steamId = id;
+				}
+
+				if (steamId != null && !_adminCache.ContainsKey(steamId))
+				{
+					_adminCache.TryAdd(steamId, player.ends);
+				}
+
+				return new
+				{
+					playerName = player.name,
+					playerData = new
+					{
+						player.identity,
+						player.immunity,
+						flags = player.flags.Where(flag => flag.StartsWith("@")).ToList(),
+						groups = player.flags.Where(flag => flag.StartsWith("#")).ToList()
+					}
+				};
+			})
+			.ToDictionary(item => item.playerName, item => item.playerData);
+
+		string json = JsonConvert.SerializeObject(jsonData, Formatting.Indented);
+		File.WriteAllText(CS2_SimpleAdmin.Instance.ModuleDirectory + "/data/admins.json", json);
 	}
 
 	public async Task DeleteAdminBySteamId(string playerSteamId, bool globalDelete = false)

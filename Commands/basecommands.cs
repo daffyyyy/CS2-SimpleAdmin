@@ -324,8 +324,19 @@ namespace CS2_SimpleAdmin
 			}
 
 			AdminSQLManager _adminManager = new(_database);
-			_ = _adminManager.GiveAllGroupsFlags();
-			_ = _adminManager.GiveAllFlags();
+
+			Task.Run(async () =>
+			{
+				await _adminManager.CrateGroupsJsonFile();
+				await _adminManager.CreateAdminsJsonFile();
+
+				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+			});
+
+
+			//_ = _adminManager.GiveAllGroupsFlags();
+			//_ = _adminManager.GiveAllFlags();
 		}
 
 		[ConsoleCommand("css_stealth")]
