@@ -2,7 +2,6 @@
 {
 	public class PlayerInfo
 	{
-		public int? Index { get; set; }
 		public int UserId { get; init; }
 		public int Slot { get; init; }
 		public string? SteamId { get; init; }

@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "Nezināms",
+	"sa_no_permission": "Jums nav atļauju izmantot šo komandu.",
+
+	"sa_admin_add": "Pievienot administratoru",
+	"sa_admin_remove": "Noņemt administratoru",
+	"sa_admin_reload": "Pārlādēt administratorus",
+
+	"sa_godmode": "Dieva režīms",
+	"sa_noclip": "Bez šķēršļiem",
+	"sa_respawn": "Atdzimt",
+	"sa_give_weapon": "Dot ieroci",
+	"sa_strip_weapons": "Noņemt ieročus",
+	"sa_freeze": "Salauzt",
+	"sa_set_hp": "Iestatīt veselību",
+	"sa_set_speed": "Iestatīt ātrumu",
+	"sa_set_gravity": "Iestatīt gravitāciju",
+	"sa_set_money": "Iestatīt naudu",
+
+	"sa_changemap": "Mainīt karti",
+	"sa_restart_game": "Restartēt spēli",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "Mainīt",
+	"sa_team_spec": "Skatītājs",
+
+	"sa_slap": "Plašs",
+	"sa_slay": "Nogalināt",
+	"sa_kick": "Izraidīt",
+	"sa_ban": "Bloķēt",
+	"sa_gag": "Izslēgt runu",
+	"sa_mute": "Noklusināt",
+	"sa_silence": "Klusums",
+	"sa_team_force": "Spēka komanda",
+
+	"sa_menu_custom_commands": "Pielāgotās komandas",
+	"sa_menu_server_manage": "Servera pārvaldība",
+	"sa_menu_fun_commands": "Jautras komandas",
+	"sa_menu_admins_manage": "Administratoru pārvaldība",
+	"sa_menu_players_manage": "Spēlētāju pārvaldība",
 
 	"sa_player": "Spēlētājs",
 	"sa_steamid": "Steam ID",

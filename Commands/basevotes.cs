@@ -15,8 +15,7 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 2, usage: "<question> [... options ...]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnVoteCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			var callerName = caller == null ? "Console" : caller.PlayerName;
-			if (command.GetArg(1) == null || command.GetArg(1).Length < 0 || command.ArgCount < 2)
+			if (command.ArgCount < 2)
 				return;
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
@@ -47,8 +46,8 @@ namespace CS2_SimpleAdmin
 
 						voteMenu.PostSelectAction = PostSelectAction.Close;
 
-						Helper.PrintToCenterAll(_localizer!["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
+						Helper.PrintToCenterAll(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
+						StringBuilder sb = new(_localizer["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						player.PrintToChat(sb.ToString());
 
