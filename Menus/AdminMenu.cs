@@ -35,15 +35,13 @@ namespace CS2_SimpleAdmin.Menus
 				return;
 			}
 
-			//bool xpRights = AdminManager.PlayerHasPermissions(admin, "@wcs/xp");
-
-			BaseMenu menu = AdminMenu.CreateMenu("Simple Admin");
-			List<ChatMenuOptionData> options = new()
-			{
+			BaseMenu menu = CreateMenu("Simple Admin");
+			List<ChatMenuOptionData> options =
+			[
 				new ChatMenuOptionData("Manage Players", () => ManagePlayersMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Manage Server", () => ManageServerMenu.OpenMenu(admin)),
 				new ChatMenuOptionData("Fun actions", () => FunActionsMenu.OpenMenu(admin)),
-			};
+			];
 
 			List<CustomServerCommandData> customCommands = CS2_SimpleAdmin.Instance.Config.CustomServerCommands;
 			if (customCommands.Count > 0)
