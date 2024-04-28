@@ -46,7 +46,7 @@ public class Database(string dbConnectionString)
 
 	public bool CheckDatabaseConnection()
 	{
-		using MySqlConnection connection = GetConnection();
+		using var connection = GetConnection();
 
 		try
 		{

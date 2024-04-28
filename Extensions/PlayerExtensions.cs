@@ -22,44 +22,47 @@ public static class PlayerExtensions
 		controller.PrintToChat(_message.ToString());
 	}
 
-	public static bool CanTarget(this CCSPlayerController controller, CCSPlayerController target)
+	public static bool CanTarget(this CCSPlayerController? controller, CCSPlayerController? target)
 	{
-		if (target.IsBot) return true;
+		if (target != null && target.IsBot) return true;
 		if (controller is null) return true;
 
-		return AdminManager.CanPlayerTarget(controller, target) || AdminManager.CanPlayerTarget(new SteamID(controller.SteamID), new SteamID(target.SteamID));
+		return target != null && (AdminManager.CanPlayerTarget(controller, target) ||
+		                          AdminManager.CanPlayerTarget(new SteamID(controller.SteamID),
+			                          new SteamID(target.SteamID)));
 	}
 
-	public static void SetSpeed(this CCSPlayerController controller, float speed)
+	public static void SetSpeed(this CCSPlayerController? controller, float speed)
 	{
-		CCSPlayerPawn? playerPawnValue = controller.PlayerPawn.Value;
+		var playerPawnValue = controller?.PlayerPawn.Value;
 		if (playerPawnValue == null) return;
 
 		playerPawnValue.VelocityModifier = speed;
 	}
 
-	public static void SetGravity(this CCSPlayerController controller, float gravity)
+	public static void SetGravity(this CCSPlayerController? controller, float gravity)
 	{
-		CCSPlayerPawn? playerPawnValue = controller.PlayerPawn.Value;
+		var playerPawnValue = controller?.PlayerPawn.Value;
 		if (playerPawnValue == null) return;
 
 		playerPawnValue.GravityScale = gravity;
 	}
 
-	public static void SetMoney(this CCSPlayerController controller, int money)
+	public static void SetMoney(this CCSPlayerController? controller, int money)
 	{
-		var moneyServices = controller.InGameMoneyServices;
+		var moneyServices = controller?.InGameMoneyServices;
 		if (moneyServices == null) return;
 
 		moneyServices.Account = money;
 
-		Utilities.SetStateChanged(controller, "CCSPlayerController", "m_pInGameMoneyServices");
+		if (controller != null) Utilities.SetStateChanged(controller, "CCSPlayerController", "m_pInGameMoneyServices");
 	}
 
-	public static void SetHp(this CCSPlayerController controller, int health = 100)
+	public static void SetHp(this CCSPlayerController? controller, int health = 100)
 	{
-		if (health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null) return;
-
+		if (controller == null) return;
+		if ((health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null)) return;
+		
 		controller.PlayerPawn.Value.Health = health;
 
 		if (health > 100)
@@ -116,36 +119,36 @@ public static class PlayerExtensions
 		}
 	}
 
-	public static void Rename(this CCSPlayerController controller, string newName = "Unknown")
+	public static void Rename(this CCSPlayerController? controller, string newName = "Unknown")
 	{
-		if (CS2_SimpleAdmin.Instance == null)
-			return;
-
 		newName = newName ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
-		SchemaString<CBasePlayerController> playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
-		playerName.Set(newName + " ");
-
-		CS2_SimpleAdmin.Instance.AddTimer(0.25f, () =>
+		if (controller != null)
 		{
-			Utilities.SetStateChanged(controller, "CCSPlayerController", "m_szClan");
-			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
-		});
+			var playerName = new SchemaString<CBasePlayerController>(controller, "m_iszPlayerName");
+			playerName.Set(newName + " ");
 
-		CS2_SimpleAdmin.Instance.AddTimer(0.3f, () =>
-		{
-			playerName.Set(newName);
-		});
+			CS2_SimpleAdmin.Instance.AddTimer(0.25f, () =>
+			{
+				Utilities.SetStateChanged(controller, "CCSPlayerController", "m_szClan");
+				Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
+			});
+
+			CS2_SimpleAdmin.Instance.AddTimer(0.3f, () =>
+			{
+				playerName.Set(newName);
+			});
+		}
 
 		CS2_SimpleAdmin.Instance.AddTimer(0.4f, () =>
 		{
-			Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
+			if (controller != null) Utilities.SetStateChanged(controller, "CBasePlayerController", "m_iszPlayerName");
 		});
 	}
 
-	public static void TeleportPlayer(this CCSPlayerController controller, CCSPlayerController target)
+	public static void TeleportPlayer(this CCSPlayerController? controller, CCSPlayerController? target)
 	{
-		if (controller.PlayerPawn?.Value == null && target!.PlayerPawn?.Value == null)
+		if (controller?.PlayerPawn?.Value == null && target!.PlayerPawn?.Value == null)
 			return;
 
 		if (

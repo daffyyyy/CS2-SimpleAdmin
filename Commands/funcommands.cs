@@ -15,10 +15,12 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/cheats")]
 		public void OnNoclipCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			TargetResult? targets = GetTarget(command);
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && player.PawnIsAlive && !player.IsHLTV).ToList();
+			var targets = GetTarget(command);
+			var playersToTarget = targets!.Players.Where(player =>
+				player.IsValid && player.SteamID.ToString().Length == 17 &&
+				player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
@@ -31,23 +33,21 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void NoClip(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null)
+		public void NoClip(CCSPlayerController? caller, CCSPlayerController? player, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.ToggleNoclip();
 
 			Helper.LogCommand(caller, $"css_noclip {player.PlayerName}");
 
-			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			foreach (var controller in Helper.GetValidPlayers())
 			{
-				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
-					using (new WithTemporaryCulture(_player.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_noclip_message", callerName, player.PlayerName]);
-						_player.PrintToChat(sb.ToString());
-					}
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_noclip_message", callerName, player.PlayerName]);
+					controller.PrintToChat(sb.ToString());
 				}
 			}
 		}
@@ -57,11 +57,11 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/slay")]
 		public void OnFreezeCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
-			int.TryParse(command.GetArg(2), out int time);
+			var callerName = caller == null ? "Console" : caller.PlayerName;
+			int.TryParse(command.GetArg(2), out var time);
 
-			TargetResult? targets = GetTarget(command);
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
+			var targets = GetTarget(command);
+			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
@@ -77,27 +77,25 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Freeze(CCSPlayerController? caller, CCSPlayerController player, int time, string? callerName = null)
+		public void Freeze(CCSPlayerController? caller, CCSPlayerController? player, int time, string? callerName = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
-			player.Pawn.Value!.Freeze();
+			player?.Pawn.Value!.Freeze();
 
-			Helper.LogCommand(caller, $"css_freeze {player.PlayerName}");
+			Helper.LogCommand(caller, $"css_freeze {player?.PlayerName}");
 
 			if (time > 0)
-				AddTimer(time, () => player.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+				AddTimer(time, () => player?.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			foreach (var controller in Helper.GetValidPlayers())
 			{
-				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
-					using (new WithTemporaryCulture(_player.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_freeze_message", callerName, player.PlayerName]);
-						_player.PrintToChat(sb.ToString());
-					}
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_freeze_message", callerName, player?.PlayerName ?? string.Empty]);
+					controller.PrintToChat(sb.ToString());
 				}
 			}
 		}
@@ -107,10 +105,10 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/slay")]
 		public void OnUnfreezeCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			TargetResult? targets = GetTarget(command);
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.PawnIsAlive && !player.IsHLTV).ToList();
+			var targets = GetTarget(command);
+			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -121,7 +119,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
+		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController? player, string? callerName = null, CommandInfo? command = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
@@ -133,16 +131,14 @@ namespace CS2_SimpleAdmin
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			}
 
-			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			foreach (var controller in Helper.GetValidPlayers())
 			{
-				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
-					using (new WithTemporaryCulture(_player.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_unfreeze_message", callerName, player.PlayerName]);
-						_player.PrintToChat(sb.ToString());
-					}
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_unfreeze_message", callerName, player.PlayerName]);
+					controller.PrintToChat(sb.ToString());
 				}
 			}
 		}

@@ -16,7 +16,7 @@ namespace CS2_SimpleAdmin.Menus
 			new Tuple<string, int>("Permanent", 0)
 		};
 
-		public static void OpenMenu(CCSPlayerController admin, string menuName, CCSPlayerController player, Action<CCSPlayerController, CCSPlayerController, int> onSelectAction)
+		public static void OpenMenu(CCSPlayerController admin, string menuName, CCSPlayerController? player, Action<CCSPlayerController, CCSPlayerController?, int> onSelectAction)
 		{
 			BaseMenu menu = AdminMenu.CreateMenu(menuName);
 

@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `sa_unmutes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `sa_admins` (`id`, `player_name`, `player_steamid`, `flags`, `immunity`, `server_id`, `ends`, `created`) 
-VALUES (-1, 'Console', 'Console', '', '0', NULL, NULL, '0000-00-00 00:00:00');
+VALUES (-1, 'Console', 'Console', '', '0', NULL, NULL, NOW());
 
 UPDATE `sa_admins` SET `id` = 0 WHERE `id` = -1;
 

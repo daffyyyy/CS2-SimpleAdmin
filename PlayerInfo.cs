@@ -3,10 +3,10 @@
 	public class PlayerInfo
 	{
 		public int? Index { get; set; }
-		public int UserId { get; set; }
-		public int Slot { get; set; }
-		public string? SteamId { get; set; }
-		public string? Name { get; set; }
-		public string? IpAddress { get; set; }
+		public int UserId { get; init; }
+		public int Slot { get; init; }
+		public string? SteamId { get; init; }
+		public string? Name { get; init; }
+		public string? IpAddress { get; init; }
 	}
 }

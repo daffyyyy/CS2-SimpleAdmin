@@ -22,14 +22,14 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("Command")]
 		public string Command { get; set; } = "";
-		
+
 		[JsonPropertyName("ExecuteOnClient")]
 		public bool ExecuteOnClient { get; set; } = false;
 	}
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 9;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 10;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";
@@ -63,6 +63,8 @@ namespace CS2_SimpleAdmin
 		
 		[JsonPropertyName("BanType")]
 		public int BanType { get; set; } = 1;
+		[JsonPropertyName("MultiServerMode")]
+		public bool MultiServerMode { get; set; } = true;
 
 		[JsonPropertyName("ExpireOldIpBans")]
 		public int ExpireOldIpBans { get; set; } = 0;
@@ -74,12 +76,12 @@ namespace CS2_SimpleAdmin
 		public Discord Discord { get; set; } = new Discord();
 
 		[JsonPropertyName("DefaultMaps")]
-		public List<string> DefaultMaps { get; set; } = new List<string>();
+		public List<string> DefaultMaps { get; set; } = [];
 
 		[JsonPropertyName("WorkshopMaps")]
-		public List<string> WorkshopMaps { get; set; } = new List<string>();
+		public List<string> WorkshopMaps { get; set; } = [];
 
 		[JsonPropertyName("CustomServerCommands")]
-		public List<CustomServerCommandData> CustomServerCommands { get; set; } = new List<CustomServerCommandData>();
+		public List<CustomServerCommandData> CustomServerCommands { get; set; } = [];
 	}
 }

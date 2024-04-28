@@ -26,24 +26,24 @@ namespace CS2_SimpleAdmin
 			{
 				try
 				{
-					using var connection = await _database.GetConnectionAsync();
+					await using var connection = await _database.GetConnectionAsync();
 					var commandText = "ALTER TABLE `sa_mutes` CHANGE `type` `type` ENUM('GAG','MUTE', 'SILENCE', '') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'GAG';";
 
-					using var commandSql = connection.CreateCommand();
+					await using var commandSql = connection.CreateCommand();
 					commandSql.CommandText = commandText;
 					await commandSql.ExecuteNonQueryAsync();
 
 					commandText = "ALTER TABLE `sa_servers` MODIFY COLUMN `hostname` varchar(128);";
-					using var commandSql1 = connection.CreateCommand();
+					await using var commandSql1 = connection.CreateCommand();
 					commandSql1.CommandText = commandText;
 					await commandSql1.ExecuteNonQueryAsync();
 
 					commandText = "ALTER TABLE `sa_bans` MODIFY `ends` TIMESTAMP NULL DEFAULT NULL;";
-					using var commandSql2 = connection.CreateCommand();
+					await using var commandSql2 = connection.CreateCommand();
 					commandSql2.CommandText = commandText;
 					await commandSql2.ExecuteNonQueryAsync();
 
-					Server.NextFrame(() =>
+					await Server.NextFrameAsync(() =>
 					{
 						command.ReplyToCommand($"Successfully updated the database - {ModuleVersion}");
 					});
@@ -83,18 +83,11 @@ namespace CS2_SimpleAdmin
 				}
 			} */
 
-			string[] lines = File.ReadAllLines(ModuleDirectory + "/admin_help.txt");
+			var lines = File.ReadAllLines(ModuleDirectory + "/admin_help.txt");
 
-			foreach (string line in lines)
+			foreach (var line in lines)
 			{
-				if (string.IsNullOrWhiteSpace(line))
-				{
-					command.ReplyToCommand(" ");
-				}
-				else
-				{
-					command.ReplyToCommand(StringExtensions.ReplaceColorTags(line));
-				}
+				command.ReplyToCommand(string.IsNullOrWhiteSpace(line) ? " " : line.ReplaceColorTags());
 			}
 		}
 
@@ -104,9 +97,9 @@ namespace CS2_SimpleAdmin
 		public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			if (!Helper.IsValidSteamID64(command.GetArg(1)))
+			if (!Helper.IsValidSteamId64(command.GetArg(1)))
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
@@ -116,19 +109,20 @@ namespace CS2_SimpleAdmin
 				command.ReplyToCommand($"Invalid player name.");
 				return;
 			}
-			if (!command.GetArg(3).Contains("@") && !command.GetArg(3).Contains("#"))
+			if (!command.GetArg(3).Contains('@') && !command.GetArg(3).Contains('#'))
 			{
 				command.ReplyToCommand($"Invalid flag or group.");
 				return;
 			}
 
-			string steamid = command.GetArg(1);
-			string name = command.GetArg(2);
-			string flags = command.GetArg(3);
-			bool globalAdmin = command.GetArg(4).ToLower().Equals("-g") || command.GetArg(5).ToLower().Equals("-g") || command.GetArg(6).ToLower().Equals("-g");
-			int immunity = 0;
+			var steamid = command.GetArg(1);
+			var name = command.GetArg(2);
+			var flags = command.GetArg(3);
+			var globalAdmin = command.GetArg(4).ToLower().Equals("-g") || command.GetArg(5).ToLower().Equals("-g") ||
+                      command.GetArg(6).ToLower().Equals("-g");
+			var immunity = 0;
 			int.TryParse(command.GetArg(4), out immunity);
-			int time = 0;
+			var time = 0;
 			int.TryParse(command.GetArg(5), out time);
 
 			AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin, command);
@@ -139,14 +133,14 @@ namespace CS2_SimpleAdmin
 			if (_database == null) return;
 			AdminSQLManager _adminManager = new(_database);
 
-			List<string> flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
+			var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
 			_ = _adminManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
 
-			string msg = $"Added '{flags}' flags to '{name}' ({steamid})";
+			var msg = $"Added '{flags}' flags to '{name}' ({steamid})";
 			if (command != null)
 				command.ReplyToCommand(msg);
 			else if (caller != null && caller.IsValid)
@@ -161,16 +155,16 @@ namespace CS2_SimpleAdmin
 		public void OnDelAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			if (!Helper.IsValidSteamID64(command.GetArg(1)))
+			if (!Helper.IsValidSteamId64(command.GetArg(1)))
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
 
-			string steamid = command.GetArg(1);
-			bool globalDelete = command.GetArg(2).ToLower().Equals("-g");
+			var steamid = command.GetArg(1);
+			var globalDelete = command.GetArg(2).ToLower().Equals("-g");
 
 			RemoveAdmin(caller, steamid, globalDelete, command);
 		}
@@ -183,23 +177,22 @@ namespace CS2_SimpleAdmin
 
 			AddTimer(2, () =>
 			{
-				if (!string.IsNullOrEmpty(steamid) && SteamID.TryParse(steamid, out var steamId) && steamId != null)
+				if (string.IsNullOrEmpty(steamid) || !SteamID.TryParse(steamid, out var steamId) ||
+				    steamId == null) return;
+				if (AdminSQLManager._adminCache.ContainsKey(steamId))
 				{
-					if (AdminSQLManager._adminCache.ContainsKey(steamId))
-					{
-						AdminSQLManager._adminCache.TryRemove(steamId, out _);
-					}
-
-					AdminManager.ClearPlayerPermissions(steamId);
-					AdminManager.RemovePlayerAdminData(steamId);
+					AdminSQLManager._adminCache.TryRemove(steamId, out _);
 				}
+
+				AdminManager.ClearPlayerPermissions(steamId);
+				AdminManager.RemovePlayerAdminData(steamId);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_deladmin {steamid}");
 
-			string msg = $"Removed flags from '{steamid}'";
+			var msg = $"Removed flags from '{steamid}'";
 			if (command != null)
 				command.ReplyToCommand(msg);
 			else if (caller != null && caller.IsValid)
@@ -208,7 +201,97 @@ namespace CS2_SimpleAdmin
 				Server.PrintToConsole(msg);
 		}
 
-		[ConsoleCommand("css_reladmin")]
+		[ConsoleCommand("css_addgroup")]
+		[CommandHelper(minArgs: 3, usage: "<group_name> <flags> <immunity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		[RequiresPermissions("@css/root")]
+		public void OnAddGroup(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (_database == null) return;
+
+			if (!command.GetArg(1).StartsWith("#"))
+			{
+				command.ReplyToCommand($"Group name must start with #.");
+				return;
+			}
+
+			if (!command.GetArg(2).StartsWith($"@") && !command.GetArg(2).StartsWith($"#"))
+			{
+				command.ReplyToCommand($"Invalid flag or group.");
+				return;
+			}
+
+			var groupName = command.GetArg(1);
+			var flags = command.GetArg(2);
+			var immunity = 0;
+			int.TryParse(command.GetArg(3), out immunity);
+
+			AddGroup(caller, groupName, flags, immunity, command);
+		}
+
+		public static void AddGroup(CCSPlayerController? caller, string name, string flags, int immunity, CommandInfo? command = null)
+		{
+			if (_database == null) return;
+			AdminSQLManager _adminManager = new(_database);
+
+			var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
+			_ = _adminManager.AddGroup(name, flagsList, immunity);
+
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, $"css_addgroup {name} {flags} {immunity}");
+
+			var msg = $"Created group '{name}' with flags '{flags}'";
+			if (command != null)
+				command.ReplyToCommand(msg);
+			else if (caller != null && caller.IsValid)
+				caller.PrintToChat(msg);
+			else
+				Server.PrintToConsole(msg);
+		}
+
+		[ConsoleCommand("css_delgroup")]
+		[CommandHelper(minArgs: 1, usage: "<group_name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		[RequiresPermissions("@css/root")]
+		public void OnDelGroupCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (_database == null) return;
+
+			if (!command.GetArg(1).StartsWith($"#"))
+			{
+				command.ReplyToCommand($"Group name must start with #.");
+				return;
+			}
+
+			var groupName = command.GetArg(1);
+
+			RemoveGroup(caller, groupName, command);
+		}
+
+		private void RemoveGroup(CCSPlayerController? caller, string name, CommandInfo? command = null)
+		{
+			if (_database == null) return;
+			AdminSQLManager _adminManager = new(_database);
+			_ = _adminManager.DeleteGroup(name);
+
+			AddTimer(2, () =>
+			{
+				ReloadAdmins(caller);
+			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+			if (command != null)
+				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, $"css_delgroup {name}");
+
+			var msg = $"Removed group '{name}'";
+			if (command != null)
+				command.ReplyToCommand(msg);
+			else if (caller != null && caller.IsValid)
+				caller.PrintToChat(msg);
+			else
+				Server.PrintToConsole(msg);
+		}
+
+		[ConsoleCommand("css_reloadadmins")]
 		[CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		[RequiresPermissions("@css/root")]
 		public void OnRelAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -217,24 +300,36 @@ namespace CS2_SimpleAdmin
 
 			ReloadAdmins(caller);
 
-			command.ReplyToCommand("Reloaded sql admins");
+			command.ReplyToCommand("Reloaded sql admins and groups");
 		}
 
 		public void ReloadAdmins(CCSPlayerController? caller)
 		{
 			if (_database == null) return;
 
-			foreach (SteamID steamId in AdminSQLManager._adminCache.Keys.ToList())
+			for (var index = 0; index < AdminSQLManager._adminCache.Keys.ToList().Count; index++)
 			{
-				if (AdminSQLManager._adminCache.TryRemove(steamId, out _))
-				{
-					AdminManager.ClearPlayerPermissions(steamId);
-					AdminManager.RemovePlayerAdminData(steamId);
-				}
+				var steamId = AdminSQLManager._adminCache.Keys.ToList()[index];
+				if (!AdminSQLManager._adminCache.TryRemove(steamId, out _)) continue;
+				
+				AdminManager.ClearPlayerPermissions(steamId);
+				AdminManager.RemovePlayerAdminData(steamId);
 			}
 
 			AdminSQLManager _adminManager = new(_database);
-			_ = _adminManager.GiveAllFlags();
+
+			Task.Run(async () =>
+			{
+				await _adminManager.CrateGroupsJsonFile();
+				await _adminManager.CreateAdminsJsonFile();
+
+				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+			});
+
+
+			//_ = _adminManager.GiveAllGroupsFlags();
+			//_ = _adminManager.GiveAllFlags();
 		}
 
 		[ConsoleCommand("css_stealth")]
@@ -274,15 +369,15 @@ namespace CS2_SimpleAdmin
 		public void OnWhoCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			TargetResult? targets = GetTarget(command);
+			var targets = GetTarget(command);
 			if (targets == null) return;
 
 			Helper.LogCommand(caller, command);
 			//Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			var playersToTarget = targets!.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
 
 			Database database = new(dbConnectionString);
 			BanManager _banManager = new(database, Config);
@@ -291,53 +386,51 @@ namespace CS2_SimpleAdmin
 			playersToTarget.ForEach(player =>
 			{
 				if (!player.UserId.HasValue) return;
-				if (caller!.CanTarget(player))
+				if (!caller!.CanTarget(player)) return;
+				PlayerInfo playerInfo = new()
 				{
-					PlayerInfo playerInfo = new()
+					UserId = player.UserId.Value,
+					Index = (int)player.Index,
+					SteamId = player?.SteamID.ToString(),
+					Name = player?.PlayerName,
+					IpAddress = player?.IpAddress?.Split(":")[0]
+				};
+
+				Task.Run(async () =>
+				{
+					var totalBans = 0;
+					var totalMutes = 0;
+
+					totalBans = await _banManager.GetPlayerBans(playerInfo);
+					totalMutes = await _muteManager.GetPlayerMutes(playerInfo.SteamId!);
+
+					await Server.NextFrameAsync(() =>
 					{
-						UserId = player.UserId.Value,
-						Index = (int)player.Index,
-						SteamId = player?.SteamID.ToString(),
-						Name = player?.PlayerName,
-						IpAddress = player?.IpAddress?.Split(":")[0]
-					};
+						Action<string> printMethod = caller == null ? Server.PrintToConsole : caller.PrintToConsole;
 
-					Task.Run(async () =>
-					{
-						int totalBans = 0;
-						int totalMutes = 0;
+						printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
 
-						totalBans = await _banManager.GetPlayerBans(playerInfo);
-						totalMutes = await _muteManager.GetPlayerMutes(playerInfo.SteamId!);
-
-						Server.NextFrame(() =>
+						printMethod($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
+						printMethod($"• UserID: \"{playerInfo.UserId}\"");
+						if (playerInfo.SteamId != null)
+							printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
+						if (player.SteamID.ToString().Length == 17)
 						{
-							Action<string> printMethod = caller == null ? Server.PrintToConsole : caller.PrintToConsole;
+							printMethod($"• SteamID2: \"{player.SteamID}\"");
+							printMethod($"• Community link: \"{new SteamID(player.SteamID).ToCommunityUrl()}\"");
+						}
+						if (playerInfo.IpAddress != null)
+							printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
+						printMethod($"• Ping: \"{player.Ping}\"");
+						if (player.SteamID.ToString().Length == 17)
+						{
+							printMethod($"• Total Bans: \"{totalBans}\"");
+							printMethod($"• Total Mutes: \"{totalMutes}\"");
+						}
 
-							printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
-
-							printMethod($"• Clan: \"{player!.Clan}\" Name: \"{playerInfo.Name}\"");
-							printMethod($"• UserID: \"{playerInfo.UserId}\"");
-							if (playerInfo.SteamId != null)
-								printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
-							if (player.SteamID.ToString().Length == 17)
-							{
-								printMethod($"• SteamID2: \"{player.SteamID}\"");
-								printMethod($"• Community link: \"{new SteamID(player.SteamID).ToCommunityUrl()}\"");
-							}
-							if (playerInfo.IpAddress != null)
-								printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
-							printMethod($"• Ping: \"{player.Ping}\"");
-							if (player.SteamID.ToString().Length == 17)
-							{
-								printMethod($"• Total Bans: \"{totalBans}\"");
-								printMethod($"• Total Mutes: \"{totalMutes}\"");
-							}
-
-							printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
-						});
+						printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
 					});
-				}
+				});
 			});
 		}
 
@@ -346,14 +439,15 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/generic")]
 		public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			List<CCSPlayerController> playersToTarget = Helper.GetValidPlayers();
+			var playersToTarget = Helper.GetValidPlayers();
 
 			if (caller != null)
 			{
 				caller!.PrintToConsole($"--------- PLAYER LIST ---------");
 				playersToTarget.ForEach(player =>
 				{
-					caller!.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
+					caller!.PrintToConsole(
+						$"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
 				});
 				caller!.PrintToConsole($"--------- END PLAYER LIST ---------");
 			}
@@ -373,15 +467,16 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
-			string reason = _localizer?["sa_unknown"] ?? "Unknown";
+			var callerName = caller == null ? "Console" : caller.PlayerName;
+			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
-			TargetResult? targets = GetTarget(command);
+			var targets = GetTarget(command);
 
 			if (targets == null)
 				return;
 
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && !player.IsHLTV).ToList();
+			var playersToTarget = targets!.Players
+				.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 			{
@@ -403,10 +498,10 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		public void Kick(CCSPlayerController? caller, CCSPlayerController player, string reason = "Unknown", string? callerName = null, CommandInfo? command = null)
+		public void Kick(CCSPlayerController? caller, CCSPlayerController? player, string reason = "Unknown", string? callerName = null, CommandInfo? command = null)
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			if (player.PawnIsAlive)
+			if (player != null && player.PawnIsAlive)
 			{
 				player.Pawn.Value!.Freeze();
 			}
@@ -415,36 +510,35 @@ namespace CS2_SimpleAdmin
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-			Helper.LogCommand(caller, $"css_kick {player.PlayerName} {reason}");
+			Helper.LogCommand(caller, $"css_kick {player?.PlayerName} {reason}");
 
 			if (string.IsNullOrEmpty(reason) == false)
 			{
-				if (!player.IsBot && !player.IsHLTV)
+				if (player != null && !player.IsBot && !player.IsHLTV)
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
-				if (player.UserId.HasValue)
+				if (player != null && player.UserId.HasValue)
 					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, reason),
 						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 			else
 			{
-				if (player.UserId.HasValue)
+				if (player != null && player.UserId.HasValue)
 					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value),
 						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
-			if (caller == null || caller != null && caller.UserId != null && !silentPlayers.Contains(caller.Slot))
+			if (caller != null && (caller.UserId == null || silentPlayers.Contains(caller.Slot))) return;
+			foreach (var controller in Helper.GetValidPlayers())
 			{
-				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				
+				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
-					using (new WithTemporaryCulture(_player.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_kick_message", callerName, player.PlayerName, reason]);
-						_player.PrintToChat(sb.ToString());
-					}
+					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					sb.Append(_localizer["sa_admin_kick_message", callerName, player?.PlayerName ?? string.Empty, reason]);
+					controller.PrintToChat(sb.ToString());
 				}
 			}
 		}
@@ -455,27 +549,22 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string? map = command.GetCommandString.Split(" ")[1];
+			var map = command.GetCommandString.Split(" ")[1];
 			ChangeMap(caller, map, command);
 		}
 
 		public void ChangeMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
-			string _command = string.Empty;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
+			string _command;
 
 			map = map.ToLower();
 
 			if (map.StartsWith("ws:"))
 			{
-				if (long.TryParse(map.Replace("ws:", ""), out long mapId))
-				{
-					_command = $"host_workshop_map {mapId}";
-				}
-				else
-				{
-					_command = $"ds_workshop_changelevel {map.Replace("ws:", "")}";
-				}
+				_command = long.TryParse(map.Replace("ws:", ""), out var mapId)
+					? $"host_workshop_map {mapId}"
+					: $"ds_workshop_changelevel {map.Replace("ws:", "")}";
 
 				AddTimer(3.0f, () =>
 				{
@@ -486,7 +575,7 @@ namespace CS2_SimpleAdmin
 			{
 				if (!Server.IsMapValid(map))
 				{
-					string msg = $"Map {map} not found.";
+					var msg = $"Map {map} not found.";
 					if (command != null)
 						command.ReplyToCommand(msg);
 					else if (caller != null && caller.IsValid)
@@ -502,24 +591,22 @@ namespace CS2_SimpleAdmin
 				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
-			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			if (caller == null || !silentPlayers.Contains(caller.Slot))
 			{
-				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				foreach (var player in Helper.GetValidPlayers())
 				{
-					using (new WithTemporaryCulture(_player.GetLanguage()))
+					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						StringBuilder sb = new(_localizer!["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
-						_player.PrintToChat(sb.ToString());
+						player.PrintToChat(sb.ToString());
 					}
 				}
 			}
 
-			if (command != null)
-			{
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-				Helper.LogCommand(caller, command);
-			}
+			if (command == null) return;
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, command);
 		}
 
 		[ConsoleCommand("css_changewsmap", "Change workshop map.")]
@@ -529,35 +616,28 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/changemap")]
 		public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string? map = command.GetArg(1);
+			var map = command.GetArg(1);
 			ChangeWorkshopMap(caller, map, command);
 		}
 
 		public void ChangeWorkshopMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
-			string _command = string.Empty;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
+			string _command;
 
 			map = map.ToLower();
 
-			if (long.TryParse(map, out long mapId))
-			{
-				_command = $"host_workshop_map {mapId}";
-			}
-			else
-			{
-				_command = $"ds_workshop_changelevel {map}";
-			}
+			_command = long.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
 
-			if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+			if (caller == null || !silentPlayers.Contains(caller.Slot))
 			{
-				foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+				foreach (var player in Helper.GetValidPlayers())
 				{
-					using (new WithTemporaryCulture(_player.GetLanguage()))
+					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						StringBuilder sb = new(_localizer!["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
-						_player.PrintToChat(sb.ToString());
+						player.PrintToChat(sb.ToString());
 					}
 				}
 			}
@@ -567,11 +647,9 @@ namespace CS2_SimpleAdmin
 				Server.ExecuteCommand(_command);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (command != null)
-			{
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-				Helper.LogCommand(caller, command);
-			}
+			if (command == null) return;
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, command);
 		}
 
 		[ConsoleCommand("css_cvar", "Change a cvar.")]
@@ -580,7 +658,7 @@ namespace CS2_SimpleAdmin
 		public void OnCvarCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			var cvar = ConVar.Find(command.GetArg(1));
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (cvar == null)
 			{
@@ -610,7 +688,7 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/rcon")]
 		public void OnRconCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);

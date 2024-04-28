@@ -15,15 +15,15 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
 
-			string reason = _localizer?["sa_unknown"] ?? "Unknown";
+			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
-			TargetResult? targets = GetTarget(command);
+			var targets = GetTarget(command);
 			if (targets == null) return;
-			List<CCSPlayerController> playersToTarget = targets!.Players.Where(player => player != null && player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			var playersToTarget = targets!.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
 
 			if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 			{
@@ -33,7 +33,7 @@ namespace CS2_SimpleAdmin
 			Database database = new(dbConnectionString);
 			BanManager _banManager = new(database, Config);
 
-			int.TryParse(command.GetArg(2), out int time);
+			int.TryParse(command.GetArg(2), out var time);
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
@@ -47,7 +47,7 @@ namespace CS2_SimpleAdmin
 			});
 		}
 
-		internal void Ban(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
+		internal void Ban(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
 		{
 			if (_database == null || player is null || !player.IsValid) return;
 			
@@ -98,15 +98,15 @@ namespace CS2_SimpleAdmin
 						player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
 
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+				if (caller == null || !silentPlayers.Contains(caller.Slot))
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					foreach (var controller in Helper.GetValidPlayers())
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
+						using (new WithTemporaryCulture(controller.GetLanguage()))
 						{
 							StringBuilder sb = new(_localizer!["sa_prefix"]);
 							sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
-							_player.PrintToChat(sb.ToString());
+							controller.PrintToChat(sb.ToString());
 						}
 					}
 				}
@@ -118,15 +118,15 @@ namespace CS2_SimpleAdmin
 					{
 						player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
 					}
-				if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+				if (caller == null || !silentPlayers.Contains(caller.Slot))
 				{
-					foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+					foreach (var controller in Helper.GetValidPlayers())
 					{
-						using (new WithTemporaryCulture(_player.GetLanguage()))
+						using (new WithTemporaryCulture(controller.GetLanguage()))
 						{
 							StringBuilder sb = new(_localizer!["sa_prefix"]);
 							sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
-							_player.PrintToChat(sb.ToString());
+							controller.PrintToChat(sb.ToString());
 						}
 					}
 				}
@@ -147,25 +147,24 @@ namespace CS2_SimpleAdmin
 		{
 			if (_database == null) return;
 			
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
 
-			string steamid = command.GetArg(1);
+			var steamid = command.GetArg(1);
 
-			if (!Helper.IsValidSteamID64(steamid))
+			if (!Helper.IsValidSteamId64(steamid))
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
 
-			string reason = _localizer?["sa_unknown"] ?? "Unknown";
+			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
 			Database database = new(dbConnectionString);
-			BanManager _banManager = new(database, Config);
 
-			int.TryParse(command.GetArg(2), out int time);
+			int.TryParse(command.GetArg(2), out var time);
 			
 			if (CheckValidBan(caller, time) == false) 
 				return;
@@ -173,17 +172,17 @@ namespace CS2_SimpleAdmin
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
 
-			PlayerInfo adminInfo = new PlayerInfo
+			var adminInfo = new PlayerInfo
 			{
 				SteamId = caller?.SteamID.ToString(),
 				Name = caller?.PlayerName,
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
-			List<CCSPlayerController> matches = Helper.GetPlayerFromSteamid64(steamid);
+			var matches = Helper.GetPlayerFromSteamid64(steamid);
 			if (matches.Count == 1)
 			{
-				CCSPlayerController? player = matches.FirstOrDefault();
+				var player = matches.FirstOrDefault();
 				if (player != null && player.IsValid)
 				{
 					if (!caller!.CanTarget(player))
@@ -203,36 +202,36 @@ namespace CS2_SimpleAdmin
 							{
 								player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 							}
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !silentPlayers.Contains(caller.Slot))
 						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers())
 							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
+								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
 									sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
-									_player.PrintToChat(sb.ToString());
+									controller.PrintToChat(sb.ToString());
 								}
 							}
 						}
 					}
 					else
 					{
-						if (!player.IsBot && !player.IsHLTV)
+						if (player is { IsBot: false, IsHLTV: false })
 							using (new WithTemporaryCulture(player.GetLanguage()))
 							{
 								player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
 							}
 
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !silentPlayers.Contains(caller.Slot))
 						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers())
 							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
+								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
 									sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
-									_player.PrintToChat(sb.ToString());
+									controller.PrintToChat(sb.ToString());
 								}
 							}
 						}
@@ -248,11 +247,8 @@ namespace CS2_SimpleAdmin
 				await _banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
 			});
 
-			if (command != null)
-			{
-				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-			}
+			Helper.LogCommand(caller, command);
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			//Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
 
 			command?.ReplyToCommand($"Banned player with steamid {steamid}.");
@@ -264,15 +260,15 @@ namespace CS2_SimpleAdmin
 		public void OnBanIp(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			string callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			if (command.ArgCount < 2)
 				return;
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
 
-			string ipAddress = command.GetArg(1);
+			var ipAddress = command.GetArg(1);
 
-			if (!Helper.IsValidIP(ipAddress))
+			if (!Helper.IsValidIp(ipAddress))
 			{
 				command.ReplyToCommand($"Invalid IP address.");
 				return;
@@ -280,26 +276,26 @@ namespace CS2_SimpleAdmin
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
-			string reason = _localizer?["sa_unknown"] ?? "Unknown";
+			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
-			PlayerInfo adminInfo = new PlayerInfo
+			var adminInfo = new PlayerInfo
 			{
 				SteamId = caller?.SteamID.ToString(),
 				Name = caller?.PlayerName,
 				IpAddress = caller?.IpAddress?.Split(":")[0]
 			};
 
-			int.TryParse(command.GetArg(2), out int time);
+			int.TryParse(command.GetArg(2), out var time);
 			if (CheckValidBan(caller, time) == false) 
 				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
 
-			List<CCSPlayerController> matches = Helper.GetPlayerFromIp(ipAddress);
+			var matches = Helper.GetPlayerFromIp(ipAddress);
 			if (matches.Count == 1)
 			{
-				CCSPlayerController? player = matches.FirstOrDefault();
+				var player = matches.FirstOrDefault();
 				if (player != null && player.IsValid)
 				{
 					if (!caller!.CanTarget(player))
@@ -312,21 +308,21 @@ namespace CS2_SimpleAdmin
 
 					if (time == 0)
 					{
-						if (!player.IsBot && !player.IsHLTV)
+						if (player is { IsBot: false, IsHLTV: false })
 							using (new WithTemporaryCulture(player.GetLanguage()))
 							{
 								player!.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 							}
 
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !silentPlayers.Contains(caller.Slot))
 						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers())
 							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
+								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
 									sb.Append(_localizer["sa_admin_ban_message_perm", callerName, player.PlayerName, reason]);
-									_player.PrintToChat(sb.ToString());
+									controller.PrintToChat(sb.ToString());
 								}
 							}
 						}
@@ -338,15 +334,15 @@ namespace CS2_SimpleAdmin
 							{
 								player!.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
 							}
-						if (caller == null || caller != null && !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !silentPlayers.Contains(caller.Slot))
 						{
-							foreach (CCSPlayerController _player in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers())
 							{
-								using (new WithTemporaryCulture(_player.GetLanguage()))
+								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
 									StringBuilder sb = new(_localizer!["sa_prefix"]);
 									sb.Append(_localizer["sa_admin_ban_message_time", callerName, player.PlayerName, reason, time]);
-									_player.PrintToChat(sb.ToString());
+									controller.PrintToChat(sb.ToString());
 								}
 							}
 						}
@@ -369,11 +365,8 @@ namespace CS2_SimpleAdmin
 				await _banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
 			});
 
-			if (command != null)
-			{
-				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
-			}
+			Helper.LogCommand(caller, command);
+			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
 			command?.ReplyToCommand($"Banned player with IP address {ipAddress}.");
 		}
@@ -408,8 +401,7 @@ namespace CS2_SimpleAdmin
 		{
 			if (_database == null) return;
 
-			string callerName = caller?.PlayerName ?? "Console";
-			string callerSteamId = caller?.SteamID.ToString() ?? "Console";
+			var callerSteamId = caller?.SteamID.ToString() ?? "Console";
 
 			if (command.GetArg(1).Length <= 1)
 			{
@@ -417,8 +409,8 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			string pattern = command.GetArg(1);
-			string reason = command.GetArg(2);
+			var pattern = command.GetArg(1);
+			var reason = command.GetArg(2);
 
 			BanManager _banManager = new(_database, Config);
 			Task.Run(async () => await _banManager.UnbanPlayer(pattern, callerSteamId, reason));
