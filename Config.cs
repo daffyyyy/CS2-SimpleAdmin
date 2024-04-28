@@ -73,12 +73,12 @@ namespace CS2_SimpleAdmin
 		public Discord Discord { get; set; } = new Discord();
 
 		[JsonPropertyName("DefaultMaps")]
-		public List<string> DefaultMaps { get; set; } = new List<string>();
+		public List<string> DefaultMaps { get; set; } = [];
 
 		[JsonPropertyName("WorkshopMaps")]
-		public List<string> WorkshopMaps { get; set; } = new List<string>();
+		public List<string> WorkshopMaps { get; set; } = [];
 
 		[JsonPropertyName("CustomServerCommands")]
-		public List<CustomServerCommandData> CustomServerCommands { get; set; } = new List<CustomServerCommandData>();
+		public List<CustomServerCommandData> CustomServerCommands { get; set; } = [];
 	}
 }

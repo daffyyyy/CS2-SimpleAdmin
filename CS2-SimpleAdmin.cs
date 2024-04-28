@@ -18,10 +18,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public static IStringLocalizer? _localizer;
 	public static Dictionary<string, int> voteAnswers = [];
-	public static ConcurrentBag<int> godPlayers = [];
-	public static ConcurrentBag<int> silentPlayers = [];
-	public static ConcurrentBag<string> bannedPlayers = [];
-	public static bool TagsDetected = false;
+	private static ConcurrentBag<int> godPlayers = [];
+	private static ConcurrentBag<int> silentPlayers = [];
+	private static ConcurrentBag<string> bannedPlayers = [];
+	private static bool TagsDetected = false;
 	public static bool voteInProgress = false;
 	public static int? ServerId = null;
 
@@ -52,7 +52,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			OnMapStart(string.Empty);
 		}
 
-		CBasePlayerController_SetPawnFunc = new(GameData.GetSignature("CBasePlayerController_SetPawn"));
+		CBasePlayerController_SetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
@@ -132,14 +132,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		_localizer = Localizer;
 
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordLogWebhook))
-			_discordWebhookClientLog = new(Config.Discord.DiscordLogWebhook);
+			_discordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordPenaltyWebhook))
-			_discordWebhookClientPenalty = new(Config.Discord.DiscordPenaltyWebhook);
+			_discordWebhookClientPenalty = new DiscordWebhookClient(Config.Discord.DiscordPenaltyWebhook);
 	}
 
 	private static TargetResult? GetTarget(CommandInfo command)
 	{
-		TargetResult matches = command.GetArgTargetResult(1);
+		var matches = command.GetArgTargetResult(1);
 
 		if (!matches.Any())
 		{
@@ -162,13 +162,13 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		List<int> tempList = [];
 		while (!bag.IsEmpty)
 		{
-			if (bag.TryTake(out int item) && item != playerSlot)
+			if (bag.TryTake(out var item) && item != playerSlot)
 			{
 				tempList.Add(item);
 			}
 		}
 
-		foreach (int item in tempList)
+		foreach (var item in tempList)
 		{
 			bag.Add(item);
 		}

@@ -28,9 +28,9 @@ namespace CS2_SimpleAdmin.Menus
 			options.Add(new ChatMenuOptionData("Remove Admin", () => PlayersMenu.OpenAdminPlayersMenu(admin, "Remove Admin", RemoveAdmin, player => player != admin && admin.CanTarget(player))));
 			options.Add(new ChatMenuOptionData("Reload Admins", () => ReloadAdmins(admin)));
 
-			foreach (ChatMenuOptionData menuOptionData in options)
+			foreach (var menuOptionData in options)
 			{
-				string menuName = menuOptionData.name;
+				var menuName = menuOptionData.name;
 				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
 			}
 
@@ -39,7 +39,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void AddAdminMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			Tuple<string, string>[] flags = new[]
+			var flags = new[]
 			{
 				new Tuple<string, string>("Generic", "@css/generic"),
 				new Tuple<string, string>("Chat", "@css/chat"),
@@ -54,12 +54,12 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, string>("Root", "@css/root"),
 			};
 
-			BaseMenu menu = AdminMenu.CreateMenu($"Add Admin: {player.PlayerName}");
+			var menu = AdminMenu.CreateMenu($"Add Admin: {player.PlayerName}");
 
-			foreach (Tuple<string, string> flagsTuple in flags)
+			foreach (var flagsTuple in flags)
 			{
-				string optionName = flagsTuple.Item1;
-				bool disabled = AdminManager.PlayerHasPermissions(player, flagsTuple.Item2);
+				var optionName = flagsTuple.Item1;
+				var disabled = AdminManager.PlayerHasPermissions(player, flagsTuple.Item2);
 				menu.AddMenuOption(optionName, (_, _) => { AddAdmin(admin, player, flagsTuple.Item2); }, disabled);
 			}
 
