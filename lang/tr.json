@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "Bilinmeyen",
+	"sa_no_permission": "Bu komutu kullanma izniniz yok.",
+
+	"sa_admin_add": "Yönetici Ekle",
+	"sa_admin_remove": "Yönetici Kaldır",
+	"sa_admin_reload": "Yöneticileri Yeniden Yükle",
+
+	"sa_godmode": "Tanrı Modu",
+	"sa_noclip": "Duvar Arkası Modu",
+	"sa_respawn": "Tekrar Doğma",
+	"sa_give_weapon": "Silah Ver",
+	"sa_strip_weapons": "Silahları Çıkart",
+	"sa_freeze": "Dondur",
+	"sa_set_hp": "HP Ayarla",
+	"sa_set_speed": "Hız Ayarla",
+	"sa_set_gravity": "Yerçekimi Ayarla",
+	"sa_set_money": "Para Ayarla",
+
+	"sa_changemap": "Haritayı Değiştir",
+	"sa_restart_game": "Oyunu Yeniden Başlat",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "Değiştir",
+	"sa_team_spec": "İzleyici",
+
+	"sa_slap": "Tokatla",
+	"sa_slay": "Öldür",
+	"sa_kick": "At",
+	"sa_ban": "Yasakla",
+	"sa_gag": "Ağzını Kapat",
+	"sa_mute": "Sustur",
+	"sa_silence": "Sessizlik",
+	"sa_team_force": "Takımı Zorla",
+
+	"sa_menu_custom_commands": "Özel Komutlar",
+	"sa_menu_server_manage": "Sunucu Yönetimi",
+	"sa_menu_fun_commands": "Eğlenceli Komutlar",
+	"sa_menu_admins_manage": "Yönetici Yönetimi",
+	"sa_menu_players_manage": "Oyuncu Yönetimi",
 
 	"sa_player": "Oyuncu",
 	"sa_steamid": "SteamID",

@@ -25,6 +25,18 @@ namespace CS2_SimpleAdmin
 
 		internal static CS2_SimpleAdminConfig? Config { get; set; }
 
+		public static bool IsDebugBuild
+		{
+			get
+			{
+				#if DEBUG
+				        return true;
+				#else
+						return false;
+				#endif
+			}
+		}
+		
 		public static List<CCSPlayerController> GetPlayerFromName(string name)
 		{
 			return Utilities.GetPlayers().FindAll(x => x.PlayerName.Equals(name, StringComparison.OrdinalIgnoreCase));
@@ -47,7 +59,9 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetValidPlayers()
 		{
-			return Utilities.GetPlayers().FindAll(p => p?.IsValid == true && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p is { Connected: PlayerConnectedState.PlayerConnected, IsBot: false, IsHLTV: false });
+			return Utilities.GetPlayers().FindAll(p =>
+				p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p is
+					{ Connected: PlayerConnectedState.PlayerConnected, IsBot: false, IsHLTV: false });
 		}
 
 		public static IEnumerable<CCSPlayerController?> GetValidPlayersWithBots()
@@ -96,11 +110,10 @@ namespace CS2_SimpleAdmin
 					}
 				}
 
-				AdminManager.SetPlayerImmunity(steamid, (uint)immunity);
+				AdminManager.SetPlayerImmunity(steamid, immunity);
 			}
-			catch (Exception)
+			catch
 			{
-				return;
 			}
 		}
 
@@ -143,7 +156,7 @@ namespace CS2_SimpleAdmin
 
 			var playerName = caller?.PlayerName ?? "Console";
 
-			var hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
+			var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
 
 			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer[
 				"sa_discord_log_command",
@@ -157,19 +170,19 @@ namespace CS2_SimpleAdmin
 
 			var playerName = caller?.PlayerName ?? "Console";
 
-			var hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+			var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
 
-			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer?["sa_discord_log_command",
+			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
 				playerName, command]}".Replace("HOSTNAME", hostname).Replace("**", ""));
 		}
 
 		public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
 		{
-			var hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
-			var address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
+			var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+			var address = $"{ConVar.Find("ip")?.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 
-			description = description.Replace("{hostname}", hostname ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown");
-			description = description.Replace("{address}", address ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown");
+			description = description.Replace("{hostname}", hostname);
+			description = description.Replace("{address}", address);
 
 			var embed = new EmbedBuilder
 			{
@@ -188,7 +201,7 @@ namespace CS2_SimpleAdmin
 
 				if ((i + 1) % 2 == 0 && i < fieldNames.Length - 1)
 				{
-					embed.AddField("\u200b", "\u200b", false);
+					embed.AddField("\u200b", "\u200b");
 				}
 			}
 
@@ -199,7 +212,7 @@ namespace CS2_SimpleAdmin
 		{
 			if (discordWebhookClientLog == null || localizer == null) return;
 			
-			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
 			discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
 		}
@@ -223,34 +236,34 @@ namespace CS2_SimpleAdmin
 		{
 			if (discordWebhookClientPenalty == null || localizer == null) return;
 			
-			var callerCommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-			var targetCommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
+			var callerCommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
+			var targetCommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
-			var targetName = target != null ? target.PlayerName : localizer?["sa_unknown"] ?? "Unknown";
-			var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2.ToString() : localizer?["sa_unknown"] ?? "Unknown";
+			var targetName = target != null ? target.PlayerName : localizer["sa_unknown"];
+			var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2 : localizer["sa_unknown"];
 
-			var time = duration != 0 ? ConvertMinutesToTime(duration) : localizer?["sa_permanent"] ?? "Permanent";
+			var time = duration != 0 ? ConvertMinutesToTime(duration) : localizer["sa_permanent"];
 
 			string[] fieldNames = [
-				localizer?["sa_player"] ?? "Player:",
-				localizer?["sa_steamid"] ?? "SteamID:",
-				localizer?["sa_duration"] ?? "Duration:",
-				localizer?["sa_reason"] ?? "Reason:",
-				localizer?["sa_admin"] ?? "Admin:"];
+				localizer["sa_player"],
+				localizer["sa_steamid"],
+				localizer["sa_duration"],
+				localizer["sa_reason"],
+				localizer["sa_admin"]];
 			string[] fieldValues = [$"[{targetName}]({targetCommunityUrl})", targetSteamId, time, reason, $"[{callerName}]({callerCommunityUrl})"];
 			bool[] inlineFlags = [true, true, true, false, false];
 
-			var hostname = ConVar.Find("hostname")!.StringValue ?? localizer?["sa_unknown"] ?? "Unknown";
+			var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
 
 			var embed = new EmbedBuilder
 			{
 				Title = penalty switch
 				{
-					PenaltyType.Ban => localizer?["sa_discord_penalty_ban"] ?? "Ban registrered",
-					PenaltyType.Mute => localizer?["sa_discord_penalty_mute"] ?? "Mute registrered",
-					PenaltyType.Gag => localizer?["sa_discord_penalty_gag"] ?? "Gag registrered",
-					PenaltyType.Silence => localizer?["sa_discord_penalty_silence"] ?? "Silence registrered",
-					_ => localizer?["sa_discord_penalty_unknown"] ?? "Unknown registrered",
+					PenaltyType.Ban => localizer["sa_discord_penalty_ban"],
+					PenaltyType.Mute => localizer["sa_discord_penalty_mute"],
+					PenaltyType.Gag => localizer["sa_discord_penalty_gag"],
+					PenaltyType.Silence => localizer["sa_discord_penalty_silence"],
+					_ => localizer["sa_discord_penalty_unknown"],
 				},
 
 				Color = penalty switch
@@ -277,8 +290,8 @@ namespace CS2_SimpleAdmin
 
 		private static string GenerateMessageDiscord(string message)
 		{
-			var hostname = ConVar.Find("hostname")!.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
-			var address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
+			var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+			var address = $"{ConVar.Find("ip")?.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 
 			message = message.Replace("HOSTNAME", hostname);
 			message = message.Replace("ADDRESS", address);
@@ -317,18 +330,22 @@ namespace CS2_SimpleAdmin
 				caller = null;
 
 			var callerName = caller == null ? "Console" : caller.PlayerName;
-			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl().ToString() + ">" : "<https://steamcommunity.com/profiles/0>";
-			CS2_SimpleAdmin._discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", commandString]));
+			var communityUrl = caller != null
+				? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">"
+				: "<https://steamcommunity.com/profiles/0>";
+			CS2_SimpleAdmin._discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(
+				CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})",
+					commandString]));
 		}
 	}
 
-	public class SchemaString<SchemaClass>(SchemaClass instance, string member)
-		: NativeObject(Schema.GetSchemaValue<nint>(instance.Handle, typeof(SchemaClass).Name!, member))
-		where SchemaClass : NativeObject
+	public class SchemaString<TSchemaClass>(TSchemaClass instance, string member)
+		: NativeObject(Schema.GetSchemaValue<nint>(instance.Handle, typeof(TSchemaClass).Name, member))
+		where TSchemaClass : NativeObject
 	{
 		public unsafe void Set(string str)
 		{
-			var bytes = SchemaString<SchemaClass>.GetStringBytes(str);
+			var bytes = GetStringBytes(str);
 
 			for (var i = 0; i < bytes.Length; i++)
 			{

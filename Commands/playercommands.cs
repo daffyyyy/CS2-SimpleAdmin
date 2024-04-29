@@ -3,7 +3,6 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -22,7 +21,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -66,7 +65,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 			var weaponName = command.GetArg(2);
 
 			// check if item is typed
@@ -104,10 +103,10 @@ namespace CS2_SimpleAdmin
 
 		public void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string? callerName = null)
 		{
-			Helper.LogCommand(caller, $"css_give {player?.PlayerName} {weapon.ToString()}");
+			Helper.LogCommand(caller, $"css_give {player.PlayerName} {weapon.ToString()}");
 
-			player?.GiveNamedItem(weapon);
-			SubGiveWeapon(caller, player!, weapon.ToString(), callerName);
+			player.GiveNamedItem(weapon);
+			SubGiveWeapon(caller, player, weapon.ToString(), callerName);
 		}
 
 		private void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null, CommandInfo? command = null)
@@ -118,8 +117,8 @@ namespace CS2_SimpleAdmin
 				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			}
 
-			player?.GiveNamedItem(weaponName);
-			SubGiveWeapon(caller, player!, weaponName, callerName);
+			player.GiveNamedItem(weaponName);
+			SubGiveWeapon(caller, player, weaponName, callerName);
 		}
 
 		private void SubGiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null)
@@ -147,7 +146,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -190,29 +189,28 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnHpCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			var callerName = caller == null ? "Console" : caller.PlayerName;
 			int.TryParse(command.GetArg(2), out var health);
 
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
 				if (caller!.CanTarget(player))
 				{
-					SetHp(caller, player, health, callerName, command);
+					SetHp(caller, player, health, command);
 				}
 			});
 		}
 
-		public void SetHp(CCSPlayerController? caller, CCSPlayerController? player, int health, string? callerName = null, CommandInfo? command = null)
+		public void SetHp(CCSPlayerController? caller, CCSPlayerController? player, int health, CommandInfo? command = null)
 		{
 			if (player != null && !player.IsBot && player.SteamID.ToString().Length != 17)
 				return;
 
-			callerName = caller == null ? "Console" : caller.PlayerName;
+			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			player.SetHp(health);
 
@@ -245,7 +243,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -289,15 +287,14 @@ namespace CS2_SimpleAdmin
 		public void OnGravityCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			var callerName = caller == null ? "Console" : caller.PlayerName;
-			var gravity = 1.0;
-			double.TryParse(command.GetArg(2), out gravity);
+			double.TryParse(command.GetArg(2), out var gravity);
 
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -346,7 +343,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -393,7 +390,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
@@ -444,13 +441,12 @@ namespace CS2_SimpleAdmin
 		[CommandHelper(minArgs: 1, usage: "<#userid or name> [damage]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
 		public void OnSlapCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			var callerName = caller == null ? "Console" : caller.PlayerName;
 			var damage = 0;
 
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			if (command.ArgCount >= 2)
 			{
@@ -505,7 +501,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			switch (teamName)
 			{
@@ -655,10 +651,10 @@ namespace CS2_SimpleAdmin
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
-			if (CBasePlayerController_SetPawnFunc == null || player?.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
+			if (CBasePlayerControllerSetPawnFunc == null || player?.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
 
 			var playerPawn = player.PlayerPawn.Value;
-			CBasePlayerController_SetPawnFunc.Invoke(player, playerPawn, true, false);
+			CBasePlayerControllerSetPawnFunc.Invoke(player, playerPawn, true, false);
 			VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
 															GameData.GetOffset("CCSPlayerController_Respawn"))(player);
 
@@ -689,14 +685,12 @@ namespace CS2_SimpleAdmin
 		{
 			if (caller == null || !caller.PawnIsAlive) return;
 
-			var callerName = caller.PlayerName;
-
 			var targets = GetTarget(command);
 
 			if (targets == null || targets.Count() > 1)
 				return;
 
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Helper.LogCommand(caller, command);
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
@@ -706,13 +700,13 @@ namespace CS2_SimpleAdmin
 				if (!player.IsBot && player.SteamID.ToString().Length != 17 || !player.PawnIsAlive)
 					return;
 
-				if (!caller!.CanTarget(player)) return;
-				caller!.TeleportPlayer(player);
-				caller!.Pawn.Value!.ToggleNoclip();
+				if (!caller.CanTarget(player)) return;
+				caller.TeleportPlayer(player);
+				caller.Pawn.Value!.ToggleNoclip();
 
 				AddTimer(3, () =>
 				{
-					caller!.Pawn.Value!.ToggleNoclip();
+					caller.Pawn.Value!.ToggleNoclip();
 				});
 
 				if (silentPlayers.Contains(caller.Slot)) return;
@@ -736,14 +730,12 @@ namespace CS2_SimpleAdmin
 		{
 			if (caller == null || !caller.PawnIsAlive) return;
 
-			var callerName = caller.PlayerName;
-
 			var targets = GetTarget(command);
 
 			if (targets == null || targets.Count() > 1)
 				return;
 
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Helper.LogCommand(caller, command);
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
@@ -753,13 +745,13 @@ namespace CS2_SimpleAdmin
 				if (!player.IsBot && player.SteamID.ToString().Length != 17 || !player.PawnIsAlive)
 					return;
 
-				if (!caller!.CanTarget(player)) return;
-				player!.TeleportPlayer(caller!);
-				caller!.Pawn.Value!.ToggleNoclip();
+				if (!caller.CanTarget(player)) return;
+				player.TeleportPlayer(caller);
+				caller.Pawn.Value!.ToggleNoclip();
 
 				AddTimer(3, () =>
 				{
-					caller!.Pawn.Value!.ToggleNoclip();
+					caller.Pawn.Value!.ToggleNoclip();
 				});
 
 				if (silentPlayers.Contains(caller.Slot)) return;

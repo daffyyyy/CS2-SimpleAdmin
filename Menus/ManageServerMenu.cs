@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin.Menus
 {
@@ -8,62 +7,58 @@ namespace CS2_SimpleAdmin.Menus
 	{
 		public static void OpenMenu(CCSPlayerController admin)
 		{
-			if (admin == null || admin.IsValid == false)
+			if (admin.IsValid == false)
 				return;
 
+			var localizer = CS2_SimpleAdmin._localizer;
 			if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
 			{
-				// TODO: Localize
-				admin.PrintToChat("[Simple Admin] You do not have permissions to use this command.");
+				admin.PrintToChat(localizer?["sa_prefix"] ??
+				                  "[SimpleAdmin] " + 
+				                  (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command")
+				);
 				return;
 			}
 
-			BaseMenu menu = AdminMenu.CreateMenu("Manage Server");
-			List<ChatMenuOptionData> options = new();
+			var menu = AdminMenu.CreateMenu(localizer?["sa_menu_server_manage"] ?? "Server Manage");
+			List<ChatMenuOptionData> options = [];
 
 			// permissions
 			bool hasMap = AdminManager.PlayerHasPermissions(admin, "@css/changemap");
 
-			// TODO: Localize options
 			// options added in order
 
 			if (hasMap)
 			{
-				options.Add(new ChatMenuOptionData("Change Map", () => ChangeMapMenu(admin)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_changemap"] ?? "Change Map", () => ChangeMapMenu(admin)));
 			}
 
-			options.Add(new ChatMenuOptionData("Restart Game", () => CS2_SimpleAdmin.RestartGame(admin)));
+			options.Add(new ChatMenuOptionData(localizer?["sa_restart_game"] ?? "Restart Game", () => CS2_SimpleAdmin.RestartGame(admin)));
 
-			foreach (ChatMenuOptionData menuOptionData in options)
+			foreach (var menuOptionData in options)
 			{
-				string menuName = menuOptionData.name;
-				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
+				var menuName = menuOptionData.Name;
+				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.Action.Invoke(); }, menuOptionData.Disabled);
 			}
 
 			AdminMenu.OpenMenu(admin, menu);
 		}
 
-		public static void ChangeMapMenu(CCSPlayerController admin)
+		private static void ChangeMapMenu(CCSPlayerController admin)
 		{
-			BaseMenu menu = AdminMenu.CreateMenu($"Change Map");
-			List<ChatMenuOptionData> options = new();
+			var menu = AdminMenu.CreateMenu(CS2_SimpleAdmin._localizer?["sa_changemap"] ?? "Change Map");
+			List<ChatMenuOptionData> options = [];
 
-			List<string> maps = CS2_SimpleAdmin.Instance.Config.DefaultMaps;
-			foreach (string map in maps)
-			{
-				options.Add(new ChatMenuOptionData(map, () => ExecuteChangeMap(admin, map, false)));
-			}
+			var maps = CS2_SimpleAdmin.Instance.Config.DefaultMaps;
+			options.AddRange(maps.Select(map => new ChatMenuOptionData(map, () => ExecuteChangeMap(admin, map, false))));
 
-			List<string> wsMaps = CS2_SimpleAdmin.Instance.Config.WorkshopMaps;
-			foreach (string map in wsMaps)
-			{
-				options.Add(new ChatMenuOptionData($"{map} (WS)", () => ExecuteChangeMap(admin, map, true)));
-			}
+			var wsMaps = CS2_SimpleAdmin.Instance.Config.WorkshopMaps;
+			options.AddRange(wsMaps.Select(map => new ChatMenuOptionData($"{map} (WS)", () => ExecuteChangeMap(admin, map, true))));
 
-			foreach (ChatMenuOptionData menuOptionData in options)
+			foreach (var menuOptionData in options)
 			{
-				string menuName = menuOptionData.name;
-				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
+				var menuName = menuOptionData.Name;
+				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.Action.Invoke(); }, menuOptionData.Disabled);
 			}
 
 			AdminMenu.OpenMenu(admin, menu);

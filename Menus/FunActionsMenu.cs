@@ -1,31 +1,29 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
-using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin.Menus
 {
 	public static class FunActionsMenu
 	{
-		private static Dictionary<int, CsItem>? _weaponsCache = null;
+		private static Dictionary<int, CsItem>? _weaponsCache;
 
 		private static Dictionary<int, CsItem> GetWeaponsCache
 		{
 			get
 			{
-				if (_weaponsCache == null)
+				if (_weaponsCache != null) return _weaponsCache;
+				
+				var weaponsArray = Enum.GetValues(typeof(CsItem));
+
+				// avoid duplicates in the menu
+				_weaponsCache = new Dictionary<int, CsItem>();
+				foreach (CsItem item in weaponsArray)
 				{
-					var weaponsArray = Enum.GetValues(typeof(CsItem));
+					if (item == CsItem.Tablet)
+						continue;
 
-					// avoid duplicates in the menu
-					_weaponsCache = new();
-					foreach (CsItem item in weaponsArray)
-					{
-						if (item == CsItem.Tablet)
-							continue;
-
-						_weaponsCache[(int)item] = item;
-					}
+					_weaponsCache[(int)item] = item;
 				}
 
 				return _weaponsCache;
@@ -34,48 +32,50 @@ namespace CS2_SimpleAdmin.Menus
 
 		public static void OpenMenu(CCSPlayerController admin)
 		{
-			if (admin == null || admin.IsValid == false)
+			if (admin.IsValid == false)
 				return;
 
+			var localizer = CS2_SimpleAdmin._localizer;
 			if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
 			{
-				// TODO: Localize
-				admin.PrintToChat("[Simple Admin] You do not have permissions to use this command.");
+				admin.PrintToChat(localizer?["sa_prefix"] ??
+				                  "[SimpleAdmin] " + 
+				                  (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command")
+				);
 				return;
 			}
 
-			var menu = AdminMenu.CreateMenu("Fun Actions");
-			List<ChatMenuOptionData> options = new();
+			var menu = AdminMenu.CreateMenu(localizer?["sa_menu_fun_commands"] ?? "Fun Commands");
+			List<ChatMenuOptionData> options = [];
 
 			// permissions
 			var hasCheats = AdminManager.PlayerHasPermissions(admin, "@css/cheats");
 			var hasSlay = AdminManager.PlayerHasPermissions(admin, "@css/slay");
 
-			// TODO: Localize options
 			// options added in order
 
 			if (hasCheats)
 			{
-				options.Add(new ChatMenuOptionData("God Mode", () => PlayersMenu.OpenAliveMenu(admin, "God Mode", GodMode)));
-				options.Add(new ChatMenuOptionData("No Clip", () => PlayersMenu.OpenAliveMenu(admin, "No Clip", NoClip)));
-				options.Add(new ChatMenuOptionData("Respawn", () => PlayersMenu.OpenDeadMenu(admin, "Respawn", Respawn)));
-				options.Add(new ChatMenuOptionData("Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, "Give Weapon", GiveWeaponMenu)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_godmode"] ?? "God Mode", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_godmode"] ?? "God Mode", GodMode)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_noclip"] ?? "No Clip", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_noclip"] ?? "No Clip", NoClip)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_respawn"] ?? "Respawn", () => PlayersMenu.OpenDeadMenu(admin, localizer?["sa_respawn"] ?? "Respawn", Respawn)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_give_weapon"] ?? "Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_give_weapon"] ?? "Give Weapon", GiveWeaponMenu)));
 			}
 
 			if (hasSlay)
 			{
-				options.Add(new ChatMenuOptionData("Strip All Weapons", () => PlayersMenu.OpenAliveMenu(admin, "Strip All Weapons", StripWeapons)));
-				options.Add(new ChatMenuOptionData("Freeze", () => PlayersMenu.OpenAliveMenu(admin, "Freeze", Freeze)));
-				options.Add(new ChatMenuOptionData("HP", () => PlayersMenu.OpenAliveMenu(admin, "HP", SetHpMenu)));
-				options.Add(new ChatMenuOptionData("Speed", () => PlayersMenu.OpenAliveMenu(admin, "Speed", SetSpeedMenu)));
-				options.Add(new ChatMenuOptionData("Gravity", () => PlayersMenu.OpenAliveMenu(admin, "Gravity", SetGravityMenu)));
-				options.Add(new ChatMenuOptionData("Set Money", () => PlayersMenu.OpenMenu(admin, "Set Money", SetMoneyMenu)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_strip_weapons"] ?? "Strip Weapons", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_strip_weapons"] ?? "Strip Weapons", StripWeapons)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_freeze"] ?? "Freeze", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_freeze"] ?? "Freeze", Freeze)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_set_hp"] ?? "Set Hp", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_set_hp"] ?? "Set Hp", SetHpMenu)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_set_speed"] ?? "Set Speed", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_set_speed"] ?? "Set Speed", SetSpeedMenu)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_set_gravity"] ?? "Set Gravity", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_set_gravity"] ?? "Set Gravity", SetGravityMenu)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_set_money"] ?? "Set Money", () => PlayersMenu.OpenMenu(admin, localizer?["sa_set_money"] ?? "Set Money", SetMoneyMenu)));
 			}
 
 			foreach (var menuOptionData in options)
 			{
-				var menuName = menuOptionData.name;
-				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
+				var menuName = menuOptionData.Name;
+				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.Action(); }, menuOptionData.Disabled);
 			}
 
 			AdminMenu.OpenMenu(admin, menu);
@@ -98,7 +98,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void GiveWeaponMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			var menu = AdminMenu.CreateMenu($"Give Weapon: {player.PlayerName}");
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_give_weapon"] ?? "Give Weapon"}: {player.PlayerName}");
 
 			foreach (var weapon in GetWeaponsCache)
 			{
@@ -120,7 +120,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void Freeze(CCSPlayerController admin, CCSPlayerController? player)
 		{
-			if (!(player?.PlayerPawn?.Value?.IsValid ?? false))
+			if (!(player?.PlayerPawn.Value?.IsValid ?? false))
 				return;
 
 			if (player.PlayerPawn.Value.MoveType != MoveType_t.MOVETYPE_OBSOLETE)
@@ -143,18 +143,17 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, int>("999", 999)
 			};
 
-			var menu = AdminMenu.CreateMenu($"Set HP: {player?.PlayerName}");
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_set_hp"] ?? "Set Hp"}: {player?.PlayerName}");
 
-			foreach (var hpTuple in hpArray)
+			foreach (var (optionName, value) in hpArray)
 			{
-				var optionName = hpTuple.Item1;
-				menu.AddMenuOption(optionName, (_, _) => { SetHP(admin, player, hpTuple.Item2); });
+				menu.AddMenuOption(optionName, (_, _) => { SetHp(admin, player, value); });
 			}
 
 			AdminMenu.OpenMenu(admin, menu);
 		}
 
-		private static void SetHP(CCSPlayerController admin, CCSPlayerController? player, int hp)
+		private static void SetHp(CCSPlayerController admin, CCSPlayerController? player, int hp)
 		{
 			CS2_SimpleAdmin.Instance.SetHp(admin, player, hp);
 		}
@@ -173,12 +172,11 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, float>("4", 4)
 			};
 
-			var menu = AdminMenu.CreateMenu($"Set Speed: {player?.PlayerName}");
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_set_speed"] ?? "Set  Speed"}: {player?.PlayerName}");
 
-			foreach (var speedTuple in speedArray)
+			foreach (var (optionName, value) in speedArray)
 			{
-				var optionName = speedTuple.Item1;
-				menu.AddMenuOption(optionName, (_, _) => { SetSpeed(admin, player, speedTuple.Item2); });
+				menu.AddMenuOption(optionName, (_, _) => { SetSpeed(admin, player, value); });
 			}
 
 			AdminMenu.OpenMenu(admin, menu);
@@ -201,12 +199,11 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, float>("2", 2)
 			};
 
-			var menu = AdminMenu.CreateMenu($"Set Gravity: {player?.PlayerName}");
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_set_gravity"] ?? "Set Gravity"}: {player?.PlayerName}");
 
-			foreach (var gravityTuple in gravityArray)
+			foreach (var (optionName, value) in gravityArray)
 			{
-				var optionName = gravityTuple.Item1;
-				menu.AddMenuOption(optionName, (_, _) => { SetGravity(admin, player, gravityTuple.Item2); });
+				menu.AddMenuOption(optionName, (_, _) => { SetGravity(admin, player, value); });
 			}
 
 			AdminMenu.OpenMenu(admin, menu);
@@ -229,12 +226,11 @@ namespace CS2_SimpleAdmin.Menus
 				new Tuple<string, int>("$16000", 16000)
 			};
 
-			var menu = AdminMenu.CreateMenu($"Set Money: {player?.PlayerName}");
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_set_money"] ?? "Set Money"}: {player?.PlayerName}");
 
-			foreach (var moneyTuple in moneyArray)
+			foreach (var (optionName, value) in moneyArray)
 			{
-				var optionName = moneyTuple.Item1;
-				menu.AddMenuOption(optionName, (_, _) => { SetMoney(admin, player, moneyTuple.Item2); });
+				menu.AddMenuOption(optionName, (_, _) => { SetMoney(admin, player, value); });
 			}
 
 			AdminMenu.OpenMenu(admin, menu);

@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "Неизвестный",
+	"sa_no_permission": "У вас нет прав для использования этой команды.",
+
+	"sa_admin_add": "Добавить администратора",
+	"sa_admin_remove": "Удалить администратора",
+	"sa_admin_reload": "Перезагрузить администраторов",
+
+	"sa_godmode": "Режим бога",
+	"sa_noclip": "Режим бесконечного прохождения",
+	"sa_respawn": "Возрождение",
+	"sa_give_weapon": "Выдать оружие",
+	"sa_strip_weapons": "Удалить оружие",
+	"sa_freeze": "Заморозить",
+	"sa_set_hp": "Установить здоровье",
+	"sa_set_speed": "Установить скорость",
+	"sa_set_gravity": "Установить гравитацию",
+	"sa_set_money": "Установить деньги",
+
+	"sa_changemap": "Сменить карту",
+	"sa_restart_game": "Перезапустить игру",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "Поменять",
+	"sa_team_spec": "Спец",
+
+	"sa_slap": "Шлепнуть",
+	"sa_slay": "Убить",
+	"sa_kick": "Выгнать",
+	"sa_ban": "Забанить",
+	"sa_gag": "Заглушить",
+	"sa_mute": "Отключить звук",
+	"sa_silence": "Тишина",
+	"sa_team_force": "Принудить к команде",
+
+	"sa_menu_custom_commands": "Пользовательские команды",
+	"sa_menu_server_manage": "Управление сервером",
+	"sa_menu_fun_commands": "Развлекательные команды",
+	"sa_menu_admins_manage": "Управление администраторами",
+	"sa_menu_players_manage": "Управление игроками",
 
 	"sa_player": "Игрок",
 	"sa_steamid": "SteamID",

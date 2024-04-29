@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "ناشناخته",
+	"sa_no_permission": "شما دسترسی برای استفاده از این دستور را ندارید.",
+
+	"sa_admin_add": "افزودن مدیر",
+	"sa_admin_remove": "حذف مدیر",
+	"sa_admin_reload": "بارگذاری مجدد مدیران",
+
+	"sa_godmode": "حالت خدا",
+	"sa_noclip": "بدون بریدن",
+	"sa_respawn": "باززایی",
+	"sa_give_weapon": "دادن اسلحه",
+	"sa_strip_weapons": "برداشتن اسلحه",
+	"sa_freeze": "یخ‌زدن",
+	"sa_set_hp": "تنظیم پلیر",
+	"sa_set_speed": "تنظیم سرعت",
+	"sa_set_gravity": "تنظیم گرانش",
+	"sa_set_money": "تنظیم پول",
+
+	"sa_changemap": "تغییر نقشه",
+	"sa_restart_game": "شروع مجدد بازی",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "جابه‌جایی",
+	"sa_team_spec": "ناظر",
+
+	"sa_slap": "چپاد زدن",
+	"sa_slay": "کشتن",
+	"sa_kick": "اخراج",
+	"sa_ban": "مسدود کردن",
+	"sa_gag": "بی‌صدا کردن",
+	"sa_mute": "بی‌صدا کردن",
+	"sa_silence": "سکوت",
+	"sa_team_force": "اجبار تیم",
+
+	"sa_menu_custom_commands": "دستورات سفارشی",
+	"sa_menu_server_manage": "مدیریت سرور",
+	"sa_menu_fun_commands": "دستورات جالب",
+	"sa_menu_admins_manage": "مدیریت مدیران",
+	"sa_menu_players_manage": "مدیریت بازیکنان",
 
 	"sa_player": "بازیکن",
 	"sa_steamid": "شناسه استیم",

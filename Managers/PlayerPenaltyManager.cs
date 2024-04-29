@@ -12,7 +12,7 @@ public enum PenaltyType
 public class PlayerPenaltyManager
 {
 	private static readonly ConcurrentDictionary<int, Dictionary<PenaltyType, List<(DateTime EndDateTime, int Duration)>>> Penalties =
-		new ConcurrentDictionary<int, Dictionary<PenaltyType, List<(DateTime, int)>>>();
+		new();
 
 	// Add a penalty for a player
 	public static void AddPenalty(int slot, PenaltyType penaltyType, DateTime endDateTime, int durationSeconds)

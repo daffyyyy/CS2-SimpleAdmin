@@ -21,7 +21,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	private static ConcurrentBag<int> godPlayers = [];
 	private static ConcurrentBag<int> silentPlayers = [];
 	private static ConcurrentBag<string> bannedPlayers = [];
-	private static bool TagsDetected = false;
+	private static bool TagsDetected;
 	public static bool voteInProgress = false;
 	public static int? ServerId = null;
 
@@ -33,11 +33,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	internal static ILogger? _logger;
 
-	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? CBasePlayerController_SetPawnFunc = null;
-	public override string ModuleName => "CS2-SimpleAdmin";
+	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? CBasePlayerControllerSetPawnFunc;
+	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.1a";
+	public override string ModuleVersion => "1.4.2a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -52,7 +52,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			OnMapStart(string.Empty);
 		}
 
-		CBasePlayerController_SetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
+		CBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)

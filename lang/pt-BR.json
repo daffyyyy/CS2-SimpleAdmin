@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "Desconhecido",
+	"sa_no_permission": "Você não tem permissão para usar este comando.",
+
+	"sa_admin_add": "Adicionar Admin",
+	"sa_admin_remove": "Remover Admin",
+	"sa_admin_reload": "Recarregar Admins",
+
+	"sa_godmode": "Modo Deus",
+	"sa_noclip": "Modo Espectador",
+	"sa_respawn": "Ressurgir",
+	"sa_give_weapon": "Dar Arma",
+	"sa_strip_weapons": "Remover Armas",
+	"sa_freeze": "Congelar",
+	"sa_set_hp": "Definir HP",
+	"sa_set_speed": "Definir Velocidade",
+	"sa_set_gravity": "Definir Gravidade",
+	"sa_set_money": "Definir Dinheiro",
+
+	"sa_changemap": "Mudar Mapa",
+	"sa_restart_game": "Reiniciar Jogo",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "Trocar",
+	"sa_team_spec": "Espec",
+
+	"sa_slap": "Tapa",
+	"sa_slay": "Matar",
+	"sa_kick": "Expulsar",
+	"sa_ban": "Banir",
+	"sa_gag": "Silenciar",
+	"sa_mute": "Mutar",
+	"sa_silence": "Silêncio",
+	"sa_team_force": "Forçar Time",
+
+	"sa_menu_custom_commands": "Comandos Personalizados",
+	"sa_menu_server_manage": "Gerenciar Servidor",
+	"sa_menu_fun_commands": "Comandos Divertidos",
+	"sa_menu_admins_manage": "Gerenciar Admins",
+	"sa_menu_players_manage": "Gerenciar Jogadores",
 
 	"sa_player": "Jogador",
 	"sa_steamid": "SteamID",

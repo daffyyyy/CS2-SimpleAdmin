@@ -7,27 +7,23 @@ namespace CS2_SimpleAdmin;
 
 internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 {
-	private readonly Database _database = database;
-	private readonly CS2_SimpleAdminConfig _config = config;
-
 	public async Task BanPlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0)
 	{
 		DateTime now = DateTime.UtcNow.ToLocalTime();
 		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
 
+		await using MySqlConnection connection = await database.GetConnectionAsync();
 		try
 		{
-			await using MySqlConnection connection = await _database.GetConnectionAsync();
-
-			var sql =
+			const string sql =
 				"INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
-				"VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
+			                   "VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
 				playerSteamid = player.SteamId,
 				playerName = player.Name,
-				playerIp = _config.BanType == 1 ? player.IpAddress : null,
+				playerIp = config.BanType == 1 ? player.IpAddress : null,
 				adminSteamid = issuer.SteamId ?? "Console",
 				adminName = issuer.Name ?? "Console",
 				banReason = reason,
@@ -49,7 +45,7 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 
 		try
 		{
-			await using MySqlConnection connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await database.GetConnectionAsync();
 
 			var sql = "INSERT INTO `sa_bans` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerSteamid, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -78,7 +74,7 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 
 		try
 		{
-			await using MySqlConnection connection = await _database.GetConnectionAsync();
+			await using MySqlConnection connection = await database.GetConnectionAsync();
 
 			var sql = "INSERT INTO `sa_bans` (`player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
 				"VALUES (@playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
@@ -110,28 +106,25 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 			CS2_SimpleAdmin._logger.LogCritical($"IsPlayerBanned for {player.Name}");
 #endif
 
-		int banCount = 0;
+		int banCount;
 
 		DateTime currentTime = DateTime.Now.ToLocalTime();
 
 		try
 		{
-			var sql = "";
-
-			sql = _config.MultiServerMode ? """
-			                                
-			                                					UPDATE sa_bans
-			                                					SET player_ip = CASE WHEN player_ip IS NULL THEN @PlayerIP ELSE player_ip END,
-			                                						player_name = CASE WHEN player_name IS NULL THEN @PlayerName ELSE player_name END
-			                                					WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
-			                                					AND status = 'ACTIVE'
-			                                					AND (duration = 0 OR ends > @CurrentTime);
-			                                
-			                                					SELECT COUNT(*) FROM sa_bans
-			                                					WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
-			                                					AND status = 'ACTIVE'
-			                                					AND (duration = 0 OR ends > @CurrentTime);
-			                                """ : @"
+			var sql = config.MultiServerMode ? """
+			                                   					UPDATE sa_bans
+			                                   					SET player_ip = CASE WHEN player_ip IS NULL THEN @PlayerIP ELSE player_ip END,
+			                                   						player_name = CASE WHEN player_name IS NULL THEN @PlayerName ELSE player_name END
+			                                   					WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+			                                   					AND status = 'ACTIVE'
+			                                   					AND (duration = 0 OR ends > @CurrentTime);
+			                                   
+			                                   					SELECT COUNT(*) FROM sa_bans
+			                                   					WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+			                                   					AND status = 'ACTIVE'
+			                                   					AND (duration = 0 OR ends > @CurrentTime);
+			                                   """ : @"
 					UPDATE sa_bans
 					SET player_ip = CASE WHEN player_ip IS NULL THEN @PlayerIP ELSE player_ip END,
 						player_name = CASE WHEN player_name IS NULL THEN @PlayerName ELSE player_name END
@@ -144,12 +137,12 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 					AND status = 'ACTIVE'
 					AND (duration = 0 OR ends > @CurrentTime) AND server_id = @serverid;";
 
-			await using var connection = await _database.GetConnectionAsync();
+			await using var connection = await database.GetConnectionAsync();
 
 			var parameters = new
 			{
 				PlayerSteamID = player.SteamId,
-				PlayerIP = _config.BanType == 0 || string.IsNullOrEmpty(player.IpAddress) ? null : player.IpAddress,
+				PlayerIP = config.BanType == 0 || string.IsNullOrEmpty(player.IpAddress) ? null : player.IpAddress,
 				PlayerName = !string.IsNullOrEmpty(player.Name) ? player.Name : string.Empty,
 				CurrentTime = currentTime,
 				serverid = CS2_SimpleAdmin.ServerId
@@ -171,13 +164,13 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 		{
 			var sql = "";
 
-			sql = _config.MultiServerMode
+			sql = config.MultiServerMode
 				? "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND server_id = @serverid"
 				: "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)";
 
 			int banCount;
 
-			await using var connection = await _database.GetConnectionAsync();
+			await using var connection = await database.GetConnectionAsync();
 
 			if (!string.IsNullOrEmpty(player.IpAddress))
 			{
@@ -211,10 +204,10 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 		}
 		try
 		{
-			await using var connection = await _database.GetConnectionAsync();
+			await using var connection = await database.GetConnectionAsync();
 
-			var sqlRetrieveBans = "";
-			if (_config.MultiServerMode)
+			string sqlRetrieveBans;
+			if (config.MultiServerMode)
 			{
 				sqlRetrieveBans = "SELECT id FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE' " +
 					"AND server_id = @serverid";
@@ -226,7 +219,7 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 			var bans = await connection.QueryAsync(sqlRetrieveBans, new { pattern = playerPattern, serverid = CS2_SimpleAdmin.ServerId });
 
 			var bansList = bans as dynamic[] ?? bans.ToArray();
-			if (!bansList.Any())
+			if (bansList.Length == 0)
 				return;
 
 			const string sqlAdmin = "SELECT id FROM sa_admins WHERE player_steamid = @adminSteamId";
@@ -269,10 +262,10 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 	{
 		try
 		{
-			await using var connection = await _database.GetConnectionAsync();
-			var sql = "";
+			await using var connection = await database.GetConnectionAsync();
+			string sql;
 
-			if (_config.MultiServerMode)
+			if (config.MultiServerMode)
 			{
 				sql = "SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) AND status = 'ACTIVE' AND" +
 					" server_id = @serverid";
@@ -314,7 +307,7 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 	{
 		var currentTime = DateTime.UtcNow.ToLocalTime();
 		
-		await using var connection = await _database.GetConnectionAsync();
+		await using var connection = await database.GetConnectionAsync();
 		try
 		{
 			/*
@@ -327,7 +320,7 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 
 			var sql = "";
 
-			sql = _config.MultiServerMode ? """
+			sql = config.MultiServerMode ? """
 			                                
 			                                				UPDATE sa_bans
 			                                				SET
@@ -354,10 +347,10 @@ internal class BanManager(Database database, CS2_SimpleAdminConfig config)
 
 			await connection.ExecuteAsync(sql, new { currentTime, serverid = CS2_SimpleAdmin.ServerId });
 
-			if (_config.ExpireOldIpBans > 0)
+			if (config.ExpireOldIpBans > 0)
 			{
-				var ipBansTime = currentTime.AddDays(-_config.ExpireOldIpBans).ToLocalTime();
-				sql = _config.MultiServerMode ? """
+				var ipBansTime = currentTime.AddDays(-config.ExpireOldIpBans).ToLocalTime();
+				sql = config.MultiServerMode ? """
 				                                
 				                                				UPDATE sa_bans
 				                                				SET

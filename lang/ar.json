@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "مجهول",
+	"sa_no_permission": "ليس لديك الصلاحيات لاستخدام هذا الأمر.",
+
+	"sa_admin_add": "إضافة مسؤول",
+	"sa_admin_remove": "إزالة المسؤول",
+	"sa_admin_reload": "إعادة تحميل المسؤولين",
+
+	"sa_godmode": "وضع الإله",
+	"sa_noclip": "بدون قصاصات",
+	"sa_respawn": "إعادة الظهور",
+	"sa_give_weapon": "إعطاء سلاح",
+	"sa_strip_weapons": "تجريد الأسلحة",
+	"sa_freeze": "تجميد",
+	"sa_set_hp": "تعيين الصحة",
+	"sa_set_speed": "تعيين السرعة",
+	"sa_set_gravity": "تعيين الجاذبية",
+	"sa_set_money": "تعيين المال",
+
+	"sa_changemap": "تغيير الخريطة",
+	"sa_restart_game": "إعادة تشغيل اللعبة",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "تبديل",
+	"sa_team_spec": "المشاهدة",
+
+	"sa_slap": "صفعة",
+	"sa_slay": "قتل",
+	"sa_kick": "طرد",
+	"sa_ban": "حظر",
+	"sa_gag": "كتم",
+	"sa_mute": "كتم",
+	"sa_silence": "صمت",
+	"sa_team_force": "فرض الفريق",
+
+	"sa_menu_custom_commands": "الأوامر المخصصة",
+	"sa_menu_server_manage": "إدارة الخادم",
+	"sa_menu_fun_commands": "أوامر ممتعة",
+	"sa_menu_admins_manage": "إدارة المسؤولين",
+	"sa_menu_players_manage": "إدارة اللاعبين",
 
 	"sa_player": "اللاعب",
 	"sa_steamid": "معرف البخار",
