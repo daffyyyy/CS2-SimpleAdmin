@@ -30,7 +30,7 @@ namespace CS2_SimpleAdmin
 		public string DiscordPenaltyWebhook { get; set; } = "";
 	}
 
-	public abstract class CustomServerCommandData
+	public class CustomServerCommandData
 	{
 		[JsonPropertyName("Flag")]
 		public string Flag { get; set; } = "@css/generic";
