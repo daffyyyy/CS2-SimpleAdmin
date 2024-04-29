@@ -375,7 +375,7 @@ namespace CS2_SimpleAdmin
 		{
 			bool validCaller = caller != null && caller.IsValid;
 			
-			bool canPermBan = validCaller && AdminManager.PlayerHasPermissions(caller, "@css/permban");
+			bool canPermBan = caller == null || validCaller && AdminManager.PlayerHasPermissions(caller, "@css/permban");
 			
 			if (duration > Config.MaxBanDuration && canPermBan == false)
 			{
