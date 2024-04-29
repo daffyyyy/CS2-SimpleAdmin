@@ -1,23 +1,9 @@
 namespace CS2_SimpleAdmin.Menus
 {
-	public class ChatMenuOptionData
+	public class ChatMenuOptionData(string name, Action action, bool disabled = false)
 	{
-		public string name;
-		public Action action;
-		public bool disabled = true;
-
-		public ChatMenuOptionData(string name, Action action)
-		{
-			this.name = name;
-			this.action = action;
-			this.disabled = false;
-		}
-
-		public ChatMenuOptionData(string name, Action action, bool disabled)
-		{
-			this.name = name;
-			this.action = action;
-			this.disabled = disabled;
-		}
+		public readonly string Name = name;
+		public readonly Action Action = action;
+		public readonly bool Disabled = disabled;
 	}
 }

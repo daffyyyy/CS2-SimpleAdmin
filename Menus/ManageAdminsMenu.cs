@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Menu;
 
 namespace CS2_SimpleAdmin.Menus
 {
@@ -8,30 +7,34 @@ namespace CS2_SimpleAdmin.Menus
 	{
 		public static void OpenMenu(CCSPlayerController admin)
 		{
-			if (admin == null || admin.IsValid == false)
+			if (admin.IsValid == false)
 				return;
 
-			if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
+			var localizer = CS2_SimpleAdmin._localizer;
+			if (AdminManager.PlayerHasPermissions(admin, "@css/root") == false)
 			{
-				// TODO: Localize
-				admin.PrintToChat("[Simple Admin] You do not have permissions to use this command.");
+				admin.PrintToChat(localizer?["sa_prefix"] ??
+				                  "[SimpleAdmin] " + 
+				                  (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command")
+				);
 				return;
 			}
 
-			BaseMenu menu = AdminMenu.CreateMenu("Manage Admins");
-			List<ChatMenuOptionData> options = new();
-
-			// TODO: Localize options
-			// options added in order
-
-			options.Add(new ChatMenuOptionData("Add Admin", () => PlayersMenu.OpenRealPlayersMenu(admin, "Add Admin", AddAdminMenu)));
-			options.Add(new ChatMenuOptionData("Remove Admin", () => PlayersMenu.OpenAdminPlayersMenu(admin, "Remove Admin", RemoveAdmin, player => player != admin && admin.CanTarget(player))));
-			options.Add(new ChatMenuOptionData("Reload Admins", () => ReloadAdmins(admin)));
+			var menu = AdminMenu.CreateMenu(localizer?["sa_menu_admins_manage"] ?? "Admins Manage");
+			List<ChatMenuOptionData> options =
+			[
+				new ChatMenuOptionData(localizer?["sa_admin_add"] ?? "Add Admin",
+					() => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_admin_add"] ?? "Add Admin", AddAdminMenu)),
+				new ChatMenuOptionData(localizer?["sa_admin_remove"] ?? "Remove Admin",
+					() => PlayersMenu.OpenAdminPlayersMenu(admin, localizer?["sa_admin_remove"] ?? "Remove Admin", RemoveAdmin,
+						player => player != admin && admin.CanTarget(player))),
+				new ChatMenuOptionData(localizer?["sa_admin_reload"] ?? "Reload Admins", () => ReloadAdmins(admin))
+			];
 
 			foreach (var menuOptionData in options)
 			{
-				var menuName = menuOptionData.name;
-				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.action?.Invoke(); }, menuOptionData.disabled);
+				var menuName = menuOptionData.Name;
+				menu.AddMenuOption(menuName, (_, _) => { menuOptionData.Action.Invoke(); }, menuOptionData.Disabled);
 			}
 
 			AdminMenu.OpenMenu(admin, menu);
@@ -39,28 +42,12 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void AddAdminMenu(CCSPlayerController admin, CCSPlayerController player)
 		{
-			var flags = new[]
-			{
-				new Tuple<string, string>("Generic", "@css/generic"),
-				new Tuple<string, string>("Chat", "@css/chat"),
-				new Tuple<string, string>("Change Map", "@css/changemap"),
-				new Tuple<string, string>("Slay", "@css/slay"),
-				new Tuple<string, string>("Kick", "@css/kick"),
-				new Tuple<string, string>("Ban", "@css/ban"),
-				new Tuple<string, string>("Unban", "@css/unban"),
-				new Tuple<string, string>("Cheats", "@css/cheats"),
-				new Tuple<string, string>("CVAR", "@css/cvar"),
-				new Tuple<string, string>("RCON", "@css/rcon"),
-				new Tuple<string, string>("Root", "@css/root"),
-			};
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_admin_add"] ?? "Add Admin"}: {player.PlayerName}");
 
-			var menu = AdminMenu.CreateMenu($"Add Admin: {player.PlayerName}");
-
-			foreach (var flagsTuple in flags)
+			foreach (var adminFlag in CS2_SimpleAdmin.Instance.Config.MenuConfigs.AdminFlags)
 			{
-				var optionName = flagsTuple.Item1;
-				var disabled = AdminManager.PlayerHasPermissions(player, flagsTuple.Item2);
-				menu.AddMenuOption(optionName, (_, _) => { AddAdmin(admin, player, flagsTuple.Item2); }, disabled);
+				var disabled = AdminManager.PlayerHasPermissions(player, adminFlag.Flag);
+				menu.AddMenuOption(adminFlag.Name, (_, _) => { AddAdmin(admin, player, adminFlag.Flag); }, disabled);
 			}
 
 			AdminMenu.OpenMenu(admin, menu);

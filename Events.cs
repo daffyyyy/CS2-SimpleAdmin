@@ -7,9 +7,7 @@ using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using Microsoft.Extensions.Logging;
-using System.Data;
 using System.Text;
-using static Dapper.SqlMapper;
 
 namespace CS2_SimpleAdmin;
 
@@ -50,7 +48,6 @@ public partial class CS2_SimpleAdmin
 #endif
 		try
 		{
-			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 			PlayerPenaltyManager.RemoveAllPenalties(player.Slot);
 
 			if (TagsDetected)
@@ -69,7 +66,7 @@ public partial class CS2_SimpleAdmin
 			}
 
 			SteamID? authorizedSteamId = player.AuthorizedSteamID;
-			if (authorizedSteamId != null && AdminSQLManager._adminCache.TryGetValue(authorizedSteamId, out var expirationTime)
+			if (authorizedSteamId != null && AdminSQLManager.AdminCache.TryGetValue(authorizedSteamId, out var expirationTime)
 				&& expirationTime <= DateTime.Now)
 			{
 				AdminManager.ClearPlayerPermissions(authorizedSteamId);
@@ -113,7 +110,6 @@ public partial class CS2_SimpleAdmin
 		var playerInfo = new PlayerInfo
 		{
 			UserId = player.UserId.Value,
-			Index = (ushort)player.Index,
 			Slot = player.Slot,
 			SteamId = player.SteamID.ToString(),
 			Name = player.PlayerName,
@@ -124,14 +120,13 @@ public partial class CS2_SimpleAdmin
 		Task.Run(async () =>
 		{
 			// Initialize managers
-			BanManager _banManager = new(_database, Config);
-			MuteManager _muteManager = new(_database);
-			PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
+			BanManager banManager = new(_database, Config);
+			MuteManager muteManager = new(_database);
 
 			try
 			{
 				// Check if the player is banned
-				bool isBanned = await _banManager.IsPlayerBanned(playerInfo);
+				bool isBanned = await banManager.IsPlayerBanned(playerInfo);
 				if (isBanned)
 				{
 					// Add player's IP and SteamID to bannedPlayers list if not already present
@@ -155,7 +150,7 @@ public partial class CS2_SimpleAdmin
 				}
 
 				// Check if the player is muted
-				var activeMutes = await _muteManager.IsPlayerMuted(playerInfo.SteamId);
+				var activeMutes = await muteManager.IsPlayerMuted(playerInfo.SteamId);
 				if (activeMutes.Count > 0)
 				{
 					foreach (var mute in activeMutes)
@@ -231,8 +226,6 @@ public partial class CS2_SimpleAdmin
 		if (info.GetArg(1).Length == 0)
 			return HookResult.Handled;
 
-		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
-
 		if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 			return HookResult.Handled;
 
@@ -247,8 +240,6 @@ public partial class CS2_SimpleAdmin
 
 		if (info.GetArg(1).Length == 0)
 			return HookResult.Handled;
-
-		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 
 		if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 			return HookResult.Handled;
@@ -290,7 +281,6 @@ public partial class CS2_SimpleAdmin
 		godPlayers.Clear();
 		silentPlayers.Clear();
 
-		PlayerPenaltyManager playerPenaltyManager = new PlayerPenaltyManager();
 		PlayerPenaltyManager.RemoveAllPenalties();
 
 		_database = new Database(dbConnectionString);
@@ -309,17 +299,17 @@ public partial class CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				AdminSQLManager _adminManager = new(_database);
-				BanManager _banManager = new(_database, Config);
-				MuteManager _muteManager = new(_database);
+				AdminSQLManager adminManager = new(_database);
+				BanManager banManager = new(_database, Config);
+				MuteManager muteManager = new(_database);
 
-				await _banManager.ExpireOldBans();
-				await _muteManager.ExpireOldMutes();
-				await _adminManager.DeleteOldAdmins();
+				await banManager.ExpireOldBans();
+				await muteManager.ExpireOldMutes();
+				await adminManager.DeleteOldAdmins();
 
 				try
 				{
-					await _banManager.CheckOnlinePlayers(onlinePlayers);
+					await banManager.CheckOnlinePlayers(onlinePlayers);
 				}
 				catch { }
 
@@ -337,7 +327,7 @@ public partial class CS2_SimpleAdmin
 							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 							{
 								if (TagsDetected)
-									Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
+									Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 							}
 
 							if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
@@ -346,7 +336,7 @@ public partial class CS2_SimpleAdmin
 							player.VoiceFlags = VoiceFlags.Normal;
 
 							if (TagsDetected)
-								Server.ExecuteCommand($"css_tag_unmute {player!.SteamID}");
+								Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 						}
 
 						PlayerPenaltyManager.RemoveExpiredPenalties();
@@ -363,7 +353,7 @@ public partial class CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				AdminSQLManager _adminManager = new(_database);
+				AdminSQLManager adminManager = new(_database);
 				try
 				{
 					await using var connection = await _database.GetConnectionAsync();
@@ -413,8 +403,8 @@ public partial class CS2_SimpleAdmin
 				//await _adminManager.GiveAllGroupsFlags();
 				//await _adminManager.GiveAllFlags();
 
-				await _adminManager.CrateGroupsJsonFile();
-				await _adminManager.CreateAdminsJsonFile();
+				await adminManager.CrateGroupsJsonFile();
+				await adminManager.CreateAdminsJsonFile();
 
 				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
 				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");

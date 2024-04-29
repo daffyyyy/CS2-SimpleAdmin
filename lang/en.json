@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "Unknown",
+	"sa_no_permission": "You do not have permissions to use this command.",
+
+	"sa_admin_add": "Add Admin",
+	"sa_admin_remove": "Remove Admin",
+	"sa_admin_reload": "Reload Admins",
+	
+	"sa_godmode": "God Mode",
+	"sa_noclip": "No Clip",
+	"sa_respawn": "Respawn",
+	"sa_give_weapon": "Give Weapon",
+	"sa_strip_weapons": "Strip Weapons",
+	"sa_freeze": "Freeze",
+	"sa_set_hp": "Set Hp",
+	"sa_set_speed": "Set Speed",
+	"sa_set_gravity": "Set Gravity",
+	"sa_set_money": "Set Money",
+	
+	"sa_changemap": "Change Map",
+	"sa_restart_game": "Restart Game",
+	
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "Swap",
+	"sa_team_spec": "Spec",
+	
+	"sa_slap": "Slap",
+	"sa_slay": "slay",
+	"sa_kick": "Kick",
+	"sa_ban": "Ban",
+	"sa_gag": "Gag",
+	"sa_mute": "Mute",
+	"sa_silence": "Silence",
+	"sa_team_force": "Force Team",
+	
+	"sa_menu_custom_commands": "Custom Commands",
+	"sa_menu_server_manage": "Server Manage",
+	"sa_menu_fun_commands": "Fun Commands",
+	"sa_menu_admins_manage": "Admins Manage",
+	"sa_menu_players_manage": "Players Manage",
 
 	"sa_player": "Player",
 	"sa_steamid": "SteamID",
@@ -9,11 +50,11 @@
 	"sa_admin": "Admin",
 	"sa_permanent": "Permanent",
 
-	"sa_discord_penalty_ban": "Ban registrered",
-	"sa_discord_penalty_mute": "Mute registrered",
-	"sa_discord_penalty_gag": "Gag registrered",
-	"sa_discord_penalty_silence": "Silence registrered",
-	"sa_discord_penalty_unknown": "Unknown registrered",
+	"sa_discord_penalty_ban": "Ban registered",
+	"sa_discord_penalty_mute": "Mute registered",
+	"sa_discord_penalty_gag": "Gag registered",
+	"sa_discord_penalty_silence": "Silence registered",
+	"sa_discord_penalty_unknown": "Unknown registered",
 
 	"sa_player_ban_message_time": "You have been banned for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "You have been banned permanently for {lightred}{0}{default} by {lightred}{1}{default}!",

@@ -3,7 +3,6 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
@@ -18,7 +17,6 @@ namespace CS2_SimpleAdmin
 		public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
-			var callerName = caller.PlayerName;
 
 			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
@@ -45,7 +43,6 @@ namespace CS2_SimpleAdmin
 		{
 			if (command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
 
-			var callerName = caller == null ? "Console" : caller.PlayerName;
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
@@ -72,7 +69,7 @@ namespace CS2_SimpleAdmin
 
 			var targets = GetTarget(command);
 			if (targets == null) return;
-			var playersToTarget = targets!.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
 
 			//Helper.LogCommand(caller, command);
 
@@ -95,7 +92,6 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/chat")]
 		public void OnAdminCenterSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			var callerName = caller == null ? "Console" : caller.PlayerName;
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
@@ -110,7 +106,6 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/chat")]
 		public void OnAdminHudSayCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			var callerName = caller == null ? "Console" : caller.PlayerName;
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 

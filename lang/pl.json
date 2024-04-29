@@ -1,6 +1,47 @@
 {
+	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
+	
 	"sa_unknown": "Brak",
+	"sa_no_permission": "Nie masz uprawnień do korzystania z tej komendy.",
+
+	"sa_admin_add": "Dodaj administratora",
+	"sa_admin_remove": "Usuń administratora",
+	"sa_admin_reload": "Przeładuj administratorów",
+
+	"sa_godmode": "Tryb Boga",
+	"sa_noclip": "Tryb Latania",
+	"sa_respawn": "Odrodzenie",
+	"sa_give_weapon": "Daj broń",
+	"sa_strip_weapons": "Usuń bronie",
+	"sa_freeze": "Zamroź",
+	"sa_set_hp": "Ustaw HP",
+	"sa_set_speed": "Ustaw prędkość",
+	"sa_set_gravity": "Ustaw grawitację",
+	"sa_set_money": "Ustaw pieniądze",
+
+	"sa_changemap": "Zmień mapę",
+	"sa_restart_game": "Zrestartuj mapę",
+
+	"sa_team_ct": "CT",
+	"sa_team_t": "T",
+	"sa_team_swap": "Zamień",
+	"sa_team_spec": "Spec",
+
+	"sa_slap": "Uderz",
+	"sa_slay": "Zabij",
+	"sa_kick": "Wyrzuć",
+	"sa_ban": "Zbanuj",
+	"sa_gag": "Zaknebluj",
+	"sa_mute": "Wycisz",
+	"sa_silence": "Ucisz",
+	"sa_team_force": "Wymuś drużynę",
+
+	"sa_menu_custom_commands": "Komendy niestandardowe",
+	"sa_menu_server_manage": "Zarządzaj serwerem",
+	"sa_menu_fun_commands": "Komendy rozrywkowe",
+	"sa_menu_admins_manage": "Zarządzaj administratorami",
+	"sa_menu_players_manage": "Zarządzaj graczami",
 
 	"sa_player": "Gracz",
 	"sa_steamid": "SteamID",

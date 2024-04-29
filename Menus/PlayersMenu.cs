@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
-using CounterStrikeSharp.API.Modules.Menu;
 using System.Web;
 
 namespace CS2_SimpleAdmin.Menus
@@ -14,7 +13,7 @@ namespace CS2_SimpleAdmin.Menus
 
 		public static void OpenAdminPlayersMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController?, bool>? enableFilter = null)
 		{
-			OpenMenu(admin, menuName, onSelectAction, p => AdminManager.GetPlayerAdminData(p)?.Flags?.Count > 0);
+			OpenMenu(admin, menuName, onSelectAction, p => AdminManager.GetPlayerAdminData(p)?.Flags.Count > 0);
 		}
 
 		public static void OpenAliveMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
@@ -45,7 +44,7 @@ namespace CS2_SimpleAdmin.Menus
 				if (optionName != null)
 					menu.AddMenuOption(optionName, (_, _) =>
 						{
-							if (player != null) onSelectAction?.Invoke(admin, player);
+							if (player != null) onSelectAction.Invoke(admin, player);
 						},
 						enabled == false);
 			}
