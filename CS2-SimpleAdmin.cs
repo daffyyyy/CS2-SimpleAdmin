@@ -17,27 +17,28 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static CS2_SimpleAdmin Instance { get; private set; } = new();
 
 	public static IStringLocalizer? _localizer;
-	public static Dictionary<string, int> voteAnswers = [];
-	private static ConcurrentBag<int> godPlayers = [];
-	private static ConcurrentBag<int> silentPlayers = [];
-	private static ConcurrentBag<string> bannedPlayers = [];
-	private static bool TagsDetected;
-	public static bool voteInProgress = false;
+	public static readonly Dictionary<string, int> VoteAnswers = [];
+	private static readonly ConcurrentBag<int> GodPlayers = [];
+	private static readonly ConcurrentBag<int> SilentPlayers = [];
+	private static readonly ConcurrentBag<string> BannedPlayers = [];
+	private static bool _tagsDetected;
+	private static bool _adminsLoaded;
+	public static bool VoteInProgress = false;
 	public static int? ServerId = null;
 
-	public static DiscordWebhookClient? _discordWebhookClientLog;
-	public static DiscordWebhookClient? _discordWebhookClientPenalty;
+	public static DiscordWebhookClient? DiscordWebhookClientLog;
+	public static DiscordWebhookClient? DiscordWebhookClientPenalty;
 
-	internal string dbConnectionString = string.Empty;
-	internal static Database? _database;
+	private string _dbConnectionString = string.Empty;
+	private static Database.Database? _database;
 
 	internal static ILogger? _logger;
 
-	public static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? CBasePlayerControllerSetPawnFunc;
+	private static MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>? _cBasePlayerControllerSetPawnFunc;
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.2b";
+	public override string ModuleVersion => "1.4.3a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -52,19 +53,21 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			OnMapStart(string.Empty);
 		}
 
-		CBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
+		_cBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
 	{
+		
 		if (config.DatabaseHost.Length < 1 || config.DatabaseName.Length < 1 || config.DatabaseUser.Length < 1)
 		{
 			throw new Exception("[CS2-SimpleAdmin] You need to setup Database credentials in config!");
 		}
-
+		
 		Instance = this;
 		_logger = Logger;
 
+			
 		MySqlConnectionStringBuilder builder = new()
 		{
 			Server = config.DatabaseHost,
@@ -77,8 +80,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			MaximumPoolSize = 640,
 		};
 
-		dbConnectionString = builder.ConnectionString;
-		_database = new(dbConnectionString);
+		_dbConnectionString = builder.ConnectionString;
+		_database = new Database.Database(_dbConnectionString);
 
 		if (!_database.CheckDatabaseConnection())
 		{
@@ -132,9 +135,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		_localizer = Localizer;
 
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordLogWebhook))
-			_discordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
+			DiscordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordPenaltyWebhook))
-			_discordWebhookClientPenalty = new DiscordWebhookClient(Config.Discord.DiscordPenaltyWebhook);
+			DiscordWebhookClientPenalty = new DiscordWebhookClient(Config.Discord.DiscordPenaltyWebhook);
+		
+		PluginInfo.ShowAd(ModuleVersion);
+		_ = PluginInfo.CheckVersion(ModuleVersion, _logger);
 	}
 
 	private static TargetResult? GetTarget(CommandInfo command)
@@ -157,7 +163,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		return null;
 	}
 
-	public static void RemoveFromConcurrentBag(ConcurrentBag<int> bag, int playerSlot)
+	private static void RemoveFromConcurrentBag(ConcurrentBag<int> bag, int playerSlot)
 	{
 		List<int> tempList = [];
 		while (!bag.IsEmpty)

@@ -40,11 +40,11 @@ namespace CS2_SimpleAdmin
 
 			if (command != null)
 			{
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 				Helper.LogCommand(caller, command);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -114,7 +114,7 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
 			player.GiveNamedItem(weaponName);
@@ -125,7 +125,7 @@ namespace CS2_SimpleAdmin
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
-			if (caller != null && (silentPlayers.Contains(caller.Slot))) return;
+			if (caller != null && (SilentPlayers.Contains(caller.Slot))) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -169,10 +169,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -217,10 +217,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -266,10 +266,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -292,7 +292,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
@@ -317,10 +317,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -366,10 +366,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -412,19 +412,19 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (!godPlayers.Contains(player.Slot))
+			if (!GodPlayers.Contains(player.Slot))
 			{
-				godPlayers.Add(player.Slot);
+				GodPlayers.Add(player.Slot);
 			}
 			else
 			{
-				RemoveFromConcurrentBag(godPlayers, player.Slot);
+				RemoveFromConcurrentBag(GodPlayers, player.Slot);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -473,10 +473,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -567,7 +567,7 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
-			if (caller == null || !silentPlayers.Contains(caller.Slot))
+			if (caller == null || !SilentPlayers.Contains(caller.Slot))
 			{
 				foreach (var controller in Helper.GetValidPlayers())
 				{
@@ -582,7 +582,7 @@ namespace CS2_SimpleAdmin
 
 			if (command == null) return;
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 		}
 
 		[ConsoleCommand("css_rename", "Rename a player.")]
@@ -600,7 +600,7 @@ namespace CS2_SimpleAdmin
 			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
@@ -608,7 +608,7 @@ namespace CS2_SimpleAdmin
 					return;
 
 				if (!caller!.CanTarget(player)) return;
-				if (caller == null || !silentPlayers.Contains(caller.Slot))
+				if (caller == null || !SilentPlayers.Contains(caller.Slot))
 				{
 					foreach (var controller in Helper.GetValidPlayers())
 					{
@@ -651,20 +651,20 @@ namespace CS2_SimpleAdmin
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
-			if (CBasePlayerControllerSetPawnFunc == null || player?.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
+			if (_cBasePlayerControllerSetPawnFunc == null || player?.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
 
 			var playerPawn = player.PlayerPawn.Value;
-			CBasePlayerControllerSetPawnFunc.Invoke(player, playerPawn, true, false);
+			_cBasePlayerControllerSetPawnFunc.Invoke(player, playerPawn, true, false);
 			VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle,
 															GameData.GetOffset("CCSPlayerController_Respawn"))(player);
 
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -693,7 +693,7 @@ namespace CS2_SimpleAdmin
 			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
@@ -709,7 +709,7 @@ namespace CS2_SimpleAdmin
 					caller.Pawn.Value!.ToggleNoclip();
 				});
 
-				if (silentPlayers.Contains(caller.Slot)) return;
+				if (SilentPlayers.Contains(caller.Slot)) return;
 				foreach (var controller in Helper.GetValidPlayers())
 				{
 					using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -738,7 +738,7 @@ namespace CS2_SimpleAdmin
 			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
@@ -754,7 +754,7 @@ namespace CS2_SimpleAdmin
 					caller.Pawn.Value!.ToggleNoclip();
 				});
 
-				if (silentPlayers.Contains(caller.Slot)) return;
+				if (SilentPlayers.Contains(caller.Slot)) return;
 				foreach (var controller in Helper.GetValidPlayers())
 				{
 					using (new WithTemporaryCulture(controller.GetLanguage()))

@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using MySqlConnector;
 
-namespace CS2_SimpleAdmin;
+namespace CS2_SimpleAdmin.Database;
 
 public class Migration(Database database)
 {
-	private readonly Database _database = database;
-
 	public void ExecuteMigrations()
 	{
 		var migrationsDirectory = CS2_SimpleAdmin.Instance.ModuleDirectory + "/Database/Migrations";
@@ -14,11 +12,10 @@ public class Migration(Database database)
 		var files = Directory.GetFiles(migrationsDirectory, "*.sql")
 							 .OrderBy(f => f);
 
-		using var connection = _database.GetConnection();
+		using var connection = database.GetConnection();
 
 		// Create sa_migrations table if not exists
 		using var cmd = new MySqlCommand("""
-		                                 
 		                                             CREATE TABLE IF NOT EXISTS `sa_migrations` (
 		                                                 `id` INT PRIMARY KEY AUTO_INCREMENT,
 		                                                 `version` VARCHAR(255) NOT NULL

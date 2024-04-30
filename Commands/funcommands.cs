@@ -21,7 +21,7 @@ namespace CS2_SimpleAdmin
 				player.IsValid && player.SteamID.ToString().Length == 17 &&
 				player is { PawnIsAlive: true, IsHLTV: false }).ToList();
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
@@ -39,7 +39,7 @@ namespace CS2_SimpleAdmin
 
 			Helper.LogCommand(caller, $"css_noclip {player.PlayerName}");
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -62,7 +62,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
@@ -87,7 +87,7 @@ namespace CS2_SimpleAdmin
 			if (time > 0)
 				AddTimer(time, () => player?.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
@@ -127,10 +127,10 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
-			if (caller != null && silentPlayers.Contains(caller.Slot)) return;
+			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))

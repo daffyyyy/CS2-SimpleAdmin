@@ -5,7 +5,7 @@ using MySqlConnector;
 
 namespace CS2_SimpleAdmin;
 
-internal class BanManager(Database database, CS2_SimpleAdminConfig config)
+internal class BanManager(Database.Database database, CS2_SimpleAdminConfig config)
 {
 	public async Task BanPlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0)
 	{

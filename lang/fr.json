@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "Inconnu",
 	"sa_no_permission": "Vous n'avez pas les permissions pour utiliser cette commande.",
+	"sa_ban_max_duration_exceeded": "La durée d'interdiction ne peut pas dépasser {lightred}{0}{default} minutes.",
+	"sa_ban_perm_restricted": "Vous n'avez pas le droit de bannir définitivement.",
 
 	"sa_admin_add": "Ajouter un administrateur",
 	"sa_admin_remove": "Supprimer un administrateur",
@@ -100,5 +102,5 @@
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default} : {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(JOUEUR) {lightred}{0}{default} : {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`",
 }

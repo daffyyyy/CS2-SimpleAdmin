@@ -11,7 +11,7 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("duration")]
 		public int Duration { get; set; }
 	}
-	
+
 	public class AdminFlag
 	{
 		[JsonPropertyName("name")]
@@ -30,7 +30,7 @@ namespace CS2_SimpleAdmin
 		public string DiscordPenaltyWebhook { get; set; } = "";
 	}
 
-	public abstract class CustomServerCommandData
+	public class CustomServerCommandData
 	{
 		[JsonPropertyName("Flag")]
 		public string Flag { get; set; } = "@css/generic";
@@ -60,7 +60,7 @@ namespace CS2_SimpleAdmin
 			new DurationItem { Name = "30 days", Duration = 60 * 24 * 30 },
 			new DurationItem { Name = "Permanent", Duration = 0 }
 		];
-		
+
 		[JsonPropertyName("BanReasons")]
 		public List<string> BanReasons { get; set; } =
 		[
@@ -70,16 +70,16 @@ namespace CS2_SimpleAdmin
 			"Admin disrespect",
 			"Other"
 		];
-		
+
 		[JsonPropertyName("KickReasons")]
-		public  List<string> KickReasons { get; set; } =
+		public List<string> KickReasons { get; set; } =
 		[
 			"Voice Abuse",
 			"Chat Abuse",
 			"Admin disrespect",
 			"Other"
 		];
-		
+
 		[JsonPropertyName("MuteReasons")]
 		public List<string> MuteReasons { get; set; } =
 		[
@@ -90,7 +90,7 @@ namespace CS2_SimpleAdmin
 			"Admin disrespect",
 			"Other"
 		];
-		
+
 		[JsonPropertyName("AdminFlags")]
 		public AdminFlag[] AdminFlags { get; set; } =
 		[
@@ -100,6 +100,7 @@ namespace CS2_SimpleAdmin
 			new AdminFlag { Name = "Slay", Flag = "@css/slay" },
 			new AdminFlag { Name = "Kick", Flag = "@css/kick" },
 			new AdminFlag { Name = "Ban", Flag = "@css/ban" },
+			new AdminFlag { Name = "Perm Ban", Flag = "@css/permban" },
 			new AdminFlag { Name = "Unban", Flag = "@css/unban" },
 			new AdminFlag { Name = "Cvar", Flag = "@css/cvar" },
 			new AdminFlag { Name = "Rcon", Flag = "@css/rcon" },
@@ -109,7 +110,7 @@ namespace CS2_SimpleAdmin
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 12;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 13;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";
@@ -137,30 +138,33 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("DisableDangerousCommands")]
 		public bool DisableDangerousCommands { get; set; } = true;
-
+		
 		[JsonPropertyName("BanType")]
-		public int BanType { get; } = 1;
+		public int BanType { get; set; } = 1;
+		
+		[JsonPropertyName("MaxBanDuration")]
+		public int MaxBanDuration { get; set; } = 60 * 24 * 7; // 7 days
 		[JsonPropertyName("MultiServerMode")]
-		public bool MultiServerMode { get; } = true;
+		public bool MultiServerMode { get; set; } = true;
 
 		[JsonPropertyName("ExpireOldIpBans")]
-		public int ExpireOldIpBans { get; } = 0;
+		public int ExpireOldIpBans { get; set; } = 0;
 
 		[JsonPropertyName("TeamSwitchType")]
-		public int TeamSwitchType { get; } = 1;
+		public int TeamSwitchType { get; set; } = 1;
 
 		[JsonPropertyName("Discord")]
-		public Discord Discord { get; } = new();
+		public Discord Discord { get; set; } = new();
 
 		[JsonPropertyName("DefaultMaps")]
-		public List<string> DefaultMaps { get; } = [];
+		public List<string> DefaultMaps { get; set; } = [];
 
 		[JsonPropertyName("WorkshopMaps")]
-		public List<string> WorkshopMaps { get; } = [];
+		public List<string> WorkshopMaps { get; set; } = [];
 
 		[JsonPropertyName("CustomServerCommands")]
-		public List<CustomServerCommandData> CustomServerCommands { get; set; } = [];
-		
+		public List<CustomServerCommandData> CustomServerCommands { get; set; } = new();
+
 		[JsonPropertyName("MenuConfig")]
 		public MenuConfig MenuConfigs { get; set; } = new();
 	}

@@ -29,7 +29,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Database database = new(dbConnectionString);
+			Database.Database database = new(_dbConnectionString);
 			BanManager banManager = new(database, Config);
 
 			int.TryParse(command.GetArg(2), out var time);
@@ -49,6 +49,9 @@ namespace CS2_SimpleAdmin
 		internal void Ban(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
 		{
 			if (_database == null || player is null || !player.IsValid) return;
+			
+			if (CheckValidBan(caller, time) == false) 
+				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
@@ -81,10 +84,10 @@ namespace CS2_SimpleAdmin
 				AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value),
 					CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
-				bannedPlayers.Add(playerInfo.IpAddress);
-			if (!bannedPlayers.Contains(player.SteamID.ToString()))
-				bannedPlayers.Add(player.SteamID.ToString());
+			if (playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
+				BannedPlayers.Add(playerInfo.IpAddress);
+			if (!BannedPlayers.Contains(player.SteamID.ToString()))
+				BannedPlayers.Add(player.SteamID.ToString());
 
 			if (time == 0)
 			{
@@ -94,7 +97,7 @@ namespace CS2_SimpleAdmin
 						player.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 					}
 
-				if (caller == null || !silentPlayers.Contains(caller.Slot))
+				if (caller == null || !SilentPlayers.Contains(caller.Slot))
 				{
 					foreach (var controller in Helper.GetValidPlayers())
 					{
@@ -114,7 +117,7 @@ namespace CS2_SimpleAdmin
 					{
 						player.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
 					}
-				if (caller == null || !silentPlayers.Contains(caller.Slot))
+				if (caller == null || !SilentPlayers.Contains(caller.Slot))
 				{
 					foreach (var controller in Helper.GetValidPlayers())
 					{
@@ -131,9 +134,9 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
-			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, DiscordWebhookClientPenalty, _localizer);
 		}
 
 		[ConsoleCommand("css_addban")]
@@ -142,6 +145,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
+			
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
@@ -158,6 +162,9 @@ namespace CS2_SimpleAdmin
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
 			int.TryParse(command.GetArg(2), out var time);
+			
+			if (CheckValidBan(caller, time) == false) 
+				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
@@ -192,7 +199,7 @@ namespace CS2_SimpleAdmin
 							{
 								player.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 							}
-						if (caller == null || !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
 							foreach (var controller in Helper.GetValidPlayers())
 							{
@@ -213,7 +220,7 @@ namespace CS2_SimpleAdmin
 								player.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
 							}
 
-						if (caller == null || !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
 							foreach (var controller in Helper.GetValidPlayers())
 							{
@@ -228,7 +235,7 @@ namespace CS2_SimpleAdmin
 					}
 				}
 
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, DiscordWebhookClientPenalty, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -238,7 +245,7 @@ namespace CS2_SimpleAdmin
 			});
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			//Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
 
 			command.ReplyToCommand($"Banned player with steamid {steamid}.");
@@ -264,7 +271,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -276,6 +283,8 @@ namespace CS2_SimpleAdmin
 			};
 
 			int.TryParse(command.GetArg(2), out var time);
+			if (CheckValidBan(caller, time) == false) 
+				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
 				reason = command.GetArg(3);
@@ -302,7 +311,7 @@ namespace CS2_SimpleAdmin
 								player.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
 							}
 
-						if (caller == null || !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
 							foreach (var controller in Helper.GetValidPlayers())
 							{
@@ -322,7 +331,7 @@ namespace CS2_SimpleAdmin
 							{
 								player.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
 							}
-						if (caller == null || !silentPlayers.Contains(caller.Slot))
+						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
 							foreach (var controller in Helper.GetValidPlayers())
 							{
@@ -344,7 +353,7 @@ namespace CS2_SimpleAdmin
 						}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 					}
 				}
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, DiscordWebhookClientPenalty, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -354,9 +363,28 @@ namespace CS2_SimpleAdmin
 			});
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			command.ReplyToCommand($"Banned player with IP address {ipAddress}.");
+		}
+		
+		private bool CheckValidBan(CCSPlayerController? caller, int duration)
+		{
+			if (caller == null) return true;
+			
+			bool canPermBan = AdminManager.PlayerHasPermissions(caller, "@css/permban");
+			
+			if (duration > Config.MaxBanDuration && canPermBan == false)
+			{
+				caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.MaxBanDuration]}");
+			}
+
+			if (duration == 0 && canPermBan == false)
+			{
+				caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_perm_restricted"]}");
+			}
+
+			return caller.IsValid && canPermBan;
 		}
 
 		[ConsoleCommand("css_unban")]
@@ -380,7 +408,7 @@ namespace CS2_SimpleAdmin
 			BanManager banManager = new(_database, Config);
 			Task.Run(async () => await banManager.UnbanPlayer(pattern, callerSteamId, reason));
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			command.ReplyToCommand($"Unbanned player with pattern {pattern}.");

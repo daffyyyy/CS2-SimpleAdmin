@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "Nezināms",
 	"sa_no_permission": "Jums nav atļauju izmantot šo komandu.",
+	"sa_ban_max_duration_exceeded": "Aizlieguma ilgums nevar pārsniegt {lightred}{0}{default} minūtes.",
+	"sa_ban_perm_restricted": "Jums nav tiesību uz pastāvīgu aizliegumu.",
 
 	"sa_admin_add": "Pievienot administratoru",
 	"sa_admin_remove": "Noņemt administratoru",
@@ -100,5 +102,5 @@
 	"sa_adminchat_template_admin": "{LIME}(Admins) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(SPĒLĒTĀJS) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** izmantoja komandu `{1}` uz servera `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** izmantoja komandu `{1}` uz servera `HOSTNAME`",
 }

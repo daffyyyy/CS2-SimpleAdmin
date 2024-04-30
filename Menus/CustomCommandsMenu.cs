@@ -8,7 +8,7 @@ namespace CS2_SimpleAdmin.Menus
 	{
 		public static void OpenMenu(CCSPlayerController admin)
 		{
-			if (admin.IsValid == false)
+			if (admin == null || admin.IsValid == false)
 				return;
 
 			var localizer = CS2_SimpleAdmin._localizer;
@@ -34,7 +34,7 @@ namespace CS2_SimpleAdmin.Menus
 					Helper.TryLogCommandOnDiscord(admin, customCommand.Command);
 
 					if (customCommand.ExecuteOnClient)
-						admin.ExecuteClientCommand(customCommand.Command);
+						admin.ExecuteClientCommandFromServer(customCommand.Command);
 					else
 						Server.ExecuteCommand(customCommand.Command);
 				}));
