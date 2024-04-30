@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS `sa_admins` (
 						 `id` int(11) NOT NULL AUTO_INCREMENT,
 						 `player_name` varchar(128) NOT NULL,
 						 `player_steamid` varchar(64) NOT NULL,
-						 `flags` TEXT NOT NULL,
 						 `immunity` int(11) NOT NULL DEFAULT 0,
 						 `server_id` INT NULL,
 						 `ends` timestamp NULL,
