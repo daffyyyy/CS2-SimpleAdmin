@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin;
 
-internal class MuteManager(Database database)
+internal class MuteManager(Database.Database database)
 {
 	public async Task MutePlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0, int type = 0)
 	{

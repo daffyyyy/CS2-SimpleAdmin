@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "مجهول",
 	"sa_no_permission": "ليس لديك الصلاحيات لاستخدام هذا الأمر.",
+	"sa_ban_max_duration_exceeded": "مدة الحظر لا يمكن أن تتجاوز {lightred}{0}{default} دقيقة.",
+	"sa_ban_perm_restricted": "ليس لديك الحق في الحظر الدائم.",
 
 	"sa_admin_add": "إضافة مسؤول",
 	"sa_admin_remove": "إزالة المسؤول",
@@ -101,7 +103,4 @@
 	"sa_adminchat_template_player": "{SILVER}(لاعب) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** أصدر الأمر `{1}` على الخادم `HOSTNAME`",
-
-	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
-	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "Desconocido",
 	"sa_no_permission": "No tienes permisos para usar este comando.",
+	"sa_ban_max_duration_exceeded": "La duración de la prohibición no puede exceder {lightred}{0}{default} minutos.",
+	"sa_ban_perm_restricted": "No tienes derecho a prohibir permanentemente.",
 
 	"sa_admin_add": "Agregar Administrador",
 	"sa_admin_remove": "Eliminar Administrador",
@@ -101,7 +103,4 @@
 	"sa_adminchat_template_player": "{SILVER}(JUGADOR) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** emitió el comando `{1}` en el servidor `HOSTNAME`",
-
-	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
-	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

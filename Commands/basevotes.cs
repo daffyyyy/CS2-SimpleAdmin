@@ -18,19 +18,19 @@ namespace CS2_SimpleAdmin
 			if (command.ArgCount < 2)
 				return;
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
-			voteAnswers.Clear();
+			VoteAnswers.Clear();
 
 			var question = command.GetArg(1);
 			var answersCount = command.ArgCount;
 
-			if (caller == null || !silentPlayers.Contains(caller.Slot))
+			if (caller == null || !SilentPlayers.Contains(caller.Slot))
 			{
 				for (var i = 2; i <= answersCount - 1; i++)
 				{
-					voteAnswers.Add(command.GetArg(i), 0);
+					VoteAnswers.Add(command.GetArg(i), 0);
 				}
 
 				foreach (var player in Helper.GetValidPlayers())
@@ -55,10 +55,10 @@ namespace CS2_SimpleAdmin
 					}
 				}
 
-				voteInProgress = true;
+				VoteInProgress = true;
 			}
 
-			if (voteInProgress)
+			if (VoteInProgress)
 			{
 				AddTimer(30, () =>
 				{
@@ -72,7 +72,7 @@ namespace CS2_SimpleAdmin
 						}
 					}
 
-					foreach (var (key, value) in voteAnswers)
+					foreach (var (key, value) in VoteAnswers)
 					{
 						foreach (var player in Helper.GetValidPlayers())
 						{
@@ -84,8 +84,8 @@ namespace CS2_SimpleAdmin
 							}
 						}
 					}
-					voteAnswers.Clear();
-					voteInProgress = false;
+					VoteAnswers.Clear();
+					VoteInProgress = false;
 				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 		}

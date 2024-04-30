@@ -133,7 +133,7 @@ namespace CS2_SimpleAdmin
 			_ = adminManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
 
 			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
 
 			var msg = $"Added '{flags}' flags to '{name}' ({steamid})";
@@ -184,7 +184,7 @@ namespace CS2_SimpleAdmin
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_deladmin {steamid}");
 
 			var msg = $"Removed flags from '{steamid}'";
@@ -231,7 +231,7 @@ namespace CS2_SimpleAdmin
 			_ = adminManager.AddGroup(name, flagsList, immunity);
 
 			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_addgroup {name} {flags} {immunity}");
 
 			var msg = $"Created group '{name}' with flags '{flags}'";
@@ -273,7 +273,7 @@ namespace CS2_SimpleAdmin
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_delgroup {name}");
 
 			var msg = $"Removed group '{name}'";
@@ -336,15 +336,15 @@ namespace CS2_SimpleAdmin
 
 			Helper.LogCommand(caller, command);
 
-			if (silentPlayers.Contains(caller.Slot))
+			if (SilentPlayers.Contains(caller.Slot))
 			{
-				RemoveFromConcurrentBag(silentPlayers, caller.Slot);
+				RemoveFromConcurrentBag(SilentPlayers, caller.Slot);
 				caller.PrintToChat($"You aren't hidden now!");
 				caller.ChangeTeam(CsTeam.Spectator);
 			}
 			else
 			{
-				silentPlayers.Add(caller.Slot);
+				SilentPlayers.Add(caller.Slot);
 				Server.ExecuteCommand("sv_disable_teamselect_menu 1");
 
 				if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
@@ -372,7 +372,7 @@ namespace CS2_SimpleAdmin
 
 			var playersToTarget = targets.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
 
-			Database database = new(dbConnectionString);
+			Database.Database database = new(_dbConnectionString);
 			BanManager banManager = new(database, Config);
 			MuteManager muteManager = new(_database);
 
@@ -498,7 +498,7 @@ namespace CS2_SimpleAdmin
 			reason ??= _localizer?["sa_unknown"] ?? "Unknown";
 
 			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_kick {player?.PlayerName} {reason}");
 
 			if (string.IsNullOrEmpty(reason) == false)
@@ -519,7 +519,7 @@ namespace CS2_SimpleAdmin
 						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
-			if (caller != null && (caller.UserId == null || silentPlayers.Contains(caller.Slot))) return;
+			if (caller != null && (caller.UserId == null || SilentPlayers.Contains(caller.Slot))) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
 				
@@ -577,7 +577,7 @@ namespace CS2_SimpleAdmin
 				}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 
-			if (caller == null || !silentPlayers.Contains(caller.Slot))
+			if (caller == null || !SilentPlayers.Contains(caller.Slot))
 			{
 				foreach (var player in Helper.GetValidPlayers())
 				{
@@ -591,7 +591,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (command == null) return;
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 		}
 
@@ -612,7 +612,7 @@ namespace CS2_SimpleAdmin
 
 			var issuedCommand = long.TryParse(map, out var mapId) ? $"host_workshop_map {mapId}" : $"ds_workshop_changelevel {map}";
 
-			if (caller == null || !silentPlayers.Contains(caller.Slot))
+			if (caller == null || !SilentPlayers.Contains(caller.Slot))
 			{
 				foreach (var player in Helper.GetValidPlayers())
 				{
@@ -631,7 +631,7 @@ namespace CS2_SimpleAdmin
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (command == null) return;
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 		}
 
@@ -655,7 +655,7 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			var value = command.GetArg(2);
@@ -673,7 +673,7 @@ namespace CS2_SimpleAdmin
 		{
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			Server.ExecuteCommand(command.ArgString);

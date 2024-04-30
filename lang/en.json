@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "Unknown",
 	"sa_no_permission": "You do not have permissions to use this command.",
+	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
+	"sa_ban_perm_restricted": "You do not have the right to permanently ban.",
 
 	"sa_admin_add": "Add Admin",
 	"sa_admin_remove": "Remove Admin",
@@ -100,7 +102,4 @@
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(PLAYER) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_discord_log_command": "**{0}** issued command `{1}` on server `HOSTNAME`",
-	
-	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
-	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

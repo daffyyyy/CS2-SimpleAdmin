@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "ناشناخته",
 	"sa_no_permission": "شما دسترسی برای استفاده از این دستور را ندارید.",
+	"sa_ban_max_duration_exceeded": "مدت ممنوعیت نمی‌تواند بیشتر از {lightred}{0}{default} دقیقه باشد.",
+	"sa_ban_perm_restricted": "شما اجازه ممنوعیت دائم را ندارید.",
 
 	"sa_admin_add": "افزودن مدیر",
 	"sa_admin_remove": "حذف مدیر",
@@ -101,7 +103,4 @@
 	"sa_adminchat_template_player": "{SILVER}(بازیکن) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** دستور `{1}` را در سرور `HOSTNAME` اجرا کرد",
-
-	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
-	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

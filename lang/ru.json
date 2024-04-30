@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "Неизвестный",
 	"sa_no_permission": "У вас нет прав для использования этой команды.",
+	"sa_ban_max_duration_exceeded": "Продолжительность бана не может превышать {lightred}{0}{default} минут.",
+	"sa_ban_perm_restricted": "У вас нет прав на постоянный бан.",
 
 	"sa_admin_add": "Добавить администратора",
 	"sa_admin_remove": "Удалить администратора",
@@ -100,7 +102,4 @@
 	"sa_adminchat_template_player": "{SILVER}(ИГРОК) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** выполнил команду `{1}` на сервере `HOSTNAME`",
-
-	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
-	"sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }

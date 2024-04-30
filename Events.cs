@@ -50,19 +50,19 @@ public partial class CS2_SimpleAdmin
 		{
 			PlayerPenaltyManager.RemoveAllPenalties(player.Slot);
 
-			if (TagsDetected)
+			if (_tagsDetected)
 			{
 				Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 			}
 
-			if (silentPlayers.Contains(player.Slot))
+			if (SilentPlayers.Contains(player.Slot))
 			{
-				RemoveFromConcurrentBag(silentPlayers, player.Slot);
+				RemoveFromConcurrentBag(SilentPlayers, player.Slot);
 			}
 
-			if (godPlayers.Contains(player.Slot))
+			if (GodPlayers.Contains(player.Slot))
 			{
-				RemoveFromConcurrentBag(godPlayers, player.Slot);
+				RemoveFromConcurrentBag(GodPlayers, player.Slot);
 			}
 
 			SteamID? authorizedSteamId = player.AuthorizedSteamID;
@@ -96,7 +96,7 @@ public partial class CS2_SimpleAdmin
 		var ipAddress = player.IpAddress.Split(":")[0];
 
 		// Check if the player's IP or SteamID is in the bannedPlayers list
-		if (bannedPlayers.Contains(ipAddress) || bannedPlayers.Contains(player.SteamID.ToString()))
+		if (BannedPlayers.Contains(ipAddress) || BannedPlayers.Contains(player.SteamID.ToString()))
 		{
 			// Kick the player if banned
 			if (player.UserId.HasValue)
@@ -130,17 +130,17 @@ public partial class CS2_SimpleAdmin
 				if (isBanned)
 				{
 					// Add player's IP and SteamID to bannedPlayers list if not already present
-					if (playerInfo.IpAddress != null && !bannedPlayers.Contains(playerInfo.IpAddress))
-						bannedPlayers.Add(playerInfo.IpAddress);
+					if (playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
+						BannedPlayers.Add(playerInfo.IpAddress);
 
-					if (playerInfo.SteamId != null && !bannedPlayers.Contains(playerInfo.SteamId))
-						bannedPlayers.Add(playerInfo.SteamId);
+					if (playerInfo.SteamId != null && !BannedPlayers.Contains(playerInfo.SteamId))
+						BannedPlayers.Add(playerInfo.SteamId);
 
 					// Kick the player if banned
 					await Server.NextFrameAsync(() =>
 					{
 						var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId);
-						if (victim.UserId.HasValue)
+						if (victim?.UserId != null)
 						{
 							Helper.KickPlayer(victim.UserId.Value, "Banned");
 						}
@@ -166,7 +166,7 @@ public partial class CS2_SimpleAdmin
 								PlayerPenaltyManager.AddPenalty(playerInfo.Slot, PenaltyType.Gag, ends, duration);
 								await Server.NextFrameAsync(() =>
 								{
-									if (TagsDetected)
+									if (_tagsDetected)
 									{
 										Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
 									}
@@ -184,7 +184,7 @@ public partial class CS2_SimpleAdmin
 								await Server.NextFrameAsync(() =>
 								{
 									player.VoiceFlags = VoiceFlags.Muted;
-									if (TagsDetected)
+									if (_tagsDetected)
 									{
 										Server.ExecuteCommand($"css_tag_mute {playerInfo.SteamId}");
 									}
@@ -213,7 +213,7 @@ public partial class CS2_SimpleAdmin
 		Logger.LogCritical("[OnRoundEnd]");
 #endif
 
-		godPlayers.Clear();
+		GodPlayers.Clear();
 		return HookResult.Continue;
 	}
 
@@ -250,7 +250,7 @@ public partial class CS2_SimpleAdmin
 
 		if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
 		{
-			sb.Append(_localizer!["sa_adminchat_template_admin", player!.PlayerName, info.GetArg(1).Remove(0, 1)]);
+			sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
 			foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 			{
 				p.PrintToChat(sb.ToString());
@@ -258,7 +258,7 @@ public partial class CS2_SimpleAdmin
 		}
 		else
 		{
-			sb.Append(_localizer!["sa_adminchat_template_player", player!.PlayerName, info.GetArg(1).Remove(0, 1)]);
+			sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
 			player.PrintToChat(sb.ToString());
 			foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
 			{
@@ -267,7 +267,6 @@ public partial class CS2_SimpleAdmin
 		}
 
 		return HookResult.Handled;
-
 	}
 
 	private void OnMapStart(string mapName)
@@ -275,15 +274,16 @@ public partial class CS2_SimpleAdmin
 		var path = Path.GetDirectoryName(ModuleDirectory);
 		if (Directory.Exists(path + "/CS2-Tags"))
 		{
-			TagsDetected = true;
+			_tagsDetected = true;
 		}
 
-		godPlayers.Clear();
-		silentPlayers.Clear();
+		_adminsLoaded = false;
+		GodPlayers.Clear();
+		SilentPlayers.Clear();
 
 		PlayerPenaltyManager.RemoveAllPenalties();
 
-		_database = new Database(dbConnectionString);
+		_database = new Database.Database(_dbConnectionString);
 
 		AddTimer(61.0f, () =>
 		{
@@ -313,7 +313,7 @@ public partial class CS2_SimpleAdmin
 				}
 				catch { }
 
-				bannedPlayers.Clear();
+				BannedPlayers.Clear();
 
 				await Server.NextFrameAsync(() =>
 				{
@@ -326,7 +326,7 @@ public partial class CS2_SimpleAdmin
 
 							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
 							{
-								if (TagsDetected)
+								if (_tagsDetected)
 									Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 							}
 
@@ -335,7 +335,7 @@ public partial class CS2_SimpleAdmin
 							    PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
 							player.VoiceFlags = VoiceFlags.Normal;
 
-							if (TagsDetected)
+							if (_tagsDetected)
 								Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 						}
 
@@ -392,7 +392,7 @@ public partial class CS2_SimpleAdmin
 
 					try
 					{
-						var response = await client.GetAsync($"https://api.daffyy.love/index.php{queryString}");
+						await client.GetAsync($"https://api.daffyy.love/index.php{queryString}");
 					}
 					catch (HttpRequestException ex)
 					{
@@ -402,12 +402,19 @@ public partial class CS2_SimpleAdmin
 
 				//await _adminManager.GiveAllGroupsFlags();
 				//await _adminManager.GiveAllFlags();
-
+				
+				if (_adminsLoaded)
+					return;
+				
 				await adminManager.CrateGroupsJsonFile();
 				await adminManager.CreateAdminsJsonFile();
 
-				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
-				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+				await Server.NextFrameAsync(() => {
+					AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+					AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+				});
+
+				_adminsLoaded = true;
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 	}
@@ -420,7 +427,7 @@ public partial class CS2_SimpleAdmin
 		if (player is null || @event.Attacker is null || !player.PawnIsAlive || player.PlayerPawn.Value == null)
 			return HookResult.Continue;
 
-		if (!godPlayers.Contains(player.Slot)) return HookResult.Continue;
+		if (!GodPlayers.Contains(player.Slot)) return HookResult.Continue;
 		
 		player.PlayerPawn.Value.Health = player.PlayerPawn.Value.MaxHealth;
 		player.PlayerPawn.Value.ArmorValue = 100;

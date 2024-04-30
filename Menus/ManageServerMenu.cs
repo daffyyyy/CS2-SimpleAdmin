@@ -14,8 +14,8 @@ namespace CS2_SimpleAdmin.Menus
 			if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
 			{
 				admin.PrintToChat(localizer?["sa_prefix"] ??
-				                  "[SimpleAdmin] " + 
-				                  (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command")
+								  "[SimpleAdmin] " +
+								  (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command")
 				);
 				return;
 			}

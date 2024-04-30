@@ -7,7 +7,7 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 
-public class AdminSQLManager(Database database)
+public class AdminSQLManager(Database.Database database)
 {
 	// Unused for now
 	//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();

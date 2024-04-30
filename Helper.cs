@@ -94,10 +94,8 @@ namespace CS2_SimpleAdmin
 				}
 
 				if (flags == null) return;
-				foreach (var flag in flags)
+				foreach (var flag in flags.Where(flag => !string.IsNullOrEmpty(flag)))
 				{
-					if (string.IsNullOrEmpty(flag)) continue;
-					
 					if (flag.StartsWith($"@"))
 					{
 						//Console.WriteLine($"Adding permission {flag} to SteamID {steamid}");
@@ -142,11 +140,11 @@ namespace CS2_SimpleAdmin
 
 		internal static void HandleVotes(CCSPlayerController player, ChatMenuOption option)
 		{
-			if (!CS2_SimpleAdmin.voteInProgress)
+			if (!CS2_SimpleAdmin.VoteInProgress)
 				return;
 
 			option.Disabled = true;
-			CS2_SimpleAdmin.voteAnswers[option.Text]++;
+			CS2_SimpleAdmin.VoteAnswers[option.Text]++;
 		}
 
 		internal static void LogCommand(CCSPlayerController? caller, CommandInfo command)
@@ -323,7 +321,7 @@ namespace CS2_SimpleAdmin
 
 		public static void TryLogCommandOnDiscord(CCSPlayerController? caller, string commandString)
 		{
-			if (CS2_SimpleAdmin._discordWebhookClientLog == null || CS2_SimpleAdmin._localizer == null)
+			if (CS2_SimpleAdmin.DiscordWebhookClientLog == null || CS2_SimpleAdmin._localizer == null)
 				return;
 
 			if (caller != null && caller.IsValid == false)
@@ -333,9 +331,70 @@ namespace CS2_SimpleAdmin
 			var communityUrl = caller != null
 				? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">"
 				: "<https://steamcommunity.com/profiles/0>";
-			CS2_SimpleAdmin._discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(
+			CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(
 				CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})",
 					commandString]));
+		}
+	}
+
+	public static class PluginInfo
+	{
+		internal static async Task CheckVersion(string version, ILogger logger)
+		{
+			using HttpClient client = new();
+
+			try
+			{
+				var response = await client.GetAsync("https://raw.githubusercontent.com/daffyyyy/CS2-SimpleAdmin/main/VERSION").ConfigureAwait(false);
+
+				if (response.IsSuccessStatusCode)
+				{
+					var remoteVersion = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+					remoteVersion = remoteVersion.Trim();
+
+					var comparisonResult = string.CompareOrdinal(version, remoteVersion);
+
+					switch (comparisonResult)
+					{
+						case < 0:
+							logger.LogWarning("Plugin is outdated! Check https://github.com/daffyyyy/CS2-SimpleAdmin");
+							break;
+						case > 0:
+							logger.LogInformation("Probably dev version detected");
+							break;
+						default:
+							logger.LogInformation("Plugin is up to date");
+							break;
+					}
+				}
+				else
+				{
+					logger.LogWarning("Failed to check version");
+				}
+			}
+			catch (HttpRequestException ex)
+			{
+				logger.LogError(ex, "Failed to connect to the version server.");
+			}
+			catch (Exception ex)
+			{
+				logger.LogError(ex, "An error occurred while checking version.");
+			}
+		}
+
+		internal static void ShowAd(string moduleVersion)
+		{
+			Console.WriteLine(" ");
+			Console.WriteLine(" _______  ___   __   __  _______  ___      _______  _______  ______   __   __  ___   __    _  ");
+			Console.WriteLine("|       ||   | |  |_|  ||       ||   |    |       ||   _   ||      | |  |_|  ||   | |  |  | |");
+			Console.WriteLine("|  _____||   | |       ||    _  ||   |    |    ___||  |_|  ||  _    ||       ||   | |   |_| |");
+			Console.WriteLine("| |_____ |   | |       ||   |_| ||   |    |   |___ |       || | |   ||       ||   | |       |");
+			Console.WriteLine("|_____  ||   | |       ||    ___||   |___ |    ___||       || |_|   ||       ||   | |  _    |");
+			Console.WriteLine(" _____| ||   | | ||_|| ||   |    |       ||   |___ |   _   ||       || ||_|| ||   | | | |   |");
+			Console.WriteLine("|_______||___| |_|   |_||___|    |_______||_______||__| |__||______| |_|   |_||___| |_|  |__|");
+			Console.WriteLine("				>> Version: " + moduleVersion);
+			Console.WriteLine("		>> GitHub: https://github.com/daffyyyy/CS2-SimpleAdmin");
+			Console.WriteLine(" ");
 		}
 	}
 

@@ -4,6 +4,8 @@
 	
 	"sa_unknown": "未知",
 	"sa_no_permission": "您没有权限使用此命令。",
+	"sa_ban_max_duration_exceeded": "禁令持续时间不能超过{lightred}{0}{default}分钟。",
+	"sa_ban_perm_restricted": "您没有永久封禁的权限。",
 
 	"sa_admin_add": "添加管理员",
 	"sa_admin_remove": "移除管理员",
@@ -100,7 +102,4 @@
 	"sa_adminchat_template_player": "{SILVER}(玩家) {lightred}{0}{default}: {lightred}{1}{default}",
 
 	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上执行了命令 `{1}`！",
-
-  "sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
-  "sa_ban_perm_restricted": "You do not have the right to permanently ban."
 }
