@@ -100,6 +100,7 @@ namespace CS2_SimpleAdmin
 			new AdminFlag { Name = "Slay", Flag = "@css/slay" },
 			new AdminFlag { Name = "Kick", Flag = "@css/kick" },
 			new AdminFlag { Name = "Ban", Flag = "@css/ban" },
+			new AdminFlag { Name = "Perm Ban", Flag = "@css/permban" },
 			new AdminFlag { Name = "Unban", Flag = "@css/unban" },
 			new AdminFlag { Name = "Cvar", Flag = "@css/cvar" },
 			new AdminFlag { Name = "Rcon", Flag = "@css/rcon" },
