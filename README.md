@@ -14,7 +14,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 ```js
 - css_addadmin <steamid> <name> <flags/groups> <immunity> [time in minutes] - Add admin by steamid // @css/root
 - css_deladmin <steamid> - Delete admin by steamid // @css/root
-- css_reladmin - Reload sql admins // @css/root
+- css_reloadadmins - Reload sql admins // @css/root
 - css_hide - Hide admin on scoreboard and commands action // @css/kick
 - css_admin - Display all admin commands // @css/generic
 - css_who <#userid or name>  - Display informations about player // @css/generic
