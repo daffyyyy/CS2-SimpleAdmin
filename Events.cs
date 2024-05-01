@@ -13,8 +13,6 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-	private static readonly HashSet<int> LoadedPlayers = [];
-
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -34,11 +32,6 @@ public partial class CS2_SimpleAdmin
 #endif
 
 		if (player == null || !player.IsValid || string.IsNullOrEmpty(player.IpAddress) || player.IsBot || player.IsHLTV)
-		{
-			return HookResult.Continue;
-		}
-
-		if (!LoadedPlayers.Contains(player.Slot))
 		{
 			return HookResult.Continue;
 		}
@@ -65,15 +58,13 @@ public partial class CS2_SimpleAdmin
 				RemoveFromConcurrentBag(GodPlayers, player.Slot);
 			}
 
-			SteamID? authorizedSteamId = player.AuthorizedSteamID;
-			if (authorizedSteamId != null && AdminSQLManager.AdminCache.TryGetValue(authorizedSteamId, out var expirationTime)
-				&& expirationTime <= DateTime.Now)
-			{
-				AdminManager.ClearPlayerPermissions(authorizedSteamId);
-				AdminManager.RemovePlayerAdminData(authorizedSteamId);
-			}
-
-			LoadedPlayers.Remove(player.Slot);
+			var authorizedSteamId = player.AuthorizedSteamID;
+			if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
+				                              out var expirationTime)
+			                              || !(expirationTime <= DateTime.Now)) return HookResult.Continue;
+			
+			AdminManager.ClearPlayerPermissions(authorizedSteamId);
+			AdminManager.RemovePlayerAdminData(authorizedSteamId);
 
 			return HookResult.Continue;
 		}
@@ -200,9 +191,6 @@ public partial class CS2_SimpleAdmin
 			}
 		});
 
-		// Add player to loadedPlayers
-		LoadedPlayers.Add(player.Slot);
-
 		return HookResult.Continue;
 	}
 
@@ -276,8 +264,7 @@ public partial class CS2_SimpleAdmin
 		{
 			_tagsDetected = true;
 		}
-
-		_adminsLoaded = false;
+		
 		GodPlayers.Clear();
 		SilentPlayers.Clear();
 
@@ -299,7 +286,7 @@ public partial class CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				AdminSQLManager adminManager = new(_database);
+				PermissionManager adminManager = new(_database);
 				BanManager banManager = new(_database, Config);
 				MuteManager muteManager = new(_database);
 
@@ -353,7 +340,7 @@ public partial class CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				AdminSQLManager adminManager = new(_database);
+				PermissionManager adminManager = new(_database);
 				try
 				{
 					await using var connection = await _database.GetConnectionAsync();
@@ -403,18 +390,10 @@ public partial class CS2_SimpleAdmin
 				//await _adminManager.GiveAllGroupsFlags();
 				//await _adminManager.GiveAllFlags();
 				
-				if (_adminsLoaded)
-					return;
-				
-				await adminManager.CrateGroupsJsonFile();
-				await adminManager.CreateAdminsJsonFile();
 
 				await Server.NextFrameAsync(() => {
-					AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
-					AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+					ReloadAdmins(null);
 				});
-
-				_adminsLoaded = true;
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 	}

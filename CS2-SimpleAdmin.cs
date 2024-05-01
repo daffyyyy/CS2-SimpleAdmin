@@ -22,7 +22,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	private static readonly ConcurrentBag<int> SilentPlayers = [];
 	private static readonly ConcurrentBag<string> BannedPlayers = [];
 	private static bool _tagsDetected;
-	private static bool _adminsLoaded;
 	public static bool VoteInProgress = false;
 	public static int? ServerId = null;
 
@@ -38,7 +37,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.3a";
+	public override string ModuleVersion => "1.4.3b";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -58,7 +57,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
 	{
-		
 		if (config.DatabaseHost.Length < 1 || config.DatabaseName.Length < 1 || config.DatabaseUser.Length < 1)
 		{
 			throw new Exception("[CS2-SimpleAdmin] You need to setup Database credentials in config!");
@@ -66,7 +64,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		
 		Instance = this;
 		_logger = Logger;
-
 			
 		MySqlConnectionStringBuilder builder = new()
 		{
@@ -91,38 +88,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		}
 
 		Task.Run(() => _database.DatabaseMigration());
-
-		/*
-		Task.Run(async () =>
-		{
-			try
-			{
-				using MySqlConnection connection = await _database.GetConnectionAsync();
-				using MySqlTransaction transaction = await connection.BeginTransactionAsync();
-
-				try
-				{
-					string sqlFilePath = ModuleDirectory + "/Database/database_setup.sql";
-					string sql = await File.ReadAllTextAsync(sqlFilePath);
-
-					await connection.QueryAsync(sql, transaction: transaction);
-					await transaction.CommitAsync();
-
-					Console.WriteLine("[CS2-SimpleAdmin] Connected to database!");
-				}
-				catch (Exception)
-				{
-					await transaction.RollbackAsync();
-					throw;
-				}
-			}
-			catch (Exception ex)
-			{
-				Logger.LogError($"Unable to connect to the database: {ex.Message}");
-				throw;
-			}
-		});
-		*/
 
 		Config = config;
 		Helper.UpdateConfig(config);

@@ -10,6 +10,7 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CS2_SimpleAdmin.Menus;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace CS2_SimpleAdmin
 {
@@ -127,7 +128,7 @@ namespace CS2_SimpleAdmin
 		public static void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
 		{
 			if (_database == null) return;
-			AdminSQLManager adminManager = new(_database);
+			PermissionManager adminManager = new(_database);
 
 			var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
 			_ = adminManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
@@ -167,16 +168,16 @@ namespace CS2_SimpleAdmin
 		public void RemoveAdmin(CCSPlayerController? caller, string steamid, bool globalDelete = false, CommandInfo? command = null)
 		{
 			if (_database == null) return;
-			AdminSQLManager adminManager = new(_database);
+			PermissionManager adminManager = new(_database);
 			_ = adminManager.DeleteAdminBySteamId(steamid, globalDelete);
 
 			AddTimer(2, () =>
 			{
 				if (string.IsNullOrEmpty(steamid) || !SteamID.TryParse(steamid, out var steamId) ||
 				    steamId == null) return;
-				if (AdminSQLManager.AdminCache.ContainsKey(steamId))
+				if (PermissionManager.AdminCache.ContainsKey(steamId))
 				{
-					AdminSQLManager.AdminCache.TryRemove(steamId, out _);
+					PermissionManager.AdminCache.TryRemove(steamId, out _);
 				}
 
 				AdminManager.ClearPlayerPermissions(steamId);
@@ -218,17 +219,18 @@ namespace CS2_SimpleAdmin
 			var groupName = command.GetArg(1);
 			var flags = command.GetArg(2);
 			int.TryParse(command.GetArg(3), out var immunity);
+			var globalGroup = command.GetArg(4).ToLower().Equals("-g");
 
-			AddGroup(caller, groupName, flags, immunity, command);
+			AddGroup(caller, groupName, flags, immunity, globalGroup, command);
 		}
 
-		private static void AddGroup(CCSPlayerController? caller, string name, string flags, int immunity, CommandInfo? command = null)
+		private static void AddGroup(CCSPlayerController? caller, string name, string flags, int immunity, bool globalGroup, CommandInfo? command = null)
 		{
 			if (_database == null) return;
-			AdminSQLManager adminManager = new(_database);
+			PermissionManager adminManager = new(_database);
 
 			var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
-			_ = adminManager.AddGroup(name, flagsList, immunity);
+			_ = adminManager.AddGroup(name, flagsList, immunity, globalGroup);
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
@@ -264,7 +266,7 @@ namespace CS2_SimpleAdmin
 		private void RemoveGroup(CCSPlayerController? caller, string name, CommandInfo? command = null)
 		{
 			if (_database == null) return;
-			AdminSQLManager adminManager = new(_database);
+			PermissionManager adminManager = new(_database);
 			_ = adminManager.DeleteGroup(name);
 
 			AddTimer(2, () =>
@@ -301,16 +303,16 @@ namespace CS2_SimpleAdmin
 		{
 			if (_database == null) return;
 
-			for (var index = 0; index < AdminSQLManager.AdminCache.Keys.ToList().Count; index++)
+			for (var index = 0; index < PermissionManager.AdminCache.Keys.ToList().Count; index++)
 			{
-				var steamId = AdminSQLManager.AdminCache.Keys.ToList()[index];
-				if (!AdminSQLManager.AdminCache.TryRemove(steamId, out _)) continue;
+				var steamId = PermissionManager.AdminCache.Keys.ToList()[index];
+				if (!PermissionManager.AdminCache.TryRemove(steamId, out _)) continue;
 				
 				AdminManager.ClearPlayerPermissions(steamId);
 				AdminManager.RemovePlayerAdminData(steamId);
 			}
 
-			AdminSQLManager adminManager = new(_database);
+			PermissionManager adminManager = new(_database);
 
 			Task.Run(async () =>
 			{
@@ -320,7 +322,6 @@ namespace CS2_SimpleAdmin
 				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
 				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
 			});
-
 
 			//_ = _adminManager.GiveAllGroupsFlags();
 			//_ = _adminManager.GiveAllFlags();
@@ -429,25 +430,59 @@ namespace CS2_SimpleAdmin
 		public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			var playersToTarget = Helper.GetValidPlayers();
+			var isJson = command.GetArg(1).ToLower().Equals("-json");
 
-			if (caller != null)
+			if (!isJson)
 			{
-				caller.PrintToConsole($"--------- PLAYER LIST ---------");
-				playersToTarget.ForEach(player =>
+				if (caller != null)
 				{
-					caller.PrintToConsole(
-						$"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
-				});
-				caller.PrintToConsole($"--------- END PLAYER LIST ---------");
+					caller.PrintToConsole($"--------- PLAYER LIST ---------");
+					playersToTarget.ForEach(player =>
+					{
+						caller.PrintToConsole(
+							$"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
+					});
+					caller.PrintToConsole($"--------- END PLAYER LIST ---------");
+				}
+				else
+				{
+					Server.PrintToConsole($"--------- PLAYER LIST ---------");
+					playersToTarget.ForEach(player =>
+					{
+						Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
+					});
+					Server.PrintToConsole($"--------- END PLAYER LIST ---------");
+				}
 			}
 			else
 			{
-				Server.PrintToConsole($"--------- PLAYER LIST ---------");
-				playersToTarget.ForEach(player =>
+				var playersJson = JsonConvert.SerializeObject(playersToTarget.Select((CCSPlayerController player)  =>
 				{
-					Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
-				});
-				Server.PrintToConsole($"--------- END PLAYER LIST ---------");
+					var matchStats = player.ActionTrackingServices?.MatchStats;
+
+					return new 
+					{ 
+						UserId = player.UserId,
+						Name = player.PlayerName,
+						SteamId = player.SteamID.ToString(),
+						IpAddress = player.IpAddress?.Split(":")[0] ?? "Unknown",
+						Ping = player.Ping,
+						AdminData = AdminManager.GetPlayerAdminData(player),
+						Stats = new
+						{
+							Score = player.Score,
+							Kills = matchStats?.Kills ?? 0,
+							Deaths = matchStats?.Deaths ?? 0,
+							Assists = matchStats?.Assists,
+							MVPs = player.MVPs
+						} 
+					};
+				}));
+				
+				if (caller != null)
+					caller.PrintToConsole(playersJson);
+				else 
+					Server.PrintToConsole(playersJson);
 			}
 		}
 

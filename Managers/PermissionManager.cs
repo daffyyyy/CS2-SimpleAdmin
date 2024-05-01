@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Modules.Admin;
 
 namespace CS2_SimpleAdmin;
 
-public class AdminSQLManager(Database.Database database)
+public class PermissionManager(Database.Database database)
 {
 	// Unused for now
 	//public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
@@ -209,7 +211,7 @@ public class AdminSQLManager(Database.Database database)
 		await using MySqlConnection connection = await database.GetConnectionAsync();
 		try
 		{
-			var sql = "SELECT group_id FROM sa_groups_servers WHERE server_id = @serverid";
+			var sql = "SELECT group_id FROM sa_groups_servers WHERE (server_id = @serverid OR server_id IS NULL)";
 			var groupDataSql = connection.Query<int>(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
 
 			sql = """
@@ -217,7 +219,7 @@ public class AdminSQLManager(Database.Database database)
 			      				FROM sa_groups_flags f
 			      				JOIN sa_groups_servers g ON f.group_id = g.group_id
 			      				JOIN sa_groups sg ON sg.id = g.group_id
-			      				WHERE g.server_id = @serverid
+			      				WHERE (g.server_id = @serverid OR server_id IS NULL)
 			      """;
 
 			var groupData = connection.Query(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
@@ -360,8 +362,8 @@ public class AdminSQLManager(Database.Database database)
 					{
 						player.identity,
 						player.immunity,
-						flags = player.flags.Where(flag => flag.StartsWith("@")).ToList(),
-						groups = player.flags.Where(flag => flag.StartsWith("#")).ToList()
+						flags = player.flags.Where(flag => flag.StartsWith($"@")).ToList(),
+						groups = player.flags.Where(flag => flag.StartsWith($"#")).ToList()
 					}
 				};
 			})
@@ -439,8 +441,8 @@ public class AdminSQLManager(Database.Database database)
 					}
 				}
 
-				var insertFlagsSql = "INSERT INTO `sa_admins_flags` (`admin_id`, `flag`) " +
-									 "VALUES (@adminId, @flag)";
+				const string insertFlagsSql = "INSERT INTO `sa_admins_flags` (`admin_id`, `flag`) " +
+				                              "VALUES (@adminId, @flag)";
 
 				await connection.ExecuteAsync(insertFlagsSql, new
 				{
@@ -448,6 +450,11 @@ public class AdminSQLManager(Database.Database database)
 					flag
 				});
 			}
+
+			await Server.NextFrameAsync(() =>
+			{
+				CS2_SimpleAdmin.Instance.ReloadAdmins(null);
+			});
 		}
 		catch (Exception ex)
 		{
@@ -455,7 +462,7 @@ public class AdminSQLManager(Database.Database database)
 		}
 	}
 
-	public async Task AddGroup(string groupName, List<string> flagsList, int immunity = 0)
+	public async Task AddGroup(string groupName, List<string> flagsList, int immunity = 0, bool globalGroup = false)
 	{
 		if (string.IsNullOrEmpty(groupName)  || flagsList.Count == 0) return;
 
@@ -463,8 +470,8 @@ public class AdminSQLManager(Database.Database database)
 		try
 		{
 			// Insert group into sa_groups table
-			var insertGroup = "INSERT INTO `sa_groups` (`name`, `immunity`) " +
-								 "VALUES (@groupName, @immunity); SELECT LAST_INSERT_ID();";
+			const string insertGroup = "INSERT INTO `sa_groups` (`name`, `immunity`) " +
+			                           "VALUES (@groupName, @immunity); SELECT LAST_INSERT_ID();";
 			var groupId = await connection.ExecuteScalarAsync<int>(insertGroup, new
 			{
 				groupName,
@@ -484,12 +491,16 @@ public class AdminSQLManager(Database.Database database)
 				});
 			}
 
-			var insertGroupServer = "INSERT INTO `sa_groups_servers` (`group_id`, `server_id`) " +
-			                           "VALUES (@groupId, @server_id)";
-			if (CS2_SimpleAdmin.ServerId != null)
+			const string insertGroupServer = "INSERT INTO `sa_groups_servers` (`group_id`, `server_id`) " +
+			                                 "VALUES (@groupId, @server_id)";
+			
+			await connection.ExecuteAsync(insertGroupServer, new { groupId, server_id = globalGroup ? null : CS2_SimpleAdmin.ServerId });
+			
+			await Server.NextFrameAsync(() =>
 			{
-				await connection.ExecuteAsync(insertGroupServer, new { groupId, server_id = CS2_SimpleAdmin.ServerId });
-			}
+				CS2_SimpleAdmin.Instance.ReloadAdmins(null);
+			});
+
 		}
 		catch (Exception ex)
 		{
