@@ -59,16 +59,14 @@ namespace CS2_SimpleAdmin
 
 		public static List<CCSPlayerController> GetValidPlayers()
 		{
-			return Utilities.GetPlayers().FindAll(p =>
-				p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p is
-					{ Connected: PlayerConnectedState.PlayerConnected, IsBot: false, IsHLTV: false });
+			return Utilities.GetPlayers().FindAll(p => p is
+					{ IsBot: false, IsHLTV: false });
 		}
 
 		public static IEnumerable<CCSPlayerController?> GetValidPlayersWithBots()
 		{
 			return Utilities.GetPlayers().FindAll(p =>
-			p.IsValid && p.SteamID.ToString().Length == 17 && !string.IsNullOrEmpty(p.IpAddress) && p is { Connected: PlayerConnectedState.PlayerConnected, IsBot: false, IsHLTV: false } ||
-			p is { IsValid: true, Connected: PlayerConnectedState.PlayerConnected, IsBot: true, IsHLTV: false }
+			 p is { IsBot: false, IsHLTV: false } or { IsBot: true, IsHLTV: false }
 			);
 		}
 

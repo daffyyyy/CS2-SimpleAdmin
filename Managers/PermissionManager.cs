@@ -1,11 +1,10 @@
-﻿using CounterStrikeSharp.API.Modules.Entities;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
-using CounterStrikeSharp.API;
-using CounterStrikeSharp.API.Modules.Admin;
 
 namespace CS2_SimpleAdmin;
 
@@ -90,7 +89,7 @@ public class PermissionManager(Database.Database database)
 				{
 					continue;
 				}
-				
+
 				if (!flagInfoDict.TryGetValue("player_steamid", out var steamIdObj) ||
 					!flagInfoDict.TryGetValue("player_name", out var playerNameObj) ||
 					!flagInfoDict.TryGetValue("flag", out var flagObj) ||
@@ -115,7 +114,7 @@ public class PermissionManager(Database.Database database)
 						ends = parsedEnds;
 					}
 				}
-				
+
 				if (currentSteamId != steamId && !string.IsNullOrEmpty(currentSteamId))
 				{
 					filteredFlagsWithImmunity.Add((currentSteamId, currentPlayerName, currentFlags, immunityValue, ends));
@@ -125,7 +124,7 @@ public class PermissionManager(Database.Database database)
 				currentSteamId = steamId;
 				currentPlayerName = playerName;
 				currentFlags.Add(flag);
-				
+
 			}
 
 			if (!string.IsNullOrEmpty(currentSteamId))
@@ -400,7 +399,7 @@ public class PermissionManager(Database.Database database)
 		DateTime? futureTime;
 
 		if (time != 0)
-			futureTime = now.ToLocalTime().AddMinutes(time);
+			futureTime = now.AddMinutes(time);
 		else
 			futureTime = null;
 
@@ -410,7 +409,7 @@ public class PermissionManager(Database.Database database)
 
 			// Insert admin into sa_admins table
 			const string insertAdminSql = "INSERT INTO `sa_admins` (`player_steamid`, `player_name`, `immunity`, `ends`, `created`, `server_id`) " +
-			                              "VALUES (@playerSteamid, @playerName, @immunity, @ends, @created, @serverid); SELECT LAST_INSERT_ID();";
+										  "VALUES (@playerSteamid, @playerName, @immunity, @ends, @created, @serverid); SELECT LAST_INSERT_ID();";
 
 			var adminId = await connection.ExecuteScalarAsync<int>(insertAdminSql, new
 			{
@@ -442,7 +441,7 @@ public class PermissionManager(Database.Database database)
 				}
 
 				const string insertFlagsSql = "INSERT INTO `sa_admins_flags` (`admin_id`, `flag`) " +
-				                              "VALUES (@adminId, @flag)";
+											  "VALUES (@adminId, @flag)";
 
 				await connection.ExecuteAsync(insertFlagsSql, new
 				{
@@ -464,14 +463,14 @@ public class PermissionManager(Database.Database database)
 
 	public async Task AddGroup(string groupName, List<string> flagsList, int immunity = 0, bool globalGroup = false)
 	{
-		if (string.IsNullOrEmpty(groupName)  || flagsList.Count == 0) return;
+		if (string.IsNullOrEmpty(groupName) || flagsList.Count == 0) return;
 
 		await using var connection = await database.GetConnectionAsync();
 		try
 		{
 			// Insert group into sa_groups table
 			const string insertGroup = "INSERT INTO `sa_groups` (`name`, `immunity`) " +
-			                           "VALUES (@groupName, @immunity); SELECT LAST_INSERT_ID();";
+									   "VALUES (@groupName, @immunity); SELECT LAST_INSERT_ID();";
 			var groupId = await connection.ExecuteScalarAsync<int>(insertGroup, new
 			{
 				groupName,
@@ -482,7 +481,7 @@ public class PermissionManager(Database.Database database)
 			foreach (var flag in flagsList)
 			{
 				const string insertFlagsSql = "INSERT INTO `sa_groups_flags` (`group_id`, `flag`) " +
-				                              "VALUES (@groupId, @flag)";
+											  "VALUES (@groupId, @flag)";
 
 				await connection.ExecuteAsync(insertFlagsSql, new
 				{
@@ -492,10 +491,10 @@ public class PermissionManager(Database.Database database)
 			}
 
 			const string insertGroupServer = "INSERT INTO `sa_groups_servers` (`group_id`, `server_id`) " +
-			                                 "VALUES (@groupId, @server_id)";
-			
+											 "VALUES (@groupId, @server_id)";
+
 			await connection.ExecuteAsync(insertGroupServer, new { groupId, server_id = globalGroup ? null : CS2_SimpleAdmin.ServerId });
-			
+
 			await Server.NextFrameAsync(() =>
 			{
 				CS2_SimpleAdmin.Instance.ReloadAdmins(null);
@@ -531,7 +530,7 @@ public class PermissionManager(Database.Database database)
 			await using var connection = await database.GetConnectionAsync();
 
 			const string sql = "DELETE FROM sa_admins WHERE ends IS NOT NULL AND ends <= @CurrentTime";
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime() });
+			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.UtcNow.ToLocalTime() });
 		}
 		catch (Exception)
 		{

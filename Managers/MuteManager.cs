@@ -10,7 +10,7 @@ internal class MuteManager(Database.Database database)
 		if (player.SteamId == null) return;
 
 		var now = DateTime.UtcNow.ToLocalTime();
-		var futureTime = now.AddMinutes(time).ToLocalTime();
+		var futureTime = now.AddMinutes(time);
 
 		var muteType = type switch
 		{
@@ -24,7 +24,7 @@ internal class MuteManager(Database.Database database)
 			await using var connection = await database.GetConnectionAsync();
 			const string sql =
 				"INSERT INTO `sa_mutes` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
-			                   "VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid)";
+							   "VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -49,7 +49,7 @@ internal class MuteManager(Database.Database database)
 
 
 		var now = DateTime.UtcNow.ToLocalTime();
-		var futureTime = now.AddMinutes(time).ToLocalTime();
+		var futureTime = now.AddMinutes(time);
 
 		var muteType = type switch
 		{
@@ -62,7 +62,7 @@ internal class MuteManager(Database.Database database)
 		{
 			await using var connection = await database.GetConnectionAsync();
 			const string sql = "INSERT INTO `sa_mutes` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
-			                   "VALUES (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid)";
+							   "VALUES (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -95,7 +95,7 @@ internal class MuteManager(Database.Database database)
 		try
 		{
 			await using var connection = await database.GetConnectionAsync();
-			var currentTime = DateTime.Now.ToLocalTime();
+			var currentTime = DateTime.UtcNow.ToLocalTime();
 			string sql;
 
 			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
@@ -177,7 +177,7 @@ internal class MuteManager(Database.Database database)
 			const string sqlAdmin = "SELECT id FROM sa_admins WHERE player_steamid = @adminSteamId";
 			var sqlInsertUnmute = "INSERT INTO sa_unmutes (mute_id, admin_id, reason) VALUES (@muteId, @adminId, @reason); SELECT LAST_INSERT_ID();";
 
-			var sqlAdminId = await connection.ExecuteScalarAsync<int?>(sqlAdmin, new { adminSteamId }); 
+			var sqlAdminId = await connection.ExecuteScalarAsync<int?>(sqlAdmin, new { adminSteamId });
 			var adminId = sqlAdminId ?? 0;
 
 			foreach (var mute in mutesList)
@@ -217,7 +217,7 @@ internal class MuteManager(Database.Database database)
 				? "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime AND server_id = @serverid"
 				: "UPDATE sa_mutes SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime";
 
-			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.Now.ToLocalTime(), serverid = CS2_SimpleAdmin.ServerId });
+			await connection.ExecuteAsync(sql, new { CurrentTime = DateTime.UtcNow.ToLocalTime(), serverid = CS2_SimpleAdmin.ServerId });
 		}
 		catch (Exception)
 		{

@@ -37,7 +37,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.3b";
+	public override string ModuleVersion => "1.4.3c";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -55,16 +55,25 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		_cBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
 	}
 
+	public override void Unload(bool hotReload)
+	{
+		if (hotReload) return;
+
+		RemoveListener(OnMapStart);
+		RemoveCommandListener("say", OnCommandSay, HookMode.Post);
+		RemoveCommandListener("say_team", OnCommandTeamSay, HookMode.Post);
+	}
+
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
 	{
 		if (config.DatabaseHost.Length < 1 || config.DatabaseName.Length < 1 || config.DatabaseUser.Length < 1)
 		{
 			throw new Exception("[CS2-SimpleAdmin] You need to setup Database credentials in config!");
 		}
-		
+
 		Instance = this;
 		_logger = Logger;
-			
+
 		MySqlConnectionStringBuilder builder = new()
 		{
 			Server = config.DatabaseHost,
@@ -103,7 +112,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 			DiscordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordPenaltyWebhook))
 			DiscordWebhookClientPenalty = new DiscordWebhookClient(Config.Discord.DiscordPenaltyWebhook);
-		
+
 		PluginInfo.ShowAd(ModuleVersion);
 		_ = PluginInfo.CheckVersion(ModuleVersion, _logger);
 	}

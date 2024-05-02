@@ -30,11 +30,11 @@ public class PlayerPenaltyManager
 			{
 				if (!existingDict.TryGetValue(penaltyType, out var value))
 				{
-                    value = new List<(DateTime, int)>();
-                    existingDict[penaltyType] = value;
+					value = new List<(DateTime, int)>();
+					existingDict[penaltyType] = value;
 				}
 
-                value.Add((endDateTime, durationSeconds));
+				value.Add((endDateTime, durationSeconds));
 				return existingDict;
 			});
 	}
@@ -44,7 +44,7 @@ public class PlayerPenaltyManager
 		//Console.WriteLine($"Checking penalties for player with slot {slot} and penalty type {penaltyType}");
 
 		if (!Penalties.TryGetValue(slot, out var penaltyDict) ||
-		    !penaltyDict.TryGetValue(penaltyType, out var penaltiesList)) return false;
+			!penaltyDict.TryGetValue(penaltyType, out var penaltiesList)) return false;
 		//Console.WriteLine($"Found penalties for player with slot {slot} and penalty type {penaltyType}");
 
 		var now = DateTime.UtcNow.ToLocalTime();
@@ -83,7 +83,7 @@ public class PlayerPenaltyManager
 	public static List<(DateTime EndDateTime, int Duration)> GetPlayerPenalties(int slot, PenaltyType penaltyType)
 	{
 		if (Penalties.TryGetValue(slot, out var penaltyDict) &&
-		    penaltyDict.TryGetValue(penaltyType, out var penaltiesList))
+			penaltyDict.TryGetValue(penaltyType, out var penaltiesList))
 		{
 			return penaltiesList;
 		}

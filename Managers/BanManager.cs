@@ -10,14 +10,14 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 	public async Task BanPlayer(PlayerInfo player, PlayerInfo issuer, string reason, int time = 0)
 	{
 		DateTime now = DateTime.UtcNow.ToLocalTime();
-		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time);
 
 		await using MySqlConnection connection = await database.GetConnectionAsync();
 		try
 		{
 			const string sql =
 				"INSERT INTO `sa_bans` (`player_steamid`, `player_name`, `player_ip`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
-			                   "VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
+							   "VALUES (@playerSteamid, @playerName, @playerIp, @adminSteamid, @adminName, @banReason, @duration, @ends, @created, @serverid)";
 
 			await connection.ExecuteAsync(sql, new
 			{
@@ -41,7 +41,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 		if (string.IsNullOrEmpty(playerSteamId)) return;
 
 		DateTime now = DateTime.UtcNow.ToLocalTime();
-		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time);
 
 		try
 		{
@@ -70,7 +70,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 		if (string.IsNullOrEmpty(playerIp)) return;
 
 		DateTime now = DateTime.UtcNow.ToLocalTime();
-		DateTime futureTime = now.AddMinutes(time).ToLocalTime();
+		DateTime futureTime = now.AddMinutes(time);
 
 		try
 		{
@@ -108,7 +108,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 
 		int banCount;
 
-		DateTime currentTime = DateTime.Now.ToLocalTime();
+		DateTime currentTime = DateTime.UtcNow.ToLocalTime();
 
 		try
 		{
@@ -172,12 +172,14 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 
 			await using var connection = await database.GetConnectionAsync();
 
-			if (!string.IsNullOrEmpty(player.IpAddress))
+			if (config.BanType > 0 && !string.IsNullOrEmpty(player.IpAddress))
 			{
 				banCount = await connection.ExecuteScalarAsync<int>(sql,
 					new
 					{
-						PlayerSteamID = player.SteamId, PlayerIP = player.IpAddress, serverid = CS2_SimpleAdmin.ServerId
+						PlayerSteamID = player.SteamId,
+						PlayerIP = player.IpAddress,
+						serverid = CS2_SimpleAdmin.ServerId
 					});
 			}
 			else
@@ -185,7 +187,9 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 				banCount = await connection.ExecuteScalarAsync<int>(sql,
 					new
 					{
-						PlayerSteamID = player.SteamId, PlayerIP = DBNull.Value, serverid = CS2_SimpleAdmin.ServerId
+						PlayerSteamID = player.SteamId,
+						PlayerIP = DBNull.Value,
+						serverid = CS2_SimpleAdmin.ServerId
 					});
 			}
 
@@ -264,6 +268,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 		{
 			await using var connection = await database.GetConnectionAsync();
 			string sql;
+			bool checkIpBans = config.BanType > 0;
 
 			if (config.MultiServerMode)
 			{
@@ -280,7 +285,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 				if (!UserId.HasValue) continue;
 
 				var banCount = 0;
-				if (!string.IsNullOrEmpty(IpAddress))
+				if (checkIpBans && !string.IsNullOrEmpty(IpAddress))
 				{
 					banCount = await connection.ExecuteScalarAsync<int>(sql,
 						new { PlayerSteamID = SteamID, PlayerIP = IpAddress, serverid = CS2_SimpleAdmin.ServerId });
@@ -306,7 +311,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 	public async Task ExpireOldBans()
 	{
 		var currentTime = DateTime.UtcNow.ToLocalTime();
-		
+
 		await using var connection = await database.GetConnectionAsync();
 		try
 		{
@@ -349,7 +354,7 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 
 			if (config.ExpireOldIpBans > 0)
 			{
-				var ipBansTime = currentTime.AddDays(-config.ExpireOldIpBans).ToLocalTime();
+				var ipBansTime = currentTime.AddDays(-config.ExpireOldIpBans);
 				sql = config.MultiServerMode ? """
 				                                
 				                                				UPDATE sa_bans

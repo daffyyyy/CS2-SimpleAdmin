@@ -9,8 +9,8 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2_SimpleAdmin.Menus;
 using Microsoft.Extensions.Logging;
-using System.Text;
 using Newtonsoft.Json;
+using System.Text;
 
 namespace CS2_SimpleAdmin
 {
@@ -118,7 +118,7 @@ namespace CS2_SimpleAdmin
 			var name = command.GetArg(2);
 			var flags = command.GetArg(3);
 			var globalAdmin = command.GetArg(4).ToLower().Equals("-g") || command.GetArg(5).ToLower().Equals("-g") ||
-                      command.GetArg(6).ToLower().Equals("-g");
+					  command.GetArg(6).ToLower().Equals("-g");
 			int.TryParse(command.GetArg(4), out var immunity);
 			int.TryParse(command.GetArg(5), out var time);
 
@@ -174,7 +174,7 @@ namespace CS2_SimpleAdmin
 			AddTimer(2, () =>
 			{
 				if (string.IsNullOrEmpty(steamid) || !SteamID.TryParse(steamid, out var steamId) ||
-				    steamId == null) return;
+					steamId == null) return;
 				if (PermissionManager.AdminCache.ContainsKey(steamId))
 				{
 					PermissionManager.AdminCache.TryRemove(steamId, out _);
@@ -307,7 +307,7 @@ namespace CS2_SimpleAdmin
 			{
 				var steamId = PermissionManager.AdminCache.Keys.ToList()[index];
 				if (!PermissionManager.AdminCache.TryRemove(steamId, out _)) continue;
-				
+
 				AdminManager.ClearPlayerPermissions(steamId);
 				AdminManager.RemovePlayerAdminData(steamId);
 			}
@@ -429,8 +429,15 @@ namespace CS2_SimpleAdmin
 		[RequiresPermissions("@css/generic")]
 		public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
 		{
-			var playersToTarget = Helper.GetValidPlayers();
 			var isJson = command.GetArg(1).ToLower().Equals("-json");
+			var isDuplicate = command.GetArg(1).ToLower().Equals("-duplicate");
+
+			var playersToTarget = isDuplicate
+				? Helper.GetValidPlayers().GroupBy(player => player.IpAddress?.Split(":")[0] ?? "Unknown")
+										  .Where(group => group.Count() > 1)
+										  .SelectMany(group => group)
+										  .ToList()
+				: Helper.GetValidPlayers();
 
 			if (!isJson)
 			{
@@ -456,32 +463,31 @@ namespace CS2_SimpleAdmin
 			}
 			else
 			{
-				var playersJson = JsonConvert.SerializeObject(playersToTarget.Select((CCSPlayerController player)  =>
+				var playersJson = JsonConvert.SerializeObject(playersToTarget.Select((CCSPlayerController player) =>
 				{
 					var matchStats = player.ActionTrackingServices?.MatchStats;
 
-					return new 
-					{ 
+					return new
+					{
 						UserId = player.UserId,
 						Name = player.PlayerName,
 						SteamId = player.SteamID.ToString(),
 						IpAddress = player.IpAddress?.Split(":")[0] ?? "Unknown",
 						Ping = player.Ping,
-						AdminData = AdminManager.GetPlayerAdminData(player),
+						IsAdmin = AdminManager.PlayerHasPermissions(player, "@css/ban") || AdminManager.PlayerHasPermissions(player, "@css/generic"),
 						Stats = new
 						{
 							Score = player.Score,
 							Kills = matchStats?.Kills ?? 0,
 							Deaths = matchStats?.Deaths ?? 0,
-							Assists = matchStats?.Assists,
 							MVPs = player.MVPs
-						} 
+						}
 					};
 				}));
-				
+
 				if (caller != null)
 					caller.PrintToConsole(playersJson);
-				else 
+				else
 					Server.PrintToConsole(playersJson);
 			}
 		}
@@ -557,7 +563,7 @@ namespace CS2_SimpleAdmin
 			if (caller != null && (caller.UserId == null || SilentPlayers.Contains(caller.Slot))) return;
 			foreach (var controller in Helper.GetValidPlayers())
 			{
-				
+
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
 					StringBuilder sb = new(_localizer!["sa_prefix"]);

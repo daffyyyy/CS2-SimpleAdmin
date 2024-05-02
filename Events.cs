@@ -4,7 +4,6 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
-using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using System.Text;
@@ -31,7 +30,7 @@ public partial class CS2_SimpleAdmin
         Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
-		if (player == null || !player.IsValid || string.IsNullOrEmpty(player.IpAddress) || player.IsBot || player.IsHLTV)
+		if (player == null || !player.IsValid || string.IsNullOrEmpty(player.IpAddress) || player.IsBot)
 		{
 			return HookResult.Continue;
 		}
@@ -60,9 +59,9 @@ public partial class CS2_SimpleAdmin
 
 			var authorizedSteamId = player.AuthorizedSteamID;
 			if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
-				                              out var expirationTime)
-			                              || !(expirationTime <= DateTime.Now)) return HookResult.Continue;
-			
+											  out var expirationTime)
+										  || !(expirationTime <= DateTime.UtcNow.ToLocalTime())) return HookResult.Continue;
+
 			AdminManager.ClearPlayerPermissions(authorizedSteamId);
 			AdminManager.RemovePlayerAdminData(authorizedSteamId);
 
@@ -81,13 +80,13 @@ public partial class CS2_SimpleAdmin
 		CCSPlayerController? player = @event.Userid;
 
 		if (player == null || string.IsNullOrEmpty(player.IpAddress) || player.IpAddress.Contains("127.0.0.1")
-			|| player.IsBot || player.IsHLTV || !player.UserId.HasValue)
+			|| player.IsBot || !player.UserId.HasValue)
 			return HookResult.Continue;
 
 		var ipAddress = player.IpAddress.Split(":")[0];
 
 		// Check if the player's IP or SteamID is in the bannedPlayers list
-		if (BannedPlayers.Contains(ipAddress) || BannedPlayers.Contains(player.SteamID.ToString()))
+		if (Config.BanType > 0 && BannedPlayers.Contains(ipAddress) || BannedPlayers.Contains(player.SteamID.ToString()))
 		{
 			// Kick the player if banned
 			if (player.UserId.HasValue)
@@ -121,7 +120,7 @@ public partial class CS2_SimpleAdmin
 				if (isBanned)
 				{
 					// Add player's IP and SteamID to bannedPlayers list if not already present
-					if (playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
+					if (Config.BanType > 0 && playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
 						BannedPlayers.Add(playerInfo.IpAddress);
 
 					if (playerInfo.SteamId != null && !BannedPlayers.Contains(playerInfo.SteamId))
@@ -233,7 +232,7 @@ public partial class CS2_SimpleAdmin
 			return HookResult.Handled;
 
 		if (!info.GetArg(1).StartsWith($"@")) return HookResult.Continue;
-		
+
 		StringBuilder sb = new();
 
 		if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
@@ -257,14 +256,14 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Handled;
 	}
 
-	private void OnMapStart(string mapName)
+	public void OnMapStart(string mapName)
 	{
 		var path = Path.GetDirectoryName(ModuleDirectory);
 		if (Directory.Exists(path + "/CS2-Tags"))
 		{
 			_tagsDetected = true;
 		}
-		
+
 		GodPlayers.Clear();
 		SilentPlayers.Clear();
 
@@ -272,75 +271,22 @@ public partial class CS2_SimpleAdmin
 
 		_database = new Database.Database(_dbConnectionString);
 
-		AddTimer(61.0f, () =>
-		{
-#if DEBUG
-			Logger.LogCritical("[OnMapStart] Expired check");
-#endif
-
-			var players = Helper.GetValidPlayers();
-			var onlinePlayers = players
-				.Where(player => player.IpAddress != null && player.SteamID.ToString().Length == 17)
-				.Select(player => (player.IpAddress, player.SteamID, player.UserId))
-				.ToList();
-
-			Task.Run(async () =>
-			{
-				PermissionManager adminManager = new(_database);
-				BanManager banManager = new(_database, Config);
-				MuteManager muteManager = new(_database);
-
-				await banManager.ExpireOldBans();
-				await muteManager.ExpireOldMutes();
-				await adminManager.DeleteOldAdmins();
-
-				try
-				{
-					await banManager.CheckOnlinePlayers(onlinePlayers);
-				}
-				catch { }
-
-				BannedPlayers.Clear();
-
-				await Server.NextFrameAsync(() =>
-				{
-					try
-					{
-						foreach (var player in players.Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot)))
-						{
-							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-								player.VoiceFlags = VoiceFlags.Normal;
-
-							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-							{
-								if (_tagsDetected)
-									Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
-							}
-
-							if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
-							    PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) ||
-							    PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
-							player.VoiceFlags = VoiceFlags.Normal;
-
-							if (_tagsDetected)
-								Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
-						}
-
-						PlayerPenaltyManager.RemoveExpiredPenalties();
-					}
-					catch { }
-				});
-			});
-		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
 		AddTimer(2.0f, () =>
 		{
-			var address = $"{ConVar.Find("ip")!.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
+			var ipAddress = ConVar.Find("ip")?.StringValue;
+
+			if (string.IsNullOrEmpty(ipAddress))
+			{
+				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
+			}
+
+			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
 			var hostname = ConVar.Find("hostname")!.StringValue;
 
 			Task.Run(async () =>
 			{
 				PermissionManager adminManager = new(_database);
+
 				try
 				{
 					await using var connection = await _database.GetConnectionAsync();
@@ -389,13 +335,76 @@ public partial class CS2_SimpleAdmin
 
 				//await _adminManager.GiveAllGroupsFlags();
 				//await _adminManager.GiveAllFlags();
-				
 
-				await Server.NextFrameAsync(() => {
+				await Server.NextFrameAsync(() =>
+				{
 					ReloadAdmins(null);
 				});
+
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+
+		AddTimer(61.0f, () =>
+		{
+#if DEBUG
+			Logger.LogCritical("[OnMapStart] Expired check");
+#endif
+
+			var players = Helper.GetValidPlayers();
+			var onlinePlayers = players
+				.Where(player => player.IpAddress != null && player.SteamID.ToString().Length == 17)
+				.Select(player => (player.IpAddress, player.SteamID, player.UserId))
+				.ToList();
+
+			Task.Run(async () =>
+			{
+				PermissionManager adminManager = new(_database);
+				BanManager banManager = new(_database, Config);
+				MuteManager muteManager = new(_database);
+
+				await banManager.ExpireOldBans();
+				await muteManager.ExpireOldMutes();
+				await adminManager.DeleteOldAdmins();
+				BannedPlayers.Clear();
+				if (onlinePlayers.Count > 0)
+				{
+					try
+					{
+						await banManager.CheckOnlinePlayers(onlinePlayers);
+					}
+					catch { }
+				}
+
+				await Server.NextFrameAsync(() =>
+				{
+					try
+					{
+						foreach (var player in players.Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot)))
+						{
+							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+								player.VoiceFlags = VoiceFlags.Normal;
+
+							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+							{
+								if (_tagsDetected)
+									Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
+							}
+
+							if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
+								PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) ||
+								PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
+							player.VoiceFlags = VoiceFlags.Normal;
+
+							if (_tagsDetected)
+								Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
+						}
+
+						PlayerPenaltyManager.RemoveExpiredPenalties();
+					}
+					catch { }
+				});
+			});
+		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 	}
 
 	[GameEventHandler]
@@ -407,7 +416,7 @@ public partial class CS2_SimpleAdmin
 			return HookResult.Continue;
 
 		if (!GodPlayers.Contains(player.Slot)) return HookResult.Continue;
-		
+
 		player.PlayerPawn.Value.Health = player.PlayerPawn.Value.MaxHealth;
 		player.PlayerPawn.Value.ArmorValue = 100;
 
