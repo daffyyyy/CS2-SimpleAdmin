@@ -430,7 +430,7 @@ namespace CS2_SimpleAdmin
 		public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			var isJson = command.GetArg(1).ToLower().Equals("-json");
-			var isDuplicate = command.GetArg(1).ToLower().Equals("-duplicate");
+			var isDuplicate = command.GetArg(1).ToLower().Equals("-duplicate") || command.GetArg(2).ToLower().Equals("-duplicate");
 
 			var playersToTarget = isDuplicate
 				? Helper.GetValidPlayers().GroupBy(player => player.IpAddress?.Split(":")[0] ?? "Unknown")
