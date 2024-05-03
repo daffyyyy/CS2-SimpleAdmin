@@ -319,8 +319,14 @@ namespace CS2_SimpleAdmin
 				await adminManager.CrateGroupsJsonFile();
 				await adminManager.CreateAdminsJsonFile();
 
-				AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
-				AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+				await Server.NextFrameAsync(() =>
+				{
+					AddTimer(0.2f, () =>
+					{
+						AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+						AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+					});
+				});
 			});
 
 			//_ = _adminManager.GiveAllGroupsFlags();

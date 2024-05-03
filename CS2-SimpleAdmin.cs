@@ -11,7 +11,7 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(215)]
+[MinimumApiVersion(220)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
 	public static CS2_SimpleAdmin Instance { get; private set; } = new();
@@ -37,7 +37,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.3c";
+	public override string ModuleVersion => "1.4.3d";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 

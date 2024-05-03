@@ -49,8 +49,8 @@ namespace CS2_SimpleAdmin
 		internal void Ban(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
 		{
 			if (_database == null || player is null || !player.IsValid) return;
-			
-			if (CheckValidBan(caller, time) == false) 
+
+			if (CheckValidBan(caller, time) == false)
 				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
@@ -145,7 +145,7 @@ namespace CS2_SimpleAdmin
 		public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			
+
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 			if (command.ArgCount < 2)
 				return;
@@ -162,8 +162,8 @@ namespace CS2_SimpleAdmin
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
 			int.TryParse(command.GetArg(2), out var time);
-			
-			if (CheckValidBan(caller, time) == false) 
+
+			if (CheckValidBan(caller, time) == false)
 				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
@@ -283,7 +283,7 @@ namespace CS2_SimpleAdmin
 			};
 
 			int.TryParse(command.GetArg(2), out var time);
-			if (CheckValidBan(caller, time) == false) 
+			if (CheckValidBan(caller, time) == false)
 				return;
 
 			if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
@@ -367,24 +367,26 @@ namespace CS2_SimpleAdmin
 
 			command.ReplyToCommand($"Banned player with IP address {ipAddress}.");
 		}
-		
+
 		private bool CheckValidBan(CCSPlayerController? caller, int duration)
 		{
 			if (caller == null) return true;
-			
+
 			bool canPermBan = AdminManager.PlayerHasPermissions(caller, "@css/permban");
-			
-			if (duration > Config.MaxBanDuration && canPermBan == false)
-			{
-				caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.MaxBanDuration]}");
-			}
 
 			if (duration == 0 && canPermBan == false)
 			{
 				caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_perm_restricted"]}");
+				return false;
 			}
 
-			return caller.IsValid && canPermBan;
+			if (duration > Config.MaxBanDuration && canPermBan == false)
+			{
+				caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.MaxBanDuration]}");
+				return false;
+			}
+
+			return true;
 		}
 
 		[ConsoleCommand("css_unban")]
