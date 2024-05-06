@@ -148,7 +148,6 @@ public partial class CS2_SimpleAdmin
 						string muteType = mute.type;
 						DateTime ends = mute.ends;
 						int duration = mute.duration;
-
 						switch (muteType)
 						{
 							// Apply mute penalty based on mute type
@@ -275,7 +274,7 @@ public partial class CS2_SimpleAdmin
 		{
 			var ipAddress = ConVar.Find("ip")?.StringValue;
 
-			if (string.IsNullOrEmpty(ipAddress))
+			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
 			{
 				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
 			}
@@ -352,8 +351,8 @@ public partial class CS2_SimpleAdmin
 
 			var players = Helper.GetValidPlayers();
 			var onlinePlayers = players
-				.Where(player => player.IpAddress != null && player.SteamID.ToString().Length == 17)
-				.Select(player => (player.IpAddress, player.SteamID, player.UserId))
+				.Where(player => player.IpAddress != null)
+				.Select(player => (player.IpAddress, player.SteamID, player.UserId, player.Slot))
 				.ToList();
 
 			Task.Run(async () =>
@@ -363,18 +362,25 @@ public partial class CS2_SimpleAdmin
 				MuteManager muteManager = new(_database);
 
 				await banManager.ExpireOldBans();
-				await muteManager.ExpireOldMutes();
 				await adminManager.DeleteOldAdmins();
+				
 				BannedPlayers.Clear();
+				
 				if (onlinePlayers.Count > 0)
 				{
 					try
 					{
 						await banManager.CheckOnlinePlayers(onlinePlayers);
+						if (Config.TimeMode == 0)
+						{
+							await muteManager.CheckOnlineModeMutes(onlinePlayers);
+						}
 					}
 					catch { }
 				}
 
+				await muteManager.ExpireOldMutes();
+				
 				await Server.NextFrameAsync(() =>
 				{
 					try
