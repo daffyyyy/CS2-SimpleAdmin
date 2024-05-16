@@ -14,7 +14,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 ```js
 - css_addadmin <steamid> <name> <flags/groups> <immunity> [time in minutes] - Add admin by steamid // @css/root
 - css_deladmin <steamid> - Delete admin by steamid // @css/root
-- css_reladmin - Reload sql admins // @css/root
+- css_reloadadmins - Reload sql admins // @css/root
 - css_hide - Hide admin on scoreboard and commands action // @css/kick
 - css_admin - Display all admin commands // @css/generic
 - css_who <#userid or name>  - Display informations about player // @css/generic
@@ -62,7 +62,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 ```
 
 ### Requirements
-- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on v201**
+- [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/) **tested on 228**
 - MySQL **tested on MySQL (MariaDB) Server version: 10.11.4-MariaDB-1~deb12u1 Debian 12**
 
 

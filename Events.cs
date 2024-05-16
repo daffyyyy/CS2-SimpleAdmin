@@ -20,7 +20,7 @@ public partial class CS2_SimpleAdmin
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
 	}
-
+	
 	[GameEventHandler]
 	public HookResult OnClientDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
 	{
@@ -331,15 +331,6 @@ public partial class CS2_SimpleAdmin
 						Logger.LogWarning($"Unable to make metrics call: {ex.Message}");
 					}
 				}
-
-				//await _adminManager.GiveAllGroupsFlags();
-				//await _adminManager.GiveAllFlags();
-
-				await Server.NextFrameAsync(() =>
-				{
-					ReloadAdmins(null);
-				});
-
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
