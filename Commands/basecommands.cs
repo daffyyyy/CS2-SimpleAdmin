@@ -316,16 +316,14 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
+				
 				await adminManager.CrateGroupsJsonFile();
 				await adminManager.CreateAdminsJsonFile();
 
 				await Server.NextFrameAsync(() =>
 				{
-					AddTimer(0.1f, () =>
-					{
-						AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
-						AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
-					});
+					AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+					AddTimer(1.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
 				});
 			});
 

@@ -66,7 +66,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	
 	public override void OnAllPluginsLoaded(bool hotReload)
 	{
-		AddTimer(0.2f, () => ReloadAdmins(null));
+		AddTimer(3.0f, () => ReloadAdmins(null));
 	}
 
 	public void OnConfigParsed(CS2_SimpleAdminConfig config)
