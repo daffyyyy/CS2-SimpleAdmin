@@ -41,6 +41,7 @@ namespace CS2_SimpleAdmin.Menus
 					continue;
 
 				var enabled = admin.CanTarget(player);
+				
 				if (optionName != null)
 					menu.AddMenuOption(optionName, (_, _) =>
 						{

@@ -141,13 +141,13 @@ namespace CS2_SimpleAdmin
 
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
 
-			var steamid = command.GetArg(1);
-
-			if (!Helper.IsValidSteamId64(steamid))
+			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
+
+			var steamid = steamId.SteamId64.ToString();
 
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -265,10 +265,10 @@ namespace CS2_SimpleAdmin
 
 			var pattern = command.GetArg(1);
 			MuteManager muteManager = new(_database);
-
-			if (Helper.IsValidSteamId64(pattern))
+			
+			if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
 			{
-				var matches = Helper.GetPlayerFromSteamid64(pattern);
+				var matches = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
 				if (matches.Count == 1)
 				{
 					var player = matches.FirstOrDefault();
@@ -474,15 +474,16 @@ namespace CS2_SimpleAdmin
 
 			if (command.ArgCount < 2)
 				return;
+			
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
 
-			var steamid = command.GetArg(1);
-
-			if (!Helper.IsValidSteamId64(steamid))
+			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
+
+			var steamid = steamId.SteamId64.ToString();
 
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -595,9 +596,9 @@ namespace CS2_SimpleAdmin
 			var found = false;
 			MuteManager muteManager = new(_database);
 
-			if (Helper.IsValidSteamId64(pattern))
+			if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
 			{
-				var matches = Helper.GetPlayerFromSteamid64(pattern);
+				var matches = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
 				if (matches.Count == 1)
 				{
 					var player = matches.FirstOrDefault();
@@ -735,7 +736,7 @@ namespace CS2_SimpleAdmin
 
 			if (time == 0)
 			{
-				if (!player.IsBot && !player.IsHLTV)
+				if (!player.IsBot)
 				{
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
@@ -780,12 +781,11 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
-			if (command != null)
-			{
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, DiscordWebhookClientPenalty, _localizer);
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-				Helper.LogCommand(caller, command);
-			}
+			if (command == null) return;
+			
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, DiscordWebhookClientPenalty, _localizer);
+			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
+			Helper.LogCommand(caller, command);
 		}
 
 		[ConsoleCommand("css_addsilence")]
@@ -800,13 +800,13 @@ namespace CS2_SimpleAdmin
 				return;
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
 
-			var steamid = command.GetArg(1);
-
-			if (!Helper.IsValidSteamId64(steamid))
+			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
+
+			var steamid = steamId.SteamId64.ToString();
 
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -843,7 +843,7 @@ namespace CS2_SimpleAdmin
 
 					if (time == 0)
 					{
-						if (!player.IsBot && !player.IsHLTV)
+						if (player is { IsBot: false, IsHLTV: false })
 							using (new WithTemporaryCulture(player.GetLanguage()))
 							{
 								player.PrintToCenter(_localizer!["sa_player_silence_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
@@ -863,7 +863,7 @@ namespace CS2_SimpleAdmin
 					}
 					else
 					{
-						if (!player.IsBot && !player.IsHLTV)
+						if (player is { IsBot: false, IsHLTV: false })
 							using (new WithTemporaryCulture(player.GetLanguage()))
 							{
 								player.PrintToCenter(_localizer!["sa_player_silence_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
@@ -921,9 +921,9 @@ namespace CS2_SimpleAdmin
 			var found = false;
 			MuteManager muteManager = new(_database);
 
-			if (Helper.IsValidSteamId64(pattern))
+			if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
 			{
-				var matches = Helper.GetPlayerFromSteamid64(pattern);
+				var matches = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
 				if (matches.Count == 1)
 				{
 					var player = matches.FirstOrDefault();

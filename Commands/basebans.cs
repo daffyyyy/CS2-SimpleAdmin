@@ -151,13 +151,14 @@ namespace CS2_SimpleAdmin
 				return;
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
 
-			var steamid = command.GetArg(1);
 
-			if (!Helper.IsValidSteamId64(steamid))
+			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
+
+			var steamid = steamId.SteamId64.ToString();
 
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 

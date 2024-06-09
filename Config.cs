@@ -129,6 +129,9 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("EnableMetrics")]
 		public bool EnableMetrics { get; set; } = true;
+        
+		[JsonPropertyName("ReloadAdminsEveryMapChange")]
+		public bool ReloadAdminsEveryMapChange { get; set; } = false;
 
 		[JsonPropertyName("UseChatMenu")]
 		public bool UseChatMenu { get; set; } = false;
@@ -160,10 +163,10 @@ namespace CS2_SimpleAdmin
 		public Discord Discord { get; set; } = new();
 
 		[JsonPropertyName("DefaultMaps")]
-		public List<string> DefaultMaps { get; set; } = [];
+		public List<string> DefaultMaps { get; set; } = new();
 
 		[JsonPropertyName("WorkshopMaps")]
-		public List<string> WorkshopMaps { get; set; } = [];
+		public List<string> WorkshopMaps { get; set; } = new();
 
 		[JsonPropertyName("CustomServerCommands")]
 		public List<CustomServerCommandData> CustomServerCommands { get; set; } = new();

@@ -97,12 +97,16 @@ namespace CS2_SimpleAdmin
 		public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-
-			if (!Helper.IsValidSteamId64(command.GetArg(1)))
+			
+			
+			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
+
+			var steamid = steamId.SteamId64.ToString();
+			
 			if (command.GetArg(2).Length <= 0)
 			{
 				command.ReplyToCommand($"Invalid player name.");
@@ -114,7 +118,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			var steamid = command.GetArg(1);
 			var name = command.GetArg(2);
 			var flags = command.GetArg(3);
 			var globalAdmin = command.GetArg(4).ToLower().Equals("-g") || command.GetArg(5).ToLower().Equals("-g") ||
@@ -153,16 +156,15 @@ namespace CS2_SimpleAdmin
 		{
 			if (_database == null) return;
 
-			if (!Helper.IsValidSteamId64(command.GetArg(1)))
+			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
-
-			var steamid = command.GetArg(1);
+			
 			var globalDelete = command.GetArg(2).ToLower().Equals("-g");
 
-			RemoveAdmin(caller, steamid, globalDelete, command);
+			RemoveAdmin(caller, steamId.SteamId64.ToString(), globalDelete, command);
 		}
 
 		public void RemoveAdmin(CCSPlayerController? caller, string steamid, bool globalDelete = false, CommandInfo? command = null)
@@ -534,13 +536,12 @@ namespace CS2_SimpleAdmin
 
 		public void Kick(CCSPlayerController? caller, CCSPlayerController? player, string? reason = "Unknown", string? callerName = null, CommandInfo? command = null)
 		{
+			if (player == null || !player.IsValid) return;
+			
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
-			if (player != null && player.PawnIsAlive)
-			{
-				player.Pawn.Value!.Freeze();
-			}
-
 			reason ??= _localizer?["sa_unknown"] ?? "Unknown";
+			
+			player.Pawn.Value!.Freeze();
 
 			if (command != null)
 				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
@@ -548,7 +549,7 @@ namespace CS2_SimpleAdmin
 
 			if (string.IsNullOrEmpty(reason) == false)
 			{
-				if (player != null && !player.IsBot && !player.IsHLTV)
+				if (player != null && !player.IsBot)
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);

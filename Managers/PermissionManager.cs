@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using Serilog.Core;
 
 namespace CS2_SimpleAdmin;
 
@@ -134,8 +135,9 @@ public class PermissionManager(Database.Database database)
 
 			return filteredFlagsWithImmunity;
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
+			CS2_SimpleAdmin._logger?.LogError(ex.ToString());
 			return [];
 		}
 	}
@@ -249,7 +251,10 @@ public class PermissionManager(Database.Database database)
 
 			return groupInfoDictionary;
 		}
-		catch { }
+		catch (Exception ex)
+		{
+			CS2_SimpleAdmin._logger?.LogError(ex.ToString());
+		}
 
 		return [];
 	}
@@ -388,7 +393,10 @@ public class PermissionManager(Database.Database database)
 
 			await connection.ExecuteAsync(sql, new { PlayerSteamID = playerSteamId, CS2_SimpleAdmin.ServerId });
 		}
-		catch { };
+		catch (Exception ex)
+		{
+			CS2_SimpleAdmin._logger?.LogError(ex.ToString());
+		}
 	}
 
 	public async Task AddAdminBySteamId(string playerSteamId, string playerName, List<string> flagsList, int immunity = 0, int time = 0, bool globalAdmin = false)
@@ -457,7 +465,7 @@ public class PermissionManager(Database.Database database)
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine(ex.ToString());
+			CS2_SimpleAdmin._logger?.LogError(ex.ToString());
 		}
 	}
 
@@ -503,7 +511,7 @@ public class PermissionManager(Database.Database database)
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine(ex.ToString());
+			CS2_SimpleAdmin._logger?.LogError(ex.ToString());
 		}
 	}
 
@@ -519,7 +527,7 @@ public class PermissionManager(Database.Database database)
 		}
 		catch (Exception ex)
 		{
-			Console.WriteLine(ex.ToString());
+			CS2_SimpleAdmin._logger?.LogError(ex.ToString());
 		}
 	}
 

@@ -75,6 +75,21 @@ namespace CS2_SimpleAdmin
 			const string pattern = @"^\d{17}$";
 			return Regex.IsMatch(input, pattern);
 		}
+		
+		public static bool ValidateSteamId(string input, out SteamID? steamId)
+		{
+			steamId = null;
+
+			if (string.IsNullOrEmpty(input))
+			{
+				return false;
+			}
+
+			if (!SteamID.TryParse(input, out var parsedSteamId)) return false;
+			
+			steamId = parsedSteamId;
+			return true;
+		}
 
 		public static bool IsValidIp(string input)
 		{

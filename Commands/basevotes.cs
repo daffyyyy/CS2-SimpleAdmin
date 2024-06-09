@@ -37,7 +37,10 @@ namespace CS2_SimpleAdmin
 				{
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
-						ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
+						BaseMenu voteMenu = Config.UseChatMenu
+							? new ChatMenu(_localizer!["sa_admin_vote_menu_title", question])
+							: new CenterHtmlMenu(_localizer!["sa_admin_vote_menu_title", question], Instance);
+						//ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
 
 						for (var i = 2; i <= answersCount - 1; i++)
 						{
@@ -50,8 +53,10 @@ namespace CS2_SimpleAdmin
 						StringBuilder sb = new(_localizer["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						player.PrintToChat(sb.ToString());
-
-						MenuManager.OpenChatMenu(player, voteMenu);
+						
+						voteMenu.OpenToAll();
+						
+						//MenuManager.OpenChatMenu(player, voteMenu);
 					}
 				}
 
