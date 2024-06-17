@@ -97,8 +97,8 @@ namespace CS2_SimpleAdmin
 		public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
 		{
 			if (_database == null) return;
-			
-			
+
+
 			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
 				command.ReplyToCommand($"Invalid SteamID64.");
@@ -106,7 +106,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			var steamid = steamId.SteamId64.ToString();
-			
+
 			if (command.GetArg(2).Length <= 0)
 			{
 				command.ReplyToCommand($"Invalid player name.");
@@ -161,7 +161,7 @@ namespace CS2_SimpleAdmin
 				command.ReplyToCommand($"Invalid SteamID64.");
 				return;
 			}
-			
+
 			var globalDelete = command.GetArg(2).ToLower().Equals("-g");
 
 			RemoveAdmin(caller, steamId.SteamId64.ToString(), globalDelete, command);
@@ -318,7 +318,7 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-				
+
 				await adminManager.CrateGroupsJsonFile();
 				await adminManager.CreateAdminsJsonFile();
 
@@ -415,7 +415,7 @@ namespace CS2_SimpleAdmin
 							printMethod($"• SteamID2: \"{player.SteamID}\"");
 							printMethod($"• Community link: \"{new SteamID(player.SteamID).ToCommunityUrl()}\"");
 						}
-						if (playerInfo.IpAddress != null)
+						if (playerInfo.IpAddress != null && AdminManager.PlayerHasPermissions(caller, "@css/showip"))
 							printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
 						printMethod($"• Ping: \"{player.Ping}\"");
 						if (player.SteamID.ToString().Length == 17)
@@ -453,7 +453,7 @@ namespace CS2_SimpleAdmin
 					playersToTarget.ForEach(player =>
 					{
 						caller.PrintToConsole(
-							$"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
+							$"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{(AdminManager.PlayerHasPermissions(caller, "@css/showip") ? player.IpAddress?.Split(":")[0] : "Unknown")}\" SteamID64: \"{player.SteamID}\")");
 					});
 					caller.PrintToConsole($"--------- END PLAYER LIST ---------");
 				}
@@ -475,18 +475,18 @@ namespace CS2_SimpleAdmin
 
 					return new
 					{
-						UserId = player.UserId,
+						player.UserId,
 						Name = player.PlayerName,
 						SteamId = player.SteamID.ToString(),
-						IpAddress = player.IpAddress?.Split(":")[0] ?? "Unknown",
-						Ping = player.Ping,
+						IpAddress = AdminManager.PlayerHasPermissions(caller, "@css/showip") ? player.IpAddress?.Split(":")[0] ?? "Unknown" : "Unknown",
+						player.Ping,
 						IsAdmin = AdminManager.PlayerHasPermissions(player, "@css/ban") || AdminManager.PlayerHasPermissions(player, "@css/generic"),
 						Stats = new
 						{
-							Score = player.Score,
+							player.Score,
 							Kills = matchStats?.Kills ?? 0,
 							Deaths = matchStats?.Deaths ?? 0,
-							MVPs = player.MVPs
+							player.MVPs
 						}
 					};
 				}));
@@ -537,10 +537,10 @@ namespace CS2_SimpleAdmin
 		public void Kick(CCSPlayerController? caller, CCSPlayerController? player, string? reason = "Unknown", string? callerName = null, CommandInfo? command = null)
 		{
 			if (player == null || !player.IsValid) return;
-			
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			reason ??= _localizer?["sa_unknown"] ?? "Unknown";
-			
+
 			player.Pawn.Value!.Freeze();
 
 			if (command != null)

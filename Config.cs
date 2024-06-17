@@ -102,6 +102,7 @@ namespace CS2_SimpleAdmin
 			new AdminFlag { Name = "Ban", Flag = "@css/ban" },
 			new AdminFlag { Name = "Perm Ban", Flag = "@css/permban" },
 			new AdminFlag { Name = "Unban", Flag = "@css/unban" },
+			new AdminFlag { Name = "Show IP", Flag = "@css/showip" },
 			new AdminFlag { Name = "Cvar", Flag = "@css/cvar" },
 			new AdminFlag { Name = "Rcon", Flag = "@css/rcon" },
 			new AdminFlag { Name = "Root (all flags)", Flag = "@css/root" }
@@ -110,7 +111,7 @@ namespace CS2_SimpleAdmin
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 14;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 15;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";
@@ -129,7 +130,10 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("EnableMetrics")]
 		public bool EnableMetrics { get; set; } = true;
-        
+
+		[JsonPropertyName("EnableUpdateCheck")]
+		public bool EnableUpdateCheck { get; set; } = true;
+
 		[JsonPropertyName("ReloadAdminsEveryMapChange")]
 		public bool ReloadAdminsEveryMapChange { get; set; } = false;
 
@@ -141,15 +145,15 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("DisableDangerousCommands")]
 		public bool DisableDangerousCommands { get; set; } = true;
-		
+
 		[JsonPropertyName("BanType")]
 		public int BanType { get; set; } = 1;
-		
+
 		[JsonPropertyName("TimeMode")]
 		public int TimeMode { get; set; } = 1;
-		
+
 		[JsonPropertyName("MaxBanDuration")]
-		public int MaxBanDuration { get; set; } = 60 * 24 * 7; // 7 days
+		public int MaxBanDuration { get; set; } = 60 * 24 * 7;
 		[JsonPropertyName("MultiServerMode")]
 		public bool MultiServerMode { get; set; } = true;
 

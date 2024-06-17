@@ -15,12 +15,10 @@ public partial class CS2_SimpleAdmin
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
-		//RegisterListener<Listeners.OnClientConnected>(OnClientConnected);
-		//RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
 	}
-	
+
 	[GameEventHandler]
 	public HookResult OnClientDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
 	{
@@ -209,7 +207,7 @@ public partial class CS2_SimpleAdmin
 			return HookResult.Continue;
 
 		if (info.GetArg(1).StartsWith($"/")
-		    || info.GetArg(1).StartsWith($"!"))
+			|| info.GetArg(1).StartsWith($"!"))
 			return HookResult.Continue;
 
 		if (info.GetArg(1).Length == 0)
@@ -223,11 +221,11 @@ public partial class CS2_SimpleAdmin
 
 	public HookResult OnCommandTeamSay(CCSPlayerController? player, CommandInfo info)
 	{
-		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV )
+		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV)
 			return HookResult.Continue;
-		
+
 		if (info.GetArg(1).StartsWith($"/")
-		    || info.GetArg(1).StartsWith($"!"))
+			|| info.GetArg(1).StartsWith($"!"))
 			return HookResult.Continue;
 
 		if (info.GetArg(1).Length == 0)
@@ -265,7 +263,7 @@ public partial class CS2_SimpleAdmin
 	{
 		if (Config.ReloadAdminsEveryMapChange)
 			AddTimer(3.0f, () => ReloadAdmins(null));
-		
+
 		var path = Path.GetDirectoryName(ModuleDirectory);
 		if (Directory.Exists(path + "/CS2-Tags"))
 		{
@@ -279,13 +277,15 @@ public partial class CS2_SimpleAdmin
 
 		_database = new Database.Database(_dbConnectionString);
 
-		AddTimer(2.0f, () =>
+		AddTimer(2.5f, () =>
 		{
 			var ipAddress = ConVar.Find("ip")?.StringValue;
 
 			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
 			{
+				ipAddress = Helper.GetServerIp();
 				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
+				Logger.LogError($"Using alternative method... Server IP {ipAddress}");
 			}
 
 			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
@@ -341,7 +341,7 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 			});
-		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+		});
 
 		AddTimer(61.0f, () =>
 		{
@@ -363,9 +363,9 @@ public partial class CS2_SimpleAdmin
 
 				await banManager.ExpireOldBans();
 				await adminManager.DeleteOldAdmins();
-				
+
 				BannedPlayers.Clear();
-				
+
 				if (onlinePlayers.Count > 0)
 				{
 					try
@@ -380,7 +380,7 @@ public partial class CS2_SimpleAdmin
 				}
 
 				await muteManager.ExpireOldMutes();
-				
+
 				await Server.NextFrameAsync(() =>
 				{
 					try

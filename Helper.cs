@@ -12,6 +12,7 @@ using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -23,20 +24,23 @@ namespace CS2_SimpleAdmin
 		private static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name ?? "";
 		private static readonly string CfgPath = $"{Server.GameDirectory}/csgo/addons/counterstrikesharp/configs/plugins/{AssemblyName}/{AssemblyName}.json";
 
+		public delegate nint CNetworkSystem_UpdatePublicIp(nint a1);
+		public static CNetworkSystem_UpdatePublicIp? _networkSystemUpdatePublicIp;
+
 		internal static CS2_SimpleAdminConfig? Config { get; set; }
 
 		public static bool IsDebugBuild
 		{
 			get
 			{
-				#if DEBUG
+#if DEBUG
 				        return true;
-				#else
-						return false;
-				#endif
+#else
+				return false;
+#endif
 			}
 		}
-		
+
 		public static List<CCSPlayerController> GetPlayerFromName(string name)
 		{
 			return Utilities.GetPlayers().FindAll(x => x.PlayerName.Equals(name, StringComparison.OrdinalIgnoreCase));
@@ -60,7 +64,7 @@ namespace CS2_SimpleAdmin
 		public static List<CCSPlayerController> GetValidPlayers()
 		{
 			return Utilities.GetPlayers().FindAll(p => p is
-					{ IsBot: false, IsHLTV: false });
+			{ IsBot: false, IsHLTV: false });
 		}
 
 		public static IEnumerable<CCSPlayerController?> GetValidPlayersWithBots()
@@ -75,7 +79,7 @@ namespace CS2_SimpleAdmin
 			const string pattern = @"^\d{17}$";
 			return Regex.IsMatch(input, pattern);
 		}
-		
+
 		public static bool ValidateSteamId(string input, out SteamID? steamId)
 		{
 			steamId = null;
@@ -86,7 +90,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (!SteamID.TryParse(input, out var parsedSteamId)) return false;
-			
+
 			steamId = parsedSteamId;
 			return true;
 		}
@@ -222,7 +226,7 @@ namespace CS2_SimpleAdmin
 		public static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
 		{
 			if (discordWebhookClientLog == null || localizer == null) return;
-			
+
 			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
 			discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
@@ -246,7 +250,7 @@ namespace CS2_SimpleAdmin
 		public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, DiscordWebhookClient? discordWebhookClientPenalty, IStringLocalizer? localizer)
 		{
 			if (discordWebhookClientPenalty == null || localizer == null) return;
-			
+
 			var callerCommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var targetCommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
@@ -309,6 +313,33 @@ namespace CS2_SimpleAdmin
 
 			return message;
 		}
+
+		public static string GetServerIp()
+		{
+			var network_system = NativeAPI.GetValveInterface(0, "NetworkSystemVersion001");
+
+			unsafe
+			{
+				if (_networkSystemUpdatePublicIp == null)
+				{
+					var funcPtr = *(nint*)(*(nint*)(network_system) + 256);
+					_networkSystemUpdatePublicIp = Marshal.GetDelegateForFunctionPointer<CNetworkSystem_UpdatePublicIp>(funcPtr);
+				}
+				/*
+				struct netadr_t
+				{
+				   uint32_t type
+				   uint8_t ip[4]
+				   uint16_t port
+				}
+				*/
+				// + 4 to skip type, because the size of uint32_t is 4 bytes
+				var ipBytes = (byte*)(_networkSystemUpdatePublicIp(network_system) + 4);
+				// port is always 0, use the one from convar "hostport"
+				return $"{ipBytes[0]}.{ipBytes[1]}.{ipBytes[2]}.{ipBytes[3]}";
+			}
+		}
+
 
 		public static void UpdateConfig<T>(T config) where T : BasePluginConfig, new()
 		{
