@@ -15,8 +15,86 @@ public partial class CS2_SimpleAdmin
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
+		RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
 		AddCommandListener("say", OnCommandSay);
 		AddCommandListener("say_team", OnCommandTeamSay);
+	}
+
+	private void OnGameServerSteamAPIActivated()
+	{
+		AddTimer(8.5f, () =>
+		{
+			if (ServerId != null) return;
+
+			var ipAddress = ConVar.Find("ip")?.StringValue;
+
+			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
+			{
+				ipAddress = Helper.GetServerIp();
+				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
+				Logger.LogError($"Using alternative method... Server IP {ipAddress}");
+			}
+
+			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
+			{
+				OnGameServerSteamAPIActivated();
+				return;
+			}
+
+			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
+			var hostname = ConVar.Find("hostname")!.StringValue;
+
+			Task.Run(async () =>
+			{
+				PermissionManager adminManager = new(_database);
+
+				try
+				{
+					await using var connection = await _database.GetConnectionAsync();
+					var addressExists = await connection.ExecuteScalarAsync<bool>(
+						"SELECT COUNT(*) FROM sa_servers WHERE address = @address",
+						new { address });
+
+					if (!addressExists)
+					{
+						await connection.ExecuteAsync(
+							"INSERT INTO sa_servers (address, hostname) VALUES (@address, @hostname)",
+							new { address, hostname });
+					}
+					else
+					{
+						await connection.ExecuteAsync(
+							"UPDATE `sa_servers` SET `hostname` = @hostname, `id` = `id` WHERE `address` = @address",
+							new { address, hostname });
+					}
+
+					int? serverId = await connection.ExecuteScalarAsync<int>(
+						"SELECT `id` FROM `sa_servers` WHERE `address` = @address",
+						new { address });
+
+					ServerId = serverId;
+				}
+				catch (Exception ex)
+				{
+					_logger?.LogCritical("Unable to create or get server_id" + ex.Message);
+				}
+
+				if (Config.EnableMetrics)
+				{
+					var queryString = $"?address={address}&hostname={hostname}";
+					using HttpClient client = new();
+
+					try
+					{
+						await client.GetAsync($"https://api.daffyy.love/index.php{queryString}");
+					}
+					catch (HttpRequestException ex)
+					{
+						Logger.LogWarning($"Unable to make metrics call: {ex.Message}");
+					}
+				}
+			});
+		});
 	}
 
 	[GameEventHandler]
@@ -277,12 +355,15 @@ public partial class CS2_SimpleAdmin
 
 		_database = new Database.Database(_dbConnectionString);
 
-		AddTimer(2.5f, () =>
+		AddTimer(2f, () =>
 		{
+			if (ServerId != null) return;
+
 			var ipAddress = ConVar.Find("ip")?.StringValue;
 
 			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
 			{
+				return;
 				ipAddress = Helper.GetServerIp();
 				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
 				Logger.LogError($"Using alternative method... Server IP {ipAddress}");
