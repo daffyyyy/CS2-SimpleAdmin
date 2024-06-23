@@ -31,7 +31,7 @@ namespace CS2_SimpleAdmin
 
 		public void Slay(CCSPlayerController? caller, CCSPlayerController? player, string? callerName = null, CommandInfo? command = null)
 		{
-			if (player != null && !player.IsBot && player.SteamID.ToString().Length != 17)
+			if (player == null || !player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
 				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
@@ -94,7 +94,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				GiveWeapon(caller, player, weaponName, callerName, command);
@@ -161,10 +161,10 @@ namespace CS2_SimpleAdmin
 		{
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
-			if (player != null && !player.IsBot && player.SteamID.ToString().Length != 17)
+			if (player == null || !player.IsValid || !player.PawnIsAlive || player.Connected != PlayerConnectedState.PlayerConnected)
 				return;
 
-			player?.RemoveWeapons();
+			player.RemoveWeapons();
 
 			if (command != null)
 			{
@@ -207,7 +207,7 @@ namespace CS2_SimpleAdmin
 
 		public void SetHp(CCSPlayerController? caller, CCSPlayerController? player, int health, CommandInfo? command = null)
 		{
-			if (player != null && !player.IsBot && player.SteamID.ToString().Length != 17)
+			if (player != null && !player.IsBot && player.Connected == PlayerConnectedState.PlayerConnected)
 				return;
 
 			var callerName = caller == null ? "Console" : caller.PlayerName;
@@ -247,7 +247,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -298,7 +298,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -347,7 +347,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -394,7 +394,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -421,7 +421,7 @@ namespace CS2_SimpleAdmin
 			}
 			else
 			{
-				RemoveFromConcurrentBag(GodPlayers, player.Slot);
+				GodPlayers.Remove(player.Slot);
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
@@ -455,7 +455,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -538,21 +538,21 @@ namespace CS2_SimpleAdmin
 
 		public void ChangeTeam(CCSPlayerController? caller, CCSPlayerController? player, string teamName, CsTeam teamNum, bool kill, string? callerName = null, CommandInfo? command = null)
 		{
-			if (player != null && !player.IsBot && player.SteamID.ToString().Length != 17)
+			if (player == null || !player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
 				return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			if (!teamName.Equals("swap"))
 			{
-				if (player != null && player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill && Config.TeamSwitchType == 1)
+				if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill && Config.TeamSwitchType == 1)
 					player.SwitchTeam(teamNum);
 				else
 					player?.ChangeTeam(teamNum);
 			}
 			else
 			{
-				if (player != null && player.TeamNum != (byte)CsTeam.Spectator)
+				if (player.TeamNum != (byte)CsTeam.Spectator)
 				{
 					var _teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
 					teamName = _teamNum == CsTeam.Terrorist ? "TT" : "CT";
@@ -597,14 +597,15 @@ namespace CS2_SimpleAdmin
 				return;
 
 			var targets = GetTarget(command);
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+			if (targets == null) return;
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Helper.LogCommand(caller, command);
 			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (!caller!.CanTarget(player)) return;
@@ -633,11 +634,12 @@ namespace CS2_SimpleAdmin
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			var targets = GetTarget(command);
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+			if (targets == null) return;
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player.Connected != PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -697,7 +699,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17 || !player.PawnIsAlive)
+				if (player.Connected != PlayerConnectedState.PlayerConnected || !player.PawnIsAlive)
 					return;
 
 				if (!caller.CanTarget(player)) return;
@@ -742,7 +744,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17 || !player.PawnIsAlive)
+				if (player.Connected != PlayerConnectedState.PlayerConnected || !player.PawnIsAlive)
 					return;
 
 				if (!caller.CanTarget(player)) return;

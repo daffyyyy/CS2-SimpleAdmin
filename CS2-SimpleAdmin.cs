@@ -18,12 +18,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public static IStringLocalizer? _localizer;
 	public static readonly Dictionary<string, int> VoteAnswers = [];
-	private static readonly ConcurrentBag<int> GodPlayers = [];
-	private static readonly ConcurrentBag<int> SilentPlayers = [];
+	private static readonly HashSet<int> GodPlayers = [];
+	private static readonly HashSet<int> SilentPlayers = [];
+	//private static readonly ConcurrentBag<int> SilentPlayers = [];
 	private static readonly ConcurrentBag<string> BannedPlayers = [];
 	private static bool _tagsDetected;
 	public static bool VoteInProgress = false;
 	public static int? ServerId = null;
+	public static bool UnlockedCommands = CoreConfig.UnlockConCommands;
 
 	public static DiscordWebhookClient? DiscordWebhookClientLog;
 	public static DiscordWebhookClient? DiscordWebhookClientPenalty;
@@ -37,7 +39,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.6b";
+	public override string ModuleVersion => "1.4.7a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 

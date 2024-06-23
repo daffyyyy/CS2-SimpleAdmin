@@ -345,7 +345,7 @@ namespace CS2_SimpleAdmin
 
 			if (SilentPlayers.Contains(caller.Slot))
 			{
-				RemoveFromConcurrentBag(SilentPlayers, caller.Slot);
+				SilentPlayers.Remove(caller.Slot);
 				caller.PrintToChat($"You aren't hidden now!");
 				caller.ChangeTeam(CsTeam.Spectator);
 			}
@@ -377,7 +377,7 @@ namespace CS2_SimpleAdmin
 			Helper.LogCommand(caller, command);
 			//Helper.SendDiscordLogMessage(caller, command, _discordWebhookClientLog, _localizer);
 
-			var playersToTarget = targets.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			Database.Database database = new(_dbConnectionString);
 			BanManager banManager = new(database, Config);
@@ -410,7 +410,7 @@ namespace CS2_SimpleAdmin
 						printMethod($"• UserID: \"{playerInfo.UserId}\"");
 						if (playerInfo.SteamId != null)
 							printMethod($"• SteamID64: \"{playerInfo.SteamId}\"");
-						if (player.SteamID.ToString().Length == 17)
+						if (player.Connected == PlayerConnectedState.PlayerConnected)
 						{
 							printMethod($"• SteamID2: \"{player.SteamID}\"");
 							printMethod($"• Community link: \"{new SteamID(player.SteamID).ToCommunityUrl()}\"");
@@ -418,7 +418,7 @@ namespace CS2_SimpleAdmin
 						if (playerInfo.IpAddress != null && AdminManager.PlayerHasPermissions(caller, "@css/showip"))
 							printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
 						printMethod($"• Ping: \"{player.Ping}\"");
-						if (player.SteamID.ToString().Length == 17)
+						if (player.Connected == PlayerConnectedState.PlayerConnected)
 						{
 							printMethod($"• Total Bans: \"{totalBans}\"");
 							printMethod($"• Total Mutes: \"{totalMutes}\"");
@@ -508,9 +508,7 @@ namespace CS2_SimpleAdmin
 
 			var targets = GetTarget(command);
 
-			if (targets == null)
-				return;
-
+			if (targets == null) return;
 			var playersToTarget = targets.Players
 				.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 

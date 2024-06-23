@@ -1,8 +1,10 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities;
 using System.Text;
 
 namespace CS2_SimpleAdmin
@@ -22,7 +24,7 @@ namespace CS2_SimpleAdmin
 
 			var targets = GetTarget(command);
 			if (targets == null) return;
-			var playersToTarget = targets.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			var playersToTarget = targets.Players.Where(player => player.IsValid && player.Connected == PlayerConnectedState.PlayerConnected && !player.IsHLTV).ToList();
 
 			if (playersToTarget.Count > 1 && Config.DisableDangerousCommands || playersToTarget.Count == 0)
 			{
@@ -91,7 +93,7 @@ namespace CS2_SimpleAdmin
 
 			if (time == 0)
 			{
-				if (!player.IsBot && !player.IsHLTV)
+				if (player is { IsBot: false })
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						player.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
@@ -112,7 +114,7 @@ namespace CS2_SimpleAdmin
 			}
 			else
 			{
-				if (!player.IsBot && !player.IsHLTV)
+				if (!player.IsBot)
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						player.PrintToCenter(_localizer!["sa_player_ban_message_time", reason, time, caller == null ? "Console" : caller.PlayerName]);
@@ -131,6 +133,9 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
+			if (UnlockedCommands)
+				Server.ExecuteCommand($"banid 2 {new SteamID(player.SteamID).SteamId3}");
+
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
@@ -147,10 +152,10 @@ namespace CS2_SimpleAdmin
 			if (_database == null) return;
 
 			var callerName = caller == null ? "Console" : caller.PlayerName;
+
 			if (command.ArgCount < 2)
 				return;
 			if (string.IsNullOrEmpty(command.GetArg(1))) return;
-
 
 			if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
 			{
@@ -248,6 +253,8 @@ namespace CS2_SimpleAdmin
 			Helper.LogCommand(caller, command);
 			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			//Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
+			if (UnlockedCommands)
+				Server.ExecuteCommand($"banid 2 {steamId.SteamId3}");
 
 			command.ReplyToCommand($"Banned player with steamid {steamid}.");
 		}

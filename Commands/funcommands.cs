@@ -17,9 +17,11 @@ namespace CS2_SimpleAdmin
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			var targets = GetTarget(command);
-			var playersToTarget = targets!.Players.Where(player =>
-				player.IsValid && player.SteamID.ToString().Length == 17 &&
-				player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+			if (targets == null) return;
+			var playersToTarget = targets.Players.Where(player =>
+			player is not null &&
+			player.IsValid &&
+			player is { PawnIsAlive: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
 
 			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
@@ -60,13 +62,14 @@ namespace CS2_SimpleAdmin
 			int.TryParse(command.GetArg(2), out var time);
 
 			var targets = GetTarget(command);
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
+			if (targets == null) return;
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (!player.IsBot && player.Connected == PlayerConnectedState.PlayerConnected)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -107,11 +110,12 @@ namespace CS2_SimpleAdmin
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 
 			var targets = GetTarget(command);
-			var playersToTarget = targets!.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
+			if (targets == null) return;
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (!player.IsBot && player.Connected == PlayerConnectedState.PlayerConnected)
 					return;
 
 				Unfreeze(caller, player, callerName, command);

@@ -69,7 +69,7 @@ namespace CS2_SimpleAdmin
 
 			var targets = GetTarget(command);
 			if (targets == null) return;
-			var playersToTarget = targets.Players.Where(player => player.IsValid && player.SteamID.ToString().Length == 17 && !player.IsHLTV).ToList();
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
 
 			//Helper.LogCommand(caller, command);
 

@@ -24,7 +24,7 @@ public partial class CS2_SimpleAdmin
 	{
 		AddTimer(8.5f, () =>
 		{
-			if (ServerId != null) return;
+			if (ServerId != null || _database == null) return;
 
 			var ipAddress = ConVar.Find("ip")?.StringValue;
 
@@ -106,7 +106,7 @@ public partial class CS2_SimpleAdmin
         Logger.LogCritical("[OnClientDisconnect] Before");
 #endif
 
-		if (player == null || !player.IsValid || string.IsNullOrEmpty(player.IpAddress) || player.IsBot)
+		if (player == null || !player.IsValid || player.IsBot)
 		{
 			return HookResult.Continue;
 		}
@@ -119,19 +119,10 @@ public partial class CS2_SimpleAdmin
 			PlayerPenaltyManager.RemoveAllPenalties(player.Slot);
 
 			if (_tagsDetected)
-			{
 				Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
-			}
 
-			if (SilentPlayers.Contains(player.Slot))
-			{
-				RemoveFromConcurrentBag(SilentPlayers, player.Slot);
-			}
-
-			if (GodPlayers.Contains(player.Slot))
-			{
-				RemoveFromConcurrentBag(GodPlayers, player.Slot);
-			}
+			SilentPlayers.Remove(player.Slot);
+			GodPlayers.Remove(player.Slot);
 
 			var authorizedSteamId = player.AuthorizedSteamID;
 			if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
@@ -196,18 +187,27 @@ public partial class CS2_SimpleAdmin
 				if (isBanned)
 				{
 					// Add player's IP and SteamID to bannedPlayers list if not already present
-					if (Config.BanType > 0 && playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
+					if (Config.BanType > 0 && playerInfo.IpAddress != null &&
+					    !BannedPlayers.Contains(playerInfo.IpAddress))
+					{
 						BannedPlayers.Add(playerInfo.IpAddress);
+					}
 
 					if (playerInfo.SteamId != null && !BannedPlayers.Contains(playerInfo.SteamId))
+					{
 						BannedPlayers.Add(playerInfo.SteamId);
+					}
 
 					// Kick the player if banned
 					await Server.NextFrameAsync(() =>
 					{
 						var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId);
+						
 						if (victim?.UserId != null)
 						{
+							if (UnlockedCommands)
+								Server.ExecuteCommand($"banid 2 {playerInfo.UserId}");
+
 							Helper.KickPlayer(victim.UserId.Value, "Banned");
 						}
 					});
@@ -281,7 +281,7 @@ public partial class CS2_SimpleAdmin
 
 	public HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)
 	{
-		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV)
+		if (player is null || !player.IsValid || player.IsBot)
 			return HookResult.Continue;
 
 		if (info.GetArg(1).StartsWith($"/")
@@ -299,7 +299,7 @@ public partial class CS2_SimpleAdmin
 
 	public HookResult OnCommandTeamSay(CCSPlayerController? player, CommandInfo info)
 	{
-		if (player is null || !player.IsValid || player.IsBot || player.IsHLTV)
+		if (player is null || !player.IsValid || player.IsBot)
 			return HookResult.Continue;
 
 		if (info.GetArg(1).StartsWith($"/")
@@ -464,31 +464,35 @@ public partial class CS2_SimpleAdmin
 
 				await Server.NextFrameAsync(() =>
 				{
-					try
+					if (onlinePlayers.Count > 0)
 					{
-						foreach (var player in players.Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot)))
+						try
 						{
-							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+							foreach (var player in players.Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot)))
+							{
+								if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+									player.VoiceFlags = VoiceFlags.Normal;
+
+								if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+								{
+									if (_tagsDetected)
+										Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
+								}
+
+								if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
+									PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) ||
+									PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
 								player.VoiceFlags = VoiceFlags.Normal;
 
-							if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-							{
 								if (_tagsDetected)
 									Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
 							}
 
-							if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
-								PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) ||
-								PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
-							player.VoiceFlags = VoiceFlags.Normal;
-
-							if (_tagsDetected)
-								Server.ExecuteCommand($"css_tag_unmute {player.SteamID}");
+							PlayerPenaltyManager.RemoveExpiredPenalties();
 						}
-
-						PlayerPenaltyManager.RemoveExpiredPenalties();
+						catch { }
 					}
-					catch { }
+
 				});
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
