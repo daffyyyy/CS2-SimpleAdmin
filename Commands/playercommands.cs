@@ -207,7 +207,7 @@ namespace CS2_SimpleAdmin
 
 		public void SetHp(CCSPlayerController? caller, CCSPlayerController? player, int health, CommandInfo? command = null)
 		{
-			if (player != null && !player.IsBot && player.Connected == PlayerConnectedState.PlayerConnected)
+			if (player == null || !player.IsValid || player.IsHLTV)
 				return;
 
 			var callerName = caller == null ? "Console" : caller.PlayerName;

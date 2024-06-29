@@ -53,9 +53,9 @@ namespace CS2_SimpleAdmin
 						StringBuilder sb = new(_localizer["sa_prefix"]);
 						sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 						player.PrintToChat(sb.ToString());
-						
-						voteMenu.OpenToAll();
-						
+
+						voteMenu.Open(player);
+
 						//MenuManager.OpenChatMenu(player, voteMenu);
 					}
 				}

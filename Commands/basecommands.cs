@@ -522,7 +522,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.SteamID.ToString().Length != 17)
+				if (player == null || !player.IsValid)
 					return;
 
 				if (caller!.CanTarget(player))

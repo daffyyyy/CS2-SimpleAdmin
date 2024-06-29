@@ -31,8 +31,6 @@ public partial class CS2_SimpleAdmin
 			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
 			{
 				ipAddress = Helper.GetServerIp();
-				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
-				Logger.LogError($"Using alternative method... Server IP {ipAddress}");
 			}
 
 			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
@@ -188,7 +186,7 @@ public partial class CS2_SimpleAdmin
 				{
 					// Add player's IP and SteamID to bannedPlayers list if not already present
 					if (Config.BanType > 0 && playerInfo.IpAddress != null &&
-					    !BannedPlayers.Contains(playerInfo.IpAddress))
+						!BannedPlayers.Contains(playerInfo.IpAddress))
 					{
 						BannedPlayers.Add(playerInfo.IpAddress);
 					}
@@ -202,7 +200,7 @@ public partial class CS2_SimpleAdmin
 					await Server.NextFrameAsync(() =>
 					{
 						var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId);
-						
+
 						if (victim?.UserId != null)
 						{
 							if (UnlockedCommands)
@@ -365,8 +363,6 @@ public partial class CS2_SimpleAdmin
 			{
 				return;
 				ipAddress = Helper.GetServerIp();
-				Logger.LogError("Unable to get server ip, Check that you have added the correct start parameter \"-ip <ip>\"");
-				Logger.LogError($"Using alternative method... Server IP {ipAddress}");
 			}
 
 			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";

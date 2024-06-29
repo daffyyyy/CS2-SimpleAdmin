@@ -69,9 +69,6 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.Connected == PlayerConnectedState.PlayerConnected)
-					return;
-
 				if (caller!.CanTarget(player))
 				{
 					Freeze(caller, player, time, callerName);
@@ -115,9 +112,6 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (!player.IsBot && player.Connected == PlayerConnectedState.PlayerConnected)
-					return;
-
 				Unfreeze(caller, player, callerName, command);
 			});
 		}

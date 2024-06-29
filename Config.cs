@@ -170,7 +170,7 @@ namespace CS2_SimpleAdmin
 		public List<string> DefaultMaps { get; set; } = new();
 
 		[JsonPropertyName("WorkshopMaps")]
-		public List<string> WorkshopMaps { get; set; } = new();
+		public Dictionary<string, long?> WorkshopMaps { get; set; } = new();
 
 		[JsonPropertyName("CustomServerCommands")]
 		public List<CustomServerCommandData> CustomServerCommands { get; set; } = new();
