@@ -318,7 +318,6 @@ namespace CS2_SimpleAdmin
 
 			Task.Run(async () =>
 			{
-
 				await adminManager.CrateGroupsJsonFile();
 				await adminManager.CreateAdminsJsonFile();
 
