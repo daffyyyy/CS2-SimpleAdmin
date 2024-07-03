@@ -39,7 +39,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.8b";
+	public override string ModuleVersion => "1.4.9a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -112,9 +112,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			Directory.CreateDirectory(ModuleDirectory + "/data");
 		}
-
+		
 		_localizer = Localizer;
-
+		
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordLogWebhook))
 			DiscordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordPenaltyWebhook))

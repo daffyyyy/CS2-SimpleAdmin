@@ -45,7 +45,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -126,7 +126,7 @@ namespace CS2_SimpleAdmin
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			if (caller != null && (SilentPlayers.Contains(caller.Slot))) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -173,7 +173,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -221,7 +221,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -270,7 +270,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -321,7 +321,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -370,7 +370,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -425,7 +425,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -473,15 +473,20 @@ namespace CS2_SimpleAdmin
 			if (command != null)
 			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
+				if (_localizer != null)
+					Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			}
 
+			if (_localizer == null)
+				return;
+
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
+					StringBuilder sb = new(_localizer["sa_prefix"]);
 					sb.Append(_localizer["sa_admin_slap_message", callerName, player.PlayerName]);
 					controller.PrintToChat(sb.ToString());
 				}
@@ -569,7 +574,7 @@ namespace CS2_SimpleAdmin
 
 			if (caller == null || !SilentPlayers.Contains(caller.Slot))
 			{
-				foreach (var controller in Helper.GetValidPlayers())
+				foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 				{
 					using (new WithTemporaryCulture(controller.GetLanguage()))
 					{
@@ -611,7 +616,7 @@ namespace CS2_SimpleAdmin
 				if (!caller!.CanTarget(player)) return;
 				if (caller == null || !SilentPlayers.Contains(caller.Slot))
 				{
-					foreach (var controller in Helper.GetValidPlayers())
+					foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 					{
 						using (new WithTemporaryCulture(controller.GetLanguage()))
 						{
@@ -667,7 +672,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -712,7 +717,7 @@ namespace CS2_SimpleAdmin
 				});
 
 				if (SilentPlayers.Contains(caller.Slot)) return;
-				foreach (var controller in Helper.GetValidPlayers())
+				foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 				{
 					using (new WithTemporaryCulture(controller.GetLanguage()))
 					{
@@ -757,7 +762,7 @@ namespace CS2_SimpleAdmin
 				});
 
 				if (SilentPlayers.Contains(caller.Slot)) return;
-				foreach (var controller in Helper.GetValidPlayers())
+				foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 				{
 					using (new WithTemporaryCulture(controller.GetLanguage()))
 					{

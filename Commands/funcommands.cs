@@ -19,7 +19,6 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 			var playersToTarget = targets.Players.Where(player =>
-			player is not null &&
 			player.IsValid &&
 			player is { PawnIsAlive: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
 
@@ -42,7 +41,7 @@ namespace CS2_SimpleAdmin
 			Helper.LogCommand(caller, $"css_noclip {player.PlayerName}");
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -88,7 +87,7 @@ namespace CS2_SimpleAdmin
 				AddTimer(time, () => player?.Pawn.Value!.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{
@@ -129,7 +128,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 				using (new WithTemporaryCulture(controller.GetLanguage()))
 				{

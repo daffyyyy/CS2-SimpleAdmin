@@ -1,5 +1,4 @@
-﻿using CounterStrikeSharp.API.Core;
-using Dapper;
+﻿using Dapper;
 using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin;
@@ -98,7 +97,7 @@ internal class MuteManager(Database.Database database)
 			await using var connection = await database.GetConnectionAsync();
 			var currentTime = DateTime.UtcNow.ToLocalTime();
 			var sql = "";
-			
+
 			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
 			{
 				sql = CS2_SimpleAdmin.Instance.Config.TimeMode == 1
@@ -141,7 +140,7 @@ internal class MuteManager(Database.Database database)
 			return 0;
 		}
 	}
-	
+
 	public async Task CheckOnlineModeMutes(List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)> players)
 	{
 		try
@@ -158,7 +157,7 @@ internal class MuteManager(Database.Database database)
 				await connection.ExecuteAsync(sql,
 					new { PlayerSteamID = SteamID, serverid = CS2_SimpleAdmin.ServerId });
 			}*/
-			
+
 			for (var i = 0; i < players.Count; i += batchSize)
 			{
 				var batch = players.Skip(i).Take(batchSize);
@@ -171,7 +170,7 @@ internal class MuteManager(Database.Database database)
 
 				await connection.ExecuteAsync(sql, parametersList);
 			}
-			
+
 			sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
 				? "SELECT * FROM `sa_mutes` WHERE player_steamid = @PlayerSteamID AND passed >= duration AND duration > 0 AND status = 'ACTIVE'"
 				: "SELECT * FROM `sa_mutes` WHERE player_steamid = @PlayerSteamID AND passed >= duration AND duration > 0 AND status = 'ACTIVE' AND server_id = @serverid";
@@ -180,7 +179,7 @@ internal class MuteManager(Database.Database database)
 			foreach (var (IpAddress, SteamID, UserId, Slot) in players)
 			{
 				var muteRecords = await connection.QueryAsync(sql, new { PlayerSteamID = SteamID, serverid = CS2_SimpleAdmin.ServerId });
-				
+
 				foreach (var muteRecord in muteRecords)
 				{
 					DateTime endDateTime = muteRecord.ends;
@@ -268,7 +267,7 @@ internal class MuteManager(Database.Database database)
 		{
 			await using var connection = await database.GetConnectionAsync();
 			var sql = "";
-			
+
 			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
 			{
 				sql = CS2_SimpleAdmin.Instance.Config.TimeMode == 1

@@ -101,7 +101,7 @@ namespace CS2_SimpleAdmin
 
 				if (caller == null || !SilentPlayers.Contains(caller.Slot))
 				{
-					foreach (var controller in Helper.GetValidPlayers())
+					foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 					{
 						using (new WithTemporaryCulture(controller.GetLanguage()))
 						{
@@ -121,7 +121,7 @@ namespace CS2_SimpleAdmin
 					}
 				if (caller == null || !SilentPlayers.Contains(caller.Slot))
 				{
-					foreach (var controller in Helper.GetValidPlayers())
+					foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 					{
 						using (new WithTemporaryCulture(controller.GetLanguage()))
 						{
@@ -207,7 +207,7 @@ namespace CS2_SimpleAdmin
 							}
 						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
-							foreach (var controller in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 							{
 								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
@@ -228,7 +228,7 @@ namespace CS2_SimpleAdmin
 
 						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
-							foreach (var controller in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 							{
 								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
@@ -321,7 +321,7 @@ namespace CS2_SimpleAdmin
 
 						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
-							foreach (var controller in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 							{
 								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{
@@ -341,7 +341,7 @@ namespace CS2_SimpleAdmin
 							}
 						if (caller == null || !SilentPlayers.Contains(caller.Slot))
 						{
-							foreach (var controller in Helper.GetValidPlayers())
+							foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 							{
 								using (new WithTemporaryCulture(controller.GetLanguage()))
 								{

@@ -1,9 +1,8 @@
-﻿using System.Text;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using Dapper;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
-using Serilog.Core;
+using System.Text;
 
 namespace CS2_SimpleAdmin;
 
@@ -151,6 +150,25 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 			};
 
 			banCount = await connection.ExecuteScalarAsync<int>(sql, parameters);
+
+			if (config.BanType == 1 && banCount == 0)
+			{
+				sql = """
+				      SELECT
+				      							COUNT(*)
+				      						FROM
+				      							sa_bans
+				      						JOIN sa_players_ips ON sa_bans.player_steamid = sa_players_ips.steamid
+				      						WHERE
+				      							sa_bans.status = 'ACTIVE'
+				      							AND sa_players_ips.address = @PlayerIP;
+				      """;
+
+				banCount = await connection.ExecuteScalarAsync<int>(sql, new
+				{
+					PlayerIP = player.IpAddress
+				});
+			}
 		}
 		catch (Exception)
 		{
@@ -215,9 +233,9 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 			var sqlRetrieveBans = config.MultiServerMode
 				? "SELECT id FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE'"
 				: "SELECT id FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE' AND server_id = @serverid";
-				
+
 			var bans = await connection.QueryAsync(sqlRetrieveBans, new { pattern = playerPattern, serverid = CS2_SimpleAdmin.ServerId });
-			
+
 			var bansList = bans as dynamic[] ?? bans.ToArray();
 			if (bansList.Length == 0)
 				return;
@@ -298,73 +316,73 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 		catch { }
 	}
 	*/
-	
+
 	public async Task CheckOnlinePlayers(List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)> players)
 	{
-	    try
-	    {
-	        await using var connection = await database.GetConnectionAsync();
-	        bool checkIpBans = config.BanType > 0;
+		try
+		{
+			await using var connection = await database.GetConnectionAsync();
+			bool checkIpBans = config.BanType > 0;
 
-	        var filteredPlayers = players.Where(p => p.UserId.HasValue).ToList();
-	        
-	        var steamIds = filteredPlayers.Select(p => p.SteamID).Distinct().ToList();
-	        var ipAddresses = filteredPlayers
-	            .Where(p => !string.IsNullOrEmpty(p.IpAddress))
-	            .Select(p => p.IpAddress)
-	            .Distinct()
-	            .ToList();
+			var filteredPlayers = players.Where(p => p.UserId.HasValue).ToList();
 
-	        var sql = new StringBuilder();
-	        sql.Append("SELECT `player_steamid`, `player_ip` FROM `sa_bans` WHERE `status` = 'ACTIVE' ");
-	        
-	        if (config.MultiServerMode)
-	        {
-	            sql.Append("AND (player_steamid IN @SteamIDs ");
-	            if (checkIpBans && ipAddresses.Count != 0)
-	            {
-	                sql.Append("OR player_ip IN @IpAddresses");
-	            }
-	            sql.Append(')');
-	        }
-	        else
-	        {
-	            sql.Append("AND server_id = @ServerId AND (player_steamid IN @SteamIDs ");
-	            if (checkIpBans && ipAddresses.Count != 0)
-	            {
-	                sql.Append("OR player_ip IN @IpAddresses");
-	            }
-	            sql.Append(')');
-	        }
+			var steamIds = filteredPlayers.Select(p => p.SteamID).Distinct().ToList();
+			var ipAddresses = filteredPlayers
+				.Where(p => !string.IsNullOrEmpty(p.IpAddress))
+				.Select(p => p.IpAddress)
+				.Distinct()
+				.ToList();
 
-	        var bannedPlayers = await connection.QueryAsync<(ulong PlayerSteamID, string PlayerIP)>(
-	            sql.ToString(),
-	            new
-	            {
-	                SteamIDs = steamIds,
-	                IpAddresses = checkIpBans ? ipAddresses : [], 
-	                ServerId = CS2_SimpleAdmin.ServerId
-	            });
+			var sql = new StringBuilder();
+			sql.Append("SELECT `player_steamid`, `player_ip` FROM `sa_bans` WHERE `status` = 'ACTIVE' ");
 
-	        var valueTuples = bannedPlayers.ToList();
-	        var bannedSteamIds = valueTuples.Select(b => b.PlayerSteamID).ToHashSet();
-	        var bannedIps = valueTuples.Select(b => b.PlayerIP).ToHashSet();
+			if (config.MultiServerMode)
+			{
+				sql.Append("AND (player_steamid IN @SteamIDs ");
+				if (checkIpBans && ipAddresses.Count != 0)
+				{
+					sql.Append("OR player_ip IN @IpAddresses");
+				}
+				sql.Append(')');
+			}
+			else
+			{
+				sql.Append("AND server_id = @ServerId AND (player_steamid IN @SteamIDs ");
+				if (checkIpBans && ipAddresses.Count != 0)
+				{
+					sql.Append("OR player_ip IN @IpAddresses");
+				}
+				sql.Append(')');
+			}
 
-	        foreach (var player in filteredPlayers.Where(player => bannedSteamIds.Contains(player.SteamID) || 
-	                                                               (checkIpBans && bannedIps.Contains(player.IpAddress ?? ""))))
-	        {
-		        if (!player.UserId.HasValue) continue;
-		        
-		        await Server.NextFrameAsync(() =>
-		        {
-			        Helper.KickPlayer(player.UserId.Value, "Banned");
-		        });
-	        }
-	    }
-	    catch (Exception ex)
-	    {
-	        CS2_SimpleAdmin._logger?.LogError($"Error checking online players: {ex.Message}");
-	    }
+			var bannedPlayers = await connection.QueryAsync<(ulong PlayerSteamID, string PlayerIP)>(
+				sql.ToString(),
+				new
+				{
+					SteamIDs = steamIds,
+					IpAddresses = checkIpBans ? ipAddresses : [],
+					ServerId = CS2_SimpleAdmin.ServerId
+				});
+
+			var valueTuples = bannedPlayers.ToList();
+			var bannedSteamIds = valueTuples.Select(b => b.PlayerSteamID).ToHashSet();
+			var bannedIps = valueTuples.Select(b => b.PlayerIP).ToHashSet();
+
+			foreach (var player in filteredPlayers.Where(player => bannedSteamIds.Contains(player.SteamID) ||
+																   (checkIpBans && bannedIps.Contains(player.IpAddress ?? ""))))
+			{
+				if (!player.UserId.HasValue) continue;
+
+				await Server.NextFrameAsync(() =>
+				{
+					Helper.KickPlayer(player.UserId.Value, "Banned");
+				});
+			}
+		}
+		catch (Exception ex)
+		{
+			CS2_SimpleAdmin._logger?.LogError($"Error checking online players: {ex.Message}");
+		}
 	}
 
 	public async Task ExpireOldBans()

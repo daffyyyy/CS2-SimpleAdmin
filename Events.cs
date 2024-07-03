@@ -184,6 +184,21 @@ public partial class CS2_SimpleAdmin
 
 			try
 			{
+				await using var connection = await _database.GetConnectionAsync();
+
+				const string query = @"INSERT IGNORE INTO `sa_players_ips` (steamid, address)
+									VALUES (@SteamID, @IPAddress)";
+
+				await connection.ExecuteAsync(query, new
+				{
+					SteamID = playerInfo.SteamId,
+					IPAddress = playerInfo.IpAddress,
+				});
+			}
+			catch { }
+
+			try
+			{
 				// Check if the player is banned
 				bool isBanned = await banManager.IsPlayerBanned(playerInfo);
 				if (isBanned)

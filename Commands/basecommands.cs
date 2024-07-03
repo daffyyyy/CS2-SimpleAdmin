@@ -521,7 +521,7 @@ namespace CS2_SimpleAdmin
 
 			playersToTarget.ForEach(player =>
 			{
-				if (player == null || !player.IsValid)
+				if (!player.IsValid)
 					return;
 
 				if (caller!.CanTarget(player))
@@ -549,7 +549,7 @@ namespace CS2_SimpleAdmin
 				if (player != null && !player.IsBot)
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
-						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, caller == null ? "Console" : caller.PlayerName]);
+						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, callerName]);
 					}
 				if (player != null && player.UserId.HasValue)
 					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, reason),
@@ -563,7 +563,7 @@ namespace CS2_SimpleAdmin
 			}
 
 			if (caller != null && (caller.UserId == null || SilentPlayers.Contains(caller.Slot))) return;
-			foreach (var controller in Helper.GetValidPlayers())
+			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
 
 				using (new WithTemporaryCulture(controller.GetLanguage()))
