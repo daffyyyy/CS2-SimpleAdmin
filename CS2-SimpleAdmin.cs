@@ -20,8 +20,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public static readonly Dictionary<string, int> VoteAnswers = [];
 	private static readonly HashSet<int> GodPlayers = [];
 	private static readonly HashSet<int> SilentPlayers = [];
-	//private static readonly ConcurrentBag<int> SilentPlayers = [];
 	private static readonly ConcurrentBag<string> BannedPlayers = [];
+	private static readonly Dictionary<ulong, string> RenamedPlayers = [];
+	//private static readonly ConcurrentBag<int> SilentPlayers = [];
 	private static bool _tagsDetected;
 	public static bool VoteInProgress = false;
 	public static int? ServerId = null;
@@ -39,7 +40,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.4.9a";
+	public override string ModuleVersion => "1.5.0a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -112,9 +113,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 		{
 			Directory.CreateDirectory(ModuleDirectory + "/data");
 		}
-		
+
 		_localizer = Localizer;
-		
+
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordLogWebhook))
 			DiscordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordPenaltyWebhook))

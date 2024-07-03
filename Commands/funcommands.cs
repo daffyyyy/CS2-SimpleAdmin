@@ -35,6 +35,8 @@ namespace CS2_SimpleAdmin
 
 		public void NoClip(CCSPlayerController? caller, CCSPlayerController? player, string? callerName = null)
 		{
+			if (!caller.CanTarget(player)) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			player!.Pawn.Value!.ToggleNoclip();
 
@@ -77,6 +79,8 @@ namespace CS2_SimpleAdmin
 
 		public void Freeze(CCSPlayerController? caller, CCSPlayerController? player, int time, string? callerName = null)
 		{
+			if (!caller.CanTarget(player)) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			player?.Pawn.Value!.Freeze();
@@ -117,6 +121,8 @@ namespace CS2_SimpleAdmin
 
 		public void Unfreeze(CCSPlayerController? caller, CCSPlayerController? player, string? callerName = null, CommandInfo? command = null)
 		{
+			if (!caller.CanTarget(player)) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 
 			player!.Pawn.Value!.Unfreeze();

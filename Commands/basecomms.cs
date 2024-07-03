@@ -49,6 +49,8 @@ namespace CS2_SimpleAdmin
 		internal static void Gag(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, PlayerPenaltyManager? playerPenaltyManager = null, CommandInfo? command = null)
 		{
 			if (_database == null) return;
+			if (!caller.CanTarget(player)) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			muteManager ??= new MuteManager(_database);
 
@@ -388,6 +390,8 @@ namespace CS2_SimpleAdmin
 		internal void Mute(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, PlayerPenaltyManager? playerPenaltyManager = null, CommandInfo? command = null)
 		{
 			if (_database == null) return;
+			if (!caller.CanTarget(player)) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			muteManager ??= new MuteManager(_database);
 
@@ -706,6 +710,8 @@ namespace CS2_SimpleAdmin
 		internal void Silence(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, PlayerPenaltyManager? playerPenaltyManager = null, CommandInfo? command = null)
 		{
 			if (_database == null) return;
+			if (!caller.CanTarget(player)) return;
+
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			muteManager ??= new MuteManager(_database);
 

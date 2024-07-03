@@ -53,6 +53,7 @@ Manage your Counter-Strike 2 server by simple commands :)
 - css_freeze <#userid or name> [duration] - Freeze player // @css/slay
 - css_unfreeze <#userid or name> - Unfreeze player // @css/slay
 - css_rename <#userid or name> <new name> - Rename player // @css/kick
+- css_prename <#userid or name> <new name> - Permanently rename player (until the server restarts - don't set new name to remove perm rename) // @css/ban
 - css_respawn <#userid or name> - Respawn player // @css/cheats
 - css_cvar <cvar> <value> - Change cvar value // @css/cvar
 - css_rcon <command> - Run command as server // @css/rcon

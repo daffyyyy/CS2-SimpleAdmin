@@ -282,6 +282,11 @@ public partial class CS2_SimpleAdmin
 			}
 		});
 
+		if (RenamedPlayers.TryGetValue(player.SteamID, out var name))
+		{
+			player.Rename(name);
+		}
+
 		return HookResult.Continue;
 	}
 
@@ -524,6 +529,25 @@ public partial class CS2_SimpleAdmin
 
 		player.PlayerPawn.Value.Health = player.PlayerPawn.Value.MaxHealth;
 		player.PlayerPawn.Value.ArmorValue = 100;
+
+		return HookResult.Continue;
+	}
+
+	[GameEventHandler]
+	public HookResult OnChangedName(EventPlayerChangename @event, GameEventInfo _)
+	{
+		CCSPlayerController? player = @event.Userid;
+
+		if (player is null || !player.IsValid || player.IsBot)
+			return HookResult.Continue;
+
+		if (RenamedPlayers.TryGetValue(player.SteamID, out var name))
+		{
+			if (@event.Newname.Equals(name))
+				return HookResult.Continue;
+
+			player.Rename(name);
+		}
 
 		return HookResult.Continue;
 	}

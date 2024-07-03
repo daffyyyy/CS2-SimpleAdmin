@@ -28,8 +28,8 @@ public static class PlayerExtensions
 		if (target.IsBot) return true;
 
 		return AdminManager.CanPlayerTarget(controller, target) ||
-		                          AdminManager.CanPlayerTarget(new SteamID(controller.SteamID),
-			                          new SteamID(target.SteamID));
+								  AdminManager.CanPlayerTarget(new SteamID(controller.SteamID),
+									  new SteamID(target.SteamID));
 	}
 
 	public static void SetSpeed(this CCSPlayerController? controller, float speed)
@@ -62,7 +62,7 @@ public static class PlayerExtensions
 	{
 		if (controller == null) return;
 		if ((health <= 0 || !controller.PawnIsAlive || controller.PlayerPawn.Value == null)) return;
-		
+
 		controller.PlayerPawn.Value.Health = health;
 
 		if (health > 100)
@@ -121,7 +121,7 @@ public static class PlayerExtensions
 
 	public static void Rename(this CCSPlayerController? controller, string newName = "Unknown")
 	{
-		newName = newName ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+		newName ??= CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
 		if (controller != null)
 		{

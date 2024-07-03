@@ -534,6 +534,7 @@ namespace CS2_SimpleAdmin
 		public void Kick(CCSPlayerController? caller, CCSPlayerController? player, string? reason = "Unknown", string? callerName = null, CommandInfo? command = null)
 		{
 			if (player == null || !player.IsValid) return;
+			if (!caller.CanTarget(player)) return;
 
 			callerName ??= caller == null ? "Console" : caller.PlayerName;
 			reason ??= _localizer?["sa_unknown"] ?? "Unknown";

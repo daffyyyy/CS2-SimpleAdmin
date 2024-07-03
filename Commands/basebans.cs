@@ -51,6 +51,8 @@ namespace CS2_SimpleAdmin
 		internal void Ban(CCSPlayerController? caller, CCSPlayerController? player, int time, string reason, string? callerName = null, BanManager? banManager = null, CommandInfo? command = null)
 		{
 			if (_database == null || player is null || !player.IsValid) return;
+			if (!caller.CanTarget(player)) return;
+
 
 			if (CheckValidBan(caller, time) == false)
 				return;
