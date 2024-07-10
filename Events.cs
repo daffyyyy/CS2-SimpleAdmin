@@ -305,9 +305,15 @@ public partial class CS2_SimpleAdmin
 	{
 		if (player is null || !player.IsValid || player.IsBot)
 			return HookResult.Continue;
-
-		if (info.GetArg(1).StartsWith($"/")
-			|| info.GetArg(1).StartsWith($"!"))
+		
+		if (CoreConfig.PublicChatTrigger.Any(trigger => info.GetArg(1).StartsWith(trigger)))
+		{
+			var trigger = CoreConfig.PublicChatTrigger.FirstOrDefault(trigger => info.GetArg(1).StartsWith(trigger));
+			if(trigger != null)
+				player.ExecuteClientCommandFromServer(info.GetArg(1).Replace(trigger, "css_"));
+			return HookResult.Handled;
+		}
+		else if (CoreConfig.SilentChatTrigger.Any(trigger => info.GetArg(1).StartsWith(trigger)))
 			return HookResult.Continue;
 
 		if (info.GetArg(1).Length == 0)
@@ -323,9 +329,15 @@ public partial class CS2_SimpleAdmin
 	{
 		if (player is null || !player.IsValid || player.IsBot)
 			return HookResult.Continue;
-
-		if (info.GetArg(1).StartsWith($"/")
-			|| info.GetArg(1).StartsWith($"!"))
+		
+		if (CoreConfig.PublicChatTrigger.Any(trigger => info.GetArg(1).StartsWith(trigger)))
+		{
+			var trigger = CoreConfig.PublicChatTrigger.FirstOrDefault(trigger => info.GetArg(1).StartsWith(trigger));
+			if(trigger != null)
+				player.ExecuteClientCommandFromServer(info.GetArg(1).Replace(trigger, "css_"));
+			return HookResult.Handled;
+		}
+		else if (CoreConfig.SilentChatTrigger.Any(trigger => info.GetArg(1).StartsWith(trigger)))
 			return HookResult.Continue;
 
 		if (info.GetArg(1).Length == 0)
