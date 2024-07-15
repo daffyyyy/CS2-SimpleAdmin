@@ -18,6 +18,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 	public static IStringLocalizer? _localizer;
 	public static readonly Dictionary<string, int> VoteAnswers = [];
+	private static bool _serverLoaded;
 	private static readonly HashSet<int> GodPlayers = [];
 	private static readonly HashSet<int> SilentPlayers = [];
 	private static readonly ConcurrentBag<string> BannedPlayers = [];
@@ -40,7 +41,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 	public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
 	public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
 	public override string ModuleAuthor => "daffyy & Dliix66";
-	public override string ModuleVersion => "1.5.0a";
+	public override string ModuleVersion => "1.5.1a";
 
 	public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -52,6 +53,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		if (hotReload)
 		{
+			_serverLoaded = false;
 			OnMapStart(string.Empty);
 		}
 

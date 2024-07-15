@@ -10,7 +10,6 @@ using CounterStrikeSharp.API.Modules.Utils;
 using CS2_SimpleAdmin.Menus;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Text;
 
 namespace CS2_SimpleAdmin
 {
@@ -321,11 +320,17 @@ namespace CS2_SimpleAdmin
 				await adminManager.CrateGroupsJsonFile();
 				await adminManager.CreateAdminsJsonFile();
 
+				var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json") ?? "";
+				var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json") ?? "";
+
 				await Server.NextFrameAsync(() =>
 				{
-					AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
-					AddTimer(1.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
-					AddTimer(1.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+					if (!string.IsNullOrEmpty(adminsFile))
+						AddTimer(0.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+					if (!string.IsNullOrEmpty(groupsFile))
+						AddTimer(1.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
+					if (!string.IsNullOrEmpty(adminsFile))
+						AddTimer(1.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
 				});
 			});
 
@@ -567,13 +572,12 @@ namespace CS2_SimpleAdmin
 			if (caller != null && (caller.UserId == null || SilentPlayers.Contains(caller.Slot))) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_kick_message", callerName, player?.PlayerName ?? string.Empty, reason]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_kick_message",
+										callerName,
+										player?.PlayerName ?? string.Empty,
+										reason);
 			}
 		}
 
@@ -626,12 +630,11 @@ namespace CS2_SimpleAdmin
 			{
 				foreach (var player in Helper.GetValidPlayers())
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
-						player.PrintToChat(sb.ToString());
-					}
+					if (_localizer != null)
+						player.SendLocalizedMessage(_localizer,
+											"sa_admin_changemap_message",
+											caller == null ? "Console" : caller.PlayerName,
+											map);
 				}
 			}
 
@@ -661,12 +664,11 @@ namespace CS2_SimpleAdmin
 			{
 				foreach (var player in Helper.GetValidPlayers())
 				{
-					using (new WithTemporaryCulture(player.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_changemap_message", caller == null ? "Console" : caller.PlayerName, map]);
-						player.PrintToChat(sb.ToString());
-					}
+					if (_localizer != null)
+						player.SendLocalizedMessage(_localizer,
+											"sa_admin_changemap_message",
+											caller == null ? "Console" : caller.PlayerName,
+											map);
 				}
 			}
 

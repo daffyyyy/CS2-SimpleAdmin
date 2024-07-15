@@ -1,8 +1,10 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
+using Microsoft.Extensions.Localization;
 using System.Text;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
@@ -193,4 +195,20 @@ public static class PlayerExtensions
 		if (pawn.Health <= 0)
 			pawn.CommitSuicide(true, true);
 	}
+
+	public static void SendLocalizedMessage(this CCSPlayerController? controller, IStringLocalizer localizer, string messageKey, params object[] messageArgs)
+	{
+		if (controller == null) return;
+
+		using (new WithTemporaryCulture(controller.GetLanguage()))
+		{
+			StringBuilder sb = new(localizer["sa_prefix"]);
+			sb.Append(localizer[messageKey, messageArgs]);
+			foreach (var part in Helper.SeparateLines(sb.ToString()))
+			{
+				controller.PrintToChat(part);
+			}
+		}
+	}
+
 }

@@ -389,9 +389,9 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
 	{
 		var currentTime = DateTime.UtcNow.ToLocalTime();
 
-		await using var connection = await database.GetConnectionAsync();
 		try
 		{
+			await using var connection = await database.GetConnectionAsync();
 			/*
 			string sql = "";
 			await using MySqlConnection connection = await _database.GetConnectionAsync();

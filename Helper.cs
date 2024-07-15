@@ -64,13 +64,13 @@ namespace CS2_SimpleAdmin
 		public static List<CCSPlayerController> GetValidPlayers()
 		{
 			return Utilities.GetPlayers().FindAll(p => p is
-			{ IsBot: false, IsHLTV: false });
+			{ IsValid: true, IsBot: false, Connected: PlayerConnectedState.PlayerConnected });
 		}
 
 		public static IEnumerable<CCSPlayerController?> GetValidPlayersWithBots()
 		{
 			return Utilities.GetPlayers().FindAll(p =>
-			 p is { IsBot: false, IsHLTV: false } or { IsBot: true, IsHLTV: false }
+			 p is { IsValid: true, IsBot: false, IsHLTV: false } or { IsValid: true, IsBot: true, IsHLTV: false }
 			);
 		}
 
@@ -312,6 +312,11 @@ namespace CS2_SimpleAdmin
 			message = message.Replace("ADDRESS", address);
 
 			return message;
+		}
+
+		public static string[] SeparateLines(string message)
+		{
+			return message.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
 		}
 
 		public static string GetServerIp()

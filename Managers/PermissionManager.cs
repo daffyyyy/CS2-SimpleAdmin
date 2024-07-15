@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
-using Serilog.Core;
 
 namespace CS2_SimpleAdmin;
 
@@ -263,7 +262,7 @@ public class PermissionManager(Database.Database database)
 	{
 		var groupsData = await GetAllGroupsData();
 
-		var jsonStructure = new Dictionary<string, object>();
+		var jsonData = new Dictionary<string, object>();
 
 		foreach (var kvp in groupsData)
 		{
@@ -273,11 +272,12 @@ public class PermissionManager(Database.Database database)
 				["immunity"] = kvp.Value.Item2
 			};
 
-			jsonStructure[kvp.Key] = groupData;
+			jsonData[kvp.Key] = groupData;
 		}
 
-		var json = JsonConvert.SerializeObject(jsonStructure, Formatting.Indented);
-		await File.WriteAllTextAsync(CS2_SimpleAdmin.Instance.ModuleDirectory + "/data/groups.json", json);
+		var json = JsonConvert.SerializeObject(jsonData, Formatting.Indented);
+		var filePath = Path.Combine(CS2_SimpleAdmin.Instance.ModuleDirectory, "data", "groups.json");
+		await File.WriteAllTextAsync(filePath, json);
 	}
 
 	/*
@@ -374,7 +374,10 @@ public class PermissionManager(Database.Database database)
 			.ToDictionary(item => item.playerName, item => item.playerData);
 
 		var json = JsonConvert.SerializeObject(jsonData, Formatting.Indented);
-		await File.WriteAllTextAsync(CS2_SimpleAdmin.Instance.ModuleDirectory + "/data/admins.json", json);
+		var filePath = Path.Combine(CS2_SimpleAdmin.Instance.ModuleDirectory, "data", "admins.json");
+		await File.WriteAllTextAsync(filePath, json);
+		
+		//await File.WriteAllTextAsync(CS2_SimpleAdmin.Instance.ModuleDirectory + "/data/admins.json", json);
 	}
 
 	public async Task DeleteAdminBySteamId(string playerSteamId, bool globalDelete = false)

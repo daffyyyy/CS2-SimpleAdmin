@@ -25,14 +25,13 @@ namespace CS2_SimpleAdmin
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
 			foreach (var player in Helper.GetValidPlayers()
-				         .Where(p => AdminManager.PlayerHasPermissions(p, "@css/chat")))
+						 .Where(p => AdminManager.PlayerHasPermissions(p, "@css/chat")))
 			{
-				using (new WithTemporaryCulture(player.GetLanguage()))
-				{
-					StringBuilder sb = new();
-					sb.Append(_localizer!["sa_adminchat_template_admin", caller == null ? "Console" : caller.PlayerName, utf8String]);
-					player.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					player.SendLocalizedMessage(_localizer,
+										"sa_adminchat_template_admin",
+										caller == null ? "Console" : caller.PlayerName,
+										utf8String);
 			}
 		}
 
@@ -51,12 +50,10 @@ namespace CS2_SimpleAdmin
 
 			foreach (var player in Helper.GetValidPlayers())
 			{
-				using (new WithTemporaryCulture(player.GetLanguage()))
-				{
-					StringBuilder sb = new();
-					sb.Append(_localizer!["sa_adminsay_prefix", utf8String]);
-					player.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					player.SendLocalizedMessage(_localizer,
+										"sa_adminsay_prefix",
+										utf8String);
 			}
 		}
 

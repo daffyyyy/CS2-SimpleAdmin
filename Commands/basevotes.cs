@@ -4,7 +4,6 @@ using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Menu;
-using System.Text;
 
 namespace CS2_SimpleAdmin
 {
@@ -50,9 +49,12 @@ namespace CS2_SimpleAdmin
 						voteMenu.PostSelectAction = PostSelectAction.Close;
 
 						Helper.PrintToCenterAll(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
-						StringBuilder sb = new(_localizer["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
-						player.PrintToChat(sb.ToString());
+
+						if (_localizer != null)
+							player.SendLocalizedMessage(_localizer,
+												"sa_admin_vote_message",
+												caller == null ? "Console" : caller.PlayerName,
+												question);
 
 						voteMenu.Open(player);
 
@@ -69,24 +71,21 @@ namespace CS2_SimpleAdmin
 				{
 					foreach (var player in Helper.GetValidPlayers())
 					{
-						using (new WithTemporaryCulture(player.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_vote_message_results", question]);
-							player.PrintToChat(sb.ToString());
-						}
+						if (_localizer != null)
+							player.SendLocalizedMessage(_localizer,
+												"sa_admin_vote_message_results",
+												question);
 					}
 
 					foreach (var (key, value) in VoteAnswers)
 					{
 						foreach (var player in Helper.GetValidPlayers())
 						{
-							using (new WithTemporaryCulture(player.GetLanguage()))
-							{
-								StringBuilder sb = new(_localizer!["sa_prefix"]);
-								sb.Append(_localizer["sa_admin_vote_message_results_answer", key, value]);
-								player.PrintToChat(sb.ToString());
-							}
+							if (_localizer != null)
+								player.SendLocalizedMessage(_localizer,
+													"sa_admin_vote_message_results_answer",
+													key,
+													value);
 						}
 					}
 					VoteAnswers.Clear();

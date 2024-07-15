@@ -1,9 +1,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
-using System.Text;
 
 namespace CS2_SimpleAdmin
 {
@@ -45,12 +43,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_noclip_message", callerName, player.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_noclip_message",
+										callerName,
+										player.PlayerName);
 			}
 		}
 
@@ -93,12 +90,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_freeze_message", callerName, player?.PlayerName ?? string.Empty]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_freeze_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -136,12 +132,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_unfreeze_message", callerName, player.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_unfreeze_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 	}

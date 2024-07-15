@@ -1,12 +1,10 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
-using System.Text;
 
 namespace CS2_SimpleAdmin
 {
@@ -49,12 +47,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_slay_message", callerName, player?.PlayerName ?? string.Empty]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_slay_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -136,12 +133,12 @@ namespace CS2_SimpleAdmin
 			if (caller != null && (SilentPlayers.Contains(caller.Slot))) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_give_message", callerName, player.PlayerName, weaponName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_give_message",
+										callerName,
+										player?.PlayerName ?? string.Empty,
+										weaponName);
 			}
 		}
 
@@ -185,12 +182,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_strip_message", callerName, player?.PlayerName ?? string.Empty]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_strip_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -235,12 +231,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_hp_message", callerName, player?.PlayerName ?? string.Empty]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_hp_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -286,12 +281,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_speed_message", callerName, player!.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_speed_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -339,12 +333,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_gravity_message", callerName, player!.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_gravity_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -390,12 +383,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_money_message", callerName, player!.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_money_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -447,12 +439,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_god_message", callerName, player.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_god_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -506,12 +497,11 @@ namespace CS2_SimpleAdmin
 
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_slap_message", callerName, player.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_slap_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -600,12 +590,12 @@ namespace CS2_SimpleAdmin
 			{
 				foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 				{
-					using (new WithTemporaryCulture(controller.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_team_message", callerName, player?.PlayerName ?? string.Empty, teamName]);
-						controller.PrintToChat(sb.ToString());
-					}
+					if (_localizer != null)
+						controller.SendLocalizedMessage(_localizer,
+											"sa_admin_team_message",
+											callerName,
+											player?.PlayerName ?? string.Empty,
+											teamName);
 				}
 			}
 
@@ -642,12 +632,12 @@ namespace CS2_SimpleAdmin
 				{
 					foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 					{
-						using (new WithTemporaryCulture(controller.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_rename_message", callerName, player.PlayerName, newName]);
-							controller.PrintToChat(sb.ToString());
-						}
+						if (_localizer != null)
+							controller.SendLocalizedMessage(_localizer,
+												"sa_admin_rename_message",
+												callerName,
+												player?.PlayerName ?? string.Empty,
+												newName);
 					}
 				}
 
@@ -680,12 +670,12 @@ namespace CS2_SimpleAdmin
 				{
 					foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 					{
-						using (new WithTemporaryCulture(controller.GetLanguage()))
-						{
-							StringBuilder sb = new(_localizer!["sa_prefix"]);
-							sb.Append(_localizer["sa_admin_rename_message", callerName, player.PlayerName, newName]);
-							controller.PrintToChat(sb.ToString());
-						}
+						if (_localizer != null)
+							controller.SendLocalizedMessage(_localizer,
+												"sa_admin_rename_message",
+												callerName,
+												player.PlayerName ?? string.Empty,
+												newName);
 					}
 				}
 
@@ -747,12 +737,11 @@ namespace CS2_SimpleAdmin
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 			{
-				using (new WithTemporaryCulture(controller.GetLanguage()))
-				{
-					StringBuilder sb = new(_localizer!["sa_prefix"]);
-					sb.Append(_localizer["sa_admin_respawn_message", callerName, player.PlayerName]);
-					controller.PrintToChat(sb.ToString());
-				}
+				if (_localizer != null)
+					controller.SendLocalizedMessage(_localizer,
+										"sa_admin_respawn_message",
+										callerName,
+										player?.PlayerName ?? string.Empty);
 			}
 		}
 
@@ -792,12 +781,11 @@ namespace CS2_SimpleAdmin
 				if (SilentPlayers.Contains(caller.Slot)) return;
 				foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 				{
-					using (new WithTemporaryCulture(controller.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_tp_message", caller.PlayerName, player.PlayerName]);
-						controller.PrintToChat(sb.ToString());
-					}
+					if (_localizer != null)
+						controller.SendLocalizedMessage(_localizer,
+											"sa_admin_tp_message",
+											caller.PlayerName,
+											player.PlayerName ?? string.Empty);
 				}
 			});
 		}
@@ -837,12 +825,11 @@ namespace CS2_SimpleAdmin
 				if (SilentPlayers.Contains(caller.Slot)) return;
 				foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))
 				{
-					using (new WithTemporaryCulture(controller.GetLanguage()))
-					{
-						StringBuilder sb = new(_localizer!["sa_prefix"]);
-						sb.Append(_localizer["sa_admin_bring_message", caller.PlayerName, player.PlayerName]);
-						controller.PrintToChat(sb.ToString());
-					}
+					if (_localizer != null)
+						controller.SendLocalizedMessage(_localizer,
+											"sa_admin_bring_message",
+											caller.PlayerName,
+											player.PlayerName ?? string.Empty);
 				}
 			});
 		}

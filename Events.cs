@@ -12,6 +12,8 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+	private int _getIpTryCount = 0;
+	
 	private void RegisterEvents()
 	{
 		RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -22,9 +24,9 @@ public partial class CS2_SimpleAdmin
 
 	private void OnGameServerSteamAPIActivated()
 	{
-		AddTimer(3.0f, () =>
+		AddTimer(2.0f, () =>
 		{
-			if (ServerId != null || _database == null) return;
+			if (_serverLoaded || ServerId != null || _database == null) return;
 
 			var ipAddress = ConVar.Find("ip")?.StringValue;
 
@@ -35,9 +37,15 @@ public partial class CS2_SimpleAdmin
 
 			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
 			{
-				OnGameServerSteamAPIActivated();
-				return;
+				if (_getIpTryCount < 12)
+				{
+					_getIpTryCount++;
+					OnGameServerSteamAPIActivated();
+					return;
+				}
 			}
+
+			_getIpTryCount = 0;
 
 			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
 			var hostname = ConVar.Find("hostname")!.StringValue;
@@ -72,9 +80,10 @@ public partial class CS2_SimpleAdmin
 
 					if (ServerId != null)
 					{
-						Server.NextFrame(() => ReloadAdmins(null));
+						await Server.NextFrameAsync(() => ReloadAdmins(null));
 					}
-
+					
+					_serverLoaded = true;
 				}
 				catch (Exception ex)
 				{
@@ -186,8 +195,10 @@ public partial class CS2_SimpleAdmin
 			{
 				await using var connection = await _database.GetConnectionAsync();
 
-				const string query = @"INSERT IGNORE INTO `sa_players_ips` (steamid, address)
-									VALUES (@SteamID, @IPAddress)";
+				const string query = """
+				                     INSERT INTO `sa_players_ips` (steamid, address)
+				                     									VALUES (@SteamID, @IPAddress) ON DUPLICATE KEY UPDATE `used_at` = CURRENT_TIMESTAMP
+				                     """;
 
 				await connection.ExecuteAsync(query, new
 				{
@@ -361,8 +372,8 @@ public partial class CS2_SimpleAdmin
 
 	public void OnMapStart(string mapName)
 	{
-		if (Config.ReloadAdminsEveryMapChange && ServerId != null)
-			AddTimer(2.0f, () => ReloadAdmins(null));
+		if (Config.ReloadAdminsEveryMapChange && _serverLoaded && ServerId != null)
+			AddTimer(3.0f, () => ReloadAdmins(null));
 
 		var path = Path.GetDirectoryName(ModuleDirectory);
 		if (Directory.Exists(path + "/CS2-Tags"))
@@ -377,72 +388,6 @@ public partial class CS2_SimpleAdmin
 
 		_database = new Database.Database(_dbConnectionString);
 
-		/*
-		AddTimer(2f, () =>
-		{
-			if (ServerId != null) return;
-
-			var ipAddress = ConVar.Find("ip")?.StringValue;
-
-			if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
-			{
-				return;
-				ipAddress = Helper.GetServerIp();
-			}
-
-			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
-			var hostname = ConVar.Find("hostname")!.StringValue;
-
-			Task.Run(async () =>
-			{
-				try
-				{
-					await using var connection = await _database.GetConnectionAsync();
-					var addressExists = await connection.ExecuteScalarAsync<bool>(
-						"SELECT COUNT(*) FROM sa_servers WHERE address = @address",
-						new { address });
-
-					if (!addressExists)
-					{
-						await connection.ExecuteAsync(
-							"INSERT INTO sa_servers (address, hostname) VALUES (@address, @hostname)",
-							new { address, hostname });
-					}
-					else
-					{
-						await connection.ExecuteAsync(
-							"UPDATE `sa_servers` SET `hostname` = @hostname, `id` = `id` WHERE `address` = @address",
-							new { address, hostname });
-					}
-
-					int? serverId = await connection.ExecuteScalarAsync<int>(
-						"SELECT `id` FROM `sa_servers` WHERE `address` = @address",
-						new { address });
-
-					ServerId = serverId;
-				}
-				catch (Exception ex)
-				{
-					_logger?.LogCritical("Unable to create or get server_id" + ex.Message);
-				}
-
-				if (Config.EnableMetrics)
-				{
-					var queryString = $"?address={address}&hostname={hostname}";
-					using HttpClient client = new();
-
-					try
-					{
-						await client.GetAsync($"https://api.daffyy.love/index.php{queryString}");
-					}
-					catch (HttpRequestException ex)
-					{
-						Logger.LogWarning($"Unable to make metrics call: {ex.Message}");
-					}
-				}
-			});
-		});
-		*/
 		AddTimer(61.0f, () =>
 		{
 #if DEBUG
@@ -471,12 +416,17 @@ public partial class CS2_SimpleAdmin
 					try
 					{
 						await banManager.CheckOnlinePlayers(onlinePlayers);
+
 						if (Config.TimeMode == 0)
 						{
 							await muteManager.CheckOnlineModeMutes(onlinePlayers);
 						}
 					}
-					catch { }
+					catch(Exception)
+					{
+						Logger.LogError("Unable to check bans for online players");
+
+					}
 				}
 
 				await muteManager.ExpireOldMutes();
@@ -509,9 +459,11 @@ public partial class CS2_SimpleAdmin
 
 							PlayerPenaltyManager.RemoveExpiredPenalties();
 						}
-						catch { }
+						catch(Exception)
+						{
+							Logger.LogError("Unable to remove old penalties");
+						}
 					}
-
 				});
 			});
 		}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);

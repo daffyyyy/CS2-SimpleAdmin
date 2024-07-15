@@ -15,8 +15,7 @@ public class Database(string dbConnectionString)
 		}
 		catch (Exception ex)
 		{
-			if (CS2_SimpleAdmin._logger != null)
-				CS2_SimpleAdmin._logger.LogCritical($"Unable to connect to database: {ex.Message}");
+				CS2_SimpleAdmin._logger?.LogCritical($"Unable to connect to database: {ex.Message}");
 			throw;
 		}
 	}
