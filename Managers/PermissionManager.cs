@@ -74,64 +74,32 @@ public class PermissionManager(Database.Database database)
 			                               ORDER BY sa_admins.player_steamid
 			                   """;
 
-			var activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId })).ToList();
+			var admins = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId })).ToList();
+			
+			// Group by player_steamid and aggregate the flags
+			var groupedPlayers = admins
+				.GroupBy(r => new { r.player_steamid, r.player_name, r.immunity, r.ends })
+				.Select(g => (
+					PlayerSteamId: (string)g.Key.player_steamid,
+					PlayerName: (string)g.Key.player_name,
+					Flags: g.Select(r => (string)r.flag).Distinct().ToList(),
+					Immunity: g.Key.immunity is int i ? i : int.TryParse((string)g.Key.immunity, out var immunity) ? immunity : 0,
+					Ends: g.Key.ends is DateTime dateTime ? dateTime : (DateTime?)null
+				))
+				.ToList();
+			
+			/*
+			foreach (var player in groupedPlayers)
+			{
+				Console.WriteLine($"Player SteamID: {player.PlayerSteamId}, Name: {player.PlayerName}, Flags: {string.Join(", ", player.Flags)}, Immunity: {player.Immunity}, Ends: {player.Ends}");
+			}
+			*/
 
 			List<(string, string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = [];
-			var currentSteamId = string.Empty;
-			var currentPlayerName = string.Empty;
-			List<string> currentFlags = [];
-			var immunityValue = 0;
-			DateTime? ends = null;
 
-			foreach (var flagInfo in activeFlags)
-			{
-				if (flagInfo is not IDictionary<string, object> flagInfoDict)
-				{
-					continue;
-				}
-
-				if (!flagInfoDict.TryGetValue("player_steamid", out var steamIdObj) ||
-					!flagInfoDict.TryGetValue("player_name", out var playerNameObj) ||
-					!flagInfoDict.TryGetValue("flag", out var flagObj) ||
-					!flagInfoDict.TryGetValue("immunity", out var immunityValueObj) ||
-					!flagInfoDict.TryGetValue("ends", out var endsObj))
-				{
-					continue;
-				}
-
-				if (steamIdObj is not string steamId ||
-					playerNameObj is not string playerName ||
-					flagObj is not string flag ||
-					!int.TryParse(immunityValueObj.ToString(), out immunityValue))
-				{
-					continue;
-				}
-
-				if (ends != null)
-				{
-					if (DateTime.TryParse(endsObj.ToString(), out var parsedEnds))
-					{
-						ends = parsedEnds;
-					}
-				}
-
-				if (currentSteamId != steamId && !string.IsNullOrEmpty(currentSteamId))
-				{
-					filteredFlagsWithImmunity.Add((currentSteamId, currentPlayerName, currentFlags, immunityValue, ends));
-					currentFlags = [];
-				}
-
-				currentSteamId = steamId;
-				currentPlayerName = playerName;
-				currentFlags.Add(flag);
-
-			}
-
-			if (!string.IsNullOrEmpty(currentSteamId))
-			{
-				filteredFlagsWithImmunity.Add((currentSteamId, currentPlayerName, currentFlags, immunityValue, ends));
-			}
-
+			// Add the grouped players to the list
+			filteredFlagsWithImmunity.AddRange(groupedPlayers);
+			
 			return filteredFlagsWithImmunity;
 		}
 		catch (Exception ex)
@@ -343,22 +311,37 @@ public class PermissionManager(Database.Database database)
 	public async Task CreateAdminsJsonFile()
 	{
 		List<(string identity, string name, List<string> flags, int immunity, DateTime? ends)> allPlayers = await GetAllPlayersFlags();
+		var validPlayers = allPlayers
+			.Where(player => SteamID.TryParse(player.identity, out _)) // Filter invalid SteamID
+			.ToList();
 
-		var jsonData = allPlayers
+		/*
+		foreach (var player in allPlayers)
+		{
+			var (steamId, name, flags, immunity, ends) = player;
+            
+			// Print or process each item
+			Console.WriteLine($"Player SteamID: {steamId}");
+			Console.WriteLine($"Player Name: {name}");
+			Console.WriteLine($"Flags: {string.Join(", ", flags)}");
+			Console.WriteLine($"Immunity: {immunity}");
+			Console.WriteLine($"Ends: {(ends.HasValue ? ends.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Never")}");
+			Console.WriteLine(); // New line for better readability
+		}
+		*/
+		
+		var jsonData = validPlayers
 			.Select(player =>
 			{
-				SteamID? steamId = null;
-
-				if (!string.IsNullOrEmpty(player.identity) && SteamID.TryParse(player.identity, out var id) && id != null)
-				{
-					steamId = id;
-				}
-
+				SteamID.TryParse(player.identity, out var steamId);
+				
+				// Update cache if SteamID is valid and not already cached
 				if (steamId != null && !AdminCache.ContainsKey(steamId))
 				{
 					AdminCache.TryAdd(steamId, player.ends);
 				}
 
+				// Create an anonymous object with player data
 				return new
 				{
 					playerName = player.name,
@@ -366,14 +349,15 @@ public class PermissionManager(Database.Database database)
 					{
 						player.identity,
 						player.immunity,
-						flags = player.flags.Where(flag => flag.StartsWith($"@")).ToList(),
-						groups = player.flags.Where(flag => flag.StartsWith($"#")).ToList()
+						flags = player.flags.Where(flag => flag.StartsWith("@")).ToList(),
+						groups = player.flags.Where(flag => flag.StartsWith("#")).ToList()
 					}
 				};
 			})
-			.ToDictionary(item => item.playerName, item => item.playerData);
+			.ToDictionary(item => item.playerName, item => (object)item.playerData);
 
 		var json = JsonConvert.SerializeObject(jsonData, Formatting.Indented);
+		
 		var filePath = Path.Combine(CS2_SimpleAdmin.Instance.ModuleDirectory, "data", "admins.json");
 		await File.WriteAllTextAsync(filePath, json);
 		

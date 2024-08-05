@@ -10,7 +10,7 @@ namespace CS2_SimpleAdmin
 
 		[JsonPropertyName("duration")]
 		public int Duration { get; set; }
-	}
+	}	
 
 	public class AdminFlag
 	{
@@ -20,14 +20,60 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("flag")]
 		public required string Flag { get; set; }
 	}
+	
+	public class DiscordPenaltySetting
+	{
+		[JsonPropertyName("name")]
+		public required string Name { get; set; }
+
+		[JsonPropertyName("value")] 
+		public string Value { get; set; } = "";
+	}
 
 	public class Discord
 	{
 		[JsonPropertyName("DiscordLogWebhook")]
 		public string DiscordLogWebhook { get; set; } = "";
 
-		[JsonPropertyName("DiscordPenaltyWebhook")]
-		public string DiscordPenaltyWebhook { get; set; } = "";
+		[JsonPropertyName("DiscordPenaltyBanSettings")]
+		public DiscordPenaltySetting[] DiscordPenaltyBanSettings { get; set; } =
+		[
+			new DiscordPenaltySetting { Name = "Color", Value = "" },
+			new DiscordPenaltySetting { Name = "Webhook", Value = "" },
+			new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "Footer", Value = "" },
+		];
+		
+		[JsonPropertyName("DiscordPenaltyMuteSettings")]
+		public DiscordPenaltySetting[] DiscordPenaltyMuteSettings { get; set; } =
+		[
+			new DiscordPenaltySetting { Name = "Color", Value = "" },
+			new DiscordPenaltySetting { Name = "Webhook", Value = "" },
+			new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "Footer", Value = "" },
+		];
+		
+		[JsonPropertyName("DiscordPenaltyGagSettings")]
+		public DiscordPenaltySetting[] DiscordPenaltyGagSettings { get; set; } =
+		[
+			new DiscordPenaltySetting { Name = "Color", Value = "" },
+			new DiscordPenaltySetting { Name = "Webhook", Value = "" },
+			new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "Footer", Value = "" },
+		];
+		
+		[JsonPropertyName("DiscordPenaltySilenceSettings")]
+		public DiscordPenaltySetting[] DiscordPenaltySilenceSettings { get; set; } =
+		[
+			new DiscordPenaltySetting { Name = "Color", Value = "" },
+			new DiscordPenaltySetting { Name = "Webhook", Value = "" },
+			new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
+			new DiscordPenaltySetting { Name = "Footer", Value = "" },
+		];
 	}
 
 	public class CustomServerCommandData
@@ -111,7 +157,7 @@ namespace CS2_SimpleAdmin
 
 	public class CS2_SimpleAdminConfig : BasePluginConfig
 	{
-		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 16;
+		[JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 17;
 
 		[JsonPropertyName("DatabaseHost")]
 		public string DatabaseHost { get; set; } = "";

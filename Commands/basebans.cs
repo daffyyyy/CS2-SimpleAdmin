@@ -52,7 +52,6 @@ namespace CS2_SimpleAdmin
 			if (_database == null || player is null || !player.IsValid) return;
 			if (!caller.CanTarget(player)) return;
 
-
 			if (CheckValidBan(caller, time) == false)
 				return;
 
@@ -139,11 +138,10 @@ namespace CS2_SimpleAdmin
 				Server.ExecuteCommand($"banid 2 {new SteamID(player.SteamID).SteamId3}");
 
 			if (command != null)
-			{
 				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			}
-			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, DiscordWebhookClientPenalty, _localizer);
+			
+			Helper.LogCommand(caller, $"css_ban {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {time} {reason}");
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _localizer);
 		}
 
 		[ConsoleCommand("css_addban")]
@@ -244,7 +242,7 @@ namespace CS2_SimpleAdmin
 					}
 				}
 
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, DiscordWebhookClientPenalty, _localizer);
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -254,7 +252,6 @@ namespace CS2_SimpleAdmin
 			});
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			//Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _discordWebhookClientPenalty, _localizer);
 			if (UnlockedCommands)
 				Server.ExecuteCommand($"banid 2 {steamId.SteamId3}");
@@ -281,8 +278,6 @@ namespace CS2_SimpleAdmin
 				command.ReplyToCommand($"Invalid IP address.");
 				return;
 			}
-
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -365,7 +360,8 @@ namespace CS2_SimpleAdmin
 						}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 					}
 				}
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, DiscordWebhookClientPenalty, _localizer);
+				
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -375,7 +371,6 @@ namespace CS2_SimpleAdmin
 			});
 
 			Helper.LogCommand(caller, command);
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 
 			command.ReplyToCommand($"Banned player with IP address {ipAddress}.");
 		}
@@ -422,7 +417,6 @@ namespace CS2_SimpleAdmin
 			BanManager banManager = new(_database, Config);
 			Task.Run(async () => await banManager.UnbanPlayer(pattern, callerSteamId, reason));
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			command.ReplyToCommand($"Unbanned player with pattern {pattern}.");

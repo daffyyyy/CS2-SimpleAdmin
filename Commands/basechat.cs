@@ -18,7 +18,6 @@ namespace CS2_SimpleAdmin
 		{
 			if (caller == null || !caller.IsValid || command.GetCommandString[command.GetCommandString.IndexOf(' ')..].Length == 0) return;
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
@@ -45,7 +44,6 @@ namespace CS2_SimpleAdmin
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			foreach (var player in Helper.GetValidPlayers())
@@ -92,7 +90,6 @@ namespace CS2_SimpleAdmin
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			Helper.PrintToCenterAll(utf8String.ReplaceColorTags());
@@ -106,7 +103,6 @@ namespace CS2_SimpleAdmin
 			var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
 			var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			VirtualFunctions.ClientPrintAll(

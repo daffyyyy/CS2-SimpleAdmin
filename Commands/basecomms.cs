@@ -124,10 +124,8 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
-			if (command == null) return;
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Gag, DiscordWebhookClientPenalty, _localizer);
-			Helper.LogCommand(caller, command);
+			Helper.LogCommand(caller, $"css_gag {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {time} {reason}");
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Gag, _localizer);
 		}
 
 		[ConsoleCommand("css_addgag")]
@@ -229,7 +227,7 @@ namespace CS2_SimpleAdmin
 					PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Gag, DateTime.Now.AddMinutes(time), time);
 				}
 
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Gag, DiscordWebhookClientPenalty, _localizer);
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Gag, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -237,7 +235,6 @@ namespace CS2_SimpleAdmin
 				await muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time);
 			});
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			command.ReplyToCommand($"Gagged player with steamid {steamid}.");
@@ -260,13 +257,13 @@ namespace CS2_SimpleAdmin
 				command.ReplyToCommand($"Too short pattern to search.");
 				return;
 			}
-
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			Helper.LogCommand(caller, command);
-
+			
 			var found = false;
 
 			var pattern = command.GetArg(1);
+			
+			Helper.LogCommand(caller, command);
+			
 			MuteManager muteManager = new(_database);
 
 			if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
@@ -461,13 +458,9 @@ namespace CS2_SimpleAdmin
 					}
 				}
 			}
-
-			if (command != null)
-			{
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, DiscordWebhookClientPenalty, _localizer);
-				Helper.LogCommand(caller, command);
-			}
+			
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, _localizer);
+			Helper.LogCommand(caller, $"css_mute {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {time} {reason}");
 		}
 
 		[ConsoleCommand("css_addmute")]
@@ -564,7 +557,7 @@ namespace CS2_SimpleAdmin
 					}
 				}
 
-				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, DiscordWebhookClientPenalty, _localizer);
+				Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, _localizer);
 			}
 
 			Task.Run(async () =>
@@ -572,7 +565,6 @@ namespace CS2_SimpleAdmin
 				await muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
 			});
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			command.ReplyToCommand($"Muted player with steamid {steamid}.");
@@ -596,7 +588,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			var pattern = command.GetArg(1);
@@ -793,9 +784,8 @@ namespace CS2_SimpleAdmin
 
 			if (command == null) return;
 
-			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, DiscordWebhookClientPenalty, _localizer);
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			Helper.LogCommand(caller, command);
+			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Silence, _localizer);
+			Helper.LogCommand(caller, $"css_silence {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {time} {reason}");
 		}
 
 		[ConsoleCommand("css_addsilence")]
@@ -893,7 +883,7 @@ namespace CS2_SimpleAdmin
 						}
 					}
 
-					Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Mute, DiscordWebhookClientPenalty, _localizer);
+					Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Silence, _localizer);
 				}
 			}
 			Task.Run(async () =>
@@ -901,7 +891,6 @@ namespace CS2_SimpleAdmin
 				await muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 2);
 			});
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			command.ReplyToCommand($"Silenced player with steamid {steamid}.");
@@ -925,7 +914,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			var pattern = command.GetArg(1);

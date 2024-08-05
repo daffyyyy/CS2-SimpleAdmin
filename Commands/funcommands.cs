@@ -19,9 +19,7 @@ namespace CS2_SimpleAdmin
 			var playersToTarget = targets.Players.Where(player =>
 			player.IsValid &&
 			player is { PawnIsAlive: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
-
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-
+			
 			playersToTarget.ForEach(player =>
 			{
 				if (caller!.CanTarget(player))
@@ -62,9 +60,7 @@ namespace CS2_SimpleAdmin
 			var targets = GetTarget(command);
 			if (targets == null) return;
 			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
-
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-
+			
 			playersToTarget.ForEach(player =>
 			{
 				if (caller!.CanTarget(player))
@@ -123,11 +119,7 @@ namespace CS2_SimpleAdmin
 
 			player!.Pawn.Value!.Unfreeze();
 
-			if (command != null)
-			{
-				Helper.LogCommand(caller, command);
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			}
+			Helper.LogCommand(caller, $"css_unfreeze {player?.PlayerName}");
 
 			if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 			foreach (var controller in Helper.GetValidPlayers().Where(controller => controller is { IsValid: true, IsBot: false }))

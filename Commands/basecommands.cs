@@ -135,8 +135,6 @@ namespace CS2_SimpleAdmin
 			var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
 			_ = adminManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
 
-			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
 
 			var msg = $"Added '{flags}' flags to '{name}' ({steamid})";
@@ -185,8 +183,6 @@ namespace CS2_SimpleAdmin
 				AdminManager.RemovePlayerAdminData(steamId);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_deladmin {steamid}");
 
 			var msg = $"Removed flags from '{steamid}'";
@@ -233,8 +229,6 @@ namespace CS2_SimpleAdmin
 			var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
 			_ = adminManager.AddGroup(name, flagsList, immunity, globalGroup);
 
-			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_addgroup {name} {flags} {immunity}");
 
 			var msg = $"Created group '{name}' with flags '{flags}'";
@@ -275,8 +269,6 @@ namespace CS2_SimpleAdmin
 				ReloadAdmins(caller);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, $"css_delgroup {name}");
 
 			var msg = $"Removed group '{name}'";
@@ -348,7 +340,7 @@ namespace CS2_SimpleAdmin
 
 			Helper.LogCommand(caller, command);
 
-			if (SilentPlayers.Contains(caller.Slot))
+			if (!SilentPlayers.Add(caller.Slot))
 			{
 				SilentPlayers.Remove(caller.Slot);
 				caller.PrintToChat($"You aren't hidden now!");
@@ -356,7 +348,6 @@ namespace CS2_SimpleAdmin
 			}
 			else
 			{
-				SilentPlayers.Add(caller.Slot);
 				Server.ExecuteCommand("sv_disable_teamselect_menu 1");
 
 				if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
@@ -547,24 +538,22 @@ namespace CS2_SimpleAdmin
 
 			player.Pawn.Value!.Freeze();
 
-			if (command != null)
-				Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			Helper.LogCommand(caller, $"css_kick {player?.PlayerName} {reason}");
+			Helper.LogCommand(caller, $"css_kick {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {reason}");
 
 			if (string.IsNullOrEmpty(reason) == false)
 			{
-				if (player != null && !player.IsBot)
+				if (!player.IsBot)
 					using (new WithTemporaryCulture(player.GetLanguage()))
 					{
 						player.PrintToCenter(_localizer!["sa_player_kick_message", reason, callerName]);
 					}
-				if (player != null && player.UserId.HasValue)
+				if (player.UserId.HasValue)
 					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value, reason),
 						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
 			else
 			{
-				if (player != null && player.UserId.HasValue)
+				if (player.UserId.HasValue)
 					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value),
 						CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
@@ -638,9 +627,7 @@ namespace CS2_SimpleAdmin
 				}
 			}
 
-			if (command == null) return;
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			Helper.LogCommand(caller, command);
+			Helper.LogCommand(caller, command?.GetCommandString ?? $"css_map {map}");
 		}
 
 		[ConsoleCommand("css_changewsmap", "Change workshop map.")]
@@ -677,9 +664,7 @@ namespace CS2_SimpleAdmin
 				Server.ExecuteCommand(issuedCommand);
 			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
-			if (command == null) return;
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
-			Helper.LogCommand(caller, command);
+			Helper.LogCommand(caller, command?.GetCommandString ?? $"css_wsmap {map}");
 		}
 
 		[ConsoleCommand("css_cvar", "Change a cvar.")]
@@ -702,7 +687,6 @@ namespace CS2_SimpleAdmin
 				return;
 			}
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			var value = command.GetArg(2);
@@ -720,7 +704,6 @@ namespace CS2_SimpleAdmin
 		{
 			var callerName = caller == null ? "Console" : caller.PlayerName;
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			Server.ExecuteCommand(command.ArgString);

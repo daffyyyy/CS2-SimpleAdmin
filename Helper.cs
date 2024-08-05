@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Drawing;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -16,6 +17,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Color = Discord.Color;
 
 namespace CS2_SimpleAdmin
 {
@@ -176,6 +178,8 @@ namespace CS2_SimpleAdmin
 			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer[
 				"sa_discord_log_command",
 				playerName, command.GetCommandString]}".Replace("HOSTNAME", hostname).Replace("**", ""));
+			
+			SendDiscordLogMessage(caller, command, CS2_SimpleAdmin.DiscordWebhookClientLog, CS2_SimpleAdmin._localizer);
 		}
 
 		internal static void LogCommand(CCSPlayerController? caller, string command)
@@ -184,14 +188,17 @@ namespace CS2_SimpleAdmin
 				return;
 
 			var playerName = caller?.PlayerName ?? "Console";
-
-			var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
+			var hostnameCvar = ConVar.Find("hostname");
+			
+			var hostname = hostnameCvar?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
 
 			CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
 				playerName, command]}".Replace("HOSTNAME", hostname).Replace("**", ""));
+
+			SendDiscordLogMessage(caller, command, CS2_SimpleAdmin.DiscordWebhookClientLog, CS2_SimpleAdmin._localizer);
 		}
 
-		public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
+		/*public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
 		{
 			var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 			var address = $"{ConVar.Find("ip")?.StringValue}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
@@ -221,15 +228,24 @@ namespace CS2_SimpleAdmin
 			}
 
 			return new List<Embed> { embed.Build() };
-		}
+		}*/
 
-		public static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
+		private static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
 		{
 			if (discordWebhookClientLog == null || localizer == null) return;
 
 			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
 			discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+		}
+
+		private static void SendDiscordLogMessage(CCSPlayerController? caller, string command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
+		{
+			if (discordWebhookClientLog == null || localizer == null) return;
+
+			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
+			var callerName = caller != null ? caller.PlayerName : "Console";
+			discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
 		}
 
 		public enum PenaltyType
@@ -247,17 +263,34 @@ namespace CS2_SimpleAdmin
 			return time.Days > 0 ? $"{time.Days}d {time.Hours}h {time.Minutes}m" : time.Hours > 0 ? $"{time.Hours}h {time.Minutes}m" : $"{time.Minutes}m";
 		}
 
-		public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, DiscordWebhookClient? discordWebhookClientPenalty, IStringLocalizer? localizer)
+		public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, IStringLocalizer? localizer)
 		{
-			if (discordWebhookClientPenalty == null || localizer == null) return;
+			if (localizer == null) return;
+
+			DiscordPenaltySetting[] penaltySetting = penalty switch
+			{
+				PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyBanSettings,
+				PenaltyType.Mute => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyMuteSettings,
+				PenaltyType.Gag => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyGagSettings,
+				PenaltyType.Silence => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltySilenceSettings,
+				_ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
+			};
+
+			var webhookUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("Webhook"))?.Value;
+
+			if (string.IsNullOrEmpty(webhookUrl)) return;
 
 			var callerCommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var targetCommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
 			var targetName = target != null ? target.PlayerName : localizer["sa_unknown"];
-			var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId2 : localizer["sa_unknown"];
+			var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId64.ToString() : localizer["sa_unknown"];
+			
+			DateTime futureTime = DateTime.Now.AddMinutes(duration);
+			long futureUnixTimestamp = new DateTimeOffset(futureTime).ToUnixTimeSeconds();
 
-			var time = duration != 0 ? ConvertMinutesToTime(duration) : localizer["sa_permanent"];
+			//var time = duration != 0 ? ConvertMinutesToTime(duration) : localizer["sa_permanent"];
+			var time = duration != 0 ? $"<t:{futureUnixTimestamp}:R>": localizer["sa_permanent"];
 
 			string[] fieldNames = [
 				localizer["sa_player"],
@@ -265,42 +298,45 @@ namespace CS2_SimpleAdmin
 				localizer["sa_duration"],
 				localizer["sa_reason"],
 				localizer["sa_admin"]];
-			string[] fieldValues = [$"[{targetName}]({targetCommunityUrl})", targetSteamId, time, reason, $"[{callerName}]({callerCommunityUrl})"];
+			string[] fieldValues =
+			[
+				$"[{targetName}]({targetCommunityUrl})", $"||{targetSteamId}||", time, reason,
+				$"[{callerName}]({callerCommunityUrl})"
+			];
 			bool[] inlineFlags = [true, true, true, false, false];
 
 			var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
 
+			var colorHex = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value ?? "#FFFFFF";
+			var color = ColorTranslator.FromHtml(colorHex);
+
 			var embed = new EmbedBuilder
 			{
+				Color = new Color(color.R, color.G, color.B),
 				Title = penalty switch
 				{
 					PenaltyType.Ban => localizer["sa_discord_penalty_ban"],
 					PenaltyType.Mute => localizer["sa_discord_penalty_mute"],
 					PenaltyType.Gag => localizer["sa_discord_penalty_gag"],
 					PenaltyType.Silence => localizer["sa_discord_penalty_silence"],
-					_ => localizer["sa_discord_penalty_unknown"],
+					_ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
 				},
-
-				Color = penalty switch
+				ThumbnailUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ThumbnailUrl"))?.Value,
+				ImageUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ImageUrl"))?.Value,
+				Footer = new EmbedFooterBuilder
 				{
-					PenaltyType.Ban => Color.Red,
-					PenaltyType.Mute => Color.Blue,
-					PenaltyType.Gag => Color.Gold,
-					PenaltyType.Silence => Color.Green,
-					_ => Color.Default,
+					Text = penaltySetting.FirstOrDefault(s => s.Name.Equals("Footer"))?.Value,
 				},
-
 				Description = $"{hostname}",
-
-				Timestamp = DateTimeOffset.UtcNow
+				Timestamp = DateTimeOffset.Now,
 			};
 
 			for (var i = 0; i < fieldNames.Length; i++)
 			{
 				embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
 			}
-
-			discordWebhookClientPenalty.SendMessageAsync(embeds: [embed.Build()]);
+			
+			new DiscordWebhookClient(webhookUrl).SendMessageAsync(embeds: [embed.Build()]);
 		}
 
 		private static string GenerateMessageDiscord(string message)

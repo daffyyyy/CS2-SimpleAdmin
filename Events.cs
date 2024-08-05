@@ -44,9 +44,7 @@ public partial class CS2_SimpleAdmin
 					return;
 				}
 			}
-
-			_getIpTryCount = 0;
-
+			
 			var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
 			var hostname = ConVar.Find("hostname")!.StringValue;
 
@@ -106,6 +104,8 @@ public partial class CS2_SimpleAdmin
 				}
 			});
 		});
+		
+		_getIpTryCount = 0;
 	}
 
 	[GameEventHandler]
@@ -370,10 +370,16 @@ public partial class CS2_SimpleAdmin
 		return HookResult.Handled;
 	}
 
-	public void OnMapStart(string mapName)
+	private void OnMapStart(string mapName)
 	{
 		if (Config.ReloadAdminsEveryMapChange && _serverLoaded && ServerId != null)
 			AddTimer(3.0f, () => ReloadAdmins(null));
+
+		AddTimer(34, () =>
+		{
+			if (!_serverLoaded)
+				OnGameServerSteamAPIActivated();
+		});
 
 		var path = Path.GetDirectoryName(ModuleDirectory);
 		if (Directory.Exists(path + "/CS2-Tags"))

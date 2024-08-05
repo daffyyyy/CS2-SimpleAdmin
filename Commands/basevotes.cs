@@ -17,7 +17,6 @@ namespace CS2_SimpleAdmin
 			if (command.ArgCount < 2)
 				return;
 
-			Helper.SendDiscordLogMessage(caller, command, DiscordWebhookClientLog, _localizer);
 			Helper.LogCommand(caller, command);
 
 			VoteAnswers.Clear();
@@ -50,11 +49,10 @@ namespace CS2_SimpleAdmin
 
 						Helper.PrintToCenterAll(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
 
-						if (_localizer != null)
-							player.SendLocalizedMessage(_localizer,
-												"sa_admin_vote_message",
-												caller == null ? "Console" : caller.PlayerName,
-												question);
+						player.SendLocalizedMessage(_localizer,
+							"sa_admin_vote_message",
+							caller == null ? "Console" : caller.PlayerName,
+							question);
 
 						voteMenu.Open(player);
 
