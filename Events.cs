@@ -229,7 +229,7 @@ public partial class CS2_SimpleAdmin
 					// Kick the player if banned
 					await Server.NextFrameAsync(() =>
 					{
-						var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId);
+						var victim = Utilities.GetPlayerFromUserid(playerInfo.UserId.Value);
 
 						if (victim?.UserId != null)
 						{
@@ -411,8 +411,11 @@ public partial class CS2_SimpleAdmin
 				PermissionManager adminManager = new(_database);
 				BanManager banManager = new(_database, Config);
 				MuteManager muteManager = new(_database);
-
+				WarnManager warnManager = new(_database);
+				
+				await muteManager.ExpireOldMutes();
 				await banManager.ExpireOldBans();
+				await warnManager.ExpireOldWarns();
 				await adminManager.DeleteOldAdmins();
 
 				BannedPlayers.Clear();
@@ -435,7 +438,6 @@ public partial class CS2_SimpleAdmin
 					}
 				}
 
-				await muteManager.ExpireOldMutes();
 
 				await Server.NextFrameAsync(() =>
 				{

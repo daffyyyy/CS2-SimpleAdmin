@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "Chat-Stummschaltung registriert",
 	"sa_discord_penalty_gag": "Sprachchat-Stummschaltung registriert",
 	"sa_discord_penalty_silence": "Komplett-Stummschaltung registriert",
+	"sa_discord_penalty_warn": "Warnung registriert",
 	"sa_discord_penalty_unknown": "Unbekanntes registriert",
 
 	"sa_player_ban_message_time": "Du wurdest wegen {lightred}{0}{default} für {lightred}{1}{default} Minuten von {lightred}{2}{default} gebannt!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "Du wurdest wegen {lightred}{0}{default} von {lightred}{1}{default} permanent im Sprachchat stummgeschaltet!",
 	"sa_player_silence_message_time": "Du wurdest wegen {lightred}{0}{default} für {lightred}{1}{default} Minuten von {lightred}{2}{default} vollständig stummgeschaltet!",
 	"sa_player_silence_message_perm": "Du wurdest wegen {lightred}{0}{default} von {lightred}{1}{default} permanent vollständig stummgeschaltet!",
+	"sa_player_warn_message_time": "Du wurdest wegen {lightred}{0}{default} für {lightred}{1}{default} Minuten von {lightred}{2}{default} gewarnt!",
+	"sa_player_warn_message_perm": "Du wurdest dauerhaft wegen {lightred}{0}{default} von {lightred}{1}{default} gewarnt!",
 	"sa_admin_ban_message_time": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} für {lightred}{3}{default} Minuten gebannt!",
 	"sa_admin_ban_message_perm": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} permanent gebannt!",
 	"sa_admin_kick_message": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} gekickt!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} permanent im Sprachchat stummgeschaltet!",
 	"sa_admin_silence_message_time": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} für {lightred}{3}{default} Minuten vollständig stummgeschaltet!",
 	"sa_admin_silence_message_perm": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} permanent vollständig stummgeschaltet!",
+	"sa_admin_warn_message_time": "Admin {lightred}{0}{default} hat {lightred}{1}{default} wegen {lightred}{2}{default} für {lightred}{3}{default} Minuten gewarnt!",
+	"sa_admin_warn_message_perm": "Admin {lightred}{0}{default} hat {lightred}{1}{default} dauerhaft wegen {lightred}{2}{default} gewarnt!",
 	"sa_admin_give_message": "Admin {lightred}{0}{default} hat {lightred}{1}{default} eine {lightred}{2}{default} gegeben!",
 	"sa_admin_strip_message": "Admin {lightred}{0}{default} hat {lightred}{1}{default} alle Waffen abgenommen!",
 	"sa_admin_hp_message": "Admin {lightred}{0}{default} hat {lightred}{1}{default} Lp geändert{default}!",
@@ -101,5 +106,6 @@
 	"sa_adminsay_prefix": "{RED}ADMIN: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(PLAYER) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** hat den Befehl `{1}` auf dem Server `HOSTNAME` ausgeführt",
+	
+	"sa_discord_log_command": "**{0}** hat den Befehl `{1}` auf dem Server `HOSTNAME` ausgeführt"
 }

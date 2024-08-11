@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "سکوت انجام شده",
 	"sa_discord_penalty_gag": "بند زدن انجام شده",
 	"sa_discord_penalty_silence": "سکوت انجام شده",
+	"sa_discord_penalty_warn": "هشدار ثبت شد",
 	"sa_discord_penalty_unknown": "ناشناخته انجام شده",
 
 	"sa_player_ban_message_time": "شما توسط {lightred}{2}{default} برای {lightred}{1}{default} دقیقه به دلیل {lightred}{0}{default} مسدود شده‌اید!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "شما توسط {lightred}{1}{default} به دلیل {lightred}{0}{default} برای همیشه بی‌صدا شده‌اید!",
 	"sa_player_silence_message_time": "شما توسط {lightred}{2}{default} برای {lightred}{1}{default} دقیقه به دلیل {lightred}{0}{default} ساکت شده‌اید!",
 	"sa_player_silence_message_perm": "شما توسط {lightred}{1}{default} به دلیل {lightred}{0}{default} برای همیشه ساکت شده‌اید!",
+	"sa_player_warn_message_time": "شما به خاطر {lightred}{0}{default} به مدت {lightred}{1}{default} دقیقه توسط {lightred}{2}{default} هشدار داده شده\u200Cاید!",
+	"sa_player_warn_message_perm": "شما به طور دائم به خاطر {lightred}{0}{default} توسط {lightred}{1}{default} هشدار داده شده\u200Cاید!",
 	"sa_admin_ban_message_time": "مدیر {lightred}{0}{default} {lightred}{3}{default} توسط {lightred}{2}{default} برای {lightred}{1}{default} دقیقه برای {lightred}{3}{default} مسدود کرد!",
 	"sa_admin_ban_message_perm": "مدیر {lightred}{0}{default} {lightred}{2}{default} را به دلیل {lightred}{1}{default} برای همیشه مسدود کرد!",
 	"sa_admin_kick_message": "مدیر {lightred}{0}{default} {lightred}{1}{default} را به دلیل {lightred}{2}{default} اخراج کرد!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "مدیر {lightred}{0}{default} {lightred}{1}{default} را به دلیل {lightred}{2}{default} برای همیشه بی‌صدا کرد!",
 	"sa_admin_silence_message_time": "مدیر {lightred}{0}{default} {lightred}{1}{default} را برای {lightred}{3}{default} دقیقه به دلیل {lightred}{2}{default} ساکت کرد!",
 	"sa_admin_silence_message_perm": "مدیر {lightred}{0}{default} {lightred}{1}{default} را به دلیل {lightred}{2}{default} برای همیشه ساکت کرد!",
+	"sa_admin_warn_message_time": "مدیر {lightred}{0}{default} به دلیل {lightred}{2}{default} به مدت {lightred}{3}{default} دقیقه به {lightred}{1}{default} هشدار داد!",
+	"sa_admin_warn_message_perm": "مدیر {lightred}{0}{default} به طور دائم به {lightred}{1}{default} به خاطر {lightred}{2}{default} هشدار داد!",
 	"sa_admin_give_message": "مدیر {lightred}{0}{default} {lightred}{2}{default} به {lightred}{1}{default} داد!",
 	"sa_admin_strip_message": "مدیر {lightred}{0}{default} تمام اسلحه‌های {lightred}{1}{default} را گرفت!",
 	"sa_admin_hp_message": "مدیر {lightred}{0}{default} مقدار اچ‌پی {lightred}{1}{default} را تغییر داد!",
@@ -102,5 +107,5 @@
 	"sa_adminchat_template_admin": "{LIME}(مدیر) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(بازیکن) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** دستور `{1}` را در سرور `HOSTNAME` اجرا کرد",
+	"sa_discord_log_command": "**{0}** دستور `{1}` را در سرور `HOSTNAME` اجرا کرد"
 }

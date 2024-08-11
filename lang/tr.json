@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "Susturma kaydedildi",
 	"sa_discord_penalty_gag": "Susturma kaydedildi",
 	"sa_discord_penalty_silence": "Sessizlik kaydedildi",
+	"sa_discord_penalty_warn": "Uyarı kaydedildi",
 	"sa_discord_penalty_unknown": "Bilinmeyen kaydedildi",
 
 	"sa_player_ban_message_time": "Senaryo nedeniyle {lightred}{0}{default} dakika boyunca {lightred}{1}{default} tarafından yasaklandınız!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "Senaryo nedeniyle kalıcı olarak {lightred}{0}{default} tarafından sessize alındınız!",
 	"sa_player_silence_message_time": "Senaryo nedeniyle {lightred}{0}{default} dakika boyunca {lightred}{1}{default} tarafından susturuldunuz!",
 	"sa_player_silence_message_perm": "Senaryo nedeniyle kalıcı olarak {lightred}{0}{default} tarafından susturuldunuz!",
+	"sa_player_warn_message_time": "{lightred}{0}{default} nedeniyle {lightred}{1}{default} dakika boyunca {lightred}{2}{default} tarafından uyarıldınız!",
+	"sa_player_warn_message_perm": "{lightred}{0}{default} nedeniyle {lightred}{1}{default} tarafından kalıcı olarak uyarıldınız!",
 	"sa_admin_ban_message_time": "Yönetici {lightred}{0}{default}, senaryo nedeniyle {lightred}{1}{default} {lightred}{2}{default} için {lightred}{3}{default} dakika boyunca yasakladı!",
 	"sa_admin_ban_message_perm": "Yönetici {lightred}{0}{default}, senaryo nedeniyle {lightred}{1}{default} {lightred}{2}{default} kalıcı olarak yasakladı!",
 	"sa_admin_kick_message": "Yönetici {lightred}{0}{default}, senaryo nedeniyle {lightred}{1}{default} tarafından atıldınız!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "Yönetici {lightred}{0}{default}, senaryo nedeniyle {lightred}{1}{default} kalıcı olarak {lightred}{2}{default} sessize aldı!",
 	"sa_admin_silence_message_time": "Yönetici {lightred}{0}{default}, senaryo nedeniyle {lightred}{1}{default} {lightred}{2}{default} için {lightred}{3}{default} dakika boyunca susturdu!",
 	"sa_admin_silence_message_perm": "Yönetici {lightred}{0}{default}, senaryo nedeniyle {lightred}{1}{default} kalıcı olarak {lightred}{2}{default} susturdu!",
+	"sa_admin_warn_message_time": "Yönetici {lightred}{0}{default} {lightred}{1}{default} kişiyi {lightred}{2}{default} nedeniyle {lightred}{3}{default} dakika boyunca uyardı!",
+	"sa_admin_warn_message_perm": "Yönetici {lightred}{0}{default} {lightred}{1}{default} kişiyi kalıcı olarak {lightred}{2}{default} nedeniyle uyardı!",
 	"sa_admin_give_message": "Yönetici {lightred}{0}{default}, {lightred}{1}{default} adlı oyuncuya {lightred}{2}{default} verdi!",
 	"sa_admin_strip_message": "Yönetici {lightred}{0}{default}, tüm {lightred}{1}{default} silahlarını aldı!",
 	"sa_admin_hp_message": "Yönetici {lightred}{0}{default}, {lightred}{1}{default} HP miktarını değiştirdi!",
@@ -101,5 +106,5 @@
 	"sa_adminchat_template_admin": "{LIME}(YÖNETİCİ) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(OYUNCU) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}**, sunucuda `HOSTNAME` üzerinde `{1}` komutunu gerçekleştirdi!",
+	"sa_discord_log_command": "**{0}**, sunucuda `HOSTNAME` üzerinde `{1}` komutunu gerçekleştirdi!"
 }

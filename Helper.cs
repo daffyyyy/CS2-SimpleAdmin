@@ -254,6 +254,7 @@ namespace CS2_SimpleAdmin
 			Mute,
 			Gag,
 			Silence,
+			Warn
 		}
 
 		private static string ConvertMinutesToTime(int minutes)
@@ -273,6 +274,7 @@ namespace CS2_SimpleAdmin
 				PenaltyType.Mute => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyMuteSettings,
 				PenaltyType.Gag => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyGagSettings,
 				PenaltyType.Silence => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltySilenceSettings,
+				PenaltyType.Warn => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyWarnSettings,
 				_ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
 			};
 
@@ -286,8 +288,8 @@ namespace CS2_SimpleAdmin
 			var targetName = target != null ? target.PlayerName : localizer["sa_unknown"];
 			var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId64.ToString() : localizer["sa_unknown"];
 			
-			DateTime futureTime = DateTime.Now.AddMinutes(duration);
-			long futureUnixTimestamp = new DateTimeOffset(futureTime).ToUnixTimeSeconds();
+			var futureTime = DateTime.Now.AddMinutes(duration);
+			var futureUnixTimestamp = new DateTimeOffset(futureTime).ToUnixTimeSeconds();
 
 			//var time = duration != 0 ? ConvertMinutesToTime(duration) : localizer["sa_permanent"];
 			var time = duration != 0 ? $"<t:{futureUnixTimestamp}:R>": localizer["sa_permanent"];
@@ -319,6 +321,7 @@ namespace CS2_SimpleAdmin
 					PenaltyType.Mute => localizer["sa_discord_penalty_mute"],
 					PenaltyType.Gag => localizer["sa_discord_penalty_gag"],
 					PenaltyType.Silence => localizer["sa_discord_penalty_silence"],
+					PenaltyType.Warn => localizer["sa_discord_penalty_warn"],
 					_ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
 				},
 				ThumbnailUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ThumbnailUrl"))?.Value,
@@ -357,13 +360,13 @@ namespace CS2_SimpleAdmin
 
 		public static string GetServerIp()
 		{
-			var network_system = NativeAPI.GetValveInterface(0, "NetworkSystemVersion001");
+			var networkSystem = NativeAPI.GetValveInterface(0, "NetworkSystemVersion001");
 
 			unsafe
 			{
 				if (_networkSystemUpdatePublicIp == null)
 				{
-					var funcPtr = *(nint*)(*(nint*)(network_system) + 256);
+					var funcPtr = *(nint*)(*(nint*)(networkSystem) + 256);
 					_networkSystemUpdatePublicIp = Marshal.GetDelegateForFunctionPointer<CNetworkSystem_UpdatePublicIp>(funcPtr);
 				}
 				/*
@@ -375,7 +378,7 @@ namespace CS2_SimpleAdmin
 				}
 				*/
 				// + 4 to skip type, because the size of uint32_t is 4 bytes
-				var ipBytes = (byte*)(_networkSystemUpdatePublicIp(network_system) + 4);
+				var ipBytes = (byte*)(_networkSystemUpdatePublicIp(networkSystem) + 4);
 				// port is always 0, use the one from convar "hostport"
 				return $"{ipBytes[0]}.{ipBytes[1]}.{ipBytes[2]}.{ipBytes[3]}";
 			}

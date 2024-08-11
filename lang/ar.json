@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "الكتم مسجل",
 	"sa_discord_penalty_gag": "الصمت مسجل",
 	"sa_discord_penalty_silence": "الصمت مسجل",
+	"sa_discord_warn_silence": "التحذير مسجل",
 	"sa_discord_penalty_unknown": "غير معروف مسجل",
 
 	"sa_player_ban_message_time": "تم حظرك لمدة {lightred}{0}{default} لمدة {lightred}{1}{default} دقيقة من قبل {lightred}{2}{default}!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "تم كتم صوتك بشكل دائم لمدة {lightred}{0}{default} من قبل {lightred}{1}{default}!",
 	"sa_player_silence_message_time": "تم إسكاتك لمدة {lightred}{0}{default} لمدة {lightred}{1}{default} دقيقة من قبل {lightred}{2}{default}!",
 	"sa_player_silence_message_perm": "تم إسكاتك بشكل دائم لمدة {lightred}{0}{default} من قبل {lightred}{1}{default}!",
+	"sa_player_warn_message_time": "لقد تم تحذيرك بسبب {lightred}{0}{default} لمدة {lightred}{1}{default} دقيقة بواسطة {lightred}{2}{default}!",
+	"sa_player_warn_message_perm": "لقد تم تحذيرك بشكل دائم بسبب {lightred}{0}{default} بواسطة {lightred}{1}{default}!",
 	"sa_admin_ban_message_time": "المسؤول {lightred}{0}{default} حظر {lightred}{1}{default} لمدة {lightred}{2}{default} لمدة {lightred}{3}{default} دقيقة!",
 	"sa_admin_ban_message_perm": "المسؤول {lightred}{0}{default} حظر {lightred}{1}{default} بشكل دائم لمدة {lightred}{2}{default}!",
 	"sa_admin_kick_message": "المسؤول {lightred}{0}{default} طرد {lightred}{1}{default} لمدة {lightred}{2}{default}!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "المسؤول {lightred}{0}{default} قام بكتم صوت {lightred}{1}{default} بشكل دائم لمدة {lightred}{2}{default}!",
 	"sa_admin_silence_message_time": "المسؤول {lightred}{0}{default} قام بإسكات {lightred}{1}{default} لمدة {lightred}{2}{default} لمدة {lightred}{3}{default} دقيقة!",
 	"sa_admin_silence_message_perm": "المسؤول {lightred}{0}{default} قام بإسكات {lightred}{1}{default} بشكل دائم لمدة {lightred}{2}{default}!",
+	"sa_admin_warn_message_time": "الإداري {lightred}{0}{default} حذر {lightred}{1}{default} بسبب {lightred}{2}{default} لمدة {lightred}{3}{default} دقيقة!",
+	"sa_admin_warn_message_perm": "الإداري {lightred}{0}{default} حذر {lightred}{1}{default} بشكل دائم بسبب {lightred}{2}{default}!",
 	"sa_admin_give_message": "المسؤول {lightred}{0}{default} قام بإعطاء {lightred}{1}{default} {lightred}{2}{default}!",
 	"sa_admin_strip_message": "المسؤول {lightred}{0}{default} قام بسحب كل أسلحة {lightred}{1}{default}!",
 	"sa_admin_hp_message": "المسؤول {lightred}{0}{default} قام بتغيير كمية نقاط الصحة لـ {lightred}{1}{default}!",
@@ -102,5 +107,5 @@
 	"sa_adminchat_template_admin": "{LIME}(مسؤول) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(لاعب) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** أصدر الأمر `{1}` على الخادم `HOSTNAME`",
+	"sa_discord_log_command": "**{0}** أصدر الأمر `{1}` على الخادم `HOSTNAME`"
 }

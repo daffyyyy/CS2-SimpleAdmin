@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "Mute registered",
 	"sa_discord_penalty_gag": "Gag registered",
 	"sa_discord_penalty_silence": "Silence registered",
+	"sa_discord_warn_silence": "Warn registered",
 	"sa_discord_penalty_unknown": "Unknown registered",
 
 	"sa_player_ban_message_time": "You have been banned for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "You have been muted permanently for {lightred}{0}{default} by {lightred}{1}{default}!",
 	"sa_player_silence_message_time": "You have been silenced for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
 	"sa_player_silence_message_perm": "You have been silenced permanently for {lightred}{0}{default} by {lightred}{1}{default}!",
+	"sa_player_warn_message_time": "You have been warned for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
+	"sa_player_warn_message_perm": "You have been warned permanently for {lightred}{0}{default} by {lightred}{1}{default}!",
 	"sa_admin_ban_message_time": "Admin {lightred}{0}{default} banned {lightred}{1}{default} for {lightred}{2}{default} for {lightred}{3}{default} minutes!",
 	"sa_admin_ban_message_perm": "Admin {lightred}{0}{default} banned {lightred}{1}{default} permanently for {lightred}{2}{default}!",
 	"sa_admin_kick_message": "Admin {lightred}{0}{default} kicked {lightred}{1}{default} for {lightred}{2}{default}!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "Admin {lightred}{0}{default} muted {lightred}{1}{default} permanently for {lightred}{2}{default}!",
 	"sa_admin_silence_message_time": "Admin {lightred}{0}{default} silenced {lightred}{1}{default} for {lightred}{2}{default} for {lightred}{3}{default} minutes!",
 	"sa_admin_silence_message_perm": "Admin {lightred}{0}{default} silenced {lightred}{1}{default} permanently for {lightred}{2}{default}!",
+	"sa_admin_warn_message_time": "Admin {lightred}{0}{default} warned {lightred}{1}{default} for {lightred}{2}{default} for {lightred}{3}{default} minutes!",
+	"sa_admin_warn_message_perm": "Admin {lightred}{0}{default} warned {lightred}{1}{default} permanently for {lightred}{2}{default}!",
 	"sa_admin_give_message": "Admin {lightred}{0}{default} gave {lightred}{1}{default} a {lightred}{2}{default}!",
 	"sa_admin_strip_message": "Admin {lightred}{0}{default} took all of player {lightred}{1}{default} weapons!",
 	"sa_admin_hp_message": "Admin {lightred}{0}{default} changed {lightred}{1}{default} hp amount{default}!",
@@ -101,5 +106,5 @@
 	"sa_adminsay_prefix": "{RED}ADMIN: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(PLAYER) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** issued command `{1}` on server `HOSTNAME`",
+	"sa_discord_log_command": "**{0}** issued command `{1}` on server `HOSTNAME`"
 }

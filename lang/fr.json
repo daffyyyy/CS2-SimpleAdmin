@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "Mute enregistré",
 	"sa_discord_penalty_gag": "Gag enregistré",
 	"sa_discord_penalty_silence": "Silence enregistré",
+	"sa_discord_penalty_warn": "Avertissement enregistré",
 	"sa_discord_penalty_unknown": "Inconnu enregistré",
 
 	"sa_player_ban_message_time": "Vous avez été banni pour {lightred}{0}{default} pendant {lightred}{1}{default} minutes par {lightred}{2}{default}!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "Vous avez été réduit au silence définitivement pour {lightred}{0}{default} par {lightred}{1}{default}!",
 	"sa_player_silence_message_time": "Vous avez été mis en sourdine pour {lightred}{0}{default} pendant {lightred}{1}{default} minutes par {lightred}{2}{default}!",
 	"sa_player_silence_message_perm": "Vous avez été mis en sourdine définitivement pour {lightred}{0}{default} par {lightred}{1}{default}!",
+	"sa_player_warn_message_time": "Vous avez été averti pour {lightred}{0}{default} pendant {lightred}{1}{default} minutes par {lightred}{2}{default}!",
+	"sa_player_warn_message_perm": "Vous avez été averti définitivement pour {lightred}{0}{default} par {lightred}{1}{default}!",
 	"sa_admin_ban_message_time": "Admin {lightred}{0}{default} a banni {lightred}{1}{default} pour {lightred}{2}{default} pendant {lightred}{3}{default} minutes!",
 	"sa_admin_ban_message_perm": "Admin {lightred}{0}{default} a banni {lightred}{1}{default} définitivement pour {lightred}{2}{default}!",
 	"sa_admin_kick_message": "Admin {lightred}{0}{default} a expulsé {lightred}{1}{default} pour {lightred}{2}{default}!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "Admin {lightred}{0}{default} a réduit au silence {lightred}{1}{default} définitivement pour {lightred}{2}{default}!",
 	"sa_admin_silence_message_time": "Admin {lightred}{0}{default} a mis en sourdine {lightred}{1}{default} pour {lightred}{2}{default} pendant {lightred}{3}{default} minutes!",
 	"sa_admin_silence_message_perm": "Admin {lightred}{0}{default} a mis en sourdine {lightred}{1}{default} définitivement pour {lightred}{2}{default}!",
+	"sa_admin_warn_message_time": "Admin {lightred}{0}{default} a averti {lightred}{1}{default} pour {lightred}{2}{default} pendant {lightred}{3}{default} minutes!",
+	"sa_admin_warn_message_perm": "Admin {lightred}{0}{default} a averti {lightred}{1}{default} définitivement pour {lightred}{2}{default}!",
 	"sa_admin_give_message": "Admin {lightred}{0}{default} a donné à {lightred}{1}{default} un {lightred}{2}{default}!",
 	"sa_admin_strip_message": "Admin {lightred}{0}{default} a retiré toutes les armes de {lightred}{1}{default}!",
 	"sa_admin_hp_message": "Admin {lightred}{0}{default} a changé la quantité de points de vie de {lightred}{1}{default}!",
@@ -102,5 +107,5 @@
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default} : {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(JOUEUR) {lightred}{0}{default} : {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`",
+	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`"
 }

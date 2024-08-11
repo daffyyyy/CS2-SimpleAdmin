@@ -120,10 +120,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
 		if (!string.IsNullOrEmpty(Config.Discord.DiscordLogWebhook))
 			DiscordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
-		/*
-		if (!string.IsNullOrEmpty(Config.Discord.DiscordPenaltyWebhook))
-			DiscordWebhookClientPenalty = new DiscordWebhookClient(Config.Discord.DiscordPenaltyWebhook);
-			*/
 
 		PluginInfo.ShowAd(ModuleVersion);
 		if (Config.EnableUpdateCheck)

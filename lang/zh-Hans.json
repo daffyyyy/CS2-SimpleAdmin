@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "禁言已记录",
 	"sa_discord_penalty_gag": "禁言已记录",
 	"sa_discord_penalty_silence": "禁声已记录",
+	"sa_discord_penalty_warn": "警告已注册",
 	"sa_discord_penalty_unknown": "未知已记录",
 
 	"sa_player_ban_message_time": "你因为{lightred}{0}{default}的原因被{lightred}{1}{default}禁止{lightred}{2}{default}分钟！",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "你因为{lightred}{0}{default}的原因被{lightred}{1}{default}永久禁声！",
 	"sa_player_silence_message_time": "你因为{lightred}{0}{default}的原因被{lightred}{2}{default}禁止发言{lightred}{1}{default}分钟！",
 	"sa_player_silence_message_perm": "你因为{lightred}{0}{default}的原因被{lightred}{1}{default}永久禁止发言！",
+	"sa_player_warn_message_time": "您因 {lightred}{0}{default} 被 {lightred}{1}{default} 分钟内由 {lightred}{2}{default} 警告！",
+	"sa_player_warn_message_perm": "您因 {lightred}{0}{default} 被 {lightred}{1}{default} 永久警告！",
 	"sa_admin_ban_message_time": "管理员{lightred}{0}{default}因为{lightred}{2}{default}的原因禁止了{lightred}{1}{default} {lightred}{3}{default}分钟！",
 	"sa_admin_ban_message_perm": "管理员{lightred}{0}{default}因为{lightred}{2}{default}的原因永久禁止了{lightred}{1}{default}！",
 	"sa_admin_kick_message": "管理员{lightred}{0}{default}因为{lightred}{2}{default}的原因踢出了{lightred}{1}{default}！",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "管理员{lightred}{0}{default}因为{lightred}{2}{default}的原因永久禁声了{lightred}{1}{default}！",
 	"sa_admin_silence_message_time": "管理员{lightred}{0}{default}因为{lightred}{2}{default}的原因禁止了{lightred}{1}{default} {lightred}{3}{default}分钟的发言！",
 	"sa_admin_silence_message_perm": "管理员{lightred}{0}{default}因为{lightred}{2}{default}的原因永久禁止了{lightred}{1}{default}的发言！",
+	"sa_admin_warn_message_time": "管理员 {lightred}{0}{default} 警告了 {lightred}{1}{default} {lightred}{2}{default} 因为 {lightred}{3}{default} 分钟!",
+	"sa_admin_warn_message_perm": "管理员 {lightred}{0}{default} 永久警告了 {lightred}{1}{default} 因为 {lightred}{2}{default}!",
 	"sa_admin_give_message": "管理员{lightred}{0}{default}给了{lightred}{1}{default} {lightred}{2}{default}！",
 	"sa_admin_strip_message": "管理员{lightred}{0}{default}拿走了玩家{lightred}{1}{default}的所有武器！",
 	"sa_admin_hp_message": "管理员{lightred}{0}{default}改变了{lightred}{1}{default}的HP数值！",
@@ -101,5 +106,5 @@
 	"sa_adminchat_template_admin": "{LIME}(管理员) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(玩家) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上执行了命令 `{1}`！",
+	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上执行了命令 `{1}`！"
 }

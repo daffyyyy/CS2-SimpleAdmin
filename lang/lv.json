@@ -56,6 +56,7 @@
 	"sa_discord_penalty_mute": "Mute reģistrēts",
 	"sa_discord_penalty_gag": "Gag reģistrēts",
 	"sa_discord_penalty_silence": "Klusums reģistrēts",
+	"sa_discord_penalty_warn": "Brīdinājums reģistrēts",
 	"sa_discord_penalty_unknown": "Nezināms reģistrēts",
 
 	"sa_player_ban_message_time": "Tu esi nobanots uz {lightred}{0}{default} uz {lightred}{1}{default} minūtēm, iemesls: {lightred}{2}{default}!",
@@ -67,6 +68,8 @@
 	"sa_player_mute_message_perm": "Tev ir izliegta balsu rakstīšana uz mūžu, iemesls: {lightred}{0}{default}, Admins: {lightred}{1}{default}!",
 	"sa_player_silence_message_time": "Tevis balss ir izslēgta uz {lightred}{0}{default} uz {lightred}{1}{default} minūtēm, iemesls: {lightred}{2}{default}, Admins: {lightred}{3}{default}!",
 	"sa_player_silence_message_perm": "Tevis balss ir izslēgta uz mūžu, iemesls: {lightred}{0}{default}, Admins: {lightred}{1}{default}!",
+	"sa_player_warn_message_time": "Jums ir izteikts brīdinājums par {lightred}{0}{default} uz {lightred}{1}{default} minūtēm no {lightred}{2}{default}!",
+	"sa_player_warn_message_perm": "Jums ir izteikts pastāvīgs brīdinājums par {lightred}{0}{default} no {lightred}{1}{default}!",
 	"sa_admin_ban_message_time": "Admins {lightred}{0}{default} nobanoja {lightred}{1}{default} uz {lightred}{2}{default} uz {lightred}{3}{default} minūtēm, iemesls: {lightred}{4}{default}!",
 	"sa_admin_ban_message_perm": "Admins {lightred}{0}{default} nobanoja {lightred}{1}{default} uz mūžu, iemesls: {lightred}{2}{default}!",
 	"sa_admin_kick_message": "Admins {lightred}{0}{default} izmeta {lightred}{1}{default}, iemesls: {lightred}{2}{default}!",
@@ -76,6 +79,8 @@
 	"sa_admin_mute_message_perm": "Admins {lightred}{0}{default} izliega balsu rakstīšanu {lightred}{1}{default} uz mūžu, iemesls: {lightred}{2}{default}!",
 	"sa_admin_silence_message_time": "Admins {lightred}{0}{default} izslēdza balss iespēju {lightred}{1}{default} uz {lightred}{2}{default} uz {lightred}{3}{default} minūtēm, iemesls: {lightred}{4}{default}!",
 	"sa_admin_silence_message_perm": "Admins {lightred}{0}{default} izslēdza balss iespēju {lightred}{1}{default} uz mūžu, iemesls: {lightred}{2}{default}!",
+	"sa_admin_warn_message_time": "Admins {lightred}{0}{default} brīdināja {lightred}{1}{default} par {lightred}{2}{default} uz {lightred}{3}{default} minūtēm!",
+	"sa_admin_warn_message_perm": "Admins {lightred}{0}{default} brīdināja {lightred}{1}{default} pastāvīgi par {lightred}{2}{default}!",
 	"sa_admin_give_message": "Admins {lightred}{0}{default} deva {lightred}{1}{default} {lightred}{2}{default}!",
 	"sa_admin_strip_message": "Admins {lightred}{0}{default} paņēma visus spēlētāja {lightred}{1}{default} ieročus!",
 	"sa_admin_hp_message": "Admins {lightred}{0}{default} mainīja {lightred}{1}{default} HP daudzumu!",
@@ -102,5 +107,5 @@
 	"sa_adminchat_template_admin": "{LIME}(Admins) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(SPĒLĒTĀJS) {lightred}{0}{default}: {lightred}{1}{default}",
 
-	"sa_discord_log_command": "**{0}** izmantoja komandu `{1}` uz servera `HOSTNAME`",
+	"sa_discord_log_command": "**{0}** izmantoja komandu `{1}` uz servera `HOSTNAME`"
 }
