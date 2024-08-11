@@ -134,6 +134,15 @@ namespace CS2_SimpleAdmin
 			"Chat Abuse",
 			"Admin disrespect",
 			"Other"
+		];		
+		
+		[JsonPropertyName("WarnReasons")]
+		public List<string> WarnReasons { get; set; } =
+		[
+			"Voice Abuse",
+			"Chat Abuse",
+			"Admin disrespect",
+			"Other"
 		];
 
 		[JsonPropertyName("MuteReasons")]

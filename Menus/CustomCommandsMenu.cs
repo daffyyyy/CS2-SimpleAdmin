@@ -8,7 +8,7 @@ namespace CS2_SimpleAdmin.Menus
 	{
 		public static void OpenMenu(CCSPlayerController admin)
 		{
-			if (admin == null || admin.IsValid == false)
+			if (admin.IsValid == false)
 				return;
 
 			var localizer = CS2_SimpleAdmin._localizer;

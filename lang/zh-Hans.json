@@ -37,6 +37,7 @@
 	"sa_gag": "禁言",
 	"sa_mute": "静音",
 	"sa_silence": "沉默",
+	"sa_warn": "警告",
 	"sa_team_force": "强制队伍",
 
 	"sa_menu_custom_commands": "自定义命令",

@@ -37,6 +37,7 @@
 	"sa_gag": "Gag",
 	"sa_mute": "Mute",
 	"sa_silence": "Silence",
+	"sa_warn": "Warn",
 	"sa_team_force": "Force Team",
 	
 	"sa_menu_custom_commands": "Custom Commands",

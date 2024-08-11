@@ -40,7 +40,10 @@ namespace CS2_SimpleAdmin.Menus
 			}
 
 			if (hasKick)
+			{
 				options.Add(new ChatMenuOptionData(localizer?["sa_kick"] ?? "Kick", () => PlayersMenu.OpenMenu(admin, localizer?["sa_kick"] ?? "Kick", KickMenu)));
+				options.Add(new ChatMenuOptionData(localizer?["sa_warn"] ?? "Warn", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_warn"] ?? "Warn", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_warn"] ?? "Warn"}: {player.PlayerName}", player, WarnMenu))));
+			}
 
 			if (hasBan)
 				options.Add(new ChatMenuOptionData(localizer?["sa_ban"] ?? "Ban", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_ban"] ?? "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_ban"] ?? "Ban"}: {player.PlayerName}", player, BanMenu))));
@@ -123,7 +126,7 @@ namespace CS2_SimpleAdmin.Menus
 			if (player is not { IsValid: true }) return;
 			
 			CS2_SimpleAdmin.Instance.Kick(admin, player, reason);
-		}
+		}		
 
 		private static void BanMenu(CCSPlayerController admin, CCSPlayerController? player, int duration)
 		{
@@ -146,6 +149,29 @@ namespace CS2_SimpleAdmin.Menus
 			if (player is not { IsValid: true }) return;
 				
 			CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason);
+		}
+		
+		private static void WarnMenu(CCSPlayerController admin, CCSPlayerController? player, int duration)
+		{
+			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_warn"] ?? "Warn"}: {player?.PlayerName}");
+
+			foreach (var option in CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons)
+			{
+				menu.AddMenuOption(option, (_, _) =>
+				{
+					if (player is { IsValid: true })
+						Warn(admin, player, duration, option);
+				});
+			}
+
+			AdminMenu.OpenMenu(admin, menu);
+		}
+
+		private static void Warn(CCSPlayerController admin, CCSPlayerController? player, int duration, string reason)
+		{
+			if (player is not { IsValid: true }) return;
+				
+			CS2_SimpleAdmin.Instance.Warn(admin, player, duration, reason);
 		}
 
 		private static void GagMenu(CCSPlayerController admin, CCSPlayerController? player, int duration)
