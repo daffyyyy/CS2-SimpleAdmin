@@ -100,6 +100,8 @@
 	"sa_admin_tp_message": "Admins {lightred}{0}{default} teleported uz {lightred}{1}{default}!",
 	"sa_admin_bring_message": "Admins {lightred}{0}{default} teleportēja sevi uz {lightred}{1}{default}!",
 	"sa_admin_team_message": "Admins {lightred}{0}{default} pārveidoja {lightred}{1}{default} uz {lightred}{2}{default}!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}BRĪDINĀJUMI",
+	"sa_admin_warns_unwarn": "{lime}Veiksmīgi{default} noņemts brīdinājums no {gold}{0} {default}no {gold}{1}{default}!",
 	"sa_admin_vote_menu_title": "{lime}BALSOŠANA PAR {gold}{0}",
 	"sa_admin_vote_message": "Admins {lightred}{0}{default} sāka balsošanu par {lightred}{1}{default}",
 	"sa_admin_vote_message_results": "{lime}BALSOŠANAS REZULTĀTI PAR {gold}{0}",

@@ -211,10 +211,8 @@ namespace CS2_SimpleAdmin
 		[JsonPropertyName("WarnThreshold")]
 		public Dictionary<int, string> WarnThreshold { get; set; } = new()
 		{
-			{ 1, "" },
-			{ 2, "" },
-			{ 3, "" },
-			{ 4, "css_ban USERID 120 \"4/4 Warn\"" },
+			{ 998, "css_addban STEAMID64 60 \"3/4 Warn\"" },
+			{ 999, "css_ban #USERID 120 \"4/4 Warn\"" },
 		};
 		
 		[JsonPropertyName("DisableDangerousCommands")]

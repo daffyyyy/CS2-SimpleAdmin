@@ -99,6 +99,8 @@
 	"sa_admin_tp_message": "管理员{lightred}{0}{default}传送到了{lightred}{1}{default}！",
 	"sa_admin_bring_message": "管理员{lightred}{0}{default}将自己传送到了{lightred}{1}{default}！",
 	"sa_admin_team_message": "管理员{lightred}{0}{default}将{lightred}{1}{default}转移到了{lightred}{2}{default}队伍！",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}警告",
+	"sa_admin_warns_unwarn": "{lime}成功{default} 取消了 {gold}{0} {default}的警告，来自 {gold}{1}{default}!",
 	"sa_admin_vote_menu_title": "{lime}投票选举{gold}{0}",
 	"sa_admin_vote_message": "管理员{lightred}{0}{default}开始对{lightred}{1}{default}进行投票",
 	"sa_admin_vote_message_results": "{lime}投票结果{gold}{0}",

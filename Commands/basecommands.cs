@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2_SimpleAdmin.Menus;
 using Microsoft.Extensions.Logging;
@@ -421,6 +422,63 @@ namespace CS2_SimpleAdmin
 						}
 
 						printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
+					});
+				});
+			});
+		}
+		
+		[ConsoleCommand("css_warns")]
+		[CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+		[RequiresPermissions("@css/kick")]
+		public void OnWarnsCommand(CCSPlayerController? caller, CommandInfo command)
+		{
+			if (_database == null) return;
+			
+			var targets = GetTarget(command);
+			if (targets == null) return;
+
+			Helper.LogCommand(caller, command);
+
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+
+			if (playersToTarget.Count > 1)
+				return;
+			
+			Database.Database database = new(_dbConnectionString);
+			WarnManager warnManager = new(database);
+
+			playersToTarget.ForEach(player =>
+			{
+				if (!player.UserId.HasValue) return;
+				if (!caller!.CanTarget(player)) return;
+
+				var steamid = player.SteamID.ToString();
+				
+				BaseMenu warnsMenu = Config.UseChatMenu
+					? new ChatMenu(_localizer!["sa_admin_warns_menu_title", player.PlayerName])
+					: new CenterHtmlMenu(_localizer!["sa_admin_warns_menu_title", player.PlayerName], Instance);
+
+				Task.Run(async () =>
+				{
+					var warnsList = await warnManager.GetPlayerWarns(steamid, false);
+					var sortedWarns = warnsList
+						.OrderBy(warn => (string)warn.status == "ACTIVE" ? 0 : 1)
+						.ThenByDescending(warn => (int)warn.id)
+						.ToList();
+					
+					sortedWarns.ForEach(w =>
+					{
+						warnsMenu.AddMenuOption($"[{((string)w.status == "ACTIVE" ? $"{ChatColors.LightRed}X" : $"{ChatColors.Lime}✔️")}{ChatColors.Default}] {(string)w.reason}",
+							(controller, option) =>
+							{
+								_ = warnManager.UnwarnPlayer(steamid, (int)w.id);
+								player.PrintToChat(_localizer["sa_admin_warns_unwarn", player.PlayerName, (string)w.reason]);
+							});
+					});
+					
+					await Server.NextFrameAsync(() =>
+					{
+						warnsMenu.Open(player);
 					});
 				});
 			});

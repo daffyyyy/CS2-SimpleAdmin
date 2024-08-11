@@ -100,6 +100,8 @@
 	"sa_admin_tp_message": "El administrador {lightred}{0}{default} se ha teletransportado a {lightred}{1}{default}!",
 	"sa_admin_bring_message": "El administrador {lightred}{0}{default} se ha teletransportado a sí mismo a {lightred}{1}{default}!",
 	"sa_admin_team_message": "El administrador {lightred}{0}{default} ha transferido a {lightred}{1}{default} a {lightred}{2}{default}!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}ADVERTENCIAS",
+	"sa_admin_warns_unwarn": "{lime}Exitosamente{default} advertencia eliminada de {gold}{0} {default}de {gold}{1}{default}!",
 	"sa_admin_vote_menu_title": "{lime}VOTACIÓN PARA {gold}{0}",
 	"sa_admin_vote_message": "El administrador {lightred}{0}{default} ha iniciado una votación para {lightred}{1}{default}",
 	"sa_admin_vote_message_results": "{lime}RESULTADOS DE LA VOTACIÓN PARA {gold}{0}",

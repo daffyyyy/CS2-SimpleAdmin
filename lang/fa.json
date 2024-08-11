@@ -100,6 +100,8 @@
 	"sa_admin_tp_message": "مدیر {lightred}{0}{default} به {lightred}{1}{default} جابجا شد!",
 	"sa_admin_bring_message": "مدیر {lightred}{0}{default} خودش به {lightred}{1}{default} جابجا شد!",
 	"sa_admin_team_message": "مدیر {lightred}{0}{default} {lightred}{1}{default} را به {lightred}{2}{default} منتقل کرد!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}اخطارها",
+	"sa_admin_warns_unwarn": "{lime}با موفقیت{default} اخطار {gold}{0} {default}از {gold}{1}{default} حذف شد!",
 	"sa_admin_vote_menu_title": "{lime}رأی گیری برای {gold}{0}",
 	"sa_admin_vote_message": "مدیر {lightred}{0}{default} رأی گیری برای {lightred}{1}{default} را شروع کرد",
 	"sa_admin_vote_message_results": "{lime}نتایج رأی گیری برای {gold}{0}",

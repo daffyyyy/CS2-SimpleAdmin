@@ -100,6 +100,8 @@
 	"sa_admin_tp_message": "Admin {lightred}{0}{default} hat sich zu {lightred}{1}{default} teleportiert!",
 	"sa_admin_bring_message": "Admin {lightred}{0}{default} hat zu sich {lightred}{1}{default} teleportiert!",
 	"sa_admin_team_message": "Admin {lightred}{0}{default} hat {lightred}{1}{default} zu {lightred}{2}{default} gewechselt!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}WARNUNGEN",
+	"sa_admin_warns_unwarn": "{lime}Erfolgreich{default} Warnung von {gold}{0} {default}von {gold}{1}{default} entfernt!",
 	"sa_admin_vote_menu_title": "{lime}ABSTIMMUNG FÜR {gold}{0}",
 	"sa_admin_vote_message": "Admin {lightred}{0}{default} hat eine Abstimmung für {lightred}{1}{default} gestartet",
 	"sa_admin_vote_message_results": "{lime}ABSTIMMUNGS ERGEBNISSE FÜR {gold}{0}",

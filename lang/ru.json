@@ -99,6 +99,8 @@
 	"sa_admin_tp_message": "Администратор {lightred}{0}{default} телепортировался к {lightred}{1}{default}!",
 	"sa_admin_bring_message": "Администратор {lightred}{0}{default} телепортировал {lightred}{1}{default} к себе!",
 	"sa_admin_team_message": "Администратор {lightred}{0}{default} переместил {lightred}{1}{default} в команду {lightred}{2}{default}!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}ПРЕДУПРЕЖДЕНИЯ",
+	"sa_admin_warns_unwarn": "{lime}Успешно{default} удалено предупреждение у {gold}{0} {default}от {gold}{1}{default}!",
 	"sa_admin_vote_menu_title": "{lime}ГОЛОСОВАНИЕ ЗА {gold}{0}",
 	"sa_admin_vote_message": "Администратор {lightred}{0}{default} начал голосование за {lightred}{1}{default}",
 	"sa_admin_vote_message_results": "{lime}РЕЗУЛЬТАТЫ ГОЛОСОВАНИЯ ЗА {gold}{0}",

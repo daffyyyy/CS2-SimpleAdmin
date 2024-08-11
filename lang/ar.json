@@ -100,6 +100,8 @@
 	"sa_admin_tp_message": "المسؤول {lightred}{0}{default} قام بالانتقال إلى {lightred}{1}{default}!",
 	"sa_admin_bring_message": "المسؤول {lightred}{0}{default} قام بنقل نفسه إلى {lightred}{1}{default}!",
 	"sa_admin_team_message": "المسؤول {lightred}{0}{default} قام بنقل {lightred}{1}{default} إلى {lightred}{2}{default}!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}التحذيرات",
+	"sa_admin_warns_unwarn": "{lime}تم بنجاح{default} إزالة التحذير عن {gold}{0} {default}من {gold}{1}{default}!",
 	"sa_admin_vote_menu_title": "{lime}التصويت على {gold}{0}",
 	"sa_admin_vote_message": "المسؤول {lightred}{0}{default} بدأ التصويت على {lightred}{1}{default}",
 	"sa_admin_vote_message_results": "{lime}نتائج التصويت على {gold}{0}",

@@ -99,6 +99,8 @@
 	"sa_admin_tp_message": "Yönetici {lightred}{0}{default}, {lightred}{1}{default}'e teleport edildi!",
 	"sa_admin_bring_message": "Yönetici {lightred}{0}{default}, {lightred}{1}{default}'yi kendine teleport etti!",
 	"sa_admin_team_message": "Yönetici {lightred}{0}{default}, {lightred}{1}{default} {lightred}{2}{default} takımına transfer edildi!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}UYARILAR",
+	"sa_admin_warns_unwarn": "{lime}Başarıyla{default} uyarı {gold}{0} {default}şu adresten {gold}{1}{default} kaldırıldı!",
 	"sa_admin_vote_menu_title": "{lime}{0} için OYLAMA",
 	"sa_admin_vote_message": "Yönetici {lightred}{0}{default}, {lightred}{1}{default} için oy vermeye başladı",
 	"sa_admin_vote_message_results": "{lime}{0} için OYLAMA SONUÇLARI",

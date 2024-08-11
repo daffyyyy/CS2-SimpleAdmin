@@ -63,6 +63,38 @@ internal class WarnManager(Database.Database database)
 		}
 		catch { };
 	}
+	
+	public async Task<IEnumerable<dynamic>> GetPlayerWarns(string steamId, bool active = true)
+	{
+		try
+		{
+			await using var connection = await database.GetConnectionAsync();
+
+			string sql;
+
+			if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
+			{
+				sql = active
+					? "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' ORDER BY id DESC"
+					: "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID ORDER BY id DESC";
+			}
+			else
+			{
+				sql = active
+					? "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID AND server_id = @serverid AND status = 'ACTIVE' ORDER BY id DESC"
+					: "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID AND server_id = @serverid ORDER BY id DESC";
+			}
+
+			var parameters = new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId };
+			var warns = await connection.QueryAsync<dynamic>(sql, parameters);
+
+			return warns;
+		}
+		catch (Exception)
+		{
+			return [];
+		}
+	}
 
 	public async Task<int> GetPlayerWarnsCount(string steamId, bool active = true)
 	{
@@ -84,6 +116,24 @@ internal class WarnManager(Database.Database database)
 		catch (Exception)
 		{
 			return 0;
+		}
+	}
+
+	public async Task UnwarnPlayer(string steamid, int warnId)
+	{
+		try
+		{
+			await using var connection = await database.GetConnectionAsync();
+
+			var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
+				? "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND player_steamid = @steamid AND id = @warnId"
+				: "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND player_steamid = @steamid AND id = @warnId AND server_id = @serverid";
+
+			await connection.ExecuteAsync(sql, new { steamid, warnId, serverid = CS2_SimpleAdmin.ServerId });
+		}
+		catch (Exception ex) 
+		{
+			CS2_SimpleAdmin._logger?.LogCritical($"Unable to remove warn + {ex}");
 		}
 	}
 

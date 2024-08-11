@@ -100,6 +100,8 @@
 	"sa_admin_tp_message": "Admin {lightred}{0}{default} teleportou para {lightred}{1}{default}!",
 	"sa_admin_bring_message": "Admin {lightred}{0}{default} teleportou {lightred}{1}{default} para si mesmo!",
 	"sa_admin_team_message": "Admin {lightred}{0}{default} transferiu {lightred}{1}{default} para o time {lightred}{2}{default}!",
+	"sa_admin_warns_menu_title": "{gold}{0} {lime}ADVERTÊNCIAS",
+	"sa_admin_warns_unwarn": "{lime}Removido com sucesso{default} o aviso de {gold}{0} {default}de {gold}{1}{default}!",
 	"sa_admin_vote_menu_title": "{lime}VOTAÇÃO PARA {gold}{0}",
 	"sa_admin_vote_message": "Admin {lightred}{0}{default} iniciou uma votação para {lightred}{1}{default}",
 	"sa_admin_vote_message_results": "{lime}RESULTADOS DA VOTAÇÃO PARA {gold}{0}",
