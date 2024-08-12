@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS `sa_warns` (
                             `admin_name` varchar(128) NOT NULL,
                             `reason` varchar(255) NOT NULL,
                             `duration` int(11) NOT NULL,
-                            `ends` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-                            `created` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+                            `ends` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             `server_id` int(11) DEFAULT NULL,
                             `status` enum('ACTIVE','EXPIRED','') NOT NULL DEFAULT 'ACTIVE',
                             PRIMARY KEY (`id`)
