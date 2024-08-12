@@ -19,6 +19,9 @@
 
   <ItemGroup>
     <None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Database\Migrations\010_CreateWarnsTable.sql">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup> 
   
   <ItemGroup>
