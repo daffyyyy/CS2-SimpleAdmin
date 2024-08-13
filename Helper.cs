@@ -245,7 +245,7 @@ namespace CS2_SimpleAdmin
 
 			var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
 			var callerName = caller != null ? caller.PlayerName : "Console";
-			discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
+			discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
 		}
 
 		public enum PenaltyType
@@ -338,8 +338,11 @@ namespace CS2_SimpleAdmin
 			{
 				embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
 			}
-			
-			new DiscordWebhookClient(webhookUrl).SendMessageAsync(embeds: [embed.Build()]);
+
+			Task.Run(async () =>
+			{
+				await new DiscordWebhookClient(webhookUrl).SendMessageAsync(embeds: [embed.Build()]);
+			});
 		}
 
 		private static string GenerateMessageDiscord(string message)
