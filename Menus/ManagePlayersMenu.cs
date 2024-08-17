@@ -25,10 +25,10 @@ namespace CS2_SimpleAdmin.Menus
 			List<ChatMenuOptionData> options = [];
 
 			// permissions
-			var hasSlay = AdminManager.PlayerHasPermissions(admin, "@css/slay");
-			var hasKick = AdminManager.PlayerHasPermissions(admin, "@css/kick");
-			var hasBan = AdminManager.PlayerHasPermissions(admin, "@css/ban");
-			var hasChat = AdminManager.PlayerHasPermissions(admin, "@css/chat");
+			var hasSlay = AdminManager.CommandIsOverriden("css_slay") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_slay")) : AdminManager.PlayerHasPermissions(admin, "@css/slay");
+			var hasKick = AdminManager.CommandIsOverriden("css_kick") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_kick")) : AdminManager.PlayerHasPermissions(admin, "@css/kick");
+			var hasBan = AdminManager.CommandIsOverriden("css_ban") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_ban")) : AdminManager.PlayerHasPermissions(admin, "@css/ban");
+			var hasChat = AdminManager.CommandIsOverriden("css_gag") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_gag")) : AdminManager.PlayerHasPermissions(admin, "@css/chat");
 
 			// TODO: Localize options
 			// options added in order
@@ -42,21 +42,36 @@ namespace CS2_SimpleAdmin.Menus
 			if (hasKick)
 			{
 				options.Add(new ChatMenuOptionData(localizer?["sa_kick"] ?? "Kick", () => PlayersMenu.OpenMenu(admin, localizer?["sa_kick"] ?? "Kick", KickMenu)));
-				options.Add(new ChatMenuOptionData(localizer?["sa_warn"] ?? "Warn", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_warn"] ?? "Warn", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_warn"] ?? "Warn"}: {player.PlayerName}", player, WarnMenu))));
 			}
 
+			if (AdminManager.CommandIsOverriden("css_warn")
+				    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_warn"))
+				    : AdminManager.PlayerHasPermissions(admin, "@css/kick"))
+				options.Add(new ChatMenuOptionData(localizer?["sa_warn"] ?? "Warn", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_warn"] ?? "Warn", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_warn"] ?? "Warn"}: {player.PlayerName}", player, WarnMenu))));
+			
 			if (hasBan)
 				options.Add(new ChatMenuOptionData(localizer?["sa_ban"] ?? "Ban", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_ban"] ?? "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_ban"] ?? "Ban"}: {player.PlayerName}", player, BanMenu))));
 
 			if (hasChat)
 			{
-				options.Add(new ChatMenuOptionData(localizer?["sa_gag"] ?? "Gag", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_gag"] ?? "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player, GagMenu))));
-				options.Add(new ChatMenuOptionData(localizer?["sa_mute"] ?? "Mute", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_mute"] ?? "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player, MuteMenu))));
-				options.Add(new ChatMenuOptionData(localizer?["sa_silence"] ?? "Silence", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_silence"] ?? "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player, SilenceMenu))));
+				if (AdminManager.CommandIsOverriden("css_gag")
+					    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_gag"))
+					    : AdminManager.PlayerHasPermissions(admin, "@css/chat"))
+					options.Add(new ChatMenuOptionData(localizer?["sa_gag"] ?? "Gag", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_gag"] ?? "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player, GagMenu))));
+				if (AdminManager.CommandIsOverriden("css_mute")
+					    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_mute"))
+					    : AdminManager.PlayerHasPermissions(admin, "@css/chat"))
+					options.Add(new ChatMenuOptionData(localizer?["sa_mute"] ?? "Mute", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_mute"] ?? "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player, MuteMenu))));
+				if (AdminManager.CommandIsOverriden("css_silence")
+					    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_silence"))
+					    : AdminManager.PlayerHasPermissions(admin, "@css/chat"))
+					options.Add(new ChatMenuOptionData(localizer?["sa_silence"] ?? "Silence", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_silence"] ?? "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player, SilenceMenu))));
 			}
 
-			if (hasKick)
-				options.Add(new ChatMenuOptionData(localizer?["sa_team_force"] ?? "Force Team", () => PlayersMenu.OpenMenu(admin, localizer?["sa_team_force"] ?? "Force Team", ForceTeamMenu)));
+			if (AdminManager.CommandIsOverriden("css_team")
+					    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_team"))
+					    : AdminManager.PlayerHasPermissions(admin, "@css/kick"))
+					options.Add(new ChatMenuOptionData(localizer?["sa_team_force"] ?? "Force Team", () => PlayersMenu.OpenMenu(admin, localizer?["sa_team_force"] ?? "Force Team", ForceTeamMenu)));
 
 			foreach (var menuOptionData in options)
 			{
@@ -155,7 +170,7 @@ namespace CS2_SimpleAdmin.Menus
 		{
 			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_warn"] ?? "Warn"}: {player?.PlayerName}");
 
-			foreach (var option in CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons)
+			foreach (var option in CS2_SimpleAdmin.Instance.Config.MenuConfigs.WarnReasons)
 			{
 				menu.AddMenuOption(option, (_, _) =>
 				{
@@ -176,7 +191,6 @@ namespace CS2_SimpleAdmin.Menus
 
 		private static void GagMenu(CCSPlayerController admin, CCSPlayerController? player, int duration)
 		{
-			// TODO: Localize and make options in config?
 			var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_gag"] ?? "Gag"}: {player?.PlayerName}");
 
 			foreach (var option in CS2_SimpleAdmin.Instance.Config.MenuConfigs.MuteReasons)

@@ -439,7 +439,7 @@ namespace CS2_SimpleAdmin
 
 			Helper.LogCommand(caller, command);
 
-			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+			var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsBot: false }).ToList();
 
 			if (playersToTarget.Count > 1)
 				return;

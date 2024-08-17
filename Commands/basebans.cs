@@ -59,7 +59,7 @@ public partial class CS2_SimpleAdmin
 
 		if (player.PawnIsAlive)
 		{
-			player.Pawn.Value!.Freeze();
+			player.Pawn.Value?.Freeze();
 		}
 
 		PlayerInfo playerInfo = new()
@@ -81,11 +81,7 @@ public partial class CS2_SimpleAdmin
 			banManager ??= new BanManager(_database, Config);
 			await banManager.BanPlayer(playerInfo, adminInfo, reason, time);
 		});
-
-		if (player.UserId.HasValue)
-			AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value),
-				CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
+		
 		if (playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
 			BannedPlayers.Add(playerInfo.IpAddress);
 		if (!BannedPlayers.Contains(player.SteamID.ToString()))
@@ -133,6 +129,14 @@ public partial class CS2_SimpleAdmin
 				}
 			}
 		}
+		
+		if (player.UserId.HasValue)
+			AddTimer(Config.KickTime, () =>
+			{
+				if (player is null || !player.IsValid || !player.UserId.HasValue) return;
+						
+				Helper.KickPlayer(player.UserId.Value);
+			}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 
 		if (UnlockedCommands)
 			Server.ExecuteCommand($"banid 2 {new SteamID(player.SteamID).SteamId3}");
@@ -190,14 +194,10 @@ public partial class CS2_SimpleAdmin
 					command.ReplyToCommand($"{player.PlayerName} is more powerful than you!");
 					return;
 				}
-
-				player.Pawn.Value!.Freeze();
-				if (player.UserId.HasValue)
-					AddTimer(Config.KickTime, () => Helper.KickPlayer(player.UserId.Value), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-
+				
 				if (time == 0)
 				{
-					if (!player.IsBot && !player.IsHLTV)
+					if (player is { IsBot: false, IsHLTV: false })
 						using (new WithTemporaryCulture(player.GetLanguage()))
 						{
 							player.PrintToCenter(_localizer!["sa_player_ban_message_perm", reason, caller == null ? "Console" : caller.PlayerName]);
@@ -237,8 +237,17 @@ public partial class CS2_SimpleAdmin
 						}
 					}
 				}
+				
+				player.Pawn.Value?.Freeze();
+				if (player.UserId.HasValue)
+					AddTimer(Config.KickTime, () =>
+					{
+						if (player is null || !player.IsValid || !player.UserId.HasValue) return;
+						
+						Helper.KickPlayer(player.UserId.Value);
+					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
 			}
-
+			
 			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _localizer);
 		}
 
@@ -350,12 +359,12 @@ public partial class CS2_SimpleAdmin
 				}
 
 				if (player.UserId.HasValue)
-				{
 					AddTimer(Config.KickTime, () =>
 					{
-						Helper.KickPlayer(player.UserId.Value, "Banned");
+						if (player is null || !player.IsValid || !player.UserId.HasValue) return;
+						
+						Helper.KickPlayer(player.UserId.Value);
 					}, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-				}
 			}
 				
 			Helper.SendDiscordPenaltyMessage(caller, player, reason, time, Helper.PenaltyType.Ban, _localizer);
@@ -384,13 +393,11 @@ public partial class CS2_SimpleAdmin
 			return false;
 		}
 
-		if (duration > Config.MaxBanDuration && canPermBan == false)
-		{
-			caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.MaxBanDuration]}");
-			return false;
-		}
+		if (duration <= Config.MaxBanDuration || canPermBan) return true;
+		
+		caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.MaxBanDuration]}");
+		return false;
 
-		return true;
 	}
 
 	[ConsoleCommand("css_unban")]

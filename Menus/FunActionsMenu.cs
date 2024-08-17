@@ -49,8 +49,11 @@ namespace CS2_SimpleAdmin.Menus
 			List<ChatMenuOptionData> options = [];
 
 			// permissions
-			var hasCheats = AdminManager.PlayerHasPermissions(admin, "@css/cheats");
-			var hasSlay = AdminManager.PlayerHasPermissions(admin, "@css/slay");
+			var hasCheats = AdminManager.CommandIsOverriden("css_godmode") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_godmode")) : AdminManager.PlayerHasPermissions(admin, "@css/cheats");
+			var hasSlay = AdminManager.CommandIsOverriden("css_slay") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_slay")) : AdminManager.PlayerHasPermissions(admin, "@css/slay");
+
+			//var hasCheats = AdminManager.PlayerHasPermissions(admin, "@css/cheats");
+			//var hasSlay = AdminManager.PlayerHasPermissions(admin, "@css/slay");
 
 			// options added in order
 

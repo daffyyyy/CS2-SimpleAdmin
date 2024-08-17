@@ -23,8 +23,11 @@ namespace CS2_SimpleAdmin.Menus
 			var menu = AdminMenu.CreateMenu(localizer?["sa_menu_server_manage"] ?? "Server Manage");
 			List<ChatMenuOptionData> options = [];
 
+			
 			// permissions
-			bool hasMap = AdminManager.PlayerHasPermissions(admin, "@css/changemap");
+			var hasMap = AdminManager.CommandIsOverriden("css_map") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_map")) : AdminManager.PlayerHasPermissions(admin, "@css/changemap");
+
+			//bool hasMap = AdminManager.PlayerHasPermissions(admin, "@css/changemap");
 
 			// options added in order
 
