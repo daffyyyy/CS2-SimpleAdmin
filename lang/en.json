@@ -57,7 +57,7 @@
 	"sa_discord_penalty_mute": "Mute registered",
 	"sa_discord_penalty_gag": "Gag registered",
 	"sa_discord_penalty_silence": "Silence registered",
-	"sa_discord_warn_silence": "Warn registered",
+	"sa_discord_penalty_warn": "Warn registered",
 	"sa_discord_penalty_unknown": "Unknown registered",
 
 	"sa_player_ban_message_time": "You have been banned for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
