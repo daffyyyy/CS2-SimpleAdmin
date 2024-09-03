@@ -57,7 +57,7 @@
 	"sa_discord_penalty_mute": "الكتم مسجل",
 	"sa_discord_penalty_gag": "الصمت مسجل",
 	"sa_discord_penalty_silence": "الصمت مسجل",
-	"sa_discord_warn_silence": "التحذير مسجل",
+	"sa_discord_penalty_warn": "التحذير مسجل",
 	"sa_discord_penalty_unknown": "غير معروف مسجل",
 
 	"sa_player_ban_message_time": "تم حظرك لمدة {lightred}{0}{default} لمدة {lightred}{1}{default} دقيقة من قبل {lightred}{2}{default}!",
