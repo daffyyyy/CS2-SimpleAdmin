@@ -57,7 +57,6 @@
 	"sa_discord_penalty_mute": "Mute registered",
 	"sa_discord_penalty_gag": "Gag registered",
 	"sa_discord_penalty_silence": "Silence registered",
-	"sa_discord_warn_silence": "Warn for Silence registered",
 	"sa_discord_penalty_warn": "Warn registered",
 	"sa_discord_penalty_unknown": "Unknown registered",
 
