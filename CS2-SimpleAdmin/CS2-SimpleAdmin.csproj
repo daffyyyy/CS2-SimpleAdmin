@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+	  <RootNamespace>CS2_SimpleAdmin</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.266" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Discord.Net.Webhook" Version="3.16.0" />
+    <PackageReference Include="MySqlConnector" Version="2.3.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CS2-SimpleAdminApi\CS2-SimpleAdminApi.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+		<None Update="Database\Migrations\010_CreateWarnsTable.sql">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+    <None Update="Database\Migrations\*.sql" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Update="admin_help.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="MenuManagerApi">
+			<HintPath>3rd_party\MenuManagerApi.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+  
+</Project>
