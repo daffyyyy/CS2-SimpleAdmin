@@ -112,6 +112,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         PluginInfo.ShowAd(ModuleVersion);
         if (Config.EnableUpdateCheck)
             Task.Run(async () => await PluginInfo.CheckVersion(ModuleVersion, _logger));
+        
+        AddCommand($"css_last{Config.OtherSettings.DisconnectedPlayersHistoryCount}",
+            "Show last x disconnected players", OnDisconnectedCommand);
     }
 
     private static TargetResult? GetTarget(CommandInfo command)

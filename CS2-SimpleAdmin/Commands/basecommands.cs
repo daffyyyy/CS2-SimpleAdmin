@@ -477,6 +477,7 @@ public partial class CS2_SimpleAdmin
     }
 
     [ConsoleCommand("css_disconnected")]
+    [ConsoleCommand("css_last")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnDisconnectedCommand(CCSPlayerController? caller, CommandInfo command)
