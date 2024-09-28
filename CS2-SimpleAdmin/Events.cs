@@ -151,10 +151,10 @@ public partial class CS2_SimpleAdmin
             return HookResult.Continue;
 
         if (info.GetArg(1).Length == 0)
-            return HookResult.Handled;
-
+            return HookResult.Stop;
+        
         if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-            return HookResult.Handled;
+            return HookResult.Stop;
 
         if (command != "say_team" || !info.GetArg(1).StartsWith($"@")) return HookResult.Continue;
 
@@ -178,7 +178,7 @@ public partial class CS2_SimpleAdmin
             }
         }
 
-        return HookResult.Handled;
+        return HookResult.Stop;
     }
 
     /*public HookResult OnCommandSay(CCSPlayerController? player, CommandInfo info)

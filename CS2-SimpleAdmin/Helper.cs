@@ -607,7 +607,6 @@ public static class Time
         {
             TimeZoneInfo timezone = TimeZoneInfo.FindSystemTimeZoneById(timezoneId);
             DateTime userTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, timezone);
-
             return userTime;
         }
         catch (TimeZoneNotFoundException)
