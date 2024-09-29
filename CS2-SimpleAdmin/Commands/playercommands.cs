@@ -596,10 +596,7 @@ public partial class CS2_SimpleAdmin
             // Check if the player is connected and can be targeted
             if (player.Connected != PlayerConnectedState.PlayerConnected || !caller!.CanTarget(player))
                 return;
-
-            // Rename the player
-            player.Rename(newName);
-
+            
             // Determine message key and arguments for the rename notification
             var activityMessageKey = "sa_admin_rename_message";
             var adminActivityArgs = new object[] { "CALLER", player.PlayerName, newName };
@@ -608,6 +605,9 @@ public partial class CS2_SimpleAdmin
             if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 
             Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            
+            // Rename the player
+            player.Rename(newName);
         });
     }
 
