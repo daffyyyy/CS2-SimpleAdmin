@@ -33,8 +33,6 @@ internal static class Helper
 
     private static CNetworkSystemUpdatePublicIp? _networkSystemUpdatePublicIp;
 
-    internal static CS2_SimpleAdminConfig? Config { get; set; }
-
     public static bool IsDebugBuild
     {
         get
@@ -182,7 +180,7 @@ internal static class Helper
         if (CS2_SimpleAdmin._localizer == null)
             return;
 
-        var playerName = caller?.PlayerName ?? "Console";
+        var playerName = caller?.PlayerName ?? CS2_SimpleAdmin._localizer["sa_console"];
 
         var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
 
@@ -198,7 +196,7 @@ internal static class Helper
         if (CS2_SimpleAdmin._localizer == null)
             return;
 
-        var playerName = caller?.PlayerName ?? "Console";
+        var playerName = caller?.PlayerName ?? CS2_SimpleAdmin._localizer["sa_console"];
         var hostnameCvar = ConVar.Find("hostname");
 
         var hostname = hostnameCvar?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
@@ -246,7 +244,7 @@ internal static class Helper
         if (discordWebhookClientLog == null || localizer == null) return;
 
         var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
         discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
     }
 
@@ -255,7 +253,7 @@ internal static class Helper
         if (discordWebhookClientLog == null || localizer == null) return;
 
         var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
         discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
     }
 
@@ -292,7 +290,7 @@ internal static class Helper
                 currentMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
                 {
                     1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(controller, "@css/kick") || AdminManager.PlayerHasPermissions(controller, "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
-                    2 => arg.Replace("CALLER", callerName ?? "Console"),
+                    2 => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
                     _ => arg
                 };
             }
@@ -323,7 +321,7 @@ internal static class Helper
             formattedMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
             {
                 1 => arg.Replace("CALLER", CS2_SimpleAdmin._localizer["sa_admin"]),
-                2 => arg.Replace("CALLER", callerName ?? "Console"),
+                2 => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
                 _ => arg
             };
         }
@@ -362,7 +360,7 @@ internal static class Helper
 
         var callerCommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
         var targetCommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
         var targetName = target != null ? target.PlayerName : localizer["sa_unknown"];
         var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId64.ToString() : localizer["sa_unknown"];
 
@@ -503,7 +501,7 @@ internal static class Helper
         if (caller != null && caller.IsValid == false)
             caller = null;
 
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? CS2_SimpleAdmin._localizer["sa_console"] : caller.PlayerName;
         var communityUrl = caller != null
             ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">"
             : "<https://steamcommunity.com/profiles/0>";

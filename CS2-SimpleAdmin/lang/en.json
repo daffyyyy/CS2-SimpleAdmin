@@ -49,6 +49,7 @@
 	"sa_menu_disconnected_action_title": "Select action",
 
 	"sa_player": "Player",
+	"sa_console": "Console",
 	"sa_steamid": "SteamID",
 	"sa_duration": "Duration",
 	"sa_reason": "Reason",

@@ -10,12 +10,11 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_slay")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSlayCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         var targets = GetTarget(command);
         if (targets == null) return;
 
@@ -33,7 +32,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Make the player commit suicide
         player.CommitSuicide(false, true);
@@ -56,12 +55,11 @@ public partial class CS2_SimpleAdmin
             Helper.LogCommand(caller, command);
     }
 
-    [ConsoleCommand("css_give")]
     [RequiresPermissions("@css/cheats")]
     [CommandHelper(minArgs: 2, usage: "<#userid or name> <weapon>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         var targets = GetTarget(command);
         if (targets == null) return;
 
@@ -106,7 +104,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Give weapon to the player
         player.GiveNamedItem(weaponName);
@@ -134,7 +132,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Give weapon to the player
         player.GiveNamedItem(weapon);
@@ -157,12 +155,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_strip")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnStripCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         var targets = GetTarget(command);
         if (targets == null) return;
 
@@ -182,7 +179,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Check if player is valid, alive, and connected
         if (!player.IsValid || !player.PawnIsAlive || player.Connected != PlayerConnectedState.PlayerConnected)
@@ -209,7 +206,6 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_hp")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnHpCommand(CCSPlayerController? caller, CommandInfo command)
@@ -236,7 +232,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Set player's health
         player.SetHp(health);
@@ -259,12 +255,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_speed")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <speed>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSpeedCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         float.TryParse(command.GetArg(2), out var speed);
 
         var targets = GetTarget(command);
@@ -289,7 +284,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Set player's speed
         player.SetSpeed(speed);
@@ -317,7 +312,7 @@ public partial class CS2_SimpleAdmin
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <gravity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGravityCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         float.TryParse(command.GetArg(2), out var gravity);
 
         var targets = GetTarget(command);
@@ -342,7 +337,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Set player's gravity
         player.SetGravity(gravity);
@@ -365,12 +360,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_money")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <money>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnMoneyCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         int.TryParse(command.GetArg(2), out var money);
 
         var targets = GetTarget(command);
@@ -395,7 +389,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Set player's money
         player.SetMoney(money);
@@ -418,7 +412,6 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_slap")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [damage]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSlapCommand(CCSPlayerController? caller, CommandInfo command)
@@ -452,7 +445,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Apply slap damage to the player
         player.Pawn.Value?.Slap(damage);
@@ -477,14 +470,13 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_team")]
     [RequiresPermissions("@css/kick")]
     [CommandHelper(minArgs: 2, usage: "<#userid or name> [<ct/tt/spec>] [-k]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnTeamCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         var teamName = command.GetArg(2).ToLower();
-        var _teamName = "SPEC";
+        string _teamName;
         var teamNum = CsTeam.Spectator;
 
         var targets = GetTarget(command);
@@ -535,7 +527,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Change team based on the provided teamName and conditions
         if (!teamName.Equals("swap", StringComparison.OrdinalIgnoreCase))
@@ -574,13 +566,12 @@ public partial class CS2_SimpleAdmin
         Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
     }
 
-    [ConsoleCommand("css_rename", "Rename a player.")]
     [CommandHelper(1, "<#userid or name> <new name>")]
     [RequiresPermissions("@css/kick")]
     public void OnRenameCommand(CCSPlayerController? caller, CommandInfo command)
     {
         // Set default caller name if not provided
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Get the new name from the command arguments
         var newName = command.GetArg(2);
@@ -620,13 +611,12 @@ public partial class CS2_SimpleAdmin
         });
     }
 
-    [ConsoleCommand("css_prename", "Permanent rename a player.")]
     [CommandHelper(1, "<#userid or name> <new name>")]
     [RequiresPermissions("@css/ban")]
-    public void OnPRenameCommand(CCSPlayerController? caller, CommandInfo command)
+    public void OnPrenameCommand(CCSPlayerController? caller, CommandInfo command)
     {
         // Set default caller name if not provided
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Get the new name from the command arguments
         var newName = command.GetArg(2);
@@ -670,12 +660,11 @@ public partial class CS2_SimpleAdmin
         });
     }
 
-    [ConsoleCommand("css_respawn", "Respawn a dead player.")]
     [CommandHelper(1, "<#userid or name>")]
     [RequiresPermissions("@css/cheats")]
     public void OnRespawnCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -699,7 +688,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller == null ? "Console" : caller.PlayerName;
+        callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Ensure the player's pawn is valid before attempting to respawn
         if (_cBasePlayerControllerSetPawnFunc == null || player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
@@ -728,9 +717,6 @@ public partial class CS2_SimpleAdmin
         Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
     }
 
-    [ConsoleCommand("css_tp", "Teleport to a player.")]
-    [ConsoleCommand("css_tpto", "Teleport to a player.")]
-    [ConsoleCommand("css_goto", "Teleport to a player.")]
     [CommandHelper(1, "<#userid or name>")]
     [RequiresPermissions("@css/kick")]
     public void OnGotoCommand(CCSPlayerController? caller, CommandInfo command)
@@ -764,7 +750,7 @@ public partial class CS2_SimpleAdmin
 
             // Prepare message key and arguments for the teleport notification
             var activityMessageKey = "sa_admin_tp_message";
-            var adminActivityArgs = new object[] { player.PlayerName };
+            var adminActivityArgs = new object[] { "CALLER", player.PlayerName };
 
             // Show admin activity
             if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)
@@ -774,8 +760,6 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_bring", "Teleport a player to you.")]
-    [ConsoleCommand("css_tphere", "Teleport a player to you.")]
     [CommandHelper(1, "<#userid or name>")]
     [RequiresPermissions("@css/kick")]
     public void OnBringCommand(CCSPlayerController? caller, CommandInfo command)
@@ -809,7 +793,7 @@ public partial class CS2_SimpleAdmin
 
             // Prepare message key and arguments for the bring notification
             var activityMessageKey = "sa_admin_bring_message";
-            var adminActivityArgs = new object[] { player.PlayerName };
+            var adminActivityArgs = new object[] { "CALLER", player.PlayerName };
 
             // Show admin activity
             if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)

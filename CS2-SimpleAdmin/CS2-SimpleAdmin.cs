@@ -1,6 +1,7 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Core.Commands;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
@@ -20,7 +21,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.6.0a";
+    public override string ModuleVersion => "1.6.1a";
 
     public CS2_SimpleAdminConfig Config { get; set; } = new();
 
@@ -60,6 +61,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         MenuApi = MenuCapability.Get();
         if (MenuApi == null)
             Logger.LogError("MenuManager Core not found...");
+        
+        RegisterCommands.InitializeCommands();
     }
 
     public void OnConfigParsed(CS2_SimpleAdminConfig config)
@@ -71,7 +74,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
         Instance = this;
         _logger = Logger;
-
+        
         MySqlConnectionStringBuilder builder = new()
         {
             Server = config.DatabaseHost,
@@ -112,9 +115,6 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         PluginInfo.ShowAd(ModuleVersion);
         if (Config.EnableUpdateCheck)
             Task.Run(async () => await PluginInfo.CheckVersion(ModuleVersion, _logger));
-        
-        AddCommand($"css_last{Config.OtherSettings.DisconnectedPlayersHistoryCount}",
-            "Show last x disconnected players", OnDisconnectedCommand);
     }
 
     private static TargetResult? GetTarget(CommandInfo command)

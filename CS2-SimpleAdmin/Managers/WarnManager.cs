@@ -22,8 +22,8 @@ internal class WarnManager(Database.Database database)
             {
                 playerSteamid = player.SteamId.SteamId64.ToString(),
                 playerName = player.Name,
-                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? "Console",
-                adminName = issuer?.Name ?? "Console",
+                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 muteReason = reason,
                 duration = time,
                 ends = futureTime,
@@ -51,8 +51,8 @@ internal class WarnManager(Database.Database database)
             await connection.ExecuteAsync(sql, new
             {
                 playerSteamid = playerSteamId,
-                adminSteamid = issuer?.SteamId.ToString() ?? "Console",
-                adminName = issuer?.Name ?? "Console",
+                adminSteamid = issuer?.SteamId.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 muteReason = reason,
                 duration = time,
                 ends = futureTime,

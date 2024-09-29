@@ -7,12 +7,11 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_noclip", "Noclip a player.")]
     [CommandHelper(1, "<#userid or name>")]
     [RequiresPermissions("@css/cheats")]
     public void OnNoclipCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -35,7 +34,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Toggle no-clip mode for the player
         player.Pawn.Value?.ToggleNoclip();
@@ -62,12 +61,11 @@ public partial class CS2_SimpleAdmin
         }
     }
     
-    [ConsoleCommand("css_god")]
     [RequiresPermissions("@css/cheats")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGodCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         var targets = GetTarget(command);
         if (targets == null) return;
 
@@ -90,7 +88,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Toggle god mode for the player
         if (!GodPlayers.Add(player.Slot))
@@ -116,12 +114,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_freeze", "Freeze a player.")]
     [CommandHelper(1, "<#userid or name> [duration]")]
     [RequiresPermissions("@css/slay")]
     public void OnFreezeCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         int.TryParse(command.GetArg(2), out var time);
 
         var targets = GetTarget(command);
@@ -143,7 +140,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Freeze player pawn
         player.Pawn.Value?.Freeze();
@@ -172,12 +169,11 @@ public partial class CS2_SimpleAdmin
             Helper.LogCommand(caller, command);
     }
 
-    [ConsoleCommand("css_unfreeze", "Unfreeze a player.")]
     [CommandHelper(1, "<#userid or name>")]
     [RequiresPermissions("@css/slay")]
     public void OnUnfreezeCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -195,7 +191,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Unfreeze player pawn
         player.Pawn.Value?.Unfreeze();

@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using CS2_SimpleAdmin.Managers;
 using CS2_SimpleAdminApi;
@@ -71,5 +72,15 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
             default:
                 throw new ArgumentOutOfRangeException(nameof(penaltyType), penaltyType, null);
         }
+    }
+
+    public void LogCommand(CCSPlayerController? caller, string command)
+    {
+        Helper.LogCommand(caller, command);
+    }
+
+    public void LogCommand(CCSPlayerController? caller, CommandInfo command)
+    {
+        Helper.LogCommand(caller, command);
     }
 }

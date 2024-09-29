@@ -9,7 +9,6 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_vote")]
     [RequiresPermissions("@css/generic")]
     [CommandHelper(minArgs: 2, usage: "<question> [... options ...]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnVoteCommand(CCSPlayerController? caller, CommandInfo command)
@@ -47,11 +46,11 @@ public partial class CS2_SimpleAdmin
 
                     voteMenu.PostSelectAction = PostSelectAction.Close;
 
-                    Helper.PrintToCenterAll(_localizer["sa_admin_vote_message", caller == null ? "Console" : caller.PlayerName, question]);
+                    Helper.PrintToCenterAll(_localizer["sa_admin_vote_message", caller == null ? _localizer["sa_console"] : caller.PlayerName, question]);
 
                     player.SendLocalizedMessage(_localizer,
                         "sa_admin_vote_message",
-                        caller == null ? "Console" : caller.PlayerName,
+                        caller == null ? _localizer["sa_console"] : caller.PlayerName,
                         question);
 
                     voteMenu.Open(player);

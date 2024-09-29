@@ -12,12 +12,11 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_ban")]
     [RequiresPermissions("@css/ban")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnBanCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         if (command.ArgCount < 2)
             return;
 
@@ -56,7 +55,7 @@ public partial class CS2_SimpleAdmin
         if (!CheckValidBan(caller, time)) return;
 
         // Set default caller name if not provided
-        callerName ??= "Console";
+        callerName ??= _localizer?["sa_console"] ?? "Console";
 
         // Freeze player pawn if alive
         if (player.PawnIsAlive)
@@ -128,13 +127,12 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Ban, reason, time);
     }
 
-    [ConsoleCommand("css_addban")]
     [RequiresPermissions("@css/ban")]
     [CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
-        var callerName = caller?.PlayerName ?? "Console";
+        var callerName = caller?.PlayerName ?? _localizer?["sa_console"] ?? "Console";
         if (command.ArgCount < 2 || string.IsNullOrEmpty(command.GetArg(1))) return;
         if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
         {
@@ -185,13 +183,12 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Ban, reason, time);
     }
 
-    [ConsoleCommand("css_banip")]
     [RequiresPermissions("@css/ban")]
     [CommandHelper(minArgs: 1, usage: "<ip> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnBanIpCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
-        var callerName = caller?.PlayerName ?? "Console";
+        var callerName = caller?.PlayerName ?? _localizer?["sa_console"] ?? "Console";
         if (command.ArgCount < 2 || string.IsNullOrEmpty(command.GetArg(1))) return;
         var ipAddress = command.GetArg(1);
 
@@ -255,14 +252,13 @@ public partial class CS2_SimpleAdmin
         return false;
     }
 
-    [ConsoleCommand("css_unban")]
     [RequiresPermissions("@css/unban")]
     [CommandHelper(minArgs: 1, usage: "<steamid or name or ip> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnUnbanCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
 
-        var callerSteamId = caller?.SteamID.ToString() ?? "Console";
+        var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
 
         if (command.GetArg(1).Length <= 1)
         {
@@ -281,14 +277,13 @@ public partial class CS2_SimpleAdmin
         command.ReplyToCommand($"Unbanned player with pattern {pattern}.");
     }
 
-    [ConsoleCommand("css_warn")]
     [RequiresPermissions("@css/kick")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnWarnCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null)
             return;
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         if (command.ArgCount < 2)
             return;
 
@@ -326,7 +321,7 @@ public partial class CS2_SimpleAdmin
         if (!CheckValidBan(caller, time)) return;
 
         // Set default caller name if not provided
-        callerName ??= "Console";
+        callerName ??= _localizer?["sa_console"] ?? "Console";
 
         // Freeze player pawn if alive
         if (player.PawnIsAlive)
@@ -395,14 +390,13 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Warn, reason, time);
     }
     
-    [ConsoleCommand("css_unwarn")]
     [RequiresPermissions("@css/kick")]
     [CommandHelper(minArgs: 1, usage: "<steamid or name or ip>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnUnwarnCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
 
-        var callerSteamId = caller?.SteamID.ToString() ?? "Console";
+        var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
 
         if (command.GetArg(1).Length <= 1)
         {

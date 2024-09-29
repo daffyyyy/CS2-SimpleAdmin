@@ -11,7 +11,6 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_asay", "Say to all admins.")]
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -26,12 +25,11 @@ public partial class CS2_SimpleAdmin
         {
             if (_localizer != null)
                 player.PrintToChat(_localizer["sa_adminchat_template_admin",
-                    caller == null ? "Console" : caller.PlayerName,
+                    caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName,
                     utf8String]);
         }
     }
 
-    [ConsoleCommand("css_cssay", "Say custom text to all players - u can use color tags.")]
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminCustomSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -49,7 +47,6 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_say", "Say to all players.")]
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -69,12 +66,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_psay", "Private message a player.")]
     [CommandHelper(2, "<#userid or name> <message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminPrivateSayCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -96,7 +92,6 @@ public partial class CS2_SimpleAdmin
         command.ReplyToCommand($" Private message sent!");
     }
 
-    [ConsoleCommand("css_csay", "Say to all players (in center).")]
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminCenterSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -109,7 +104,6 @@ public partial class CS2_SimpleAdmin
         Helper.PrintToCenterAll(utf8String.ReplaceColorTags());
     }
 
-    [ConsoleCommand("css_hsay", "Say to all players (in hud).")]
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminHudSayCommand(CCSPlayerController? caller, CommandInfo command)

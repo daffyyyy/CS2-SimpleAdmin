@@ -180,43 +180,12 @@ public class PlayerManager
                     }
                 }
 
-                /*
-				if (CS2_SimpleAdmin._localizer != null)
-				{
-					if (mutesList[PenaltyType.Gag].Count == 0)
-						mutesList[PenaltyType.Gag].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_no_active_gag"]);
-					if (mutesList[PenaltyType.Mute].Count == 0)
-						mutesList[PenaltyType.Mute].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_no_active_mute"]);
-					if (mutesList[PenaltyType.Silence].Count == 0)
-						mutesList[PenaltyType.Silence].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_no_active_silence"]);
-				}
-				*/
-
-                /*
-				await Server.NextFrameAsync(() =>
-				{
-					CS2_SimpleAdmin.Instance.AddTimer(3.0f, () =>
-					{
-						player.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_player_penalty_info",
-						[
-							player.PlayerName, 
-							CS2_SimpleAdmin.PlayersInfo[userId].TotalBans,
-							CS2_SimpleAdmin.PlayersInfo[userId].TotalGags,
-							CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes,
-							CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences,
-							CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns,
-							string.Join("\n", mutesList.SelectMany(kvp => kvp.Value)),
-							string.Join("\n", warnsList)
-						]);
-					});
-			*/
-
                 await Server.NextFrameAsync(() =>
                 {
                     foreach (var admin in Helper.GetValidPlayers()
                                  .Where(p => (AdminManager.PlayerHasPermissions(p, "@css/kick") ||
                                               AdminManager.PlayerHasPermissions(p, "@css/ban")) &&
-                                             p.Connected == PlayerConnectedState.PlayerConnected))
+                                             p.Connected == PlayerConnectedState.PlayerConnected && !CS2_SimpleAdmin.AdminDisabledJoinComms.Contains(p.SteamID)))
                     {
                         if (CS2_SimpleAdmin._localizer != null && admin != player)
                             admin.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_admin_penalty_info",

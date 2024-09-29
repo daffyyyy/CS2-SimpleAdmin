@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
+using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 
 namespace CS2_SimpleAdminApi;
@@ -20,4 +21,6 @@ public interface ICS2_SimpleAdminApi
     public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?>? OnPlayerPenaltiedAdded;
     
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1);
+    public void LogCommand(CCSPlayerController? caller, string command);
+    public void LogCommand(CCSPlayerController? caller, CommandInfo command);
 }

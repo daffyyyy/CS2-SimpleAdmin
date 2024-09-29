@@ -19,9 +19,6 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_penalties")]
-    [ConsoleCommand("css_mypenalties")]
-    [ConsoleCommand("css_comms")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnPenaltiesCommand(CCSPlayerController? caller, CommandInfo command)
     {
@@ -128,7 +125,6 @@ public partial class CS2_SimpleAdmin
         });
     }
 
-    [ConsoleCommand("css_admin")]
     [RequiresPermissions("@css/generic")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -139,7 +135,6 @@ public partial class CS2_SimpleAdmin
         AdminMenu.OpenMenu(caller);
     }
 
-    [ConsoleCommand("css_adminhelp")]
     [RequiresPermissions("@css/generic")]
     public void OnAdminHelpCommand(CCSPlayerController? caller, CommandInfo command)
     {
@@ -151,7 +146,6 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_addadmin")]
     [CommandHelper(minArgs: 4, usage: "<steamid> <name> <flags/groups> <immunity> <duration>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -207,7 +201,6 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
-    [ConsoleCommand("css_deladmin")]
     [CommandHelper(minArgs: 1, usage: "<steamid>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnDelAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -255,7 +248,6 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
-    [ConsoleCommand("css_addgroup")]
     [CommandHelper(minArgs: 3, usage: "<group_name> <flags> <immunity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnAddGroup(CCSPlayerController? caller, CommandInfo command)
@@ -301,7 +293,6 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
-    [ConsoleCommand("css_delgroup")]
     [CommandHelper(minArgs: 1, usage: "<group_name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnDelGroupCommand(CCSPlayerController? caller, CommandInfo command)
@@ -341,7 +332,6 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
-    [ConsoleCommand("css_reloadadmins")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnRelAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -391,8 +381,6 @@ public partial class CS2_SimpleAdmin
         //_ = _adminManager.GiveAllFlags();
     }
 
-    [ConsoleCommand("css_stealth")]
-    [ConsoleCommand("css_hide")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnHideCommand(CCSPlayerController? caller, CommandInfo command)
@@ -421,7 +409,25 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_who")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    [RequiresPermissions("@css/kick")]
+    public void OnHideCommsCommand(CCSPlayerController? caller, CommandInfo command)
+    {
+        if (caller == null)
+            return;
+
+        if (!AdminDisabledJoinComms.Add(caller.SteamID))
+        {
+            AdminDisabledJoinComms.Remove(caller.SteamID);
+            command.ReplyToCommand("From now on, you'll see penalty notifications");
+        }
+        else
+        {
+            AdminDisabledJoinComms.Add(caller.SteamID);
+            command.ReplyToCommand($"You don't see penalty notifications now");
+        }
+    }
+
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/generic")]
     public void OnWhoCommand(CCSPlayerController? caller, CommandInfo command)
@@ -476,8 +482,6 @@ public partial class CS2_SimpleAdmin
         });
     }
 
-    [ConsoleCommand("css_disconnected")]
-    [ConsoleCommand("css_last")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnDisconnectedCommand(CCSPlayerController? caller, CommandInfo command)
@@ -494,7 +498,7 @@ public partial class CS2_SimpleAdmin
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_ban"], (_, _) =>
                 {
                     DurationMenu.OpenMenu(caller, _localizer["sa_ban"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Ban, "Powód", player, (_, _, reason) =>
+                        ReasonMenu.OpenMenu(caller, PenaltyType.Ban, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addban {player.SteamId.SteamId64} {duration} \"{reason}\"");
                         }));
@@ -502,7 +506,7 @@ public partial class CS2_SimpleAdmin
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_mute"], (_, _) =>
                 {
                     DurationMenu.OpenMenu(caller, _localizer["sa_mute"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, "Powód", player, (_, _, reason) =>
+                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addmute {player.SteamId.SteamId64} {duration} \"{reason}\"");
                         }));
@@ -510,7 +514,7 @@ public partial class CS2_SimpleAdmin
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_gag"], (_, _) =>
                 {
                     DurationMenu.OpenMenu(caller, _localizer["sa_gag"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, "Powód", player, (_, _, reason) =>
+                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addgag {player.SteamId.SteamId64} {duration} \"{reason}\"");
                         }));
@@ -518,7 +522,7 @@ public partial class CS2_SimpleAdmin
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_silence"], (_, _) =>
                 {
                     DurationMenu.OpenMenu(caller, _localizer["sa_silence"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, "Powód", player, (_, _, reason) =>
+                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addsilence {player.SteamId.SteamId64} {duration} \"{reason}\"");
                         }));
@@ -531,7 +535,6 @@ public partial class CS2_SimpleAdmin
         disconnectedMenu?.Open(caller);
     }
 
-    [ConsoleCommand("css_warns")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnWarnsCommand(CCSPlayerController? caller, CommandInfo command)
@@ -586,7 +589,6 @@ public partial class CS2_SimpleAdmin
         });
     }
 
-    [ConsoleCommand("css_players")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/generic")]
     public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
@@ -654,12 +656,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_kick")]
     [RequiresPermissions("@css/kick")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
         var targets = GetTarget(command);
@@ -695,7 +696,7 @@ public partial class CS2_SimpleAdmin
         if (!player.UserId.HasValue) return;
         
         // Set default caller name if not provided
-        callerName ??= caller != null ? caller.PlayerName : "Console";
+        callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
         reason ??= _localizer?["sa_unknown"] ?? "Unknown";
         
         var playerInfo = PlayersInfo[player.UserId.Value];
@@ -743,8 +744,6 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Kick, reason);
     }
 
-    [ConsoleCommand("css_changemap")]
-    [ConsoleCommand("css_map")]
     [RequiresPermissions("@css/changemap")]
     [CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
@@ -755,7 +754,7 @@ public partial class CS2_SimpleAdmin
 
     public void ChangeMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
     {
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
         map = map.ToLower();
 
         if (map.StartsWith("ws:"))
@@ -802,9 +801,6 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command?.GetCommandString ?? $"css_map {map}");
     }
 
-    [ConsoleCommand("css_changewsmap", "Change workshop map.")]
-    [ConsoleCommand("css_wsmap", "Change workshop map.")]
-    [ConsoleCommand("css_workshop", "Change workshop map.")]
     [CommandHelper(1, "<name or id>")]
     [RequiresPermissions("@css/changemap")]
     public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
@@ -816,7 +812,7 @@ public partial class CS2_SimpleAdmin
     public void ChangeWorkshopMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
     {
         map = map.ToLower();
-        var callerName = caller != null ? caller.PlayerName : "Console";
+        var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Determine the workshop command
         var issuedCommand = long.TryParse(map, out var mapId)
@@ -842,13 +838,12 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command?.GetCommandString ?? $"css_wsmap {map}");
     }
 
-    [ConsoleCommand("css_cvar", "Change a cvar.")]
     [CommandHelper(2, "<cvar> <value>")]
     [RequiresPermissions("@css/cvar")]
     public void OnCvarCommand(CCSPlayerController? caller, CommandInfo command)
     {
         var cvar = ConVar.Find(command.GetArg(1));
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         if (cvar == null)
         {
@@ -872,12 +867,11 @@ public partial class CS2_SimpleAdmin
         Logger.LogInformation($"{callerName} changed cvar {cvar.Name} to {value}.");
     }
 
-    [ConsoleCommand("css_rcon", "Run a server console command.")]
     [CommandHelper(1, "<command>")]
     [RequiresPermissions("@css/rcon")]
     public void OnRconCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         Helper.LogCommand(caller, command);
 
@@ -886,10 +880,6 @@ public partial class CS2_SimpleAdmin
         Logger.LogInformation($"{callerName} executed command ({command.ArgString}).");
     }
 
-    [ConsoleCommand("css_rr")]
-    [ConsoleCommand("css_rg")]
-    [ConsoleCommand("css_restart")]
-    [ConsoleCommand("css_restartgame")]
     [RequiresPermissions("@css/generic")]
     [CommandHelper(minArgs: 0, usage: "", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnRestartCommand(CCSPlayerController? caller, CommandInfo command)
@@ -902,7 +892,7 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(admin, "css_restartgame");
 
         // TODO: Localize
-        var name = admin == null ? "Console" : admin.PlayerName;
+        var name = admin == null ? _localizer?["sa_console"] ?? "Console" : admin.PlayerName;
         Server.PrintToChatAll($"[SA] {name}: Restarting game...");
         Server.ExecuteCommand("mp_restartgame 2");
     }

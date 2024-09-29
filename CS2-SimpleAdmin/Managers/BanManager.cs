@@ -27,8 +27,8 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
                 playerSteamid = player.SteamId.SteamId64.ToString(),
                 playerName = player.Name,
                 playerIp = config.OtherSettings.BanType == 1 ? player.IpAddress : null,
-                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? "Console",
-                adminName = issuer?.Name ?? "Console",
+                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 banReason = reason,
                 duration = time,
                 ends = futureTime,
@@ -56,8 +56,8 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
             await connection.ExecuteAsync(sql, new
             {
                 playerSteamid = playerSteamId,
-                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? "Console",
-                adminName = issuer?.Name ?? "Console",
+                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 banReason = reason,
                 duration = time,
                 ends = futureTime,
@@ -85,8 +85,8 @@ internal class BanManager(Database.Database database, CS2_SimpleAdminConfig conf
             await connection.ExecuteAsync(sql, new
             {
                 playerIp,
-                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? "Console",
-                adminName = issuer?.Name ?? "Console",
+                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 banReason = reason,
                 duration = time,
                 ends = futureTime,

@@ -10,13 +10,12 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [ConsoleCommand("css_gag")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGagCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -51,7 +50,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller == null ? "Console" : caller.PlayerName;
+        callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         muteManager ??= new MuteManager(Database);
 
         // Get player and admin information
@@ -101,7 +100,6 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Gag, reason, time);
     }
 
-    [ConsoleCommand("css_addgag")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnAddGagCommand(CCSPlayerController? caller, CommandInfo command)
@@ -109,7 +107,7 @@ public partial class CS2_SimpleAdmin
         if (Database == null) return;
 
         // Set caller name
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Validate command arguments
         if (command.ArgCount < 2 || string.IsNullOrEmpty(command.GetArg(1))) return;
@@ -160,14 +158,13 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Gag, reason, time);
     }
 
-    [ConsoleCommand("css_ungag")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<steamid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnUngagCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
 
-        var callerSteamId = caller?.SteamID.ToString() ?? "Console";
+        var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
         var reason = command.GetArg(2);
 
@@ -229,13 +226,12 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_mute")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnMuteCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -270,7 +266,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller == null ? "Console" : caller.PlayerName;
+        callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         muteManager ??= new MuteManager(Database);
 
         // Get player and admin information
@@ -323,7 +319,6 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Mute, reason, time);
     }
 
-    [ConsoleCommand("css_addmute")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<steamid> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnAddMuteCommand(CCSPlayerController? caller, CommandInfo command)
@@ -331,7 +326,7 @@ public partial class CS2_SimpleAdmin
         if (Database == null) return;
 
         // Set caller name
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Validate command arguments
         if (command.ArgCount < 2 || string.IsNullOrEmpty(command.GetArg(1))) return;
@@ -382,14 +377,13 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Mute, reason, time);
     }
 
-    [ConsoleCommand("css_unmute")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<steamid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnUnmuteCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
 
-        var callerSteamId = caller?.SteamID.ToString() ?? "Console";
+        var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
         var reason = command.GetArg(2);
 
@@ -453,13 +447,12 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_silence")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSilenceCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
@@ -494,7 +487,7 @@ public partial class CS2_SimpleAdmin
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
-        callerName ??= caller == null ? "Console" : caller.PlayerName;
+        callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
         muteManager ??= new MuteManager(Database);
 
         // Get player and admin information
@@ -544,7 +537,6 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Silence, reason, time);
     }
 
-    [ConsoleCommand("css_addsilence")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [time in minutes/0 perm] [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnAddSilenceCommand(CCSPlayerController? caller, CommandInfo command)
@@ -552,7 +544,7 @@ public partial class CS2_SimpleAdmin
         if (Database == null) return;
 
         // Set caller name
-        var callerName = caller == null ? "Console" : caller.PlayerName;
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Validate command arguments
         if (command.ArgCount < 2 || string.IsNullOrEmpty(command.GetArg(1))) return;
@@ -603,14 +595,13 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Silence, reason, time);
     }
 
-    [ConsoleCommand("css_unsilence")]
     [RequiresPermissions("@css/chat")]
     [CommandHelper(minArgs: 1, usage: "<steamid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnUnsilenceCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (Database == null) return;
 
-        var callerSteamId = caller?.SteamID.ToString() ?? "Console";
+        var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
         var reason = command.GetArg(2);
 
