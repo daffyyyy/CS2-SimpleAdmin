@@ -643,9 +643,10 @@ public partial class CS2_SimpleAdmin
             var adminActivityArgs = new object[] { "CALLER", player.PlayerName, newName };
 
             // Display admin activity message to other players
-            if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
-
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            if (caller != null && !SilentPlayers.Contains(caller.Slot))
+            {
+                Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            }
             
             // Determine if the new name is valid and update the renamed players list
             if (!string.IsNullOrEmpty(newName))
