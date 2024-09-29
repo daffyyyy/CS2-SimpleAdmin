@@ -64,7 +64,7 @@ public partial class CS2_SimpleAdmin
         });
 
         // Add penalty to the player's penalty manager
-        PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Gag, DateTime.Now.AddMinutes(time), time);
+        PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Gag, Time.ActualDateTime().AddMinutes(time), time);
 
         // Determine message keys and arguments based on gag time (permanent or timed)
         var (messageKey, activityMessageKey, playerArgs, adminActivityArgs) = time == 0
@@ -283,7 +283,7 @@ public partial class CS2_SimpleAdmin
         });
 
         // Add penalty to the player's penalty manager
-        PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Mute, DateTime.Now.AddMinutes(time), time);
+        PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Mute, Time.ActualDateTime().AddMinutes(time), time);
 
         // Determine message keys and arguments based on mute time (permanent or timed)
         var (messageKey, activityMessageKey, playerArgs, adminActivityArgs) = time == 0
@@ -501,7 +501,7 @@ public partial class CS2_SimpleAdmin
         });
 
         // Add penalty to the player's penalty manager
-        PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Silence, DateTime.Now.AddMinutes(time), time);
+        PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Silence, Time.ActualDateTime().AddMinutes(time), time);
 
         // Determine message keys and arguments based on silence time (permanent or timed)
         var (messageKey, activityMessageKey, playerArgs, adminActivityArgs) = time == 0

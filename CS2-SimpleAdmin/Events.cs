@@ -59,11 +59,11 @@ public partial class CS2_SimpleAdmin
             {
                 disconnectedPlayer.Name = player.PlayerName;
                 disconnectedPlayer.IpAddress = player.IpAddress?.Split(":")[0];
-                disconnectedPlayer.DisconnectTime = DateTime.Now;
+                disconnectedPlayer.DisconnectTime = Time.ActualDateTime();
             }
             else
             {
-                DisconnectedPlayers.Add(new DisconnectedPlayer(steamId, player.PlayerName, player.IpAddress?.Split(":")[0], DateTime.Now));
+                DisconnectedPlayers.Add(new DisconnectedPlayer(steamId, player.PlayerName, player.IpAddress?.Split(":")[0], Time.ActualDateTime()));
             }
 
             PlayerPenaltyManager.RemoveAllPenalties(player.Slot);

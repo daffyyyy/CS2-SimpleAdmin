@@ -364,12 +364,12 @@ internal static class Helper
         var targetName = target != null ? target.PlayerName : localizer["sa_unknown"];
         var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId64.ToString() : localizer["sa_unknown"];
 
-        var futureTime = DateTime.Now.AddMinutes(duration);
+        var futureTime = Time.ActualDateTime().AddMinutes(duration);
         var futureUnixTimestamp = new DateTimeOffset(futureTime).ToUnixTimeSeconds();
 
         string time;
 
-        if (penaltySetting.FirstOrDefault(s => s.Name.Equals("Webhook"))?.Value == "{relative}")
+        if (penaltySetting.FirstOrDefault(s => s.Name.Equals("Time"))?.Value == "{relative}")
             time = duration != 0 ? $"<t:{futureUnixTimestamp}:R>" : localizer["sa_permanent"];
         else
             time = duration != 0 ? ConvertMinutesToTime(duration) : localizer["sa_permanent"];
