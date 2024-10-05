@@ -12,7 +12,6 @@
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.266" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Discord.Net.Webhook" Version="3.16.0" />
     <PackageReference Include="MySqlConnector" Version="2.3.7" />
     <PackageReference Include="Newtonsoft.Json" Version="*" />
   </ItemGroup>

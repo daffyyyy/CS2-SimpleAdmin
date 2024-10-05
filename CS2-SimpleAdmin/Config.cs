@@ -27,7 +27,7 @@ public class DiscordPenaltySetting
     public required string Name { get; set; }
 
     [JsonPropertyName("value")]
-    public string Value { get; set; } = "";
+    public string? Value { get; set; } = "";
 }
 
 public class Discord
@@ -210,6 +210,9 @@ public class OtherSettings
 
     [JsonPropertyName("DisconnectedPlayersHistoryCount")]
     public int DisconnectedPlayersHistoryCount { get; set; } = 10;
+    
+    [JsonPropertyName("NotifyPenaltiesToAdminOnConnect")]
+    public bool NotifyPenaltiesToAdminOnConnect { get; set; } = true;
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig

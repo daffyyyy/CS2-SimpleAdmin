@@ -1,19 +1,17 @@
 ﻿using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Capabilities;
-using CounterStrikeSharp.API.Core.Commands;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CS2_SimpleAdmin.Managers;
 using CS2_SimpleAdminApi;
-using Discord.Webhook;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(260)]
+[MinimumApiVersion(271)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
     internal static CS2_SimpleAdmin Instance { get; private set; } = new();
@@ -21,10 +19,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.6.1b";
-
-    public CS2_SimpleAdminConfig Config { get; set; } = new();
-
+    public override string ModuleVersion => "1.6.2a";
+    
     public override void Load(bool hotReload)
     {
         Instance = this;
@@ -98,6 +94,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         }
 
         Task.Run(() => Database.DatabaseMigration());
+        
+        PermissionManager = new PermissionManager(Database);
+        BanManager = new BanManager(Database);
+        MuteManager = new MuteManager(Database);
+        WarnManager = new WarnManager(Database);
 
         Config = config;
         Helper.UpdateConfig(config);
@@ -110,7 +111,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         _localizer = Localizer;
 
         if (!string.IsNullOrEmpty(Config.Discord.DiscordLogWebhook))
-            DiscordWebhookClientLog = new DiscordWebhookClient(Config.Discord.DiscordLogWebhook);
+            DiscordWebhookClientLog = new DiscordManager(Config.Discord.DiscordLogWebhook);
 
         PluginInfo.ShowAd(ModuleVersion);
         if (Config.EnableUpdateCheck)

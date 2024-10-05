@@ -4,6 +4,7 @@ using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CS2_SimpleAdmin.Managers;
+using CS2_SimpleAdmin.Menus;
 using CS2_SimpleAdminApi;
 
 namespace CS2_SimpleAdmin;
@@ -27,20 +28,21 @@ public partial class CS2_SimpleAdmin
         {
             return;
         }
-
-        int.TryParse(command.GetArg(2), out var time);
-
+        
         if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
             reason = command.GetArg(3);
 
-        MuteManager muteManager = new(Database);
-
         playersToTarget.ForEach(player =>
         {
-            if (caller!.CanTarget(player))
+            if (!caller!.CanTarget(player)) return;
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
             {
-                Gag(caller, player, time, reason, callerName, muteManager, command);
+                DurationMenu.OpenMenu(caller, $"{_localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player,
+                    ManagePlayersMenu.GagMenu);
+                return;
             }
+            
+            Gag(caller, player, time, reason, callerName, MuteManager, command);
         });
     }
 
@@ -124,7 +126,6 @@ public partial class CS2_SimpleAdmin
             ? command.GetArg(3)
             : (_localizer?["sa_unknown"] ?? "Unknown");
 
-        MuteManager muteManager = new(Database);
         int.TryParse(command.GetArg(2), out var time);
 
         // Get player and admin info
@@ -140,14 +141,14 @@ public partial class CS2_SimpleAdmin
             if (!caller.CanTarget(player)) return;
 
             // Perform the gag for an online player
-            Gag(caller, player, time, reason, callerName, muteManager, silent: true);
+            Gag(caller, player, time, reason, callerName, MuteManager, silent: true);
         }
         else
         {
             // Asynchronous gag operation for offline players
             Task.Run(async () =>
             {
-                await muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time);
+                await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time);
             });
 
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Gag has been added offline.");
@@ -244,19 +245,20 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        int.TryParse(command.GetArg(2), out var time);
-
         if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
             reason = command.GetArg(3);
 
-        MuteManager muteManager = new(Database);
-
         playersToTarget.ForEach(player =>
         {
-            if (caller!.CanTarget(player))
+            if (!caller!.CanTarget(player)) return;
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
             {
-                Mute(caller, player, time, reason, callerName, muteManager, command);
+                DurationMenu.OpenMenu(caller, $"{_localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player,
+                    ManagePlayersMenu.MuteMenu);
+                return;
             }
+
+            Mute(caller, player, time, reason, callerName, MuteManager, command);
         });
     }
 
@@ -343,7 +345,6 @@ public partial class CS2_SimpleAdmin
             ? command.GetArg(3)
             : (_localizer?["sa_unknown"] ?? "Unknown");
 
-        MuteManager muteManager = new(Database);
         int.TryParse(command.GetArg(2), out var time);
 
         // Get player and admin info
@@ -359,14 +360,14 @@ public partial class CS2_SimpleAdmin
             if (!caller.CanTarget(player)) return;
 
             // Perform the mute for an online player
-            Mute(caller, player, time, reason, callerName, muteManager, silent: true);
+            Mute(caller, player, time, reason, callerName, MuteManager, silent: true);
         }
         else
         {
             // Asynchronous mute operation for offline players
             Task.Run(async () =>
             {
-                await muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
+                await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
             });
 
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Mute has been added offline.");
@@ -464,20 +465,21 @@ public partial class CS2_SimpleAdmin
         {
             return;
         }
-
-        int.TryParse(command.GetArg(2), out var time);
-
+        
         if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
             reason = command.GetArg(3);
 
-        MuteManager muteManager = new(Database);
-
         playersToTarget.ForEach(player =>
         {
-            if (caller!.CanTarget(player))
+            if (!caller!.CanTarget(player)) return;
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
             {
-                Silence(caller, player, time, reason, callerName, muteManager, command);
+                DurationMenu.OpenMenu(caller, $"{_localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player,
+                    ManagePlayersMenu.SilenceMenu);
+                return;
             }
+                
+            Silence(caller, player, time, reason, callerName, MuteManager, command);
         });
     }
 
@@ -562,7 +564,6 @@ public partial class CS2_SimpleAdmin
             : (_localizer?["sa_unknown"] ?? "Unknown");
 
         int.TryParse(command.GetArg(2), out var time);
-        MuteManager muteManager = new(Database);
 
         // Get player and admin info
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
@@ -577,14 +578,14 @@ public partial class CS2_SimpleAdmin
             if (!caller.CanTarget(player)) return;
 
             // Perform the silence for an online player
-            Silence(caller, player, time, reason, callerName, muteManager, silent: true);
+            Silence(caller, player, time, reason, callerName, MuteManager, silent: true);
         }
         else
         {
             // Asynchronous silence operation for offline players
             Task.Run(async () =>
             {
-                await muteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 2);
+                await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 2);
             });
 
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Silence has been added offline.");

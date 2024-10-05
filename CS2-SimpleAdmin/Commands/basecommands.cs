@@ -29,16 +29,12 @@ public partial class CS2_SimpleAdmin
 
         Task.Run(async () =>
         {
-            // Initialize managers
-            MuteManager muteManager = new(Database);
-            WarnManager warnManager = new(Database);
-
             try
             {
-                var warns = await warnManager.GetPlayerWarns(PlayersInfo[userId], false);
+                var warns = await WarnManager.GetPlayerWarns(PlayersInfo[userId], false);
 
                 // Check if the player is muted
-                var activeMutes = await muteManager.IsPlayerMuted(PlayersInfo[userId].SteamId.SteamId64.ToString());
+                var activeMutes = await MuteManager.IsPlayerMuted(PlayersInfo[userId].SteamId.SteamId64.ToString());
 
                 Dictionary<PenaltyType, List<string>> mutesList = new()
                 {
@@ -221,8 +217,7 @@ public partial class CS2_SimpleAdmin
     public void RemoveAdmin(CCSPlayerController? caller, string steamid, bool globalDelete = false, CommandInfo? command = null)
     {
         if (Database == null) return;
-        PermissionManager adminManager = new(Database);
-        _ = adminManager.DeleteAdminBySteamId(steamid, globalDelete);
+        _ = PermissionManager.DeleteAdminBySteamId(steamid, globalDelete);
 
         AddTimer(2, () =>
         {
@@ -313,8 +308,7 @@ public partial class CS2_SimpleAdmin
     private void RemoveGroup(CCSPlayerController? caller, string name, CommandInfo? command = null)
     {
         if (Database == null) return;
-        PermissionManager adminManager = new(Database);
-        _ = adminManager.DeleteGroup(name);
+        _ = PermissionManager.DeleteGroup(name);
 
         AddTimer(2, () =>
         {
@@ -551,9 +545,6 @@ public partial class CS2_SimpleAdmin
         if (playersToTarget.Count > 1)
             return;
 
-        Database.Database database = new(DbConnectionString);
-        WarnManager warnManager = new(database);
-
         playersToTarget.ForEach(player =>
         {
             if (!player.UserId.HasValue) return;
@@ -565,7 +556,7 @@ public partial class CS2_SimpleAdmin
 
             Task.Run(async () =>
             {
-                var warnsList = await warnManager.GetPlayerWarns(PlayersInfo[userId], false);
+                var warnsList = await WarnManager.GetPlayerWarns(PlayersInfo[userId], false);
                 var sortedWarns = warnsList
                     .OrderBy(warn => (string)warn.status == "ACTIVE" ? 0 : 1)
                     .ThenByDescending(warn => (int)warn.id)
@@ -576,7 +567,7 @@ public partial class CS2_SimpleAdmin
                     warnsMenu?.AddMenuOption($"[{((string)w.status == "ACTIVE" ? $"{ChatColors.LightRed}X" : $"{ChatColors.Lime}✔️")}{ChatColors.Default}] {(string)w.reason}",
                         (controller, option) =>
                         {
-                            _ = warnManager.UnwarnPlayer(PlayersInfo[userId], (int)w.id);
+                            _ = WarnManager.UnwarnPlayer(PlayersInfo[userId], (int)w.id);
                             player.PrintToChat(_localizer["sa_admin_warns_unwarn", player.PlayerName, (string)w.reason]);
                         });
                 });

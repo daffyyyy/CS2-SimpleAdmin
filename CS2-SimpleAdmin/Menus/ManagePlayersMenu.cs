@@ -151,7 +151,7 @@ public static class ManagePlayersMenu
         CS2_SimpleAdmin.Instance.Kick(admin, player, reason);
     }
 
-    private static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
+    internal static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
     {
         ReasonMenu.OpenMenu(admin, PenaltyType.Ban,
             $"{CS2_SimpleAdmin._localizer?["sa_ban"] ?? "Ban"}: {player.PlayerName}", player, (_, _, reason) =>
@@ -211,7 +211,7 @@ public static class ManagePlayersMenu
         CS2_SimpleAdmin.Instance.Warn(admin, player, duration, reason);
     }
 
-    private static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
+    internal static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
     {
         ReasonMenu.OpenMenu(admin, PenaltyType.Gag,
             $"{CS2_SimpleAdmin._localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player, (_, _, reason) =>
@@ -241,7 +241,7 @@ public static class ManagePlayersMenu
         CS2_SimpleAdmin.Instance.Gag(admin, player, duration, reason);
     }
 
-    private static void MuteMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
+    internal static void MuteMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
     {
         ReasonMenu.OpenMenu(admin, PenaltyType.Mute,
             $"{CS2_SimpleAdmin._localizer?["sa_mute"] ?? "mute"}: {player.PlayerName}", player, (_, _, reason) =>
@@ -272,7 +272,7 @@ public static class ManagePlayersMenu
         CS2_SimpleAdmin.Instance.Mute(admin, player, duration, reason);
     }
 
-    private static void SilenceMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
+    internal static void SilenceMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
     {
         ReasonMenu.OpenMenu(admin, PenaltyType.Silence,
             $"{CS2_SimpleAdmin._localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player, (_, _, reason) =>

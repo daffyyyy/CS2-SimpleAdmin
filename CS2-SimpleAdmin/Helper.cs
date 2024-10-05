@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API;
+﻿using System.Globalization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
@@ -9,18 +10,15 @@ using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Menu;
 using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using CS2_SimpleAdminApi;
-using Discord;
-using Discord.Webhook;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using System.Drawing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using Color = Discord.Color;
+using CS2_SimpleAdmin.Managers;
 
 namespace CS2_SimpleAdmin;
 
@@ -188,7 +186,7 @@ internal static class Helper
             "sa_discord_log_command",
             playerName, command.GetCommandString]}".Replace("HOSTNAME", hostname).Replace("**", ""));
         
-        SendDiscordLogMessage(caller, command, CS2_SimpleAdmin.DiscordWebhookClientLog, CS2_SimpleAdmin._localizer);
+        SendDiscordLogMessage(caller, command, CS2_SimpleAdmin._localizer);
     }
 
     internal static void LogCommand(CCSPlayerController? caller, string command)
@@ -204,7 +202,7 @@ internal static class Helper
         CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer["sa_discord_log_command",
             playerName, command]}".Replace("HOSTNAME", hostname).Replace("**", ""));
 
-        SendDiscordLogMessage(caller, command, CS2_SimpleAdmin.DiscordWebhookClientLog, CS2_SimpleAdmin._localizer);
+        SendDiscordLogMessage(caller, command, CS2_SimpleAdmin._localizer);
     }
 
     /*public static IEnumerable<Embed> GenerateEmbedsDiscord(string title, string description, string thumbnailUrl, Color color, string[] fieldNames, string[] fieldValues, bool[] inlineFlags)
@@ -239,22 +237,22 @@ internal static class Helper
 		return new List<Embed> { embed.Build() };
 	}*/
 
-    private static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
+    private static void SendDiscordLogMessage(CCSPlayerController? caller, CommandInfo command, IStringLocalizer? localizer)
     {
-        if (discordWebhookClientLog == null || localizer == null) return;
+        if (CS2_SimpleAdmin.DiscordWebhookClientLog == null || localizer == null) return;
 
         var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
         var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
-        discordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+        _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
     }
 
-    private static void SendDiscordLogMessage(CCSPlayerController? caller, string command, DiscordWebhookClient? discordWebhookClientLog, IStringLocalizer? localizer)
+    private static void SendDiscordLogMessage(CCSPlayerController? caller, string command, IStringLocalizer? localizer)
     {
-        if (discordWebhookClientLog == null || localizer == null) return;
+        if (CS2_SimpleAdmin.DiscordWebhookClientLog == null || localizer == null) return;
 
         var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
         var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
-        discordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
+        _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
     }
 
     public static void ShowAdminActivity(string messageKey, string? callerName = null, params object[] messageArgs)
@@ -343,7 +341,7 @@ internal static class Helper
     public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, IStringLocalizer? localizer)
     {
         if (localizer == null) return;
-
+        
         var penaltySetting = penalty switch
         {
             PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyBanSettings,
@@ -357,11 +355,13 @@ internal static class Helper
         var webhookUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("Webhook"))?.Value;
 
         if (string.IsNullOrEmpty(webhookUrl)) return;
+        
+        const string defaultCommunityUrl = "<https://steamcommunity.com/profiles/0>";
+        var callerCommunityUrl = caller != null ? $"<{new SteamID(caller.SteamID).ToCommunityUrl()}>" : defaultCommunityUrl;
+        var targetCommunityUrl = target != null ? $"<{new SteamID(target.SteamID).ToCommunityUrl()}>" : defaultCommunityUrl;
 
-        var callerCommunityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
-        var targetCommunityUrl = target != null ? "<" + new SteamID(target.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
-        var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
-        var targetName = target != null ? target.PlayerName : localizer["sa_unknown"];
+        var callerName = caller?.PlayerName ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
+        var targetName = target?.PlayerName ?? localizer["sa_unknown"];
         var targetSteamId = target != null ? new SteamID(target.SteamID).SteamId64.ToString() : localizer["sa_unknown"];
 
         var futureTime = Time.ActualDateTime().AddMinutes(duration);
@@ -385,16 +385,14 @@ internal static class Helper
             $"[{targetName}]({targetCommunityUrl})", $"||{targetSteamId}||", time, reason,
             $"[{callerName}]({callerCommunityUrl})"
         ];
+        
         bool[] inlineFlags = [true, true, true, false, false];
-
         var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
-
         var colorHex = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value ?? "#FFFFFF";
-        var color = ColorTranslator.FromHtml(colorHex);
 
-        var embed = new EmbedBuilder
+        var embed = new Embed
         {
-            Color = new Color(color.R, color.G, color.B),
+            Color = DiscordManager.ColorFromHex(colorHex),
             Title = penalty switch
             {
                 PenaltyType.Ban => localizer["sa_discord_penalty_ban"],
@@ -404,14 +402,15 @@ internal static class Helper
                 PenaltyType.Warn => localizer["sa_discord_penalty_warn"],
                 _ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
             },
+            Description = $"{hostname}",
             ThumbnailUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ThumbnailUrl"))?.Value,
             ImageUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ImageUrl"))?.Value,
-            Footer = new EmbedFooterBuilder
+            Footer = new Footer
             {
-                Text = penaltySetting.FirstOrDefault(s => s.Name.Equals("Footer"))?.Value,
+                Text = penaltySetting.FirstOrDefault(s => s.Name.Equals("Footer"))?.Value
             },
-            Description = $"{hostname}",
-            Timestamp = DateTimeOffset.Now,
+            
+            Timestamp = Time.ActualDateTime().ToUniversalTime().ToString("o"),
         };
 
         for (var i = 0; i < fieldNames.Length; i++)
@@ -421,7 +420,15 @@ internal static class Helper
 
         Task.Run(async () =>
         {
-            await new DiscordWebhookClient(webhookUrl).SendMessageAsync(embeds: [embed.Build()]);
+            try
+            {
+                await new DiscordManager(webhookUrl).SendEmbedAsync(embed);
+            }
+            catch (Exception ex)
+            {
+                // Log or handle the exception
+                Console.WriteLine(ex);
+            }
         });
     }
 
@@ -470,7 +477,6 @@ internal static class Helper
         }
     }
 
-
     public static void UpdateConfig<T>(T config) where T : BasePluginConfig, new()
     {
         // get newest config version
@@ -505,7 +511,7 @@ internal static class Helper
         var communityUrl = caller != null
             ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">"
             : "<https://steamcommunity.com/profiles/0>";
-        CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(
+        _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(
             CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})",
                 commandString]));
     }
@@ -513,20 +519,21 @@ internal static class Helper
 
 public static class PluginInfo
 {
-    internal static async Task CheckVersion(string version, ILogger logger)
+    internal static async Task CheckVersion(string localVersion, ILogger logger)
     {
-        using HttpClient client = new();
+        const string versionUrl = "https://raw.githubusercontent.com/daffyyyy/CS2-SimpleAdmin/main/CS2-SimpleAdmin/VERSION";
+        var client = CS2_SimpleAdmin.HttpClient;
 
         try
         {
-            var response = await client.GetAsync("https://raw.githubusercontent.com/daffyyyy/CS2-SimpleAdmin/main/CS2-SimpleAdmin/VERSION");
+            var response = await client.GetAsync(versionUrl);
 
             if (response.IsSuccessStatusCode)
             {
                 var remoteVersion = await response.Content.ReadAsStringAsync();
                 remoteVersion = remoteVersion.Trim();
 
-                var comparisonResult = string.CompareOrdinal(version, remoteVersion);
+                var comparisonResult = string.CompareOrdinal(localVersion, remoteVersion);
 
                 switch (comparisonResult)
                 {
@@ -543,7 +550,7 @@ public static class PluginInfo
             }
             else
             {
-                logger.LogWarning("Failed to check version");
+                logger.LogWarning($"Failed to check version. Status Code: {response.StatusCode}");
             }
         }
         catch (HttpRequestException ex)
@@ -555,7 +562,7 @@ public static class PluginInfo
             logger.LogError(ex, "An error occurred while checking version.");
         }
     }
-
+    
     internal static void ShowAd(string moduleVersion)
     {
         Console.WriteLine(" ");

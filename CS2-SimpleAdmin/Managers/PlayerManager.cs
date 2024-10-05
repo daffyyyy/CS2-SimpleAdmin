@@ -27,12 +27,12 @@ public class PlayerManager
         var userId = player.UserId.Value;
 
         // Check if the player's IP or SteamID is in the bannedPlayers list
-        if (_config.OtherSettings.BanType > 0 && CS2_SimpleAdmin.BannedPlayers.Contains(ipAddress) || CS2_SimpleAdmin.BannedPlayers.Contains(player.SteamID.ToString()))
+        if (_config.OtherSettings.BanType > 0 && CS2_SimpleAdmin.BannedPlayers.Contains(ipAddress) ||
+            CS2_SimpleAdmin.BannedPlayers.Contains(player.SteamID.ToString()))
         {
             // Kick the player if banned
             if (player.UserId.HasValue)
                 Helper.KickPlayer(player.UserId.Value, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
-
             return;
         }
 
@@ -41,32 +41,52 @@ public class PlayerManager
         // Perform asynchronous database operations within a single method
         Task.Run(async () =>
         {
-            // Initialize managers
-            BanManager banManager = new(CS2_SimpleAdmin.Database, _config);
-            MuteManager muteManager = new(CS2_SimpleAdmin.Database);
-            WarnManager warnManager = new(CS2_SimpleAdmin.Database);
-
             try
             {
                 await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
-
-                const string query = """
-				                     INSERT INTO `sa_players_ips` (steamid, address)
-				                     									VALUES (@SteamID, @IPAddress) ON DUPLICATE KEY UPDATE `used_at` = CURRENT_TIMESTAMP
-				                     """;
-
-                await connection.ExecuteAsync(query, new
+                const string selectQuery = "SELECT COUNT(*) FROM `sa_players_ips` WHERE steamid = @SteamID AND address = @IPAddress;";
+                var recordExists = await connection.ExecuteScalarAsync<int>(selectQuery, new
                 {
-                    SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId,
-                    IPAddress = ipAddress,
+                    SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                    IPAddress = ipAddress
                 });
+                
+                if (recordExists > 0)
+                {
+                    const string updateQuery = """
+                                               UPDATE `sa_players_ips`
+                                               SET used_at = CURRENT_TIMESTAMP
+                                               WHERE steamid = @SteamID AND address = @IPAddress;
+                                               """;
+                    await connection.ExecuteAsync(updateQuery, new
+                    {
+                        SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                        IPAddress = ipAddress
+                    });
+                }
+                else
+                {
+                    const string insertQuery = """
+                                               INSERT INTO `sa_players_ips` (steamid, address, used_at)
+                                               VALUES (@SteamID, @IPAddress, CURRENT_TIMESTAMP);
+                                               """;
+                    await connection.ExecuteAsync(insertQuery, new
+                    {
+                        SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                        IPAddress = ipAddress
+                    });
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                CS2_SimpleAdmin._logger?.LogError(
+                    $"Unable to save ip address for {CS2_SimpleAdmin.PlayersInfo[userId].Name} ({ipAddress}) {ex.Message}");   
+            }
 
             try
             {
                 // Check if the player is banned
-                bool isBanned = await banManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId]);
+                bool isBanned = await CS2_SimpleAdmin.Instance.BanManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId]);
 
                 if (isBanned)
                 {
@@ -98,50 +118,19 @@ public class PlayerManager
                     return;
                 }
 
-                var warns = await warnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
+                var warns = await CS2_SimpleAdmin.Instance.WarnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
+                var (totalMutes, totalGags, totalSilences) =
+                    await CS2_SimpleAdmin.Instance.MuteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId]);
 
                 CS2_SimpleAdmin.PlayersInfo[userId].TotalBans =
-                    await banManager.GetPlayerBans(CS2_SimpleAdmin.PlayersInfo[userId]);
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes =
-                    await muteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId], 1);
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalGags =
-                    await muteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId], 0);
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences =
-                    await muteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId], 2);
+                    await CS2_SimpleAdmin.Instance.BanManager.GetPlayerBans(CS2_SimpleAdmin.PlayersInfo[userId]);
+                CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes = totalMutes;
+                CS2_SimpleAdmin.PlayersInfo[userId].TotalGags = totalGags;
+                CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences = totalSilences;
                 CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns = warns.Count;
 
-
                 // Check if the player is muted
-                var activeMutes = await muteManager.IsPlayerMuted(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString());
-
-                /*
-				Dictionary<PenaltyType, List<string>> mutesList = new()
-				{
-					{ PenaltyType.Gag, [] },
-					{ PenaltyType.Mute, [] },
-					{ PenaltyType.Silence, [] }
-				};
-
-				List<string> warnsList = [];
-
-				bool found = false;
-				foreach (var warn in warns.TakeWhile(warn => (string)warn.status == "ACTIVE"))
-				{
-					DateTime ends = warn.ends;
-					if (CS2_SimpleAdmin._localizer == null) continue;
-					
-					Console.WriteLine(ends.ToLocalTime().ToString(CultureInfo.CurrentCulture));
-					
-					warnsList.Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_warn", ends.ToLocalTime().ToString(CultureInfo.CurrentCulture), (string)warn.reason]);
-					found = true;
-				}
-
-				if (!found)
-				{
-					if (CS2_SimpleAdmin._localizer != null)
-						warnsList.Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_no_active_warn"]);
-				}
-				*/
+                var activeMutes = await CS2_SimpleAdmin.Instance.MuteManager.IsPlayerMuted(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString());
 
                 if (activeMutes.Count > 0)
                 {
@@ -180,24 +169,27 @@ public class PlayerManager
                     }
                 }
 
-                await Server.NextFrameAsync(() =>
+                if (CS2_SimpleAdmin.Instance.Config.OtherSettings.NotifyPenaltiesToAdminOnConnect)
                 {
-                    foreach (var admin in Helper.GetValidPlayers()
-                                 .Where(p => (AdminManager.PlayerHasPermissions(p, "@css/kick") ||
-                                              AdminManager.PlayerHasPermissions(p, "@css/ban")) &&
-                                             p.Connected == PlayerConnectedState.PlayerConnected && !CS2_SimpleAdmin.AdminDisabledJoinComms.Contains(p.SteamID)))
+                    await Server.NextFrameAsync(() =>
                     {
-                        if (CS2_SimpleAdmin._localizer != null && admin != player)
-                            admin.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_admin_penalty_info",
-                                player.PlayerName,
-                                CS2_SimpleAdmin.PlayersInfo[userId].TotalBans,
-                                CS2_SimpleAdmin.PlayersInfo[userId].TotalGags,
-                                CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes,
-                                CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences,
-                                CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns
-                            );
-                    }
-                });
+                        foreach (var admin in Helper.GetValidPlayers()
+                                     .Where(p => (AdminManager.PlayerHasPermissions(p, "@css/kick") ||
+                                                  AdminManager.PlayerHasPermissions(p, "@css/ban")) &&
+                                                 p.Connected == PlayerConnectedState.PlayerConnected && !CS2_SimpleAdmin.AdminDisabledJoinComms.Contains(p.SteamID)))
+                        {
+                            if (CS2_SimpleAdmin._localizer != null && admin != player)
+                                admin.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_admin_penalty_info",
+                                    player.PlayerName,
+                                    CS2_SimpleAdmin.PlayersInfo[userId].TotalBans,
+                                    CS2_SimpleAdmin.PlayersInfo[userId].TotalGags,
+                                    CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes,
+                                    CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences,
+                                    CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns
+                                );
+                        }
+                    });
+                }
             }
             catch (Exception ex)
             {
@@ -229,15 +221,10 @@ public class PlayerManager
 
             Task.Run(async () =>
             {
-                PermissionManager adminManager = new(CS2_SimpleAdmin.Database);
-                BanManager banManager = new(CS2_SimpleAdmin.Database, _config);
-                MuteManager muteManager = new(CS2_SimpleAdmin.Database);
-                WarnManager warnManager = new(CS2_SimpleAdmin.Database);
-
-                await muteManager.ExpireOldMutes();
-                await banManager.ExpireOldBans();
-                await warnManager.ExpireOldWarns();
-                await adminManager.DeleteOldAdmins();
+                await CS2_SimpleAdmin.Instance.MuteManager.ExpireOldMutes();
+                await CS2_SimpleAdmin.Instance.BanManager.ExpireOldBans();
+                await CS2_SimpleAdmin.Instance.WarnManager.ExpireOldWarns();
+                await CS2_SimpleAdmin.Instance.PermissionManager.DeleteOldAdmins();
 
                 CS2_SimpleAdmin.BannedPlayers.Clear();
 
@@ -245,11 +232,11 @@ public class PlayerManager
                 {
                     try
                     {
-                        await banManager.CheckOnlinePlayers(onlinePlayers);
+                        await CS2_SimpleAdmin.Instance.BanManager.CheckOnlinePlayers(onlinePlayers);
 
                         if (_config.OtherSettings.TimeMode == 0)
                         {
-                            await muteManager.CheckOnlineModeMutes(onlinePlayers);
+                            await CS2_SimpleAdmin.Instance.MuteManager.CheckOnlineModeMutes(onlinePlayers);
                         }
                     }
                     catch (Exception)

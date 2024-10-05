@@ -21,8 +21,25 @@ public partial class CS2_SimpleAdmin
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
         AddCommandListener(null, OnCommandSayNew);
+        AddCommandListener("callvote", OnCommandCallVote);
         // AddCommandListener("say", OnCommandSay);
         // AddCommandListener("say_team", OnCommandTeamSay);
+    }
+
+    private HookResult OnCommandCallVote(CCSPlayerController? caller, CommandInfo commandinfo)
+    {
+        var voteType = commandinfo.GetArg(1).ToLower();
+        if (voteType != "kick")
+            return HookResult.Continue;
+
+        var target = int.TryParse(commandinfo.GetArg(2), out var userId) 
+            ? Utilities.GetPlayerFromUserid(userId) 
+            : null;
+        
+        if (target == null || !target.IsValid || target.Connected != PlayerConnectedState.PlayerConnected)
+            return HookResult.Continue;
+
+        return !CounterStrikeSharp.API.Modules.Admin.AdminManager.CanPlayerTarget(caller, target) ? HookResult.Stop : HookResult.Continue;
     }
 
     private void OnGameServerSteamAPIActivated()
@@ -79,8 +96,8 @@ public partial class CS2_SimpleAdmin
                                               out var expirationTime)
                                           || !(expirationTime <= Time.ActualDateTime())) return HookResult.Continue;
 
-            AdminManager.ClearPlayerPermissions(authorizedSteamId);
-            AdminManager.RemovePlayerAdminData(authorizedSteamId);
+            CounterStrikeSharp.API.Modules.Admin.AdminManager.ClearPlayerPermissions(authorizedSteamId);
+            CounterStrikeSharp.API.Modules.Admin.AdminManager.RemovePlayerAdminData(authorizedSteamId);
 
             return HookResult.Continue;
         }
@@ -160,10 +177,10 @@ public partial class CS2_SimpleAdmin
 
         StringBuilder sb = new();
 
-        if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
+        if (CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(player, "@css/chat"))
         {
             sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -172,7 +189,7 @@ public partial class CS2_SimpleAdmin
         {
             sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
             player.PrintToChat(sb.ToString());
-            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -218,10 +235,10 @@ public partial class CS2_SimpleAdmin
 
         StringBuilder sb = new();
 
-        if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
+        if (CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(player, "@css/chat"))
         {
             sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -230,7 +247,7 @@ public partial class CS2_SimpleAdmin
         {
             sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
             player.PrintToChat(sb.ToString());
-            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }

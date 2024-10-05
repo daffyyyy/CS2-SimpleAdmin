@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin.Managers;
 
-internal class WarnManager(Database.Database database)
+internal class WarnManager(Database.Database? database)
 {
     public async Task WarnPlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0)
     {
+        if (database == null) return;
+
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
 
@@ -36,8 +38,8 @@ internal class WarnManager(Database.Database database)
 
     public async Task AddWarnBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0)
     {
+        if (database == null) return;
         if (string.IsNullOrEmpty(playerSteamId)) return;
-
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
@@ -65,6 +67,8 @@ internal class WarnManager(Database.Database database)
 
     public async Task<List<dynamic>> GetPlayerWarns(PlayerInfo player, bool active = true)
     {
+        if (database == null) return [];
+
         try
         {
             await using var connection = await database.GetConnectionAsync();
@@ -97,6 +101,8 @@ internal class WarnManager(Database.Database database)
 
     public async Task<int> GetPlayerWarnsCount(string steamId, bool active = true)
     {
+        if (database == null) return 0;
+
         try
         {
             await using var connection = await database.GetConnectionAsync();
@@ -120,6 +126,8 @@ internal class WarnManager(Database.Database database)
 
     public async Task UnwarnPlayer(PlayerInfo player, int warnId)
     {
+        if (database == null) return;
+
         try
         {
             await using var connection = await database.GetConnectionAsync();
@@ -138,6 +146,8 @@ internal class WarnManager(Database.Database database)
     
     public async Task UnwarnPlayer(string playerPattern)
     {
+        if (database == null) return;
+
         try
         {
             await using var connection = await database.GetConnectionAsync();
@@ -156,6 +166,8 @@ internal class WarnManager(Database.Database database)
 
     public async Task ExpireOldWarns()
     {
+        if (database == null) return;
+
         try
         {
             await using var connection = await database.GetConnectionAsync();

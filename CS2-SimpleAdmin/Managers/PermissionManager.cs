@@ -8,7 +8,7 @@ using System.Collections.Concurrent;
 
 namespace CS2_SimpleAdmin.Managers;
 
-public class PermissionManager(Database.Database database)
+public class PermissionManager(Database.Database? database)
 {
     // Unused for now
     //public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
@@ -59,6 +59,8 @@ public class PermissionManager(Database.Database database)
 
     private async Task<List<(string, string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
     {
+	    if (database == null) return [];
+
         var now = Time.ActualDateTime();
 
         try
@@ -176,6 +178,8 @@ public class PermissionManager(Database.Database database)
 
     private async Task<Dictionary<string, (List<string>, int)>> GetAllGroupsData()
     {
+	    if (database == null) return [];
+
         await using MySqlConnection connection = await database.GetConnectionAsync();
         try
         {
@@ -366,6 +370,8 @@ public class PermissionManager(Database.Database database)
 
     public async Task DeleteAdminBySteamId(string playerSteamId, bool globalDelete = false)
     {
+	    if (database == null) return;
+
         if (string.IsNullOrEmpty(playerSteamId)) return;
 
         //_adminCache.TryRemove(playerSteamId, out _);
@@ -388,6 +394,8 @@ public class PermissionManager(Database.Database database)
 
     public async Task AddAdminBySteamId(string playerSteamId, string playerName, List<string> flagsList, int immunity = 0, int time = 0, bool globalAdmin = false)
     {
+	    if (database == null) return;
+
         if (string.IsNullOrEmpty(playerSteamId) || flagsList.Count == 0) return;
 
         var now = Time.ActualDateTime();
@@ -458,6 +466,8 @@ public class PermissionManager(Database.Database database)
 
     public async Task AddGroup(string groupName, List<string> flagsList, int immunity = 0, bool globalGroup = false)
     {
+	    if (database == null) return;
+
         if (string.IsNullOrEmpty(groupName) || flagsList.Count == 0) return;
 
         await using var connection = await database.GetConnectionAsync();
@@ -504,6 +514,8 @@ public class PermissionManager(Database.Database database)
 
     public async Task DeleteGroup(string groupName)
     {
+	    if (database == null) return;
+
         if (string.IsNullOrEmpty(groupName)) return;
 
         await using var connection = await database.GetConnectionAsync();
@@ -520,6 +532,8 @@ public class PermissionManager(Database.Database database)
 
     public async Task DeleteOldAdmins()
     {
+	    if (database == null) return;
+
         try
         {
             await using var connection = await database.GetConnectionAsync();

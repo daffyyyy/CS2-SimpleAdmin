@@ -1,11 +1,11 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using CS2_SimpleAdmin.Managers;
+using CS2_SimpleAdmin.Menus;
 using CS2_SimpleAdminApi;
 
 namespace CS2_SimpleAdmin;
@@ -30,21 +30,22 @@ public partial class CS2_SimpleAdmin
         {
             return;
         }
-
-        Database.Database database = new(DbConnectionString);
-        BanManager banManager = new(database, Config);
-
-        int.TryParse(command.GetArg(2), out var time);
-
+        
         if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
             reason = command.GetArg(3);
 
         playersToTarget.ForEach(player =>
         {
-            if (caller!.CanTarget(player))
+            if (!caller.CanTarget(player)) return;
+            
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
             {
-                Ban(caller, player, time, reason, callerName, banManager, command);
+                DurationMenu.OpenMenu(caller, $"{_localizer?["sa_ban"] ?? "Ban"}: {player.PlayerName}", player,
+                    ManagePlayersMenu.BanMenu);
+                return;
             }
+
+            Ban(caller, player, time, reason, callerName, BanManager, command);
         });
     }
 
@@ -70,7 +71,7 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle banning logic
         Task.Run(async () =>
         {
-            await (banManager ??= new BanManager(Database, Config)).BanPlayer(playerInfo, adminInfo, reason, time);
+            await BanManager.BanPlayer(playerInfo, adminInfo, reason, time);
         });
 
         // Update banned players list
@@ -168,8 +169,7 @@ public partial class CS2_SimpleAdmin
             // Asynchronous ban operation if player is not online or not found
             Task.Run(async () =>
             {
-                var banManager = new BanManager(Database, Config);
-                await banManager.AddBanBySteamid(steamid, adminInfo, reason, time);
+                await BanManager.AddBanBySteamid(steamid, adminInfo, reason, time);
             });
 
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Ban has been added offline.");
@@ -224,8 +224,7 @@ public partial class CS2_SimpleAdmin
             // Asynchronous ban operation if player is not online or not found
             Task.Run(async () =>
             {
-                var banManager = new BanManager(Database, Config);
-                await banManager.AddBanByIp(ipAddress, adminInfo, reason, time);
+                await BanManager.AddBanByIp(ipAddress, adminInfo, reason, time);
             });
 
             command.ReplyToCommand($"Player with ip {ipAddress} is not online. Ban has been added offline.");
@@ -269,8 +268,7 @@ public partial class CS2_SimpleAdmin
         var pattern = command.GetArg(1);
         var reason = command.GetArg(2);
 
-        BanManager banManager = new(Database, Config);
-        Task.Run(async () => await banManager.UnbanPlayer(pattern, callerSteamId, reason));
+        Task.Run(async () => await BanManager.UnbanPlayer(pattern, callerSteamId, reason));
 
         Helper.LogCommand(caller, command);
 
@@ -406,8 +404,7 @@ public partial class CS2_SimpleAdmin
 
         var pattern = command.GetArg(1);
 
-        WarnManager warnManager = new(Database);
-        Task.Run(async () => await warnManager.UnwarnPlayer(pattern));
+        Task.Run(async () => await WarnManager.UnwarnPlayer(pattern));
 
         Helper.LogCommand(caller, command);
         command.ReplyToCommand($"Unwarned player with pattern {pattern}.");

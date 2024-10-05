@@ -4,10 +4,12 @@ using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin.Managers;
 
-internal class MuteManager(Database.Database database)
+internal class MuteManager(Database.Database? database)
 {
     public async Task MutePlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0, int type = 0)
     {
+        if (database == null) return;
+
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
 
@@ -47,6 +49,8 @@ internal class MuteManager(Database.Database database)
 
     public async Task AddMuteBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0, int type = 0)
     {
+        if (database == null) return;
+
         if (string.IsNullOrEmpty(playerSteamId)) return;
 
 
@@ -84,6 +88,8 @@ internal class MuteManager(Database.Database database)
 
     public async Task<List<dynamic>> IsPlayerMuted(string steamId)
     {
+        if (database == null) return [];
+
         if (string.IsNullOrEmpty(steamId))
         {
             return [];
@@ -124,34 +130,50 @@ internal class MuteManager(Database.Database database)
         }
     }
 
-    public async Task<int> GetPlayerMutes(PlayerInfo playerInfo, int type = 0)
+    public async Task<(int TotalMutes, int TotalGags, int TotalSilences)> GetPlayerMutes(PlayerInfo playerInfo)
     {
+        if (database == null) return (0,0,0);
+
         try
         {
-            var muteType = type switch
-            {
-                1 => "MUTE",
-                2 => "SILENCE",
-                _ => "GAG"
-            };
-
             await using var connection = await database.GetConnectionAsync();
 
             var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
-                ? "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND type = @MuteType"
-                : "SELECT COUNT(*) FROM sa_mutes WHERE player_steamid = @PlayerSteamID AND server_id = @serverid AND type = @MuteType";
+                ? """
+                  SELECT
+                      COUNT(CASE WHEN type = 'MUTE' THEN 1 END) AS TotalMutes,
+                      COUNT(CASE WHEN type = 'GAG' THEN 1 END) AS TotalGags,
+                      COUNT(CASE WHEN type = 'SILENCE' THEN 1 END) AS TotalSilences
+                  FROM sa_mutes
+                  WHERE player_steamid = @PlayerSteamID;
+                  """
+                : """
+                  SELECT
+                      COUNT(CASE WHEN type = 'MUTE' THEN 1 END) AS TotalMutes,
+                      COUNT(CASE WHEN type = 'GAG' THEN 1 END) AS TotalGags,
+                      COUNT(CASE WHEN type = 'SILENCE' THEN 1 END) AS TotalSilences
+                  FROM sa_mutes
+                  WHERE player_steamid = @PlayerSteamID AND server_id = @ServerId;
+                  """;
 
-            var muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = playerInfo.SteamId.SteamId64.ToString(), serverid = CS2_SimpleAdmin.ServerId, MuteType = muteType });
-            return muteCount;
+            var result = await connection.QuerySingleAsync<(int TotalMutes, int TotalGags, int TotalSilences)>(sql, new
+            {
+                PlayerSteamID = playerInfo.SteamId.SteamId64.ToString(),
+                CS2_SimpleAdmin.ServerId
+            });
+
+            return result;
         }
         catch (Exception)
         {
-            return 0;
+            return (0, 0, 0);
         }
     }
-
+    
     public async Task CheckOnlineModeMutes(List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)> players)
     {
+        if (database == null) return;
+
         try
         {
             int batchSize = 10;
@@ -196,6 +218,8 @@ internal class MuteManager(Database.Database database)
 
     public async Task UnmutePlayer(string playerPattern, string adminSteamId, string reason, int type = 0)
     {
+        if (database == null) return;
+
         if (playerPattern.Length <= 1)
         {
             return;
@@ -266,6 +290,8 @@ internal class MuteManager(Database.Database database)
 
     public async Task ExpireOldMutes()
     {
+        if (database == null) return;
+
         try
         {
             await using var connection = await database.GetConnectionAsync();

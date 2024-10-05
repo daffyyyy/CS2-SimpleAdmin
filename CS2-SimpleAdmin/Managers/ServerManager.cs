@@ -79,7 +79,7 @@ public class ServerManager
                 if (CS2_SimpleAdmin.Instance.Config.EnableMetrics)
                 {
                     var queryString = $"?address={address}&hostname={hostname}";
-                    using HttpClient client = new();
+                    var client = CS2_SimpleAdmin.HttpClient;
 
                     try
                     {

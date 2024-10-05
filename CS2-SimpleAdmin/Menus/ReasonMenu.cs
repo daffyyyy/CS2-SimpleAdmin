@@ -16,6 +16,8 @@ public static class ReasonMenu
             PenaltyType.Kick => CS2_SimpleAdmin.Instance.Config.MenuConfigs.KickReasons,
             PenaltyType.Mute => CS2_SimpleAdmin.Instance.Config.MenuConfigs.MuteReasons,
             PenaltyType.Warn => CS2_SimpleAdmin.Instance.Config.MenuConfigs.WarnReasons,
+            PenaltyType.Gag => CS2_SimpleAdmin.Instance.Config.MenuConfigs.MuteReasons,
+            PenaltyType.Silence => CS2_SimpleAdmin.Instance.Config.MenuConfigs.MuteReasons,
             _ => CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons
         };
 
