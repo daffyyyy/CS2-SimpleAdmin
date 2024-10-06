@@ -19,13 +19,30 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    [CommandHelper(usage: "[#userid or name]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnPenaltiesCommand(CCSPlayerController? caller, CommandInfo command)
     {
         if (caller == null || caller.IsValid == false || !caller.UserId.HasValue || Database == null)
             return;
-
+        
         var userId = caller.UserId.Value;
+        
+        if (!string.IsNullOrEmpty(command.GetArg(1)) && AdminManager.PlayerHasPermissions(caller, "@css/kick"))
+        {
+            var targets = GetTarget(command);
+            
+            if (targets == null)
+                return;
+            
+            var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+            playersToTarget.ForEach(player =>
+            {
+                if (!player.UserId.HasValue) return;
+                if (!caller!.CanTarget(player)) return;
+
+                userId = player.UserId.Value;
+            });
+        }
 
         Task.Run(async () =>
         {
@@ -103,7 +120,7 @@ public partial class CS2_SimpleAdmin
                 {
                     caller.SendLocalizedMessage(_localizer, "sa_player_penalty_info",
                     [
-                        caller.PlayerName,
+                        PlayersInfo[userId].Name,
                         PlayersInfo[userId].TotalBans,
                         PlayersInfo[userId].TotalGags,
                         PlayersInfo[userId].TotalMutes,

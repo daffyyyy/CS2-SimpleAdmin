@@ -35,7 +35,7 @@ public partial class CS2_SimpleAdmin
         playersToTarget.ForEach(player =>
         {
             if (!caller!.CanTarget(player)) return;
-            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
             {
                 DurationMenu.OpenMenu(caller, $"{_localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player,
                     ManagePlayersMenu.GagMenu);
@@ -251,7 +251,7 @@ public partial class CS2_SimpleAdmin
         playersToTarget.ForEach(player =>
         {
             if (!caller!.CanTarget(player)) return;
-            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
             {
                 DurationMenu.OpenMenu(caller, $"{_localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player,
                     ManagePlayersMenu.MuteMenu);
@@ -472,7 +472,7 @@ public partial class CS2_SimpleAdmin
         playersToTarget.ForEach(player =>
         {
             if (!caller!.CanTarget(player)) return;
-            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid)
+            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
             {
                 DurationMenu.OpenMenu(caller, $"{_localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player,
                     ManagePlayersMenu.SilenceMenu);

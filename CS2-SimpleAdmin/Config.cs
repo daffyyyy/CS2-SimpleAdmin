@@ -213,11 +213,14 @@ public class OtherSettings
     
     [JsonPropertyName("NotifyPenaltiesToAdminOnConnect")]
     public bool NotifyPenaltiesToAdminOnConnect { get; set; } = true;
+    
+    [JsonPropertyName("ShowBanMenuIfNoTime")]
+    public bool ShowBanMenuIfNoTime { get; set; } = true;
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
 {
-    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 20;
+    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 21;
 
     [JsonPropertyName("DatabaseHost")]
     public string DatabaseHost { get; set; } = "";
