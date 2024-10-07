@@ -42,18 +42,17 @@ public partial class CS2_SimpleAdmin
                 return;
             }
             
-            Gag(caller, player, time, reason, callerName, MuteManager, command);
+            Gag(caller, player, time, reason, callerName, command);
         });
     }
 
-    internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, CommandInfo? command = null, bool silent = false)
+    internal void Gag(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, CommandInfo? command = null, bool silent = false)
     {
         if (Database == null || !player.IsValid || !player.UserId.HasValue) return;
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-        muteManager ??= new MuteManager(Database);
 
         // Get player and admin information
         var playerInfo = PlayersInfo[player.UserId.Value];
@@ -62,7 +61,7 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle gag logic
         Task.Run(async () =>
         {
-            await muteManager.MutePlayer(playerInfo, adminInfo, reason, time);
+            await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time);
         });
 
         // Add penalty to the player's penalty manager
@@ -141,7 +140,7 @@ public partial class CS2_SimpleAdmin
             if (!caller.CanTarget(player)) return;
 
             // Perform the gag for an online player
-            Gag(caller, player, time, reason, callerName, MuteManager, silent: true);
+            Gag(caller, player, time, reason, callerName, silent: true);
         }
         else
         {
@@ -176,7 +175,6 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.LogCommand(caller, command);
-        var muteManager = new MuteManager(Database);
 
         // Check if pattern is a valid SteamID64
         if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
@@ -190,7 +188,7 @@ public partial class CS2_SimpleAdmin
 
                 Task.Run(async () =>
                 {
-                    await muteManager.UnmutePlayer(player.SteamID.ToString(), callerSteamId, reason);
+                    await MuteManager.UnmutePlayer(player.SteamID.ToString(), callerSteamId, reason);
                 });
 
                 command.ReplyToCommand($"Ungaged player {player.PlayerName}.");
@@ -211,7 +209,7 @@ public partial class CS2_SimpleAdmin
 
             Task.Run(async () =>
             {
-                await muteManager.UnmutePlayer(namePlayer.SteamID.ToString(), callerSteamId, reason);
+                await MuteManager.UnmutePlayer(namePlayer.SteamID.ToString(), callerSteamId, reason);
             });
 
             command.ReplyToCommand($"Ungaged player {namePlayer.PlayerName}.");
@@ -220,7 +218,7 @@ public partial class CS2_SimpleAdmin
         {
             Task.Run(async () =>
             {
-                await muteManager.UnmutePlayer(pattern, callerSteamId, reason);
+                await MuteManager.UnmutePlayer(pattern, callerSteamId, reason);
             });
 
             command.ReplyToCommand($"Ungaged offline player with pattern {pattern}.");
@@ -258,18 +256,17 @@ public partial class CS2_SimpleAdmin
                 return;
             }
 
-            Mute(caller, player, time, reason, callerName, MuteManager, command);
+            Mute(caller, player, time, reason, callerName, command);
         });
     }
 
-    internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, CommandInfo? command = null, bool silent = false)
+    internal void Mute(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, CommandInfo? command = null, bool silent = false)
     {
         if (Database == null || !player.IsValid || !player.UserId.HasValue) return;
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-        muteManager ??= new MuteManager(Database);
 
         // Get player and admin information
         var playerInfo = PlayersInfo[player.UserId.Value];
@@ -281,7 +278,7 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle mute logic
         Task.Run(async () =>
         {
-            await muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
+            await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
         });
 
         // Add penalty to the player's penalty manager
@@ -360,7 +357,7 @@ public partial class CS2_SimpleAdmin
             if (!caller.CanTarget(player)) return;
 
             // Perform the mute for an online player
-            Mute(caller, player, time, reason, callerName, MuteManager, silent: true);
+            Mute(caller, player, time, reason, callerName, silent: true);
         }
         else
         {
@@ -395,7 +392,6 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.LogCommand(caller, command);
-        var muteManager = new MuteManager(Database);
 
         // Check if pattern is a valid SteamID64
         if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
@@ -410,7 +406,7 @@ public partial class CS2_SimpleAdmin
 
                 Task.Run(async () =>
                 {
-                    await muteManager.UnmutePlayer(player.SteamID.ToString(), callerSteamId, reason, 1);
+                    await MuteManager.UnmutePlayer(player.SteamID.ToString(), callerSteamId, reason, 1);
                 });
 
                 command.ReplyToCommand($"Unmuted player {player.PlayerName}.");
@@ -432,7 +428,7 @@ public partial class CS2_SimpleAdmin
 
             Task.Run(async () =>
             {
-                await muteManager.UnmutePlayer(namePlayer.SteamID.ToString(), callerSteamId, reason, 1);
+                await MuteManager.UnmutePlayer(namePlayer.SteamID.ToString(), callerSteamId, reason, 1);
             });
 
             command.ReplyToCommand($"Unmuted player {namePlayer.PlayerName}.");
@@ -441,7 +437,7 @@ public partial class CS2_SimpleAdmin
         {
             Task.Run(async () =>
             {
-                await muteManager.UnmutePlayer(pattern, callerSteamId, reason, 1);
+                await MuteManager.UnmutePlayer(pattern, callerSteamId, reason, 1);
             });
 
             command.ReplyToCommand($"Unmuted offline player with pattern {pattern}.");
@@ -479,18 +475,17 @@ public partial class CS2_SimpleAdmin
                 return;
             }
                 
-            Silence(caller, player, time, reason, callerName, MuteManager, command);
+            Silence(caller, player, time, reason, callerName, command);
         });
     }
 
-    internal void Silence(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, MuteManager? muteManager = null, CommandInfo? command = null, bool silent = false)
+    internal void Silence(CCSPlayerController? caller, CCSPlayerController player, int time, string reason, string? callerName = null, CommandInfo? command = null, bool silent = false)
     {
         if (Database == null || !player.IsValid || !player.UserId.HasValue) return;
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-        muteManager ??= new MuteManager(Database);
 
         // Get player and admin information
         var playerInfo = PlayersInfo[player.UserId.Value];
@@ -499,7 +494,7 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle silence logic
         Task.Run(async () =>
         {
-            await muteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2); // Assuming 2 is the type for silence
+            await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2); // Assuming 2 is the type for silence
         });
 
         // Add penalty to the player's penalty manager
@@ -578,7 +573,7 @@ public partial class CS2_SimpleAdmin
             if (!caller.CanTarget(player)) return;
 
             // Perform the silence for an online player
-            Silence(caller, player, time, reason, callerName, MuteManager, silent: true);
+            Silence(caller, player, time, reason, callerName, silent: true);
         }
         else
         {
@@ -613,7 +608,6 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.LogCommand(caller, command);
-        var muteManager = new MuteManager(Database);
 
         // Check if pattern is a valid SteamID64
         if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
@@ -630,7 +624,7 @@ public partial class CS2_SimpleAdmin
 
                 Task.Run(async () =>
                 {
-                    await muteManager.UnmutePlayer(player.SteamID.ToString(), callerSteamId, reason, 2); // Unmute by type 2 (silence)
+                    await MuteManager.UnmutePlayer(player.SteamID.ToString(), callerSteamId, reason, 2); // Unmute by type 2 (silence)
                 });
 
                 command.ReplyToCommand($"Unsilenced player {player.PlayerName}.");
@@ -654,7 +648,7 @@ public partial class CS2_SimpleAdmin
 
             Task.Run(async () =>
             {
-                await muteManager.UnmutePlayer(namePlayer.SteamID.ToString(), callerSteamId, reason, 2); // Unmute by type 2 (silence)
+                await MuteManager.UnmutePlayer(namePlayer.SteamID.ToString(), callerSteamId, reason, 2); // Unmute by type 2 (silence)
             });
 
             command.ReplyToCommand($"Unsilenced player {namePlayer.PlayerName}.");
@@ -663,7 +657,7 @@ public partial class CS2_SimpleAdmin
         {
             Task.Run(async () =>
             {
-                await muteManager.UnmutePlayer(pattern, callerSteamId, reason, 2); // Unmute by type 2 (silence)
+                await MuteManager.UnmutePlayer(pattern, callerSteamId, reason, 2); // Unmute by type 2 (silence)
             });
 
             command.ReplyToCommand($"Unsilenced offline player with pattern {pattern}.");

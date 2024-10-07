@@ -176,7 +176,7 @@ internal class MuteManager(Database.Database? database)
 
         try
         {
-            int batchSize = 10;
+            var batchSize = 10;
             await using var connection = await database.GetConnectionAsync();
 
             var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
@@ -188,9 +188,9 @@ internal class MuteManager(Database.Database? database)
                 var batch = players.Skip(i).Take(batchSize);
                 var parametersList = new List<object>();
 
-                foreach (var (IpAddress, SteamID, UserId, Slot) in batch)
+                foreach (var (_, steamId, _, _) in batch)
                 {
-                    parametersList.Add(new { PlayerSteamID = SteamID, serverid = CS2_SimpleAdmin.ServerId });
+                    parametersList.Add(new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
                 }
 
                 await connection.ExecuteAsync(sql, parametersList);
@@ -201,14 +201,14 @@ internal class MuteManager(Database.Database? database)
                 : "SELECT * FROM `sa_mutes` WHERE player_steamid = @PlayerSteamID AND passed >= duration AND duration > 0 AND status = 'ACTIVE' AND server_id = @serverid";
 
 
-            foreach (var (IpAddress, SteamID, UserId, Slot) in players)
+            foreach (var (_, steamId, _, slot) in players)
             {
-                var muteRecords = await connection.QueryAsync(sql, new { PlayerSteamID = SteamID, serverid = CS2_SimpleAdmin.ServerId });
+                var muteRecords = await connection.QueryAsync(sql, new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
 
                 foreach (var muteRecord in muteRecords)
                 {
                     DateTime endDateTime = muteRecord.ends;
-                    PlayerPenaltyManager.RemovePenaltiesByDateTime(Slot, endDateTime);
+                    PlayerPenaltyManager.RemovePenaltiesByDateTime(slot, endDateTime);
                 }
 
             }
@@ -295,7 +295,7 @@ internal class MuteManager(Database.Database? database)
         try
         {
             await using var connection = await database.GetConnectionAsync();
-            var sql = "";
+            string sql;
 
             if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
             {

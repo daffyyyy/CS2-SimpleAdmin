@@ -198,10 +198,9 @@ public partial class CS2_SimpleAdmin
     public static void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
     {
         if (Database == null) return;
-        PermissionManager adminManager = new(Database);
-
+        
         var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
-        _ = adminManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
+        _ = Instance.PermissionManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
 
         Helper.LogCommand(caller, $"css_addadmin {steamid} {name} {flags} {immunity} {time}");
 
@@ -289,10 +288,9 @@ public partial class CS2_SimpleAdmin
     private static void AddGroup(CCSPlayerController? caller, string name, string flags, int immunity, bool globalGroup, CommandInfo? command = null)
     {
         if (Database == null) return;
-        PermissionManager adminManager = new(Database);
 
         var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
-        _ = adminManager.AddGroup(name, flagsList, immunity, globalGroup);
+        _ = Instance.PermissionManager.AddGroup(name, flagsList, immunity, globalGroup);
 
         Helper.LogCommand(caller, $"css_addgroup {name} {flags} {immunity}");
 
@@ -367,12 +365,10 @@ public partial class CS2_SimpleAdmin
             AdminManager.RemovePlayerAdminData(steamId);
         }
 
-        PermissionManager adminManager = new(Database);
-
         Task.Run(async () =>
         {
-            await adminManager.CrateGroupsJsonFile();
-            await adminManager.CreateAdminsJsonFile();
+            await PermissionManager.CrateGroupsJsonFile();
+            await PermissionManager.CreateAdminsJsonFile();
 
             var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
             var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");

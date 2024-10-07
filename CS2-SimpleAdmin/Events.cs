@@ -29,6 +29,7 @@ public partial class CS2_SimpleAdmin
     private HookResult OnCommandCallVote(CCSPlayerController? caller, CommandInfo info)
     {
         var voteType = info.GetArg(1).ToLower();
+        
         if (voteType != "kick")
             return HookResult.Continue;
 
@@ -96,8 +97,8 @@ public partial class CS2_SimpleAdmin
                                               out var expirationTime)
                                           || !(expirationTime <= Time.ActualDateTime())) return HookResult.Continue;
 
-            CounterStrikeSharp.API.Modules.Admin.AdminManager.ClearPlayerPermissions(authorizedSteamId);
-            CounterStrikeSharp.API.Modules.Admin.AdminManager.RemovePlayerAdminData(authorizedSteamId);
+            AdminManager.ClearPlayerPermissions(authorizedSteamId);
+            AdminManager.RemovePlayerAdminData(authorizedSteamId);
 
             return HookResult.Continue;
         }
@@ -186,7 +187,7 @@ public partial class CS2_SimpleAdmin
         if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
         {
             sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -195,7 +196,7 @@ public partial class CS2_SimpleAdmin
         {
             sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
             player.PrintToChat(sb.ToString());
-            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -241,10 +242,10 @@ public partial class CS2_SimpleAdmin
 
         StringBuilder sb = new();
 
-        if (CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(player, "@css/chat"))
+        if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
         {
             sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -253,7 +254,7 @@ public partial class CS2_SimpleAdmin
         {
             sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
             player.PrintToChat(sb.ToString());
-            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && CounterStrikeSharp.API.Modules.Admin.AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -277,7 +278,6 @@ public partial class CS2_SimpleAdmin
         SilentPlayers.Clear();
 
         PlayerPenaltyManager.RemoveAllPenalties();
-        new PlayerManager().CheckPlayersTimer();
     }
 
     [GameEventHandler]

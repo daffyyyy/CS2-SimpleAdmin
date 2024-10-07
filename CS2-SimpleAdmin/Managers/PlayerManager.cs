@@ -86,8 +86,8 @@ public class PlayerManager
             try
             {
                 // Check if the player is banned
-                bool isBanned = await CS2_SimpleAdmin.Instance.BanManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId]);
-
+                var isBanned = await CS2_SimpleAdmin.Instance.BanManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId]);
+                
                 if (isBanned)
                 {
                     // Add player's IP and SteamID to bannedPlayers list if not already present
@@ -205,14 +205,14 @@ public class PlayerManager
 
     public void CheckPlayersTimer()
     {
-        CS2_SimpleAdmin.Database = new Database.Database(CS2_SimpleAdmin.Instance.DbConnectionString);
-
         CS2_SimpleAdmin.Instance.AddTimer(61.0f, () =>
         {
 #if DEBUG
             CS2_SimpleAdmin._logger?.LogCritical("[OnMapStart] Expired check");
 #endif
-
+            if (CS2_SimpleAdmin.Database == null)
+                return;
+            
             var players = Helper.GetValidPlayers();
             var onlinePlayers = players
                 .Where(player => player.IpAddress != null)
@@ -271,6 +271,6 @@ public class PlayerManager
                     }
                 });
             });
-        }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT | CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+        }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT);
     }
 }

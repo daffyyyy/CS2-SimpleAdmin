@@ -111,7 +111,7 @@ internal class BanManager(Database.Database? database)
         {
             return false;
         }
-
+        
 #if DEBUG
         if (CS2_SimpleAdmin._logger != null)
             CS2_SimpleAdmin._logger.LogCritical($"IsPlayerBanned for {player.Name}");
@@ -124,40 +124,53 @@ internal class BanManager(Database.Database? database)
         try
         {
             var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode ? """
-                                                                        SELECT COALESCE((
-                                                                            SELECT COUNT(*)
-                                                                            FROM sa_bans
-                                                                            WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
-                                                                            AND status = 'ACTIVE'
-                                                                            AND (duration = 0 OR ends > @CurrentTime)
-                                                                        ), 0) AS BanCount
-                                                                        + COALESCE((
-                                                                            SELECT COUNT(*)
-                                                                            FROM sa_bans
-                                                                            JOIN sa_players_ips ON sa_bans.player_steamid = sa_players_ips.steamid
-                                                                            WHERE sa_bans.status = 'ACTIVE'
-                                                                            AND sa_players_ips.address = @PlayerIP
-                                                                            AND (SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) 
-                                                                                AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime)) = 0
-                                                                        ), 0) AS TotalBanCount;
+                                                                            SELECT COALESCE((
+                                                                                SELECT COUNT(*)
+                                                                                FROM sa_bans
+                                                                                WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                                AND status = 'ACTIVE'
+                                                                                AND (duration = 0 OR ends > @CurrentTime)
+                                                                            ), 0) 
+                                                                            + 
+                                                                            COALESCE((
+                                                                                SELECT COUNT(*)
+                                                                                FROM sa_bans
+                                                                                JOIN sa_players_ips ON sa_bans.player_steamid = sa_players_ips.steamid
+                                                                                WHERE sa_bans.status = 'ACTIVE'
+                                                                                AND sa_players_ips.address = @PlayerIP
+                                                                                AND NOT EXISTS (
+                                                                                    SELECT 1 
+                                                                                    FROM sa_bans 
+                                                                                    WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP) 
+                                                                                    AND status = 'ACTIVE'
+                                                                                    AND (duration = 0 OR ends > @CurrentTime)
+                                                                                )
+                                                                            ), 0) AS TotalBanCount;
                                                                         """ : """
-                                                                              SELECT COALESCE((
-                                                                                  SELECT COUNT(*)
-                                                                                  FROM sa_bans
-                                                                                  WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
-                                                                                  AND status = 'ACTIVE'
-                                                                                  AND (duration = 0 OR ends > @CurrentTime)
-                                                                                  AND server_id = @ServerId
-                                                                              ), 0) AS BanCount
-                                                                              + COALESCE((
-                                                                                  SELECT COUNT(*)
-                                                                                  FROM sa_bans
-                                                                                  JOIN sa_players_ips ON sa_bans.player_steamid = sa_players_ips.steamid
-                                                                                  WHERE sa_bans.status = 'ACTIVE'
-                                                                                  AND sa_players_ips.address = @PlayerIP
-                                                                                  AND (SELECT COUNT(*) FROM sa_bans WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
-                                                                                      AND status = 'ACTIVE' AND (duration = 0 OR ends > @CurrentTime) AND server_id = @ServerId) = 0
-                                                                              ), 0) AS TotalBanCount;
+                                                                                  SELECT COALESCE((
+                                                                                      SELECT COUNT(*)
+                                                                                      FROM sa_bans
+                                                                                      WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                                      AND status = 'ACTIVE'
+                                                                                      AND (duration = 0 OR ends > @CurrentTime)
+                                                                                      AND server_id = @ServerId
+                                                                                  ), 0) 
+                                                                                  + 
+                                                                                  COALESCE((
+                                                                                      SELECT COUNT(*)
+                                                                                      FROM sa_bans
+                                                                                      JOIN sa_players_ips ON sa_bans.player_steamid = sa_players_ips.steamid
+                                                                                      WHERE sa_bans.status = 'ACTIVE'
+                                                                                      AND sa_players_ips.address = @PlayerIP
+                                                                                      AND NOT EXISTS (
+                                                                                          SELECT 1 
+                                                                                          FROM sa_bans 
+                                                                                          WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                                          AND status = 'ACTIVE'
+                                                                                          AND (duration = 0 OR ends > @CurrentTime)
+                                                                                          AND server_id = @ServerId
+                                                                                      )
+                                                                                  ), 0) AS TotalBanCount;
                                                                               """;
 
             await using var connection = await database.GetConnectionAsync();
@@ -176,8 +189,10 @@ internal class BanManager(Database.Database? database)
 
             banCount = await connection.ExecuteScalarAsync<int>(sql, parameters);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            CS2_SimpleAdmin._logger?.LogError("Unable to check ban status for {PlayerName} ({ExceptionMessage})",
+                player.Name, ex.Message);
             return false;
         }
 

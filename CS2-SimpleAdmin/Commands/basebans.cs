@@ -394,8 +394,6 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null) return;
 
-        var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
-
         if (command.GetArg(1).Length <= 1)
         {
             command.ReplyToCommand($"Too short pattern to search.");
