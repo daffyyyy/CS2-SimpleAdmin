@@ -182,6 +182,7 @@ public partial class CS2_SimpleAdmin
             {
                 p.PrintToChat(sb.ToString());
             }
+            return HookResult.Stop;
         }
         
         if (command != "say_team" || !info.GetArg(1).StartsWith($"@")) return HookResult.Continue;
