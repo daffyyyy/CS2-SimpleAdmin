@@ -122,6 +122,7 @@
 	"sa_admin_vote_message_results": "{lime}РЕЗУЛЬТАТЫ ГОЛОСОВАНИЯ ЗА {gold}{0}",
 	"sa_admin_vote_message_results_answer": "{lime}{0} {default}- {gold}{1}",
 	"sa_adminsay_prefix": "{RED}АДМИН: {lightred}{0}{default}",
+	"sa_vipchat_template": "{LIME}(ВИП ЧАТ) {0}{default}: {1}",
 	"sa_adminchat_template_admin": "{LIME}(АДМИН) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(ИГРОК) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_discord_log_command": "**{0}** выполнил команду `{1}` на сервере `HOSTNAME`"

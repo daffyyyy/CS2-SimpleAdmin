@@ -175,10 +175,13 @@ public partial class CS2_SimpleAdmin
             return HookResult.Stop;
 
         if (command == "say" && info.GetArg(1).StartsWith($"@") &&
-            AdminManager.PlayerHasPermissions(player, "@css/chat"))
+            AdminManager.PlayerHasPermissions(player, "@vip/chat"))
         {
-            player.ExecuteClientCommandFromServer($"css_say {info.GetArg(1).Remove(0, 1)}");
-            return HookResult.Stop;
+            sb.Append(_localizer!["sa_vipchat_template", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@vip/chat")))
+            {
+                p.PrintToChat(sb.ToString());
+            }
         }
         
         if (command != "say_team" || !info.GetArg(1).StartsWith($"@")) return HookResult.Continue;
