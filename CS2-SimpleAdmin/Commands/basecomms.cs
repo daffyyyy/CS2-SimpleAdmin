@@ -1,6 +1,5 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CS2_SimpleAdmin.Managers;
@@ -50,6 +49,7 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null || !player.IsValid || !player.UserId.HasValue) return;
         if (!caller.CanTarget(player)) return;
+        if (!CheckValidMute(caller, time)) return;
 
         // Set default caller name if not provided
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
@@ -126,6 +126,7 @@ public partial class CS2_SimpleAdmin
             : (_localizer?["sa_unknown"] ?? "Unknown");
 
         int.TryParse(command.GetArg(2), out var time);
+        if (!CheckValidMute(caller, time)) return;
 
         // Get player and admin info
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
@@ -264,6 +265,7 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null || !player.IsValid || !player.UserId.HasValue) return;
         if (!caller.CanTarget(player)) return;
+        if (!CheckValidMute(caller, time)) return;
 
         // Set default caller name if not provided
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
@@ -343,6 +345,7 @@ public partial class CS2_SimpleAdmin
             : (_localizer?["sa_unknown"] ?? "Unknown");
 
         int.TryParse(command.GetArg(2), out var time);
+        if (!CheckValidMute(caller, time)) return;
 
         // Get player and admin info
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
@@ -483,6 +486,7 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null || !player.IsValid || !player.UserId.HasValue) return;
         if (!caller.CanTarget(player)) return;
+        if (!CheckValidMute(caller, time)) return;
 
         // Set default caller name if not provided
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
@@ -499,6 +503,7 @@ public partial class CS2_SimpleAdmin
 
         // Add penalty to the player's penalty manager
         PlayerPenaltyManager.AddPenalty(player.Slot, PenaltyType.Silence, Time.ActualDateTime().AddMinutes(time), time);
+        player.VoiceFlags = VoiceFlags.Muted;
 
         // Determine message keys and arguments based on silence time (permanent or timed)
         var (messageKey, activityMessageKey, playerArgs, adminActivityArgs) = time == 0
@@ -559,6 +564,7 @@ public partial class CS2_SimpleAdmin
             : (_localizer?["sa_unknown"] ?? "Unknown");
 
         int.TryParse(command.GetArg(2), out var time);
+        if (!CheckValidMute(caller, time)) return;
 
         // Get player and admin info
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
@@ -662,5 +668,23 @@ public partial class CS2_SimpleAdmin
 
             command.ReplyToCommand($"Unsilenced offline player with pattern {pattern}.");
         }
+    }
+    
+    private bool CheckValidMute(CCSPlayerController? caller, int duration)
+    {
+        if (caller == null) return true;
+
+        var canPermMute = AdminManager.PlayerHasPermissions(caller, "@css/permmute");
+
+        if (duration <= 0 && canPermMute == false)
+        {
+            caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_perm_restricted"]}");
+            return false;
+        }
+
+        if (duration <= Config.OtherSettings.MaxMuteDuration || canPermMute) return true;
+
+        caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_max_duration_exceeded", Config.OtherSettings.MaxMuteDuration]}");
+        return false;
     }
 }
