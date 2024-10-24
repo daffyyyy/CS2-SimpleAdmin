@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "Неизвестный",
 	"sa_no_permission": "У вас нет прав для использования этой команды.",
 	"sa_ban_max_duration_exceeded": "Продолжительность бана не может превышать {lightred}{0}{default} минут.",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "Предупреждение зарегистрировано",
 	"sa_discord_penalty_unknown": "Неизвестно зарегистрировано",
 
+	"sa_player_gag_active": "Вы не можете использовать чат, так как вы заглушены или лишены слова.",
 	"sa_player_penalty_info_active_mute": "➔ Мут [{lightred}❌{default}] - Истекает [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Гэг [{lightred}❌{default}] - Истекает [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Тишина [{lightred}❌{default}] - Истекает [{lightred}{0}{default}]",

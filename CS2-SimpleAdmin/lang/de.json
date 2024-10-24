@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "Unbekannt",
 	"sa_no_permission": "Du hast keine Berechtigung zur Verwendung dieses Befehls.",
 	"sa_ban_max_duration_exceeded": "Die Dauer des Banns darf {lightred}{0}{default} Minuten nicht überschreiten.",
@@ -10,7 +10,7 @@
 	"sa_admin_add": "Admin hinzufügen",
 	"sa_admin_remove": "Admin entfernen",
 	"sa_admin_reload": "Admins neuladen",
-	
+
 	"sa_godmode": "Gottmodus",
 	"sa_noclip": "No Clip",
 	"sa_respawn": "Wiederbeleben",
@@ -21,15 +21,15 @@
 	"sa_set_speed": "Geschwindigkeit setzen",
 	"sa_set_gravity": "Gravitation setzen",
 	"sa_set_money": "Geld setzen",
-	
+
 	"sa_changemap": "Map wechseln",
 	"sa_restart_game": "Spiel neustarten",
-	
+
 	"sa_team_ct": "AT",
 	"sa_team_t": "T",
 	"sa_team_swap": "Wechseln",
 	"sa_team_spec": "Zuschauer",
-	
+
 	"sa_slap": "Klaps",
 	"sa_slay": "töten",
 	"sa_kick": "Kicken",
@@ -39,7 +39,7 @@
 	"sa_silence": "Komplett stummschalten",
 	"sa_warn": "Warnen",
 	"sa_team_force": "Team zuweisen",
-	
+
 	"sa_menu_custom_commands": "Eigene Befehle",
 	"sa_menu_server_manage": "Server Verwalten",
 	"sa_menu_fun_commands": "Spaß Befehle",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "Warnung registriert",
 	"sa_discord_penalty_unknown": "Unbekanntes registriert",
 
+	"sa_player_gag_active": "Du kannst den Chat nicht verwenden, da du stummgeschaltet oder zum Schweigen gebracht wurdest.",
 	"sa_player_penalty_info_active_mute": "➔ Stummschaltung [{lightred}❌{default}] - Ablauf [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Mundtot [{lightred}❌{default}] - Ablauf [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Stille [{lightred}❌{default}] - Ablauf [{lightred}{0}{default}]",
