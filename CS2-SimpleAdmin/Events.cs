@@ -172,7 +172,10 @@ public partial class CS2_SimpleAdmin
             return HookResult.Stop;
         
         if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+        {
+            player.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer!["sa_player_gag_active"]}");
             return HookResult.Stop;
+        }
 
         if (command == "say" && info.GetArg(1).StartsWith($"@") &&
             AdminManager.PlayerHasPermissions(player, "@css/chat"))

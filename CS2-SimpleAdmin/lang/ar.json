@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "مجهول",
 	"sa_no_permission": "ليس لديك الصلاحيات لاستخدام هذا الأمر.",
 	"sa_ban_max_duration_exceeded": "مدة الحظر لا يمكن أن تتجاوز {lightred}{0}{default} دقيقة.",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "التحذير مسجل",
 	"sa_discord_penalty_unknown": "غير معروف مسجل",
 
+	"sa_player_gag_active": "لا يمكنك استخدام الدردشة لأنك مكمم أو مسكوت عنك.",
 	"sa_player_penalty_info_active_mute": "➔ كتم [{lightred}❌{default}] - ينتهي [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ صمت [{lightred}❌{default}] - ينتهي [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ سكوت [{lightred}❌{default}] - ينتهي [{lightred}{0}{default}]",

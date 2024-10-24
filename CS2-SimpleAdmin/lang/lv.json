@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "Nezināms",
 	"sa_no_permission": "Jums nav atļauju izmantot šo komandu.",
 	"sa_ban_max_duration_exceeded": "Aizlieguma ilgums nevar pārsniegt {lightred}{0}{default} minūtes.",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "Brīdinājums reģistrēts",
 	"sa_discord_penalty_unknown": "Nezināms reģistrēts",
 
+	"sa_player_gag_active": "Jūs nevarat izmantot čatu, jo esat apklusināts vai apklusināts.",
 	"sa_player_penalty_info_active_mute": "➔ Izslēgts [{lightred}❌{default}] - Beidzas [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Klusums [{lightred}❌{default}] - Beidzas [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Klusēšana [{lightred}❌{default}] - Beidzas [{lightred}{0}{default}]",

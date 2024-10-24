@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "Inconnu",
 	"sa_no_permission": "Vous n'avez pas les permissions pour utiliser cette commande.",
 	"sa_ban_max_duration_exceeded": "La durée d'interdiction ne peut pas dépasser {lightred}{0}{default} minutes.",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "Avertissement enregistré",
 	"sa_discord_penalty_unknown": "Inconnu enregistré",
 
+	"sa_player_gag_active": "Vous ne pouvez pas utiliser le chat car vous êtes bâillonné ou réduit au silence.",
 	"sa_player_penalty_info_active_mute": "➔ Muet [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Gag [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Silence [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",

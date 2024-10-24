@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "Unknown",
 	"sa_no_permission": "You do not have permissions to use this command.",
 	"sa_ban_max_duration_exceeded": "Ban duration cannot exceed {lightred}{0}{default} minutes.",
@@ -10,7 +10,7 @@
 	"sa_admin_add": "Add Admin",
 	"sa_admin_remove": "Remove Admin",
 	"sa_admin_reload": "Reload Admins",
-	
+
 	"sa_godmode": "God Mode",
 	"sa_noclip": "No Clip",
 	"sa_respawn": "Respawn",
@@ -21,15 +21,15 @@
 	"sa_set_speed": "Set Speed",
 	"sa_set_gravity": "Set Gravity",
 	"sa_set_money": "Set Money",
-	
+
 	"sa_changemap": "Change Map",
 	"sa_restart_game": "Restart Game",
-	
+
 	"sa_team_ct": "CT",
 	"sa_team_t": "T",
 	"sa_team_swap": "Swap",
 	"sa_team_spec": "Spec",
-	
+
 	"sa_slap": "Slap",
 	"sa_slay": "slay",
 	"sa_kick": "Kick",
@@ -39,7 +39,7 @@
 	"sa_silence": "Silence",
 	"sa_warn": "Warn",
 	"sa_team_force": "Force Team",
-	
+
 	"sa_menu_custom_commands": "Custom Commands",
 	"sa_menu_server_manage": "Server Manage",
 	"sa_menu_fun_commands": "Fun Commands",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "Warn registered",
 	"sa_discord_penalty_unknown": "Unknown registered",
 
+	"sa_player_gag_active": "You can't use chat since you are gagged or silenced.",
 	"sa_player_penalty_info_active_mute": "➔ Mute [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Gag [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Silence [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",

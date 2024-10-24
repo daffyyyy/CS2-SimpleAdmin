@@ -1,7 +1,7 @@
 {
 	"sa_title": "SimpleAdmin",
 	"sa_prefix": "{lightred}[SA] {default}",
-	
+
 	"sa_unknown": "Desconhecido",
 	"sa_no_permission": "Você não tem permissão para usar este comando.",
 	"sa_ban_max_duration_exceeded": "A duração da proibição não pode exceder {lightred}{0}{default} minutos.",
@@ -63,6 +63,7 @@
 	"sa_discord_penalty_warn": "Aviso registrado",
 	"sa_discord_penalty_unknown": "Desconhecido registrado",
 
+	"sa_player_gag_active": "Você não pode usar o chat, pois você foi silenciado ou amordaçado.",
 	"sa_player_penalty_info_active_mute": "➔ Mudo [{lightred}❌{default}] - Expira [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Gag [{lightred}❌{default}] - Expira [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Silêncio [{lightred}❌{default}] - Expira [{lightred}{0}{default}]",
