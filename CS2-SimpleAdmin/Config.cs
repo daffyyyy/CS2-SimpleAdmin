@@ -108,6 +108,8 @@ public class CustomServerCommandData
 
 public class MenuConfig
 {
+    [JsonPropertyName("MenuType")] public string MenuType { get; set; } = "selectable";
+
     [JsonPropertyName("Durations")]
     public DurationItem[] Durations { get; set; } =
     [
@@ -223,7 +225,7 @@ public class OtherSettings
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
 {
-    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 22;
+    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 23;
 
     [JsonPropertyName("DatabaseHost")]
     public string DatabaseHost { get; set; } = "";

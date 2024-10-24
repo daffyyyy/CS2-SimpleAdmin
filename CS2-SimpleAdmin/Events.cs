@@ -161,6 +161,12 @@ public partial class CS2_SimpleAdmin
 
         var command = info.GetArg(0).ToLower();
 
+        if (command == "css_admins_reload")
+        {
+            AddTimer(1.0f, () => ReloadAdmins(null));
+            return HookResult.Continue;
+        }
+
         if (!command.Contains("say"))
             return HookResult.Continue;
 

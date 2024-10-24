@@ -494,13 +494,13 @@ public partial class CS2_SimpleAdmin
     {
         if (_localizer == null || caller == null) return;
 
-        var disconnectedMenu = MenuApi?.NewMenu(_localizer["sa_menu_disconnected_title"]);
+        var disconnectedMenu = Helper.CreateMenu(_localizer["sa_menu_disconnected_title"]);
 
         DisconnectedPlayers.ForEach(player =>
         {
             disconnectedMenu?.AddMenuOption(player.Name, (_, _) =>
             {
-                var disconnectedMenuAction = MenuApi?.NewMenu(_localizer["sa_menu_disconnected_action_title"]);
+                var disconnectedMenuAction = Helper.CreateMenu(_localizer["sa_menu_disconnected_action_title"]);
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_ban"], (_, _) =>
                 {
                     DurationMenu.OpenMenu(caller, _localizer["sa_ban"], player, (_, _, duration) =>
@@ -564,7 +564,7 @@ public partial class CS2_SimpleAdmin
 
             var userId = player.UserId.Value;
 
-            IMenu? warnsMenu = MenuApi?.NewMenu(_localizer["sa_admin_warns_menu_title", player.PlayerName]);
+            IMenu? warnsMenu = Helper.CreateMenu(_localizer["sa_admin_warns_menu_title", player.PlayerName]);
 
             Task.Run(async () =>
             {

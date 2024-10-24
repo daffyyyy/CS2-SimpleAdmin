@@ -20,6 +20,7 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CS2_SimpleAdmin.Managers;
+using MenuManager;
 
 namespace CS2_SimpleAdmin;
 
@@ -515,6 +516,33 @@ internal static class Helper
         _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(
             CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})",
                 commandString]));
+    }
+
+    public static IMenu? CreateMenu(string title)
+    {
+        var menuType = CS2_SimpleAdmin.Instance.Config.MenuConfigs.MenuType.ToLower();
+        
+        var menu = menuType switch
+        {
+            _ when menuType.Equals("selectable", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenu(title),
+
+            _ when menuType.Equals("dynamic", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ButtonMenu),
+
+            _ when menuType.Equals("center", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.CenterMenu),
+
+            _ when menuType.Equals("chat", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ChatMenu),
+
+            _ when menuType.Equals("console", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ConsoleMenu),
+
+            _ => CS2_SimpleAdmin.MenuApi?.NewMenu(title)
+        };
+
+        return menu;
     }
 }
 

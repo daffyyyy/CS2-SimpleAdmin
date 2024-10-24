@@ -33,7 +33,7 @@ public partial class CS2_SimpleAdmin
             {
                 using (new WithTemporaryCulture(player.GetLanguage()))
                 {
-                    IMenu? voteMenu = MenuApi?.NewMenu(_localizer["sa_admin_vote_menu_title", question]);
+                    IMenu? voteMenu = Helper.CreateMenu(_localizer["sa_admin_vote_menu_title", question]);
                     if (voteMenu == null)
                         return;
                     //ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
