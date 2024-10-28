@@ -8,7 +8,7 @@ public static class AdminMenu
 {
     public static IMenu? CreateMenu(string title)
     {
-        return CS2_SimpleAdmin.MenuApi?.NewMenu(title);
+        return Helper.CreateMenu(title);
         // return CS2_SimpleAdmin.Instance.Config.UseChatMenu ? new ChatMenu(title) : new CenterHtmlMenu(title, CS2_SimpleAdmin.Instance);
     }
 

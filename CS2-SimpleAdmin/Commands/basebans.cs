@@ -237,7 +237,7 @@ public partial class CS2_SimpleAdmin
     {
         if (caller == null) return true;
 
-        bool canPermBan = AdminManager.PlayerHasPermissions(caller, "@css/permban");
+        var canPermBan = AdminManager.PlayerHasPermissions(caller, "@css/permban");
 
         if (duration <= 0 && canPermBan == false)
         {

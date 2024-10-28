@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
@@ -15,10 +14,13 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CS2_SimpleAdmin.Managers;
+using MenuManager;
 
 namespace CS2_SimpleAdmin;
 
@@ -542,6 +544,33 @@ internal static class Helper
             CS2_SimpleAdmin._localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})",
                 commandString]));
     }
+
+    public static IMenu? CreateMenu(string title)
+    {
+        var menuType = CS2_SimpleAdmin.Instance.Config.MenuConfigs.MenuType.ToLower();
+        
+        var menu = menuType switch
+        {
+            _ when menuType.Equals("selectable", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenu(title),
+
+            _ when menuType.Equals("dynamic", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ButtonMenu),
+
+            _ when menuType.Equals("center", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.CenterMenu),
+
+            _ when menuType.Equals("chat", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ChatMenu),
+
+            _ when menuType.Equals("console", StringComparison.CurrentCultureIgnoreCase) =>
+                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ConsoleMenu),
+
+            _ => CS2_SimpleAdmin.MenuApi?.NewMenu(title)
+        };
+
+        return menu;
+    }
 }
 
 public static class PluginInfo
@@ -651,5 +680,48 @@ public static class Time
             CS2_SimpleAdmin._logger?.LogWarning($"Time zone '{timezoneId}' is invalid. Returning UTC time.");
             return utcNow;
         }
+    }
+}
+
+public static class WeaponHelper
+{
+    private static readonly Lazy<Dictionary<string, CsItem>> WeaponsEnumCache = new(BuildEnumMemberMap);
+
+    private static Dictionary<string, CsItem> BuildEnumMemberMap()
+    {
+        var dictionary = new Dictionary<string, CsItem>();
+
+        foreach (var field in typeof(CsItem).GetFields(BindingFlags.Public | BindingFlags.Static))
+        {
+            var attribute = field.GetCustomAttribute<EnumMemberAttribute>();
+            if (attribute?.Value == null) continue;
+            if (field.GetValue(null) is not CsItem csItem)
+                continue;
+            var enumValue = field.GetValue(null);
+            
+            dictionary.TryAdd(attribute.Value, csItem);
+        }
+
+        return dictionary;
+    }
+    
+    public static CsItem? GetEnumFromWeaponName(string weaponName)
+    {
+        if (WeaponsEnumCache.Value.TryGetValue(weaponName, out var csItem))
+        {
+            return csItem;
+        }
+
+        return null;
+    }
+    
+    public static List<(string EnumMemberValue, CsItem EnumValue)> GetWeaponsByPartialName(string input)
+    {
+        var matchingWeapons = WeaponsEnumCache.Value
+            .Where(kvp => kvp.Key.Contains(input))
+            .Select(kvp => (kvp.Key, kvp.Value))
+            .ToList();
+
+        return matchingWeapons;
     }
 }

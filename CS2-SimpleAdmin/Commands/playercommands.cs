@@ -67,18 +67,11 @@ public partial class CS2_SimpleAdmin
         var weaponName = command.GetArg(2);
 
         // check if item is typed
-        if (weaponName.Length < 5)
-        {
-            command.ReplyToCommand($"No weapon typed.");
-            return;
-        }
-
-        // check if item is valid
-        if (!weaponName.Contains("weapon_") && !weaponName.Contains("item_"))
-        {
-            command.ReplyToCommand($"{weaponName} is not a valid item.");
-            return;
-        }
+        // if (weaponName.Length < 2)
+        // {
+        //     command.ReplyToCommand($"No weapon typed.");
+        //     return;
+        // }
 
         // check if weapon is knife
         if (weaponName.Contains("_knife") || weaponName.Contains("bayonet"))
@@ -105,9 +98,22 @@ public partial class CS2_SimpleAdmin
 
         // Set default caller name if not provided
         callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
+        var weapons = WeaponHelper.GetWeaponsByPartialName(weaponName);
+
+        switch (weapons.Count)
+        {
+            case 0:
+                return;
+            case > 1:
+            {
+                var weaponList = string.Join(", ", weapons.Select(w => w.EnumMemberValue));
+                command?.ReplyToCommand($"Found weapons with a similar name: {weaponList}");
+                return;
+            }
+        }
 
         // Give weapon to the player
-        player.GiveNamedItem(weaponName);
+        player.GiveNamedItem(weapons.First().EnumValue);
 
         // Log the command
         if (command == null)
