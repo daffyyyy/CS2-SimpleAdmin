@@ -1,3 +1,7 @@
+# This fork is made to support [CSSPanel](https://github.com/CSSPanel/Panel)'s functionalities:
+- This fork has added some variables in config file so refer to: `CS2-SimpleAdmin.example.json`. That's all for folks who are upgrading from [CSSPanel Plugin](https://github.com/CSSPanel/Plugin)
+- If you are upgrading from [CS2-SimpleAdmin](https://github.com/daffyyyy/CS2-SimpleAdmin) and want to use CSSPanel stuff, you need to execute `Database/Migrations/011_CSSPanelSupport.sql` file in your database.
+
 # CS2-SimpleAdmin
 
 > **Manage your Counter-Strike 2 server with simple commands!**  

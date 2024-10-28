@@ -48,14 +48,28 @@ public class ServerManager
 
                     if (!addressExists)
                     {
+                        string query = "INSERT INTO sa_servers (address, hostname) VALUES (@address, @hostname)";
+
+                        if(CS2_SimpleAdmin.Instance.Config.IsCSSPanel)
+                        {
+                            query = "INSERT INTO sa_servers (address, hostname, rcon) VALUES (@address, @hostname, @rcon)";
+                        }
+                        
                         await connection.ExecuteAsync(
-                            "INSERT INTO sa_servers (address, hostname, rcon) VALUES (@address, @hostname, @rcon)",
+                            query,
                             new { address, hostname, rcon });
                     }
                     else
                     {
+                        string query = "UPDATE `sa_servers` SET `hostname` = @hostname, `id` = `id` WHERE `address` = @address";
+
+                        if(CS2_SimpleAdmin.Instance.Config.IsCSSPanel)
+                        {
+                            query = "UPDATE `sa_servers` SET `hostname` = @hostname, rcon = @rcon, `id` = `id` WHERE `address` = @address";
+                        }
+                        
                         await connection.ExecuteAsync(
-                            "UPDATE `sa_servers` SET `hostname` = @hostname, rcon = @rcon, `id` = `id` WHERE `address` = @address",
+                            query,
                             new { address, rcon, hostname });
                     }
 
