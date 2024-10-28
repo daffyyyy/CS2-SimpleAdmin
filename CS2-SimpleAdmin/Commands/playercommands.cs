@@ -307,7 +307,6 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_gravity")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <gravity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGravityCommand(CCSPlayerController? caller, CommandInfo command)

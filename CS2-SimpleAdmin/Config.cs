@@ -91,6 +91,21 @@ public class Discord
     ];
 }
 
+public class ChatLog
+{
+    [JsonPropertyName("ChatLog_Enable")]
+    public bool ChatLog_Enable { get; set; } = true;
+
+    [JsonPropertyName("ChatLog_ExcludeMessageContains")]
+    public string ExcludeMessageContains { get; set; } = "!./";
+
+    [JsonPropertyName("ChatLog_ExcludeMessageContainsLessThanXLetters")]
+    public int ExcludeMessageContainsLessThanXLetters { get; set; } = 0;
+
+    [JsonPropertyName("ChatLog_ExcludeMessageDuplicate")]
+    public bool ExcludeMessageDuplicate { get; set; } = false;
+}
+
 public class CustomServerCommandData
 {
     [JsonPropertyName("Flag")]
@@ -273,4 +288,16 @@ public class CS2_SimpleAdminConfig : BasePluginConfig
 
     [JsonPropertyName("MenuConfig")]
     public MenuConfig MenuConfigs { get; set; } = new();
+
+    [JsonPropertyName("ChatLog")]
+	public ChatLog ChatLog { get; set; } = new ChatLog();
+
+    [JsonPropertyName("Statistics_Enable")]
+    public bool Statistics_Enable { get; set; } = true;
+
+    [JsonPropertyName("IsCSSPanel")]
+    public bool IsCSSPanel { get; set; } = false;
+    
+    [JsonPropertyName("BanIDBan")]
+    public bool BanIDBan { get; set; } = true;
 }

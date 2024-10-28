@@ -69,4 +69,8 @@ public partial class CS2_SimpleAdmin
     internal BanManager BanManager = new(Database);
     internal MuteManager MuteManager = new(Database);
     internal WarnManager WarnManager = new(Database);
+    internal ChatManager ChatManager = new();
+
+    static string firstMessage = "";
+	static string secondMessage = "";
 }

@@ -365,27 +365,29 @@ public partial class CS2_SimpleAdmin
             AdminManager.RemovePlayerAdminData(steamId);
         }
 
-        Task.Run(async () =>
+        if(!Config.IsCSSPanel)
         {
-            await PermissionManager.CrateGroupsJsonFile();
-            await PermissionManager.CreateAdminsJsonFile();
-
-            var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
-            var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");
-
-            await Server.NextFrameAsync(() =>
+            Task.Run(async () =>
             {
-                if (!string.IsNullOrEmpty(adminsFile))
-                    AddTimer(0.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
-                if (!string.IsNullOrEmpty(groupsFile))
-                    AddTimer(1.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
-                if (!string.IsNullOrEmpty(adminsFile))
-                    AddTimer(1.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
-            });
-        });
+                await PermissionManager.CreateGroupsJsonFile();
+                await PermissionManager.CreateAdminsJsonFile();
 
-        //_ = _adminManager.GiveAllGroupsFlags();
-        //_ = _adminManager.GiveAllFlags();
+                var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
+                var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");
+
+                await Server.NextFrameAsync(() =>
+                {
+                    if (!string.IsNullOrEmpty(adminsFile))
+                        AddTimer(0.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                    if (!string.IsNullOrEmpty(groupsFile))
+                        AddTimer(1.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
+                    if (!string.IsNullOrEmpty(adminsFile))
+                        AddTimer(1.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                });
+            });
+        }
+        else
+            _ = PermissionManager.GiveAllFlags();
     }
 
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
@@ -761,6 +763,8 @@ public partial class CS2_SimpleAdmin
         var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
         map = map.ToLower();
 
+        var wsMaps = Config.WorkshopMaps;
+
         if (map.StartsWith("ws:"))
         {
             var issuedCommand = long.TryParse(map.Replace("ws:", ""), out var mapId)
@@ -776,14 +780,21 @@ public partial class CS2_SimpleAdmin
         {
             if (!Server.IsMapValid(map))
             {
-                var msg = $"Map {map} not found.";
-                if (command != null)
-                    command.ReplyToCommand(msg);
-                else if (caller != null && caller.IsValid)
-                    caller.PrintToChat(msg);
+                if(wsMaps.ContainsKey(map))
+                {
+                    map = wsMaps.Where(m => m.Key == map).FirstOrDefault().Key;
+                }
                 else
-                    Server.PrintToConsole(msg);
-                return;
+                {
+                    var msg = $"Map {map} not found.";
+                    if (command != null)
+                        command.ReplyToCommand(msg);
+                    else if (caller != null && caller.IsValid)
+                        caller.PrintToChat(msg);
+                    else
+                        Server.PrintToConsole(msg);
+                    return;
+                }
             }
 
             AddTimer(3.0f, () =>

@@ -4,3 +4,4 @@ obj/
 .git
 .vscode/
 .idea/
+*.sln

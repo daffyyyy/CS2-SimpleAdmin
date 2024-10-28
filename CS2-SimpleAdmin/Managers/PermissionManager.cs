@@ -1,4 +1,5 @@
 ﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Entities;
 using Dapper;
 using Microsoft.Extensions.Logging;
@@ -14,22 +15,77 @@ public class PermissionManager(Database.Database? database)
     //public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
     public static readonly ConcurrentDictionary<SteamID, DateTime?> AdminCache = new();
 
-    /*
-	public async Task<List<(List<string>, int)>> GetAdminFlags(string steamId)
+    // Get the relevant server groups from the sa_servers_groups table by searching if the serverId is in the servers set column
+	public async Task<List<string>> GetServerGroups()
 	{
-		DateTime now = Time.ActualDateTime();
+		if (database == null) return [];
+        
+        await using MySqlConnection connection = await database.GetConnectionAsync();
 
-		await using MySqlConnection connection = await _database.GetConnectionAsync();
+		string sql = "SELECT id FROM sa_servers_groups WHERE FIND_IN_SET(@ServerId, servers)";
+		List<dynamic>? serverGroups = (await connection.QueryAsync(sql, new { ServerId = CS2_SimpleAdmin.ServerId }))?.ToList();
 
-		string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR server_id = @serverid)";
+		if (serverGroups == null)
+		{
+			return new List<string>();
+		}
+
+		List<string> serverGroupsList = new List<string>();
+
+		foreach (dynamic serverGroup in serverGroups)
+		{
+			if (serverGroup is not IDictionary<string, object> serverGroupDict)
+			{
+				Console.WriteLine("[GetServerGroups] Failed to parse server group.");
+				continue;
+			}
+
+			if (!serverGroupDict.TryGetValue("id", out var idObj))
+			{
+				Console.WriteLine("[GetServerGroups] Failed to get server group id.");
+				continue;
+			}
+
+			if (idObj is not string id)
+			{
+				// Convert to string and add it to the list
+				// Console.WriteLine("[GetServerGroups] Failed to parse server group id.");
+				serverGroupsList.Add(idObj.ToString()!);
+
+				continue;
+			}
+
+			serverGroupsList.Add(id);
+		}
+
+		Console.WriteLine($"[GetServerGroups] Server Groups List: {string.Join(", ", serverGroupsList)}");
+		return serverGroupsList;
+	}
+
+	public async Task<List<string>> GetAdminFlagsAsString(string steamId)
+	{
+		if (database == null) return [];
+        
+        DateTime now = DateTime.UtcNow.ToLocalTime();
+
+		await using MySqlConnection connection = await database.GetConnectionAsync();
+
+		// string sql = "SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR FIND_IN_SET(@serverid, server_id) > 0)";
+		// string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR FIND_IN_SET(@serverid, server_id) > 0)";
+		List<string> serverGroups = await GetServerGroups();
+		string serverGroupsCondition = string.Join(" OR ", serverGroups.Select(g => $"FIND_IN_SET({g}, servers_groups) > 0"));
+
+		string GroupCheck = serverGroups.Count > 0 ? $"AND (((server_id IS NULL AND servers_groups IS NULL) OR FIND_IN_SET(@serverid, server_id) > 0) OR (servers_groups IS NULL OR {serverGroupsCondition}))" : "AND ((server_id IS NULL AND servers_groups IS NULL) OR FIND_IN_SET(@serverid, server_id) > 0)";
+		string sql = $"SELECT flags, immunity, ends FROM sa_admins WHERE player_steamid = @PlayerSteamID AND (ends IS NULL OR ends > @CurrentTime) {GroupCheck}";
+
 		List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
 
 		if (activeFlags == null)
 		{
-			return new List<(List<string>, int)>();
+			return new List<string>();
 		}
 
-		List<(List<string>, int)> filteredFlagsWithImmunity = [];
+		List<string> flagsList = new List<string>();
 
 		foreach (dynamic flags in activeFlags)
 		{
@@ -38,26 +94,160 @@ public class PermissionManager(Database.Database? database)
 				continue;
 			}
 
-			if (!flagsDict.TryGetValue("flags", out var flagsValueObj) || !flagsDict.TryGetValue("immunity", out var immunityValueObj))
+			if (!flagsDict.TryGetValue("flags", out var flagsValueObj))
 			{
 				continue;
 			}
 
-			if (!(flagsValueObj is string flagsValue) || !int.TryParse(immunityValueObj.ToString(), out var immunityValue))
+			if (!(flagsValueObj is string flagsValue))
 			{
 				continue;
 			}
 
-			//Console.WriteLine($"Flags: {flagsValue}, Immunity: {immunityValue}");
+			// If flags start with '#', fetch flags from sa_admins_groups
+			if (flagsValue.StartsWith("#"))
+			{
+				string groupSql = "SELECT flags FROM sa_admins_groups WHERE id = @GroupId";
+				var group = await connection.QueryFirstOrDefaultAsync(groupSql, new { GroupId = flagsValue });
 
-			filteredFlagsWithImmunity.Add((flagsValue.Split(',').ToList(), immunityValue));
+				if (group != null)
+				{
+					flagsValue = group.flags;
+				}
+			}
+
+			flagsList.AddRange(flagsValue.Split(','));
 		}
 
-		return filteredFlagsWithImmunity;
+		return flagsList;
 	}
-	*/
 
-    private async Task<List<(string, string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
+	public async Task<List<(string, List<string>, int, DateTime?)>> GetAllPlayersFlags()
+	{
+		if (database == null) return [];
+        
+        DateTime now = DateTime.UtcNow.ToLocalTime();
+
+		try
+		{
+			await using MySqlConnection connection = await database.GetConnectionAsync();
+
+			// string sql = "SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) AND (server_id IS NULL OR FIND_IN_SET(@serverid, server_id) > 0)";
+			List<string> serverGroups = await GetServerGroups();
+			string serverGroupsCondition = string.Join(" OR ", serverGroups.Select(g => $"FIND_IN_SET({g}, servers_groups) > 0"));
+
+			string GroupCheck = serverGroups.Count > 0 ? $"AND (((server_id IS NULL AND servers_groups IS NULL) OR FIND_IN_SET(@serverid, server_id) > 0) OR (servers_groups IS NULL OR {serverGroupsCondition}))" : "AND ((server_id IS NULL AND servers_groups IS NULL) OR FIND_IN_SET(@serverid, server_id) > 0)";
+			string sql = $"SELECT player_steamid, flags, immunity, ends FROM sa_admins WHERE (ends IS NULL OR ends > @CurrentTime) {GroupCheck}";
+
+			List<dynamic>? activeFlags = (await connection.QueryAsync(sql, new { CurrentTime = now, serverid = CS2_SimpleAdmin.ServerId }))?.ToList();
+
+			if (activeFlags == null)
+			{
+				return new List<(string, List<string>, int, DateTime?)>();
+			}
+
+			List<(string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = new List<(string, List<string>, int, DateTime?)>();
+
+			foreach (dynamic flags in activeFlags)
+			{
+				if (flags is not IDictionary<string, object> flagsDict)
+				{
+					continue;
+				}
+
+				if (!flagsDict.TryGetValue("player_steamid", out var steamIdObj) ||
+					!flagsDict.TryGetValue("flags", out var flagsValueObj) ||
+					!flagsDict.TryGetValue("immunity", out var immunityValueObj) ||
+					!flagsDict.TryGetValue("ends", out var endsObj))
+				{
+					//Console.WriteLine("One or more required keys are missing.");
+					continue;
+				}
+
+				DateTime? ends = null;
+
+				if (endsObj != null) // Check if "ends" is not null
+				{
+					if (!DateTime.TryParse(endsObj.ToString(), out var parsedEnds))
+					{
+						//Console.WriteLine("Failed to parse 'ends' value.");
+						continue;
+					}
+
+					ends = parsedEnds;
+				}
+
+				if (!(steamIdObj is string steamId) ||
+					!(flagsValueObj is string flagsValue) ||
+					!int.TryParse(immunityValueObj.ToString(), out var immunityValue))
+				{
+					//Console.WriteLine("Failed to parse one or more values.");
+					continue;
+				}
+
+				//
+				if (flagsValue.StartsWith("#"))
+				{
+					string groupSql = "SELECT flags, immunity FROM sa_admins_groups WHERE id = @GroupId";
+					var group = await connection.QueryFirstOrDefaultAsync(groupSql, new { GroupId = flagsValue });
+
+					if (group != null)
+					{
+						flagsValue = group.flags;
+						if (int.TryParse(group.immunity.ToString(), out int immunityGroupValue))
+						{
+							filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityGroupValue, ends));
+							// Console.WriteLine($"Flags Check (Group): SteamId {steamId} Flags: {flagsValue}, Immunity: {immunityValue}");
+
+							continue;
+						}
+						else
+						{
+							Console.WriteLine($"Failed to parse immunity: {group.immunity}");
+						}
+					}
+				}
+
+				filteredFlagsWithImmunity.Add((steamId, flagsValue.Split(',').ToList(), immunityValue, ends));
+			}
+
+			return filteredFlagsWithImmunity;
+		}
+		catch (Exception e)
+		{
+			Console.WriteLine($"Error: {e.Message}");
+			return new List<(string, List<string>, int, DateTime?)>();
+		}
+	}
+
+    public async Task GiveAllFlags()
+	{
+		List<(string, List<string>, int, DateTime?)> allPlayers = await GetAllPlayersFlags();
+
+		foreach (var record in allPlayers)
+		{
+			string steamIdStr = record.Item1;
+			List<string> flags = record.Item2;
+			int immunity = record.Item3;
+
+			DateTime? ends = record.Item4;
+
+			if (!string.IsNullOrEmpty(steamIdStr) && SteamID.TryParse(steamIdStr, out var steamId) && steamId != null)
+			{
+				if (!AdminCache.ContainsKey(steamId))
+				{
+					AdminCache.TryAdd(steamId, ends);
+					//_adminCacheTimestamps.Add(steamId, ends);
+				}
+
+				Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
+				// Often need to call 2 times
+				Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
+			}
+		}
+	}
+
+    private async Task<List<(string, string, List<string>, int, DateTime?)>> GetAllPlayersFlagsSA()
     {
 	    if (database == null) return [];
 
@@ -111,71 +301,6 @@ public class PermissionManager(Database.Database? database)
         }
     }
 
-    /*
-	public async Task<Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>>> GetAllGroupsFlags()
-	{
-		try
-		{
-			await using MySqlConnection connection = await _database.GetConnectionAsync();
-
-			string sql = "SELECT group_id FROM sa_groups_servers WHERE server_id = @serverid";
-			var groupIds = connection.Query<int>(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
-
-			sql = @"
-            SELECT g.group_id, f.flag 
-            FROM sa_groups_flags f
-            JOIN sa_groups_servers g ON f.group_id = g.group_id
-            WHERE g.server_id = @serverid";
-
-			var groupFlagData = connection.Query(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
-
-			if (groupIds.Count == 0 || groupFlagData.Count == 0)
-			{
-				return [];
-			}
-
-			var groupInfoDictionary = new Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>>();
-
-			foreach (var groupId in groupIds)
-			{
-				groupInfoDictionary[groupId] = new Tuple<List<string>, List<Tuple<string, DateTime?>>, int>([], [], 0);
-			}
-
-			foreach (var row in groupFlagData)
-			{
-				var groupId = (int)row.group_id;
-				var flag = (string)row.flag;
-
-				groupInfoDictionary[groupId].Item1.Add(flag);
-			}
-
-			sql = @"
-            SELECT a.group_id, a.player_steamid, a.ends, g.immunity, g.name  
-            FROM sa_admins a
-            JOIN sa_groups g ON a.group_id = g.id
-            WHERE a.group_id IN @groupIds";
-
-			var playerData = (await connection.QueryAsync(sql, new { groupIds })).ToList();
-
-			foreach (var row in playerData)
-			{
-				var groupId = (int)row.group_id;
-				var playerSteamid = (string)row.player_steamid;
-				var ends = row.ends as DateTime?;
-				var immunity = (int)row.immunity;
-
-				groupInfoDictionary[groupId].Item2.Add(new Tuple<string, DateTime?>(playerSteamid, ends));
-				groupInfoDictionary[groupId] = new Tuple<List<string>, List<Tuple<string, DateTime?>>, int>(groupInfoDictionary[groupId].Item1, groupInfoDictionary[groupId].Item2, immunity);
-			}
-
-			return groupInfoDictionary;
-		}
-		catch { }
-
-		return [];
-	}
-	*/
-
     private async Task<Dictionary<string, (List<string>, int)>> GetAllGroupsData()
     {
 	    if (database == null) return [];
@@ -184,6 +309,7 @@ public class PermissionManager(Database.Database? database)
         try
         {
             var sql = "SELECT group_id FROM sa_groups_servers WHERE (server_id = @serverid OR server_id IS NULL)";
+
             var groupDataSql = connection.Query<int>(sql, new { serverid = CS2_SimpleAdmin.ServerId }).ToList();
 
             sql = """
@@ -230,7 +356,7 @@ public class PermissionManager(Database.Database? database)
         return [];
     }
 
-    public async Task CrateGroupsJsonFile()
+    public async Task CreateGroupsJsonFile()
     {
         var groupsData = await GetAllGroupsData();
 
@@ -252,69 +378,9 @@ public class PermissionManager(Database.Database? database)
         await File.WriteAllTextAsync(filePath, json);
     }
 
-    /*
-	public async Task GiveAllGroupsFlags()
-	{
-		Dictionary<int, Tuple<List<string>, List<Tuple<string, DateTime?>>, int>> groupFlags = await GetAllGroupsFlags();
-
-		foreach (var kvp in groupFlags)
-		{
-			var flags = kvp.Value.Item1;
-			var players = kvp.Value.Item2;
-			int immunity = kvp.Value.Item3;
-
-			foreach (var playerTuple in players)
-			{
-				var steamIdStr = playerTuple.Item1;
-				var ends = playerTuple.Item2;
-
-				if (!string.IsNullOrEmpty(steamIdStr) && SteamID.TryParse(steamIdStr, out var steamId) && steamId != null)
-				{
-					if (!_adminCache.ContainsKey(steamId))
-					{
-						_adminCache.TryAdd(steamId, ends);
-					}
-
-					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
-					// Often need to call 2 times
-					Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
-				}
-			}
-		}
-	}
-	*/
-    /*
-	public async Task GiveAllFlags()
-	{
-		List<(string, string, List<string>, int, DateTime?)> allPlayers = await GetAllPlayersFlags();
-
-		foreach (var record in allPlayers)
-		{
-			string steamIdStr = record.Item1;
-			List<string> flags = record.Item2;
-			int immunity = record.Item3;
-
-			DateTime? ends = record.Item4;
-
-			if (!string.IsNullOrEmpty(steamIdStr) && SteamID.TryParse(steamIdStr, out var steamId) && steamId != null)
-			{
-				if (!_adminCache.ContainsKey(steamId))
-				{
-					_adminCache.TryAdd(steamId, ends);
-					//_adminCacheTimestamps.Add(steamId, ends);
-				}
-
-				Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
-				// Often need to call 2 times
-				Helper.GivePlayerFlags(steamId, flags, (uint)immunity);
-			}
-		}
-	}
-	*/
-
     public async Task CreateAdminsJsonFile()
     {
-        List<(string identity, string name, List<string> flags, int immunity, DateTime? ends)> allPlayers = await GetAllPlayersFlags();
+        List<(string identity, string name, List<string> flags, int immunity, DateTime? ends)> allPlayers = await GetAllPlayersFlagsSA();
         var validPlayers = allPlayers
             .Where(player => SteamID.TryParse(player.identity, out _)) // Filter invalid SteamID
             .ToList();

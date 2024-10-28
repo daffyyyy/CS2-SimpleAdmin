@@ -111,7 +111,7 @@ public partial class CS2_SimpleAdmin
         }
 
         // Execute ban command if necessary
-        if (UnlockedCommands)
+        if (UnlockedCommands && Config.BanIDBan)
         {
             Server.ExecuteCommand($"banid 1 {new SteamID(player.SteamID).SteamId3}");
         }
@@ -177,7 +177,7 @@ public partial class CS2_SimpleAdmin
 
         Helper.LogCommand(caller, command);
 
-        if (UnlockedCommands)
+        if (UnlockedCommands && Config.BanIDBan)
             Server.ExecuteCommand($"banid 1 {steamId.SteamId3}");
         
         SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Ban, reason, time);

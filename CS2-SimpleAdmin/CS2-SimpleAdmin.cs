@@ -51,6 +51,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         Capabilities.RegisterPluginCapability(ICS2_SimpleAdminApi.PluginCapability, () => SimpleAdminApi);
         
         new PlayerManager().CheckPlayersTimer();
+
+        ChatManager = new ChatManager();
     }
 
     public override void OnAllPluginsLoaded(bool hotReload)

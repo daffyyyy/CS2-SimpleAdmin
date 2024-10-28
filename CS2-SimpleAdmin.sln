@@ -1,11 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.8.34309.116
+VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS2-SimpleAdmin", "CS2-SimpleAdmin\CS2-SimpleAdmin.csproj", "{CC7C3B4D-26C9-4DE7-B4E1-0864350468D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS2-SimpleAdmin", "CS2-SimpleAdmin\CS2-SimpleAdmin.csproj", "{10611B4A-49BC-4556-A000-C1F922C4979D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS2-SimpleAdminApi", "CS2-SimpleAdminApi\CS2-SimpleAdminApi.csproj", "{8BEF0C35-7E4E-4BAF-B632-8584FAFCA922}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS2-SimpleAdminApi", "CS2-SimpleAdminApi\CS2-SimpleAdminApi.csproj", "{2A46E7D8-A0AC-4EB2-BCEA-BBC9049A83DB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{264FAD58-0947-4A02-86C6-39FF99B8EA51}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS2-SimpleAdmin_ExampleModule", "Modules\CS2-SimpleAdmin_ExampleModule\CS2-SimpleAdmin_ExampleModule.csproj", "{FD770842-F4CE-468A-A0DC-7A3A30A0CED6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,19 +17,26 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CC7C3B4D-26C9-4DE7-B4E1-0864350468D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC7C3B4D-26C9-4DE7-B4E1-0864350468D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC7C3B4D-26C9-4DE7-B4E1-0864350468D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC7C3B4D-26C9-4DE7-B4E1-0864350468D0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8BEF0C35-7E4E-4BAF-B632-8584FAFCA922}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8BEF0C35-7E4E-4BAF-B632-8584FAFCA922}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8BEF0C35-7E4E-4BAF-B632-8584FAFCA922}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8BEF0C35-7E4E-4BAF-B632-8584FAFCA922}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10611B4A-49BC-4556-A000-C1F922C4979D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10611B4A-49BC-4556-A000-C1F922C4979D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10611B4A-49BC-4556-A000-C1F922C4979D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10611B4A-49BC-4556-A000-C1F922C4979D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A46E7D8-A0AC-4EB2-BCEA-BBC9049A83DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A46E7D8-A0AC-4EB2-BCEA-BBC9049A83DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A46E7D8-A0AC-4EB2-BCEA-BBC9049A83DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A46E7D8-A0AC-4EB2-BCEA-BBC9049A83DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD770842-F4CE-468A-A0DC-7A3A30A0CED6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD770842-F4CE-468A-A0DC-7A3A30A0CED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD770842-F4CE-468A-A0DC-7A3A30A0CED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD770842-F4CE-468A-A0DC-7A3A30A0CED6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FD770842-F4CE-468A-A0DC-7A3A30A0CED6} = {264FAD58-0947-4A02-86C6-39FF99B8EA51}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {86114444-059F-4DB8-9A55-E6D1BB76238D}
+		SolutionGuid = {27D147C9-0BD5-467F-8602-83A82E4792D6}
 	EndGlobalSection
 EndGlobal

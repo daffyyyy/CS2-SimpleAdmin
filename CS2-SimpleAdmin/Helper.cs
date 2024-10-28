@@ -22,6 +22,33 @@ using CS2_SimpleAdmin.Managers;
 
 namespace CS2_SimpleAdmin;
 
+public partial class CS2_SimpleAdmin
+{
+    bool IsStringValid(string input)
+	{
+        if (!string.IsNullOrEmpty(input) && (string.IsNullOrEmpty(Config.ChatLog.ExcludeMessageContains) || !input.Any(c => Config.ChatLog.ExcludeMessageContains.Contains(c))) && !char.IsWhiteSpace(input.Last()))
+		{
+			return true;
+		}
+		return false;
+	}
+
+    static int CountLetters(string input)
+    {
+        int count = 0;
+
+        foreach (char c in input)
+        {
+            if (char.IsLetter(c))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+}
+
 internal static class Helper
 {
     private static readonly string AssemblyName = Assembly.GetExecutingAssembly().GetName().Name ?? "";

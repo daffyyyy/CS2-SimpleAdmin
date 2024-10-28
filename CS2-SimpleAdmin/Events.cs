@@ -117,7 +117,13 @@ public partial class CS2_SimpleAdmin
         if (player == null || !player.IsValid || player.IsBot)
             return HookResult.Continue;
 
-        new PlayerManager().LoadPlayerData(player);
+        AddTimer(1.25f, () =>
+        {
+            if(player == null || !player.IsValid)
+                return;
+            
+            new PlayerManager().LoadPlayerData(player);
+        });
 
         return HookResult.Continue;
     }
@@ -164,7 +170,8 @@ public partial class CS2_SimpleAdmin
         if (!command.Contains("say"))
             return HookResult.Continue;
 
-        if (info.GetArg(1).StartsWith($"/")
+        if (string.IsNullOrWhiteSpace(info.GetArg(1))
+            || info.GetArg(1).StartsWith($"/")
             || info.GetArg(1).StartsWith($"!"))
             return HookResult.Continue;
 
@@ -179,6 +186,36 @@ public partial class CS2_SimpleAdmin
         {
             player.ExecuteClientCommandFromServer($"css_say {info.GetArg(1).Remove(0, 1)}");
             return HookResult.Stop;
+        }
+
+        if ((command == "say" || command == "say_team") && Config.IsCSSPanel)
+        {
+            var message = info.GetArg(1);
+
+		    string trimmedMessage1 = message.TrimStart();
+            string trimmedMessage = trimmedMessage1.TrimEnd();
+
+            //Console.WriteLine($"{IsStringValid(trimmedMessage)} | {Config.ChatLog.ExcludeMessageContainsLessThanXLetters} | {CountLetters(trimmedMessage)}");
+
+            if (IsStringValid(trimmedMessage) && (Config.ChatLog.ExcludeMessageContainsLessThanXLetters <= 0 || CountLetters(trimmedMessage) > Config.ChatLog.ExcludeMessageContainsLessThanXLetters))
+            {
+                var vplayername = player.PlayerName;
+                var steamId64 = (player.AuthorizedSteamID != null) ? player.AuthorizedSteamID.SteamId64.ToString() : "InvalidSteamID";
+
+                secondMessage = firstMessage;
+                firstMessage = trimmedMessage;
+
+                if (!Config.ChatLog.ExcludeMessageDuplicate || secondMessage != firstMessage)
+                {
+                    // Add to db
+                    ChatManager.AddChatMessageDB(
+                        steamId64,
+                        vplayername,
+                        trimmedMessage,
+                        command.Contains("say_team")
+                    );
+                }
+            }
         }
         
         if (command != "say_team" || !info.GetArg(1).StartsWith($"@")) return HookResult.Continue;

@@ -109,7 +109,7 @@ public class PlayerManager
 
                         if (victim?.UserId == null) return;
 
-                        if (CS2_SimpleAdmin.UnlockedCommands)
+                        if (CS2_SimpleAdmin.UnlockedCommands && _config.BanIDBan)
                             Server.ExecuteCommand($"banid 1 {userId}");
 
                         Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
@@ -178,7 +178,9 @@ public class PlayerManager
                                                   AdminManager.PlayerHasPermissions(p, "@css/ban")) &&
                                                  p.Connected == PlayerConnectedState.PlayerConnected && !CS2_SimpleAdmin.AdminDisabledJoinComms.Contains(p.SteamID)))
                         {
-                            if (CS2_SimpleAdmin._localizer != null && admin != player)
+                            if (CS2_SimpleAdmin._localizer != null && admin != player
+                            && (CS2_SimpleAdmin.PlayersInfo[userId].TotalBans > 0 || CS2_SimpleAdmin.PlayersInfo[userId].TotalGags > 0 || CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes > 0 || CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences > 0 || CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns > 0)
+                            )
                                 admin.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_admin_penalty_info",
                                     player.PlayerName,
                                     CS2_SimpleAdmin.PlayersInfo[userId].TotalBans,
@@ -253,13 +255,14 @@ public class PlayerManager
                         {
                             foreach (var player in players.Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot)))
                             {
-                                if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-                                    player.VoiceFlags = VoiceFlags.Normal;
+                                if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) && player.VoiceFlags.HasFlag(VoiceFlags.Muted))
+                                    player.VoiceFlags &= ~VoiceFlags.Muted;
 
                                 if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
                                     PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) ||
                                     PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
-                                player.VoiceFlags = VoiceFlags.Normal;
+                                if (player.VoiceFlags.HasFlag(VoiceFlags.Muted))
+				                    player.VoiceFlags &= ~VoiceFlags.Muted;
                             }
 
                             PlayerPenaltyManager.RemoveExpiredPenalties();

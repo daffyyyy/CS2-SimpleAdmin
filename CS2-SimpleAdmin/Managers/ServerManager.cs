@@ -34,6 +34,7 @@ public class ServerManager
 
             var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
             var hostname = ConVar.Find("hostname")!.StringValue;
+            var rcon = ConVar.Find("rcon_password")!.StringValue;
             CS2_SimpleAdmin.IpAddress = address;
 
             Task.Run(async () =>
@@ -48,14 +49,14 @@ public class ServerManager
                     if (!addressExists)
                     {
                         await connection.ExecuteAsync(
-                            "INSERT INTO sa_servers (address, hostname) VALUES (@address, @hostname)",
-                            new { address, hostname });
+                            "INSERT INTO sa_servers (address, hostname, rcon) VALUES (@address, @hostname, @rcon)",
+                            new { address, hostname, rcon });
                     }
                     else
                     {
                         await connection.ExecuteAsync(
-                            "UPDATE `sa_servers` SET `hostname` = @hostname, `id` = `id` WHERE `address` = @address",
-                            new { address, hostname });
+                            "UPDATE `sa_servers` SET `hostname` = @hostname, rcon = @rcon, `id` = `id` WHERE `address` = @address",
+                            new { address, rcon, hostname });
                     }
 
                     int? serverId = await connection.ExecuteScalarAsync<int>(
