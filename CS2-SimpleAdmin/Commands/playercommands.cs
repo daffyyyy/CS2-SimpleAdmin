@@ -1,5 +1,5 @@
+using System.Globalization;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
@@ -10,6 +10,9 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+    internal static readonly Dictionary<int, float> SpeedPlayers = [];
+    internal static readonly Dictionary<CCSPlayerController, float> GravityPlayers = [];
+    
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSlayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -265,8 +268,7 @@ public partial class CS2_SimpleAdmin
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <speed>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSpeedCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-        float.TryParse(command.GetArg(2), out var speed);
+        float.TryParse(command.GetArg(2), NumberStyles.Float, CultureInfo.InvariantCulture, out var speed);
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -294,6 +296,11 @@ public partial class CS2_SimpleAdmin
 
         // Set player's speed
         player.SetSpeed(speed);
+        
+        if (speed == 1f)
+            SpeedPlayers.Remove(player.Slot);
+        else
+            SpeedPlayers[player.Slot] = speed;
 
         // Log the command
         if (command == null)
@@ -313,14 +320,12 @@ public partial class CS2_SimpleAdmin
         }
     }
 
-    [ConsoleCommand("css_gravity")]
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <gravity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGravityCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-        float.TryParse(command.GetArg(2), out var gravity);
-
+        float.TryParse(command.GetArg(2), NumberStyles.Float, CultureInfo.InvariantCulture, out var gravity);
+        
         var targets = GetTarget(command);
         if (targets == null) return;
 
@@ -347,7 +352,12 @@ public partial class CS2_SimpleAdmin
 
         // Set player's gravity
         player.SetGravity(gravity);
-
+        
+        if (gravity == 1f)
+            GravityPlayers.Remove(player);
+        else
+            GravityPlayers[player] = gravity;
+        
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_gravity {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {gravity}");
@@ -452,7 +462,7 @@ public partial class CS2_SimpleAdmin
 
         // Set default caller name if not provided
         var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
-
+        
         // Apply slap damage to the player
         player.Pawn.Value?.Slap(damage);
 

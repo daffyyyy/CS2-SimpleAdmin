@@ -2,6 +2,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
+using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using CS2_SimpleAdminApi;
 using Dapper;
@@ -205,6 +206,20 @@ public class PlayerManager
 
     public void CheckPlayersTimer()
     {
+        CS2_SimpleAdmin.Instance.AddTimer(0.1f, () =>
+        {
+            if (CS2_SimpleAdmin.GravityPlayers.Count <= 0) return;
+            
+            foreach (var value in CS2_SimpleAdmin.GravityPlayers)
+            {
+                if (value.Key is not
+                    { IsValid: true, Connected: PlayerConnectedState.PlayerConnected, PawnIsAlive: true })
+                    continue;
+
+                value.Key.SetGravity(value.Value);
+            }
+        }, TimerFlags.REPEAT);
+        
         CS2_SimpleAdmin.Instance.AddTimer(61.0f, () =>
         {
 #if DEBUG
@@ -214,23 +229,50 @@ public class PlayerManager
                 return;
             
             var players = Helper.GetValidPlayers();
-            var onlinePlayers = players
-                .Where(player => player.IpAddress != null)
-                .Select(player => (player.IpAddress, player.SteamID, player.UserId, player.Slot))
-                .ToList();
+            var onlinePlayers = new List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)>();
+            // var onlinePlayers = players
+            //     .Where(player => player.IpAddress != null)
+            //     .Select(player => (player.IpAddress, player.SteamID, player.UserId, player.Slot))
+            //     .ToList();
 
-            Task.Run(async () =>
+            foreach (var player in players)
             {
-                await CS2_SimpleAdmin.Instance.MuteManager.ExpireOldMutes();
-                await CS2_SimpleAdmin.Instance.BanManager.ExpireOldBans();
-                await CS2_SimpleAdmin.Instance.WarnManager.ExpireOldWarns();
-                await CS2_SimpleAdmin.Instance.PermissionManager.DeleteOldAdmins();
-
-                CS2_SimpleAdmin.BannedPlayers.Clear();
-
-                if (onlinePlayers.Count > 0)
+                if (player.IpAddress != null)
+                    onlinePlayers.Add((player.IpAddress, player.SteamID, player.UserId, player.Slot));
+            }
+            
+            try
+            {
+                var expireTasks = new[]
                 {
-                    try
+                    CS2_SimpleAdmin.Instance.BanManager.ExpireOldBans(),
+                    CS2_SimpleAdmin.Instance.MuteManager.ExpireOldMutes(),
+                    CS2_SimpleAdmin.Instance.WarnManager.ExpireOldWarns(),
+                    CS2_SimpleAdmin.Instance.PermissionManager.DeleteOldAdmins()
+                };
+
+                Task.WhenAll(expireTasks).ContinueWith(t =>
+                {
+                    if (t is not { IsFaulted: true, Exception: not null }) return;
+                    
+                    foreach (var ex in t.Exception.InnerExceptions)
+                    {
+                        CS2_SimpleAdmin._logger?.LogError($"Error expiring penalties: {ex.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                CS2_SimpleAdmin._logger?.LogError($"Unexpected error: {ex.Message}");
+            }
+            
+            CS2_SimpleAdmin.BannedPlayers.Clear();
+
+            if (onlinePlayers.Count > 0)
+            {
+                try
+                {
+                    Task.Run(async () =>
                     {
                         await CS2_SimpleAdmin.Instance.BanManager.CheckOnlinePlayers(onlinePlayers);
 
@@ -238,39 +280,54 @@ public class PlayerManager
                         {
                             await CS2_SimpleAdmin.Instance.MuteManager.CheckOnlineModeMutes(onlinePlayers);
                         }
-                    }
-                    catch (Exception)
+                    }).ContinueWith(t =>
                     {
-                        CS2_SimpleAdmin._logger?.LogError("Unable to check bans for online players");
-                    }
+                        if (t is not { IsFaulted: true, Exception: not null }) return;
+                        
+                        foreach (var ex in t.Exception.InnerExceptions)
+                        {
+                            CS2_SimpleAdmin._logger?.LogError($"Error checking online players: {ex.Message}");
+                        }
+                    });
                 }
-
-                await Server.NextFrameAsync(() =>
+                catch (Exception ex)
                 {
-                    if (onlinePlayers.Count > 0)
+                    CS2_SimpleAdmin._logger?.LogError($"Unexpected error: {ex.Message}");
+                }
+            }
+
+            if (onlinePlayers.Count <= 0) return;
+            
+            {
+                try
+                {
+                    var penalizedSlots = players
+                        .Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot))
+                        .Select(player => new 
+                        { 
+                            Player = player, 
+                            IsMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute), 
+                            IsSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence), 
+                            IsGagged = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) 
+                        });
+
+                    foreach (var entry in penalizedSlots)
                     {
-                        try
+                        // If the player is not muted or silenced, set voice flags to normal
+                        if (!entry.IsMuted && !entry.IsSilenced)
                         {
-                            foreach (var player in players.Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot)))
-                            {
-                                if (!PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) && !PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-                                    player.VoiceFlags = VoiceFlags.Normal;
-
-                                if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence) ||
-                                    PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute) ||
-                                    PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag)) continue;
-                                player.VoiceFlags = VoiceFlags.Normal;
-                            }
-
-                            PlayerPenaltyManager.RemoveExpiredPenalties();
-                        }
-                        catch (Exception)
-                        {
-                            CS2_SimpleAdmin._logger?.LogError("Unable to remove old penalties");
+                            entry.Player.VoiceFlags = VoiceFlags.Normal;
                         }
                     }
-                });
-            });
+
+                    PlayerPenaltyManager.RemoveExpiredPenalties();
+                }
+                catch (Exception ex)
+                {
+                    CS2_SimpleAdmin._logger?.LogError($"Unable to remove old penalties: {ex.Message}");
+                }
+            }
+
         }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT);
     }
 }

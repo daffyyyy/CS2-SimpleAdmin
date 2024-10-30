@@ -6,6 +6,7 @@ using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Memory;
 using Microsoft.Extensions.Localization;
 using System.Text;
+using CounterStrikeSharp.API.Modules.UserMessages;
 using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
 
 namespace CS2_SimpleAdmin;
@@ -93,8 +94,8 @@ public static class PlayerExtensions
 
     public static void Freeze(this CBasePlayerPawn pawn)
     {
-        pawn.MoveType = MoveType_t.MOVETYPE_OBSOLETE;
-        Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 1); // obsolete
+        pawn.MoveType = MoveType_t.MOVETYPE_INVALID;
+        Schema.SetSchemaValue(pawn.Handle, "CBaseEntity", "m_nActualMoveType", 11); // invalid
         Utilities.SetStateChanged(pawn, "CBaseEntity", "m_MoveType");
     }
 
@@ -171,6 +172,8 @@ public static class PlayerExtensions
         if (pawn.LifeState != (int)LifeState_t.LIFE_ALIVE)
             return;
 
+        var controller = pawn.Controller.Value?.As<CCSPlayerController>();
+
         /* Teleport in a random direction - thank you, Mani!*/
         /* Thank you AM & al!*/
         var random = new Random();
@@ -183,6 +186,17 @@ public static class PlayerExtensions
         pawn.AbsVelocity.X = vel.X;
         pawn.AbsVelocity.Y = vel.Y;
         pawn.AbsVelocity.Z = vel.Z;
+
+        if (controller != null && controller.IsValid)
+        {
+            var shakeMessage = UserMessage.FromPartialName("Shake");
+            shakeMessage.SetFloat("duration", 1);
+            shakeMessage.SetFloat("amplitude", 10);
+            shakeMessage.SetFloat("frequency", 1f);
+            shakeMessage.SetInt("command", 0);
+            shakeMessage.Recipients.Add(controller);
+            shakeMessage.Send();
+        }
 
         if (damage <= 0)
             return;

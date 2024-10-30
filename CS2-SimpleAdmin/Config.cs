@@ -221,6 +221,9 @@ public class OtherSettings
     
     [JsonPropertyName("ShowBanMenuIfNoTime")]
     public bool ShowBanMenuIfNoTime { get; set; } = true;
+    
+    [JsonPropertyName("UserMessageGagChatType")]
+    public bool UserMessageGagChatType { get; set; } = false;
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
