@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "إدارة اللاعبين",
 	"sa_menu_disconnected_title": "اللاعبون الأخيرون",
 	"sa_menu_disconnected_action_title": "اختر الإجراء",
+	"sa_menu_pluginsmanager_title": "إدارة الإضافات",
 
 	"sa_player": "اللاعب",
 	"sa_console": "وحدة التحكم",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}الإداري: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(إداري) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(لاعب) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** أصدر الأمر `{1}` على الخادم `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** أصدر الأمر `{1}` على الخادم `HOSTNAME`",
+	"sa_menu_pluginsmanager_loaded": "{lime}مفعل {default}الإضافة {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}معطل {default}الإضافة {lightred}{0}"
 }

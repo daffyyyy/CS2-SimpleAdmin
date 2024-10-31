@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "Gérer les joueurs",
 	"sa_menu_disconnected_title": "Derniers joueurs",
 	"sa_menu_disconnected_action_title": "Choisir une action",
+	"sa_menu_pluginsmanager_title": "Gérer les plugins",
 
 	"sa_player": "Joueur",
 	"sa_console": "Console",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}ADMIN: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(JOUEUR) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** a exécuté la commande `{1}` sur le serveur `HOSTNAME`",
+	"sa_menu_pluginsmanager_loaded": "{lime}Activé {default}plugin {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}Désactivé {default}plugin {lightred}{0}"
 }

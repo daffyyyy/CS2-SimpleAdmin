@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "Oyuncu Yönetimi",
 	"sa_menu_disconnected_title": "Son oyuncular",
 	"sa_menu_disconnected_action_title": "Eylem seçin",
+	"sa_menu_pluginsmanager_title": "Eklentileri Yönet",
 
 	"sa_player": "Oyuncu",
 	"sa_console": "Konsol",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}Yönetici: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(Yönetici) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(Oyuncu) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** `{1}` komutunu `HOSTNAME` sunucusunda gerçekleştirdi"
+	"sa_discord_log_command": "**{0}** `{1}` komutunu `HOSTNAME` sunucusunda gerçekleştirdi",
+	"sa_menu_pluginsmanager_loaded": "{lime}Etkinleştirildi {default}eklenti {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}Devre Dışı Bırakıldı {default}eklenti {lightred}{0}"
 }

@@ -1,3 +1,4 @@
+using System.Collections;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Translations;
@@ -13,6 +14,9 @@ using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Globalization;
+using System.Reflection;
+using CounterStrikeSharp.API.Core.Attributes.Registration;
+using MenuManager;
 
 namespace CS2_SimpleAdmin;
 
@@ -888,6 +892,76 @@ public partial class CS2_SimpleAdmin
     public void OnRestartCommand(CCSPlayerController? caller, CommandInfo command)
     {
         RestartGame(caller);
+    }
+
+    [RequiresPermissions("@css/root")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    public void OnPluginManagerCommand(CCSPlayerController? caller, CommandInfo commandInfo)
+    {
+        if (MenuApi == null || caller == null)
+            return;
+        
+        var pluginManager = Helper.GetPluginManager();
+        if (pluginManager == null)
+        {
+            Logger.LogError("Unable to access PluginManager.");
+            return;
+        }
+
+        var getLoadedPluginsMethod = pluginManager.GetType().GetMethod("GetLoadedPlugins", BindingFlags.Public | BindingFlags.Instance);
+        if (getLoadedPluginsMethod?.Invoke(pluginManager, null) is not IEnumerable plugins)
+        {
+            Logger.LogError("Unable to retrieve plugins.");
+            return;
+        }
+
+        var pluginsMenu = Helper.CreateMenu(Localizer["sa_menu_pluginsmanager_title"]);
+        
+        foreach (var plugin in plugins)
+        {
+            var pluginType = plugin.GetType();
+
+            // Accessing each property with the Type of the plugin
+            var pluginId = pluginType.GetProperty("PluginId")?.GetValue(plugin);
+            var state = pluginType.GetProperty("State")?.GetValue(plugin)?.ToString();
+            var path = pluginType.GetProperty("FilePath")?.GetValue(plugin)?.ToString();
+            path = Path.GetFileName(Path.GetDirectoryName(path));
+
+            // Access nested properties within "Plugin" (like ModuleName, ModuleVersion, etc.)
+            var nestedPlugin = pluginType.GetProperty("Plugin")?.GetValue(plugin);
+            if (nestedPlugin == null) continue;
+            
+            var status = state?.ToUpper() != "UNLOADED" ? "ON" : "OFF";
+            var allowedMenuTypes = new[] { "chat", "console" };
+
+            if (!allowedMenuTypes.Contains(Config.MenuConfigs.MenuType) && MenuApi.GetMenuType(caller) >= MenuType.CenterMenu)
+                status = state?.ToUpper() != "UNLOADED" ? "<font color='lime'>ON</font>" : "<font color='red'>OFF</font>";
+            var nestedType = nestedPlugin.GetType();
+            var moduleName = nestedType.GetProperty("ModuleName")?.GetValue(nestedPlugin)?.ToString() ?? "Unknown";
+            var moduleVersion = nestedType.GetProperty("ModuleVersion")?.GetValue(nestedPlugin)?.ToString();
+            // var moduleAuthor = nestedType.GetProperty("ModuleAuthor")?.GetValue(nestedPlugin)?.ToString();
+            // var moduleDescription = nestedType.GetProperty("ModuleDescription")?.GetValue(nestedPlugin)?.ToString();
+
+            pluginsMenu?.AddMenuOption($"({status}) [{moduleName} {moduleVersion}]", (_, _) =>
+            {
+                if (state?.ToUpper() != "UNLOADED")
+                {
+                    caller.SendLocalizedMessage(Localizer, "sa_menu_pluginsmanager_unloaded", moduleName);
+                    Server.ExecuteCommand($"css_plugins unload {pluginId}");
+                }
+                else
+                {
+                    caller.SendLocalizedMessage(Localizer, "sa_menu_pluginsmanager_loaded", moduleName);
+                    Server.ExecuteCommand($"css_plugins load {path}");
+                }
+
+                AddTimer(0.1f, () => OnPluginManagerCommand(caller, commandInfo));
+            });
+                
+            // Console.WriteLine($"[#{pluginId}:{state?.ToUpper()}]: \"{moduleName ?? "Unknown"}\" ({moduleVersion ?? "Unknown"}) by {moduleAuthor}");
+        }
+        
+        pluginsMenu?.Open(caller);
     }
 
     public static void RestartGame(CCSPlayerController? admin)

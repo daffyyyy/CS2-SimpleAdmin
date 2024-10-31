@@ -18,6 +18,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CounterStrikeSharp.API.Core.Plugin.Host;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CS2_SimpleAdmin.Managers;
 using MenuManager;
@@ -543,6 +544,18 @@ internal static class Helper
         };
 
         return menu;
+    }
+
+    internal static IPluginManager? GetPluginManager()
+    {
+        // Access the singleton instance of Application
+        var applicationInstance = Application.Instance;
+
+        // Use Reflection to access the private _pluginManager field
+        var pluginManagerField = typeof(Application).GetField("_pluginManager", BindingFlags.NonPublic | BindingFlags.Instance);
+        var pluginManager = pluginManagerField?.GetValue(applicationInstance) as IPluginManager;
+        
+        return pluginManager;
     }
 }
 

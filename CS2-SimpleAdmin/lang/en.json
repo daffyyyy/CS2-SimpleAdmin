@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "Players Manage",
 	"sa_menu_disconnected_title": "Recent players",
 	"sa_menu_disconnected_action_title": "Select action",
+	"sa_menu_pluginsmanager_title": "Plugins Manage",
 
 	"sa_player": "Player",
 	"sa_console": "Console",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}ADMIN: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(ADMIN) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(PLAYER) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** issued command `{1}` on server `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** issued command `{1}` on server `HOSTNAME`",
+	"sa_menu_pluginsmanager_loaded": "{lime}Enabled {default}plugin {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}Disabled {default}plugin {lightred}{0}"
 }
