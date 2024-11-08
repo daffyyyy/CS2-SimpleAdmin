@@ -7,7 +7,7 @@ namespace CS2_SimpleAdmin.Managers;
 
 public class ServerManager
 {
-    private int _getIpTryCount = 0;
+    private int _getIpTryCount;
 
     public void LoadServerData()
     {

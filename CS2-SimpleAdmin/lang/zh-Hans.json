@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "玩家管理",
 	"sa_menu_disconnected_title": "最近的玩家",
 	"sa_menu_disconnected_action_title": "选择操作",
+	"sa_menu_pluginsmanager_title": "管理插件",
 
 	"sa_player": "玩家",
 	"sa_console": "控制台",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}管理员: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(管理员) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(玩家) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上发出了 `{1}` 命令"
+	"sa_discord_log_command": "**{0}** 在服务器 `HOSTNAME` 上发出了 `{1}` 命令",
+	"sa_menu_pluginsmanager_loaded": "{lime}已启用 {default}插件 {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}已禁用 {default}插件 {lightred}{0}"
 }

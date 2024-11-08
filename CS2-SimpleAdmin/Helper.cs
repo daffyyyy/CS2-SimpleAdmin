@@ -18,6 +18,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using CounterStrikeSharp.API.Core.Plugin.Host;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CS2_SimpleAdmin.Managers;
 using MenuManager;
@@ -571,6 +572,18 @@ internal static class Helper
 
         return menu;
     }
+
+    internal static IPluginManager? GetPluginManager()
+    {
+        // Access the singleton instance of Application
+        var applicationInstance = Application.Instance;
+
+        // Use Reflection to access the private _pluginManager field
+        var pluginManagerField = typeof(Application).GetField("_pluginManager", BindingFlags.NonPublic | BindingFlags.Instance);
+        var pluginManager = pluginManagerField?.GetValue(applicationInstance) as IPluginManager;
+        
+        return pluginManager;
+    }
 }
 
 public static class PluginInfo
@@ -717,11 +730,30 @@ public static class WeaponHelper
     
     public static List<(string EnumMemberValue, CsItem EnumValue)> GetWeaponsByPartialName(string input)
     {
+        // Normalize input for case-insensitive comparison
+        var normalizedInput = input.ToLowerInvariant();
+
+        // Find all matching weapons based on the input
         var matchingWeapons = WeaponsEnumCache.Value
-            .Where(kvp => kvp.Key.Contains(input))
-            .Select(kvp => (kvp.Key, kvp.Value))
+            .Where(kvp => kvp.Key.Contains(normalizedInput, StringComparison.InvariantCultureIgnoreCase))
+            .Select(kvp => (EnumMemberValue: kvp.Key, EnumValue: kvp.Value))
             .ToList();
 
-        return matchingWeapons;
+        // Check for an exact match first
+        var exactMatch = matchingWeapons
+            .FirstOrDefault(m => m.EnumMemberValue.Equals(input, StringComparison.OrdinalIgnoreCase));
+
+        if (exactMatch.EnumMemberValue != null)
+        {
+            // Return a list containing only the exact match
+            return [exactMatch];
+        }
+
+        // If no exact match, get all matches that start with the input
+        var filteredWeapons = matchingWeapons
+            .Where(m => m.EnumMemberValue.StartsWith(normalizedInput, StringComparison.InvariantCultureIgnoreCase))
+            .ToList();
+
+        return filteredWeapons; // Return all relevant matches for the partial input
     }
 }

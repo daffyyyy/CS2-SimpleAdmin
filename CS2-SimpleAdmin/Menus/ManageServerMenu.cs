@@ -26,10 +26,16 @@ public static class ManageServerMenu
 
         // permissions
         var hasMap = AdminManager.CommandIsOverriden("css_map") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_map")) : AdminManager.PlayerHasPermissions(admin, "@css/changemap");
+        var hasPlugins = AdminManager.CommandIsOverriden("css_pluginsmanager") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_pluginsmanager")) : AdminManager.PlayerHasPermissions(admin, "@css/root");
 
         //bool hasMap = AdminManager.PlayerHasPermissions(admin, "@css/changemap");
 
         // options added in order
+
+        if (hasPlugins)
+        {
+            options.Add(new ChatMenuOptionData(localizer?["sa_menu_pluginsmanager_title"] ?? "Manage Plugins", () => admin.ExecuteClientCommandFromServer("css_pluginsmanager")));
+        }
 
         if (hasMap)
         {

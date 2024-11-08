@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "Управление игроками",
 	"sa_menu_disconnected_title": "Последние игроки",
 	"sa_menu_disconnected_action_title": "Выберите действие",
+	"sa_menu_pluginsmanager_title": "Управление плагинами",
 
 	"sa_player": "Игрок",
 	"sa_console": "Консоль",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}АДМИН: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(АДМИН) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(ИГРОК) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** выполнил команду `{1}` на сервере `HOSTNAME`"
+	"sa_discord_log_command": "**{0}** выполнил команду `{1}` на сервере `HOSTNAME`",
+	"sa_menu_pluginsmanager_loaded": "{lime}Включен {default}плагин {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}Выключен {default}плагин {lightred}{0}"
 }

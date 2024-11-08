@@ -47,6 +47,7 @@
 	"sa_menu_players_manage": "مدیریت بازیکنان",
 	"sa_menu_disconnected_title": "آخرین بازیکنان",
 	"sa_menu_disconnected_action_title": "انتخاب عملیات",
+	"sa_menu_pluginsmanager_title": "مدیریت پلاگین‌ها",
 
 	"sa_player": "بازیکن",
 	"sa_console": "کنسول",
@@ -124,5 +125,7 @@
 	"sa_adminsay_prefix": "{RED}ادمین: {lightred}{0}{default}",
 	"sa_adminchat_template_admin": "{LIME}(ادمین) {lightred}{0}{default}: {lightred}{1}{default}",
 	"sa_adminchat_template_player": "{SILVER}(بازیکن) {lightred}{0}{default}: {lightred}{1}{default}",
-	"sa_discord_log_command": "**{0}** فرمان `{1}` را در سرور `HOSTNAME` اجرا کرد"
+	"sa_discord_log_command": "**{0}** فرمان `{1}` را در سرور `HOSTNAME` اجرا کرد",
+	"sa_menu_pluginsmanager_loaded": "{lime}فعال {default}پلاگین {lime}{0}",
+	"sa_menu_pluginsmanager_unloaded": "{lightred}غیرفعال {default}پلاگین {lightred}{0}"
 }
