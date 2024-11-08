@@ -18,7 +18,8 @@
       "ReloadAdminsEveryMapChange": false,
       "DisconnectedPlayersHistoryCount": 10,
       "NotifyPenaltiesToAdminOnConnect": true,
-      "ShowBanMenuIfNoTime": true
+      "ShowBanMenuIfNoTime": true,
+      "UserMessageGagChatType": false
     },
     "EnableMetrics": true,
     "EnableUpdateCheck": true,
