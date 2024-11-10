@@ -180,7 +180,7 @@ public static class ManagePlayersMenu
     {
         if (player is not { IsValid: true }) return;
 
-        // CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason);
+        CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason);
     }
 
     private static void WarnMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
