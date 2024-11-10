@@ -306,9 +306,9 @@ public class PlayerManager
                         .Select(player => new 
                         { 
                             Player = player, 
-                            IsMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute), 
-                            IsSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence), 
-                            IsGagged = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) 
+                            IsMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute, out _), 
+                            IsSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out _), 
+                            IsGagged = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag, out _) 
                         });
 
                     foreach (var entry in penalizedSlots)

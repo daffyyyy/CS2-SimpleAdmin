@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "Brīdinājums reģistrēts",
 	"sa_discord_penalty_unknown": "Nezināms reģistrēts",
 
+	"sa_player_penalty_chat_active": "{lightred}Jūsu čats ir bloķēts uz: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ Izslēgts [{lightred}❌{default}] - Beidzas [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Klusums [{lightred}❌{default}] - Beidzas [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Klusēšana [{lightred}❌{default}] - Beidzas [{lightred}{0}{default}]",

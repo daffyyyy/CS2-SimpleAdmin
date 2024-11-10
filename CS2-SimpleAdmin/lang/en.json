@@ -63,6 +63,8 @@
 	"sa_discord_penalty_silence": "Silence registered",
 	"sa_discord_penalty_warn": "Warn registered",
 	"sa_discord_penalty_unknown": "Unknown registered",
+	
+	"sa_player_penalty_chat_active": "{lightred}Your chat is blocked to: {grey}{0}",
 
 	"sa_player_penalty_info_active_mute": "➔ Mute [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Gag [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",

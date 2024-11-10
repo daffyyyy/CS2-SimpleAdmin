@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "警告已注册",
 	"sa_discord_penalty_unknown": "未知已记录",
 
+	"sa_player_penalty_chat_active": "{lightred}您的聊天已被封锁到: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ 静音 [{lightred}❌{default}] - 到期 [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ 禁言 [{lightred}❌{default}] - 到期 [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ 沉默 [{lightred}❌{default}] - 到期 [{lightred}{0}{default}]",

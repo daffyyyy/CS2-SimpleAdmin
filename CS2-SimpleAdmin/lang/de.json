@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "Warnung registriert",
 	"sa_discord_penalty_unknown": "Unbekanntes registriert",
 
+	"sa_player_penalty_chat_active": "{lightred}Dein Chat ist blockiert für: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ Stummschaltung [{lightred}❌{default}] - Ablauf [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Mundtot [{lightred}❌{default}] - Ablauf [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Stille [{lightred}❌{default}] - Ablauf [{lightred}{0}{default}]",

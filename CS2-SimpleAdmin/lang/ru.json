@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "Предупреждение зарегистрировано",
 	"sa_discord_penalty_unknown": "Неизвестно зарегистрировано",
 
+	"sa_player_penalty_chat_active": "{lightred}Ваш чат заблокирован для: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ Мут [{lightred}❌{default}] - Истекает [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Гэг [{lightred}❌{default}] - Истекает [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Тишина [{lightred}❌{default}] - Истекает [{lightred}{0}{default}]",

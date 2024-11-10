@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "Nowe ostrzeżenie",
 	"sa_discord_penalty_unknown": "Nowa nieznana blokada",
 
+	"sa_player_penalty_chat_active": "{lightred}Twój czat jest zablokowany do: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ Zakneblowanie [{lightred}❌{default}] - Wygasa [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Wyciszenie [{lightred}❌{default}] - Wygasa [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Uciszenie [{lightred}❌{default}] - Wygasa [{lightred}{0}{default}]",

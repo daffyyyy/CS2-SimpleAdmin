@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "Avertissement enregistré",
 	"sa_discord_penalty_unknown": "Inconnu enregistré",
 
+	"sa_player_penalty_chat_active": "{lightred}Votre chat est bloqué pour : {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ Muet [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Gag [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Silence [{lightred}❌{default}] - Expire [{lightred}{0}{default}]",

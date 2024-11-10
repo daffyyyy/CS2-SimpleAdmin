@@ -224,6 +224,9 @@ public class OtherSettings
     
     [JsonPropertyName("UserMessageGagChatType")]
     public bool UserMessageGagChatType { get; set; } = false;
+
+    [JsonPropertyName("AdditionalCommandsToLog")]
+    public List<string> AdditionalCommandsToLog = new();
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
