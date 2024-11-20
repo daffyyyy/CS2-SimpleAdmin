@@ -19,7 +19,8 @@
       "DisconnectedPlayersHistoryCount": 10,
       "NotifyPenaltiesToAdminOnConnect": true,
       "ShowBanMenuIfNoTime": true,
-      "UserMessageGagChatType": false
+      "UserMessageGagChatType": false,
+      "AdditionalCommandsToLog": []
     },
     "EnableMetrics": true,
     "EnableUpdateCheck": true,
