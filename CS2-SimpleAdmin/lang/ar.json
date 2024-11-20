@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "التحذير مسجل",
 	"sa_discord_penalty_unknown": "غير معروف مسجل",
 
+	"sa_player_penalty_chat_active": "{lightred}تم حظر الدردشة الخاصة بك إلى: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ كتم [{lightred}❌{default}] - ينتهي [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ صمت [{lightred}❌{default}] - ينتهي [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ سكوت [{lightred}❌{default}] - ينتهي [{lightred}{0}{default}]",

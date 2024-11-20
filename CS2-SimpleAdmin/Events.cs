@@ -9,6 +9,7 @@ using CS2_SimpleAdmin.Models;
 using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.UserMessages;
 
@@ -173,13 +174,16 @@ public partial class CS2_SimpleAdmin
         var author = Utilities.GetPlayerFromIndex(um.ReadInt("entityindex"));
         if (author == null || !author.IsValid || author.IsBot)
             return HookResult.Continue;
-        
-        if (PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Silence))
-            return HookResult.Stop;
+
+        if (!PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Gag, out DateTime? endDateTime) &&
+            !PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Silence, out endDateTime))
+            return HookResult.Continue;
+        if (_localizer != null && endDateTime is not null)
+            author.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", author.GetLanguage()));
+        return HookResult.Stop;
 
         // um.Recipients.Clear();
-        
-        return HookResult.Continue;
+
     }
 
     private HookResult ComamndListenerHandler(CCSPlayerController? player, CommandInfo info)
@@ -188,6 +192,9 @@ public partial class CS2_SimpleAdmin
             return HookResult.Continue;
 
         var command = info.GetArg(0).ToLower();
+
+        if (Config.OtherSettings.AdditionalCommandsToLog.Contains(command))
+            Helper.LogCommand(player, info);
 
         switch (command)
         {
@@ -207,7 +214,7 @@ public partial class CS2_SimpleAdmin
         
                 if (target == null || !target.IsValid || target.Connected != PlayerConnectedState.PlayerConnected)
                     return HookResult.Continue;
-
+                
                 return !AdminManager.CanPlayerTarget(player, target) ? HookResult.Stop : HookResult.Continue;
             }
         }
@@ -216,8 +223,15 @@ public partial class CS2_SimpleAdmin
             return HookResult.Continue;
         
         if (!Config.OtherSettings.UserMessageGagChatType)
-            if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
+        {
+            if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag, out DateTime? endDateTime) ||
+                PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out endDateTime))
+            {
+                if (_localizer != null && endDateTime is not null)
+                    player.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", player.GetLanguage()));
                 return HookResult.Stop;
+            }
+        }
 
         if (string.IsNullOrWhiteSpace(info.GetArg(1))
             || info.GetArg(1).StartsWith($"/")
@@ -318,8 +332,8 @@ public partial class CS2_SimpleAdmin
         if (info.GetArg(1).Length == 0)
             return HookResult.Handled;
 
-        if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence))
-            return HookResult.Handled;
+        if (PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag, out _) || PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out _))
+            return HookResult.Stop;
 
         if (!info.GetArg(1).StartsWith($"@")) return HookResult.Continue;
 
@@ -395,12 +409,18 @@ public partial class CS2_SimpleAdmin
         SpeedPlayers.Remove(player.Slot);
         GravityPlayers.Remove(player);
 
-        PlayersInfo[player.UserId.Value].DiePosition =
-            new DiePosition(
-                new Vector(player.PlayerPawn.Value?.AbsOrigin?.X, player.PlayerPawn.Value?.AbsOrigin?.Y,
-                    player.PlayerPawn.Value?.AbsOrigin?.Z),
-                new QAngle(player.PlayerPawn.Value?.AbsRotation?.X, player.PlayerPawn.Value?.AbsRotation?.Y,
-                    player.PlayerPawn.Value?.AbsRotation?.Z));
+        PlayersInfo[player.UserId.Value].DiePosition = new DiePosition(
+            new Vector(
+                player.PlayerPawn.Value?.AbsOrigin?.X ?? 0,
+                player.PlayerPawn.Value?.AbsOrigin?.Y ?? 0,
+                player.PlayerPawn.Value?.AbsOrigin?.Z ?? 0
+            ),
+            new QAngle(
+                player.PlayerPawn.Value?.AbsRotation?.X ?? 0,
+                player.PlayerPawn.Value?.AbsRotation?.Y ?? 0,
+                player.PlayerPawn.Value?.AbsRotation?.Z ?? 0
+            )
+        );
 
         return HookResult.Continue;
     }

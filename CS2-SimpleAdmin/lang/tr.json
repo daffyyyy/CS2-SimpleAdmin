@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "Uyarı kaydedildi",
 	"sa_discord_penalty_unknown": "Bilinmeyen kaydedildi",
 
+	"sa_player_penalty_chat_active": "{lightred}Sohbetiniz şu kişiye engellendi: {grey}{0}",
+
 	"sa_player_penalty_info_active_mute": "➔ Mute [{lightred}❌{default}] - Süre Dolacak [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ Gag [{lightred}❌{default}] - Süre Dolacak [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ Sessizlik [{lightred}❌{default}] - Süre Dolacak [{lightred}{0}{default}]",

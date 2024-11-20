@@ -33,16 +33,20 @@ public static class PlayerPenaltyManager
             });
     }
 
-    public static bool IsPenalized(int slot, PenaltyType penaltyType)
+    public static bool IsPenalized(int slot, PenaltyType penaltyType, out DateTime? endDateTime)
     {
-        //Console.WriteLine($"Checking penalties for player with slot {slot} and penalty type {penaltyType}");
+        endDateTime = null;
 
         if (!Penalties.TryGetValue(slot, out var penaltyDict) ||
             !penaltyDict.TryGetValue(penaltyType, out var penaltiesList)) return false;
-        //Console.WriteLine($"Found penalties for player with slot {slot} and penalty type {penaltyType}");
 
         if (CS2_SimpleAdmin.Instance.Config.OtherSettings.TimeMode == 0)
-            return penaltiesList.Count != 0;
+        {
+            if (penaltiesList.Count == 0) return false;
+            
+            endDateTime = penaltiesList.First().EndDateTime;
+            return true;
+        }
 
         var now = Time.ActualDateTime();
 
@@ -52,28 +56,22 @@ public static class PlayerPenaltyManager
             // Check if the penalty is still active
             if (penalty.Duration > 0 && now >= penalty.EndDateTime)
             {
-                //Console.WriteLine($"Removing expired penalty for player with slot {slot} and penalty type {penaltyType}");
                 penaltiesList.Remove(penalty); // Remove expired penalty
                 if (penaltiesList.Count == 0)
                 {
-                    //Console.WriteLine($"No more penalties of type {penaltyType} for player with slot {slot}. Removing penalty type.");
                     penaltyDict.Remove(penaltyType); // Remove penalty type if no more penalties exist
                 }
             }
             else if (penalty.Duration == 0 || now < penalty.EndDateTime)
             {
-                //Console.WriteLine($"Player with slot {slot} is penalized for type {penaltyType}");
-                // Return true if there's an active penalty
+                // Set endDateTime to the end time of this active penalty
+                endDateTime = penalty.EndDateTime;
                 return true;
             }
         }
 
         // Return false if no active penalties are found
-        //Console.WriteLine($"Player with slot {slot} is not penalized for type {penaltyType}");
         return false;
-
-        // Return false if no penalties of the specified type were found for the player
-        //Console.WriteLine($"No penalties found for player with slot {slot} and penalty type {penaltyType}");
     }
 
     // Get the end datetime and duration of penalties for a player and penalty type

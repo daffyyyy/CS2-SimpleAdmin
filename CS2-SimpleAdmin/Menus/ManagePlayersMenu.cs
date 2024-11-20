@@ -158,6 +158,8 @@ public static class ManagePlayersMenu
             {
                 if (player is { IsValid: true })
                     Ban(admin, player, duration, reason);
+                
+                CS2_SimpleAdmin.MenuApi?.CloseMenu(admin);
             });
 
         // var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_ban"] ?? "Ban"}: {player?.PlayerName}");

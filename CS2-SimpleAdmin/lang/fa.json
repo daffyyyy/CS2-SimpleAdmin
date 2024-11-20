@@ -64,6 +64,8 @@
 	"sa_discord_penalty_warn": "هشدار ثبت شد",
 	"sa_discord_penalty_unknown": "ناشناخته انجام شده",
 
+	"sa_player_penalty_chat_active": "{lightred}چت شما برای: {grey}{0} مسدود شده است",
+
 	"sa_player_penalty_info_active_mute": "➔ بی‌صدا [{lightred}❌{default}] - منقضی شدن [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_gag": "➔ مسدود کردن صدا [{lightred}❌{default}] - منقضی شدن [{lightred}{0}{default}]",
 	"sa_player_penalty_info_active_silence": "➔ سکوت [{lightred}❌{default}] - منقضی شدن [{lightred}{0}{default}]",
