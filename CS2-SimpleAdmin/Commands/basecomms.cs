@@ -151,6 +151,8 @@ public partial class CS2_SimpleAdmin
                 await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time);
             });
 
+            Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Gag, _localizer);
+
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Gag has been added offline.");
         }
 
@@ -370,6 +372,8 @@ public partial class CS2_SimpleAdmin
                 await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
             });
 
+            Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Mute, _localizer);
+            
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Mute has been added offline.");
         }
 
@@ -588,6 +592,8 @@ public partial class CS2_SimpleAdmin
             {
                 await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 2);
             });
+
+            Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Silence, _localizer);
 
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Silence has been added offline.");
         }

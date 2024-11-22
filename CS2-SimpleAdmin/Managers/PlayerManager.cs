@@ -86,6 +86,11 @@ public class PlayerManager
 
             try
             {
+                if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(userId))
+                {
+                    Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION);
+                }
+                
                 // Check if the player is banned
                 var isBanned = await CS2_SimpleAdmin.Instance.BanManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId]);
                 
@@ -194,7 +199,7 @@ public class PlayerManager
             }
             catch (Exception ex)
             {
-                CS2_SimpleAdmin._logger?.LogError($"Error processing player connection: {ex}");
+                CS2_SimpleAdmin._logger?.LogError("Error processing player connection: {exception}", ex.Message);
             }
         });
 
@@ -263,7 +268,7 @@ public class PlayerManager
             }
             catch (Exception ex)
             {
-                CS2_SimpleAdmin._logger?.LogError($"Unexpected error: {ex.Message}");
+                CS2_SimpleAdmin._logger?.LogError("Unexpected error: {exception}", ex.Message);
             }
             
             CS2_SimpleAdmin.BannedPlayers.Clear();
