@@ -30,6 +30,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         if (hotReload)
         {
             ServerLoaded = false;
+            _serverLoading = false;
             OnGameServerSteamAPIActivated();
             OnMapStart(string.Empty);
 

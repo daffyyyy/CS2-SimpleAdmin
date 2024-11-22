@@ -17,6 +17,8 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+    private bool _serverLoading;
+    
     private void RegisterEvents()
     {
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -49,6 +51,10 @@ public partial class CS2_SimpleAdmin
 
     private void OnGameServerSteamAPIActivated()
     {
+        if (_serverLoading)
+            return;
+        
+        _serverLoading = true;
         new ServerManager().LoadServerData();
     }
 
@@ -330,11 +336,11 @@ public partial class CS2_SimpleAdmin
         if (Config.OtherSettings.ReloadAdminsEveryMapChange && ServerLoaded && ServerId != null)
             AddTimer(3.0f, () => ReloadAdmins(null));
 
-        AddTimer(34, () =>
-        {
-            if (!ServerLoaded)
-                OnGameServerSteamAPIActivated();
-        });
+        // AddTimer(34, () =>
+        // {
+        //     if (!ServerLoaded)
+        //         OnGameServerSteamAPIActivated();
+        // });
 
         GodPlayers.Clear();
         SilentPlayers.Clear();
