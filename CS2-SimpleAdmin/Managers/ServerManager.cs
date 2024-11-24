@@ -14,19 +14,23 @@ public class ServerManager
         CS2_SimpleAdmin.Instance.AddTimer(2.0f, () =>
         {
             if (CS2_SimpleAdmin.ServerLoaded || CS2_SimpleAdmin.ServerId != null || CS2_SimpleAdmin.Database == null) return;
+            
+            if (_getIpTryCount > 16 && Helper.GetServerIp().StartsWith("0.0.0.0") || string.IsNullOrEmpty(Helper.GetServerIp()))
+            {
+                CS2_SimpleAdmin._logger?.LogError("Unable to load server data - can't fetch ip address!");
+                return;
+            }
 
             var ipAddress = ConVar.Find("ip")?.StringValue;
 
             if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
             {
                 ipAddress = Helper.GetServerIp();
-            }
 
-            if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
-            {
-                if (_getIpTryCount < 12)
+                if (_getIpTryCount <= 16)
                 {
                     _getIpTryCount++;
+                    
                     LoadServerData();
                     return;
                 }
@@ -36,6 +40,8 @@ public class ServerManager
             var hostname = ConVar.Find("hostname")!.StringValue;
             var rcon = ConVar.Find("rcon_password")!.StringValue;
             CS2_SimpleAdmin.IpAddress = address;
+            
+            CS2_SimpleAdmin._logger?.LogInformation("Loaded server with ip {ip}", ipAddress);
 
             Task.Run(async () =>
             {
@@ -81,7 +87,7 @@ public class ServerManager
 
                     if (CS2_SimpleAdmin.ServerId != null)
                     {
-                        await Server.NextFrameAsync(() => CS2_SimpleAdmin.Instance.ReloadAdmins(null));
+                        await Server.NextWorldUpdateAsync(() => CS2_SimpleAdmin.Instance.ReloadAdmins(null));
                     }
 
                     CS2_SimpleAdmin.ServerLoaded = true;

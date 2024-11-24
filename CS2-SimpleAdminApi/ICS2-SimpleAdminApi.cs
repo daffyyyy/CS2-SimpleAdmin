@@ -23,4 +23,6 @@ public interface ICS2_SimpleAdminApi
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1);
     public void LogCommand(CCSPlayerController? caller, string command);
     public void LogCommand(CCSPlayerController? caller, CommandInfo command);
+
+    public bool IsAdminSilent(CCSPlayerController player);
 }

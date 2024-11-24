@@ -17,6 +17,8 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+    private bool _serverLoading;
+    
     private void RegisterEvents()
     {
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
@@ -49,6 +51,10 @@ public partial class CS2_SimpleAdmin
 
     private void OnGameServerSteamAPIActivated()
     {
+        if (_serverLoading)
+            return;
+        
+        _serverLoading = true;
         new ServerManager().LoadServerData();
     }
 
@@ -96,7 +102,7 @@ public partial class CS2_SimpleAdmin
             GravityPlayers.Remove(player);
             
             if (player.UserId.HasValue)
-                PlayersInfo.Remove(player.UserId.Value);
+                PlayersInfo.TryRemove(player.UserId.Value, out _);
 
             var authorizedSteamId = player.AuthorizedSteamID;
             if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
@@ -138,7 +144,7 @@ public partial class CS2_SimpleAdmin
     public HookResult OnRoundStart(EventRoundStart @event, GameEventInfo info)
     {
 #if DEBUG
-        Logger.LogCritical("[OnRoundEnd]");
+        Logger.LogCritical("[OnRoundStart]");
 #endif
 
         GodPlayers.Clear();
@@ -215,7 +221,9 @@ public partial class CS2_SimpleAdmin
                 if (target == null || !target.IsValid || target.Connected != PlayerConnectedState.PlayerConnected)
                     return HookResult.Continue;
                 
-                return !AdminManager.CanPlayerTarget(player, target) ? HookResult.Stop : HookResult.Continue;
+                Logger.LogInformation($"{player.PlayerName} {AdminManager.GetPlayerImmunity(player).ToString()} probuje wywalic {target.PlayerName} {AdminManager.GetPlayerImmunity(target).ToString()}");
+                
+                return !player.CanTarget(target) ? HookResult.Stop : HookResult.Continue;
             }
         }
 
@@ -365,11 +373,11 @@ public partial class CS2_SimpleAdmin
         if (Config.OtherSettings.ReloadAdminsEveryMapChange && ServerLoaded && ServerId != null)
             AddTimer(3.0f, () => ReloadAdmins(null));
 
-        AddTimer(34, () =>
-        {
-            if (!ServerLoaded)
-                OnGameServerSteamAPIActivated();
-        });
+        // AddTimer(34, () =>
+        // {
+        //     if (!ServerLoaded)
+        //         OnGameServerSteamAPIActivated();
+        // });
 
         GodPlayers.Clear();
         SilentPlayers.Clear();
@@ -403,12 +411,15 @@ public partial class CS2_SimpleAdmin
     {
         var player = @event.Userid;
 
-        if (player?.UserId == null || player.IsBot || player.Connected != PlayerConnectedState.PlayerConnected)
+        if (player?.UserId == null || !player.IsValid || player.IsHLTV || player.Connected != PlayerConnectedState.PlayerConnected)
             return HookResult.Continue;
 
         SpeedPlayers.Remove(player.Slot);
         GravityPlayers.Remove(player);
 
+        if (!PlayersInfo.ContainsKey(player.UserId.Value))
+            return HookResult.Continue;
+        
         PlayersInfo[player.UserId.Value].DiePosition = new DiePosition(
             new Vector(
                 player.PlayerPawn.Value?.AbsOrigin?.X ?? 0,

@@ -143,10 +143,10 @@ public static class FunActionsMenu
 
     private static void Freeze(CCSPlayerController admin, CCSPlayerController player)
     {
-        if (!(player?.PlayerPawn.Value?.IsValid ?? false))
+        if (!(player.PlayerPawn.Value?.IsValid ?? false))
             return;
 
-        if (player.PlayerPawn.Value.MoveType != MoveType_t.MOVETYPE_OBSOLETE)
+        if (player.PlayerPawn.Value.MoveType != MoveType_t.MOVETYPE_INVALID)
             CS2_SimpleAdmin.Freeze(admin, player, -1);
         else
             CS2_SimpleAdmin.Unfreeze(admin, player);

@@ -296,7 +296,7 @@ public class PermissionManager(Database.Database? database)
         }
         catch (Exception ex)
         {
-            CS2_SimpleAdmin._logger?.LogError(ex.ToString());
+            CS2_SimpleAdmin._logger?.LogError("Unable to load admins from database! {exception}", ex.Message);
             return [];
         }
     }
@@ -350,7 +350,7 @@ public class PermissionManager(Database.Database? database)
         }
         catch (Exception ex)
         {
-            CS2_SimpleAdmin._logger?.LogError(ex.ToString());
+            CS2_SimpleAdmin._logger?.LogError("Unable to load groups from database! {exception}", ex.Message);
         }
 
         return [];
@@ -437,7 +437,6 @@ public class PermissionManager(Database.Database? database)
     public async Task DeleteAdminBySteamId(string playerSteamId, bool globalDelete = false)
     {
 	    if (database == null) return;
-
         if (string.IsNullOrEmpty(playerSteamId)) return;
 
         //_adminCache.TryRemove(playerSteamId, out _);
@@ -519,7 +518,7 @@ public class PermissionManager(Database.Database? database)
                 });
             }
 
-            await Server.NextFrameAsync(() =>
+            await Server.NextWorldUpdateAsync(() =>
             {
                 CS2_SimpleAdmin.Instance.ReloadAdmins(null);
             });
@@ -566,7 +565,7 @@ public class PermissionManager(Database.Database? database)
 
             await connection.ExecuteAsync(insertGroupServer, new { groupId, server_id = globalGroup ? null : CS2_SimpleAdmin.ServerId });
 
-            await Server.NextFrameAsync(() =>
+            await Server.NextWorldUpdateAsync(() =>
             {
                 CS2_SimpleAdmin.Instance.ReloadAdmins(null);
             });
@@ -574,7 +573,7 @@ public class PermissionManager(Database.Database? database)
         }
         catch (Exception ex)
         {
-            CS2_SimpleAdmin._logger?.LogError(ex.ToString());
+            CS2_SimpleAdmin._logger?.LogError("Problem with loading admins: {exception}", ex.Message);
         }
     }
 

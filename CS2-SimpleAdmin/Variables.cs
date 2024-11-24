@@ -38,10 +38,10 @@ public partial class CS2_SimpleAdmin
 
     // Player Management
     private static readonly HashSet<int> GodPlayers = [];
-    private static readonly HashSet<int> SilentPlayers = [];
+    internal static readonly HashSet<int> SilentPlayers = [];
     internal static readonly ConcurrentBag<string?> BannedPlayers = [];
     internal static readonly Dictionary<ulong, string> RenamedPlayers = [];
-    internal static readonly Dictionary<int, PlayerInfo> PlayersInfo = [];
+    internal static readonly ConcurrentDictionary<int, PlayerInfo> PlayersInfo = [];
     private static readonly List<DisconnectedPlayer> DisconnectedPlayers = [];
 
     // Discord Integration

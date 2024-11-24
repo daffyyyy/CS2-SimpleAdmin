@@ -82,4 +82,9 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     {
         Helper.LogCommand(caller, command);
     }
+    
+    public bool IsAdminSilent(CCSPlayerController player)
+    {
+        return CS2_SimpleAdmin.SilentPlayers.Contains(player.Slot);
+    }
 }

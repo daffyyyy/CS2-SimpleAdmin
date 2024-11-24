@@ -420,6 +420,102 @@ internal static class Helper
         var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
         var colorHex = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value ?? "#FFFFFF";
 
+        if (string.IsNullOrEmpty(colorHex))
+            colorHex = "#FFFFFF";
+
+        var embed = new Embed
+        {
+            Color = DiscordManager.ColorFromHex(colorHex),
+            Title = penalty switch
+            {
+                PenaltyType.Ban => localizer["sa_discord_penalty_ban"],
+                PenaltyType.Mute => localizer["sa_discord_penalty_mute"],
+                PenaltyType.Gag => localizer["sa_discord_penalty_gag"],
+                PenaltyType.Silence => localizer["sa_discord_penalty_silence"],
+                PenaltyType.Warn => localizer["sa_discord_penalty_warn"],
+                _ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
+            },
+            Description = $"{hostname}",
+            ThumbnailUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ThumbnailUrl"))?.Value,
+            ImageUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("ImageUrl"))?.Value,
+            Footer = new Footer
+            {
+                Text = penaltySetting.FirstOrDefault(s => s.Name.Equals("Footer"))?.Value
+            },
+            
+            Timestamp = Time.ActualDateTime().ToUniversalTime().ToString("o"),
+        };
+
+        for (var i = 0; i < fieldNames.Length; i++)
+        {
+            embed.AddField(fieldNames[i], fieldValues[i], inlineFlags[i]);
+        }
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                await new DiscordManager(webhookUrl).SendEmbedAsync(embed);
+            }
+            catch (Exception ex)
+            {
+                // Log or handle the exception
+                CS2_SimpleAdmin._logger?.LogError("Unable to send discord webhook: {exception}", ex.Message);
+            }
+        });
+    }
+    
+        public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, string steamId, string reason, int duration, PenaltyType penalty, IStringLocalizer? localizer)
+    {
+        if (localizer == null) return;
+        
+        var penaltySetting = penalty switch
+        {
+            PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyBanSettings,
+            PenaltyType.Mute => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyMuteSettings,
+            PenaltyType.Gag => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyGagSettings,
+            PenaltyType.Silence => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltySilenceSettings,
+            PenaltyType.Warn => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyWarnSettings,
+            _ => throw new ArgumentOutOfRangeException(nameof(penalty), penalty, null)
+        };
+
+        var webhookUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("Webhook"))?.Value;
+
+        if (string.IsNullOrEmpty(webhookUrl)) return;
+        const string defaultCommunityUrl = "<https://steamcommunity.com/profiles/0>";
+        var callerCommunityUrl = caller != null ? $"<{new SteamID(caller.SteamID).ToCommunityUrl()}>" : defaultCommunityUrl;
+        var targetCommunityUrl = $"<{new SteamID(ulong.Parse(steamId)).ToCommunityUrl()}>";
+
+        var callerName = caller?.PlayerName ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
+        var targetName = steamId;
+        var targetSteamId = steamId;
+
+        var futureTime = Time.ActualDateTime().AddMinutes(duration);
+        var futureUnixTimestamp = new DateTimeOffset(futureTime).ToUnixTimeSeconds();
+
+        string time;
+
+        if (penaltySetting.FirstOrDefault(s => s.Name.Equals("Time"))?.Value == "{relative}")
+            time = duration != 0 ? $"<t:{futureUnixTimestamp}:R>" : localizer["sa_permanent"];
+        else
+            time = duration != 0 ? ConvertMinutesToTime(duration) : localizer["sa_permanent"];
+            
+        string[] fieldNames = [
+            localizer["sa_player"],
+            localizer["sa_steamid"],
+            localizer["sa_duration"],
+            localizer["sa_reason"],
+            localizer["sa_admin"]];
+        string[] fieldValues =
+        [
+            $"[{targetName}]({targetCommunityUrl})", $"||{targetSteamId}||", time, reason,
+            $"[{callerName}]({callerCommunityUrl})"
+        ];
+        
+        bool[] inlineFlags = [true, true, true, false, false];
+        var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
+        var colorHex = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value ?? "#FFFFFF";
+
         var embed = new Embed
         {
             Color = DiscordManager.ColorFromHex(colorHex),

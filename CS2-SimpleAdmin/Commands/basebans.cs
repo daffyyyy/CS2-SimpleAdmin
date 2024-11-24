@@ -171,6 +171,8 @@ public partial class CS2_SimpleAdmin
             {
                 await BanManager.AddBanBySteamid(steamid, adminInfo, reason, time);
             });
+            
+            Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Ban, _localizer);
 
             command.ReplyToCommand($"Player with steamid {steamid} is not online. Ban has been added offline.");
         }

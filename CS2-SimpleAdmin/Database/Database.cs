@@ -41,16 +41,18 @@ public class Database(string dbConnectionString)
         migrator.ExecuteMigrations();
     }
 
-    public bool CheckDatabaseConnection()
+    public bool CheckDatabaseConnection(out string? exception)
     {
         using var connection = GetConnection();
-
+        exception = null;
+        
         try
         {
             return connection.Ping();
         }
-        catch
+        catch (Exception ex)
         {
+            exception = ex.Message;
             return false;
         }
     }

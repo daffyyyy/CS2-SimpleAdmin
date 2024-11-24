@@ -11,7 +11,7 @@ using MySqlConnector;
 
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(284)]
+[MinimumApiVersion(286)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
     internal static CS2_SimpleAdmin Instance { get; private set; } = new();
@@ -19,7 +19,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.6.8a";
+    public override string ModuleVersion => "1.6.9a";
     
     public override void Load(bool hotReload)
     {
@@ -30,16 +30,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         if (hotReload)
         {
             ServerLoaded = false;
+            _serverLoading = false;
             OnGameServerSteamAPIActivated();
             OnMapStart(string.Empty);
 
             AddTimer(2.0f, () =>
             {
                 if (Database == null) return;
+                
+                var playerManager = new PlayerManager();
 
                 Helper.GetValidPlayers().ForEach(player =>
                 {
-                    var playerManager = new PlayerManager();
                     playerManager.LoadPlayerData(player);
                 });
             });
@@ -58,9 +60,14 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     {
         AddTimer(3.0f, () => ReloadAdmins(null));
 
-        MenuApi = MenuCapability.Get();
-        if (MenuApi == null)
-            Logger.LogError("MenuManager Core not found...");
+        try
+        {
+            MenuApi = MenuCapability.Get();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError("Unable to load required plugins ... \n{exception}", ex.Message);
+        }
         
         RegisterCommands.InitializeCommands();
     }
@@ -90,9 +97,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         DbConnectionString = builder.ConnectionString;
         Database = new Database.Database(DbConnectionString);
 
-        if (!Database.CheckDatabaseConnection())
+        if (!Database.CheckDatabaseConnection(out var exception))
         {
-            Logger.LogError("Unable connect to database!");
+            if (exception != null)
+                Logger.LogError("Problem with database connection! \n{exception}", exception);
+            
             Unload(false);
             return;
         }
