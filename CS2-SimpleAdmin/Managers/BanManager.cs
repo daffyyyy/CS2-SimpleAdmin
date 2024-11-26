@@ -123,7 +123,11 @@ internal class BanManager(Database.Database? database)
 
         try
         {
-            var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode ? """
+            string sql;
+            
+            if (CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp)
+            {
+                sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode ? """
                                                                             SELECT COALESCE((
                                                                                 SELECT COUNT(*)
                                                                                 FROM sa_bans
@@ -172,7 +176,36 @@ internal class BanManager(Database.Database? database)
                                                                                       )
                                                                                   ), 0) AS TotalBanCount;
                                                                               """;
-
+            }
+            else
+            {
+                sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode ? """
+                                                                            UPDATE sa_bans
+                                                                            SET player_ip = CASE WHEN player_ip IS NULL THEN @PlayerIP ELSE player_ip END,
+                                                                                player_name = CASE WHEN player_name IS NULL THEN @PlayerName ELSE player_name END
+                                                                            WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                            AND status = 'ACTIVE'
+                                                                            AND (duration = 0 OR ends > @CurrentTime);
+                                                                        
+                                                                            SELECT COUNT(*) FROM sa_bans
+                                                                            WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                            AND status = 'ACTIVE'
+                                                                            AND (duration = 0 OR ends > @CurrentTime);
+                                                                        """ : """
+                                                                                  UPDATE sa_bans
+                                                                                  SET player_ip = CASE WHEN player_ip IS NULL THEN @PlayerIP ELSE player_ip END,
+                                                                                      player_name = CASE WHEN player_name IS NULL THEN @PlayerName ELSE player_name END
+                                                                                  WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                                  AND status = 'ACTIVE'
+                                                                                  AND (duration = 0 OR ends > @CurrentTime) AND server_id = @ServerId;
+                                                                              
+                                                                                  SELECT COUNT(*) FROM sa_bans
+                                                                                  WHERE (player_steamid = @PlayerSteamID OR player_ip = @PlayerIP)
+                                                                                  AND status = 'ACTIVE'
+                                                                                  AND (duration = 0 OR ends > @CurrentTime) AND server_id = @ServerId;
+                                                                              """;
+            }
+            
             await using var connection = await database.GetConnectionAsync();
 
             var parameters = new

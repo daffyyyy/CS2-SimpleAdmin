@@ -32,7 +32,8 @@ public static class PlayerExtensions
 
         return AdminManager.CanPlayerTarget(controller, target) ||
                                   AdminManager.CanPlayerTarget(new SteamID(controller.SteamID),
-                                      new SteamID(target.SteamID));
+                                      new SteamID(target.SteamID)) || 
+                                      AdminManager.GetPlayerImmunity(controller) >= AdminManager.GetPlayerImmunity(target);
     }
 
     public static void SetSpeed(this CCSPlayerController? controller, float speed)

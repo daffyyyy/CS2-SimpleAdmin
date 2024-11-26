@@ -16,15 +16,26 @@ public class PlayerManager
 
     public void LoadPlayerData(CCSPlayerController player)
     {
-        if (player.IsBot || string.IsNullOrEmpty(player.IpAddress) || player.IpAddress.Contains("127.0.0.1")
-                                                   || !player.UserId.HasValue)
+        if (player.IsBot || string.IsNullOrEmpty(player.IpAddress) || player.IpAddress.Contains("127.0.0.1"))
             return;
+        
+        if (!player.UserId.HasValue)
+        {
+            Helper.KickPlayer(player, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION);
+            return;
+        }
 
         var ipAddress = player.IpAddress?.Split(":")[0];
 
         CS2_SimpleAdmin.PlayersInfo[player.UserId.Value] =
             new PlayerInfo(player.UserId.Value, player.Slot, new SteamID(player.SteamID), player.PlayerName, ipAddress);
 
+        // if (!player.UserId.HasValue)
+        // {
+        //     Helper.KickPlayer(player, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION);
+        //     return;
+        // }
+        
         var userId = player.UserId.Value;
 
         // Check if the player's IP or SteamID is in the bannedPlayers list
@@ -32,8 +43,7 @@ public class PlayerManager
             CS2_SimpleAdmin.BannedPlayers.Contains(player.SteamID.ToString()))
         {
             // Kick the player if banned
-            if (player.UserId.HasValue)
-                Helper.KickPlayer(player.UserId.Value, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+            Helper.KickPlayer(player.UserId.Value, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
             return;
         }
 
@@ -113,7 +123,7 @@ public class PlayerManager
                     {
                         var victim = Utilities.GetPlayerFromUserid(userId);
 
-                        if (victim?.UserId == null) return;
+                        if (victim == null || !victim.UserId.HasValue) return;
 
                         if (CS2_SimpleAdmin.UnlockedCommands)
                             Server.ExecuteCommand($"banid 1 {userId}");

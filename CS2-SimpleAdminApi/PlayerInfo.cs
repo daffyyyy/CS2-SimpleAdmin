@@ -28,8 +28,8 @@ public class PlayerInfo(
     public DiePosition? DiePosition { get; set; }
 }
 
-public struct DiePosition(Vector? position = null, QAngle? angle = null)
+public struct DiePosition(Vector position, QAngle angle)
 {
-    public Vector? Position { get; set; } = position;
-    public QAngle? Angle { get; set; } = angle;
+    public Vector Position { get; set; } = position;
+    public QAngle Angle { get; set; } = angle;
 }

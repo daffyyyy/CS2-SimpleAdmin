@@ -128,7 +128,7 @@ public partial class CS2_SimpleAdmin
 
         if (player == null || !player.IsValid || player.IsBot)
             return HookResult.Continue;
-
+        
         new PlayerManager().LoadPlayerData(player);
 
         return HookResult.Continue;
@@ -147,7 +147,7 @@ public partial class CS2_SimpleAdmin
         
         foreach (var player in PlayersInfo.Values)
         {
-            player.DiePosition = null;
+            player.DiePosition = default;
         }
 
         AddTimer(0.41f, () =>
@@ -214,8 +214,6 @@ public partial class CS2_SimpleAdmin
         
                 if (target == null || !target.IsValid || target.Connected != PlayerConnectedState.PlayerConnected)
                     return HookResult.Continue;
-                
-                Logger.LogInformation($"{player.PlayerName} {AdminManager.GetPlayerImmunity(player).ToString()} probuje wywalic {target.PlayerName} {AdminManager.GetPlayerImmunity(target).ToString()}");
                 
                 return !player.CanTarget(target) ? HookResult.Stop : HookResult.Continue;
             }
@@ -357,9 +355,10 @@ public partial class CS2_SimpleAdmin
 
         if (player is null || @event.Attacker is null || !player.PawnIsAlive || player.PlayerPawn.Value == null)
             return HookResult.Continue;
+        
 
         if (SpeedPlayers.TryGetValue(player.Slot, out var speedPlayer))
-            player.SetSpeed(speedPlayer);
+            AddTimer(0.15f, () => player.SetSpeed(speedPlayer));
         
         if (!GodPlayers.Contains(player.Slot)) return HookResult.Continue;
 
@@ -373,26 +372,29 @@ public partial class CS2_SimpleAdmin
     public HookResult OnPlayerDeath(EventPlayerDeath @event, GameEventInfo info)
     {
         var player = @event.Userid;
-
+        
         if (player?.UserId == null || !player.IsValid || player.IsHLTV || player.Connected != PlayerConnectedState.PlayerConnected)
             return HookResult.Continue;
 
         SpeedPlayers.Remove(player.Slot);
         GravityPlayers.Remove(player);
 
-        if (!PlayersInfo.ContainsKey(player.UserId.Value))
+        if (!PlayersInfo.ContainsKey(player.UserId.Value) || @event.Attacker == null)
             return HookResult.Continue;
+
+        var playerPosition = player.PlayerPawn.Value?.AbsOrigin; 
+        var playerRotation = player.PlayerPawn.Value?.AbsRotation;
         
         PlayersInfo[player.UserId.Value].DiePosition = new DiePosition(
             new Vector(
-                player.PlayerPawn.Value?.AbsOrigin?.X ?? 0,
-                player.PlayerPawn.Value?.AbsOrigin?.Y ?? 0,
-                player.PlayerPawn.Value?.AbsOrigin?.Z ?? 0
+                playerPosition?.X ?? 0,
+                playerPosition?.Y ?? 0,
+                playerPosition?.Z ?? 0
             ),
             new QAngle(
-                player.PlayerPawn.Value?.AbsRotation?.X ?? 0,
-                player.PlayerPawn.Value?.AbsRotation?.Y ?? 0,
-                player.PlayerPawn.Value?.AbsRotation?.Z ?? 0
+                playerRotation?.X ?? 0,
+                playerRotation?.Y ?? 0,
+                playerRotation?.Z ?? 0
             )
         );
 

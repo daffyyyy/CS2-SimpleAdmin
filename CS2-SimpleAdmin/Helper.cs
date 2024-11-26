@@ -158,6 +158,23 @@ internal static class Helper
         //
         // Server.ExecuteCommand($"kickid {userId} {reason}");
     }
+    
+    public static void KickPlayer(CCSPlayerController player, NetworkDisconnectionReason reason = NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED)
+    {
+        player.Disconnect(reason);
+
+        // if (!string.IsNullOrEmpty(reason))
+        // {
+        // 	var escapeChars = reason.IndexOfAny([';', '|']);
+        //
+        // 	if (escapeChars != -1)
+        // 	{
+        // 		reason = reason[..escapeChars];
+        // 	}
+        // }
+        //
+        // Server.ExecuteCommand($"kickid {userId} {reason}");
+    }
 
     public static void PrintToCenterAll(string message)
     {

@@ -224,14 +224,17 @@ public class OtherSettings
     
     [JsonPropertyName("UserMessageGagChatType")]
     public bool UserMessageGagChatType { get; set; } = false;
+    
+    [JsonPropertyName("CheckMultiAccountsByIp")]
+    public bool CheckMultiAccountsByIp { get; set; } = true;
 
     [JsonPropertyName("AdditionalCommandsToLog")]
-    public List<string> AdditionalCommandsToLog = new();
+    public List<string> AdditionalCommandsToLog { get; set; } = new();
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
 {
-    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 23;
+    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 24;
 
     [JsonPropertyName("DatabaseHost")]
     public string DatabaseHost { get; set; } = "";
