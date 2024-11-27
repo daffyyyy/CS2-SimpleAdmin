@@ -11,11 +11,11 @@ public class ServerManager
 
     public void LoadServerData()
     {
-        CS2_SimpleAdmin.Instance.AddTimer(2.0f, () =>
+        CS2_SimpleAdmin.Instance.AddTimer(1.2f, () =>
         {
             if (CS2_SimpleAdmin.ServerLoaded || CS2_SimpleAdmin.ServerId != null || CS2_SimpleAdmin.Database == null) return;
             
-            if (_getIpTryCount > 16 && Helper.GetServerIp().StartsWith("0.0.0.0") || string.IsNullOrEmpty(Helper.GetServerIp()))
+            if (_getIpTryCount > 32 && Helper.GetServerIp().StartsWith("0.0.0.0") || string.IsNullOrEmpty(Helper.GetServerIp()))
             {
                 CS2_SimpleAdmin._logger?.LogError("Unable to load server data - can't fetch ip address!");
                 return;
@@ -27,7 +27,7 @@ public class ServerManager
             {
                 ipAddress = Helper.GetServerIp();
 
-                if (_getIpTryCount <= 16)
+                if (_getIpTryCount <= 32)
                 {
                     _getIpTryCount++;
                     

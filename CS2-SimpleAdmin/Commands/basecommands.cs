@@ -380,11 +380,11 @@ public partial class CS2_SimpleAdmin
                 await Server.NextWorldUpdateAsync(() =>
                 {
                     if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(1.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                        AddTimer(0.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
                     if (!string.IsNullOrEmpty(groupsFile))
-                        AddTimer(1.5f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
+                        AddTimer(0.8f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
                     if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(2.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                        AddTimer(1.1f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
                 });
             });
         }
