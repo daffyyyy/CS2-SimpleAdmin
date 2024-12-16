@@ -148,7 +148,7 @@ public static class ManagePlayersMenu
     {
         if (player is not { IsValid: true }) return;
 
-        CS2_SimpleAdmin.Instance.Kick(admin, player, reason);
+        CS2_SimpleAdmin.Instance.Kick(admin, player, reason, admin.PlayerName);
     }
 
     internal static void BanMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
@@ -180,7 +180,7 @@ public static class ManagePlayersMenu
     {
         if (player is not { IsValid: true }) return;
 
-        CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason);
+        CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason, admin.PlayerName);
     }
 
     private static void WarnMenu(CCSPlayerController admin, CCSPlayerController player, int duration)
@@ -210,7 +210,7 @@ public static class ManagePlayersMenu
     {
         if (player is not { IsValid: true }) return;
 
-        CS2_SimpleAdmin.Instance.Warn(admin, player, duration, reason);
+        CS2_SimpleAdmin.Instance.Warn(admin, player, duration, reason, admin.PlayerName);
     }
 
     internal static void GagMenu(CCSPlayerController admin, CCSPlayerController player, int duration)

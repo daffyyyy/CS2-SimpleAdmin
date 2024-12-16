@@ -96,7 +96,7 @@ public class PermissionManager(Database.Database? database)
 			// 	Console.WriteLine($"Player SteamID: {player.PlayerSteamId}, Name: {player.PlayerName}, Flags: {string.Join(", ", player.Flags)}, Immunity: {player.Immunity}, Ends: {player.Ends}");
 			// }
 			
-            List<(string, string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = [];
+	            List<(string, string, List<string>, int, DateTime?)> filteredFlagsWithImmunity = [];
 
             // Add the grouped players to the list
             filteredFlagsWithImmunity.AddRange(groupedPlayers);

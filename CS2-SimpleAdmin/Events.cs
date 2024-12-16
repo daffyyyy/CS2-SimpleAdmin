@@ -22,6 +22,7 @@ public partial class CS2_SimpleAdmin
     private void RegisterEvents()
     {
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
+        RegisterListener<Listeners.OnClientConnect>(OnClientConnect);
         RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
         if (Config.OtherSettings.UserMessageGagChatType)
             HookUserMessage(118, HookUmChat);
@@ -120,10 +121,31 @@ public partial class CS2_SimpleAdmin
             return HookResult.Continue;
         }
     }
+    
+    private void OnClientConnect(int playerslot, string name, string ipaddress)
+    {
+#if DEBUG
+        Logger.LogCritical("[OnClientConnect]");
+#endif
+
+        Server.NextFrame(() =>
+        {
+            var player = Utilities.GetPlayerFromSlot(playerslot);
+
+            if (player == null || !player.IsValid || player.IsBot)
+                return;
+        
+            new PlayerManager().LoadPlayerData(player);
+        });
+    }
 
     [GameEventHandler]
     public HookResult OnPlayerFullConnect(EventPlayerConnectFull @event, GameEventInfo info)
     {
+#if DEBUG
+        Logger.LogCritical("[OnPlayerFullConnect]");
+#endif
+
         var player = @event.Userid;
 
         if (player == null || !player.IsValid || player.IsBot)

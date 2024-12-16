@@ -307,7 +307,7 @@ internal static class Helper
                 var arg = currentMessageArgs[i];
                 currentMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
                 {
-                    1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(controller, "@css/kick") || AdminManager.PlayerHasPermissions(controller, "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
+                    1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/kick") || AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
                     2 => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
                     _ => arg
                 };

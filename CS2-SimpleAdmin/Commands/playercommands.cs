@@ -1,4 +1,5 @@
 using System.Globalization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -755,15 +756,43 @@ public partial class CS2_SimpleAdmin
         // Process each player to teleport
         foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PawnIsAlive: true }).Where(caller.CanTarget))
         {
-            if (caller.PlayerPawn.Value == null)
+            if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
                 continue;
 
             // Teleport the caller to the player and toggle noclip
             caller.TeleportPlayer(player);
-            caller.PlayerPawn.Value.ToggleNoclip();
+            // caller.PlayerPawn.Value.ToggleNoclip();
 
-            // Set a timer to toggle noclip back after 3 seconds
-            AddTimer(3, () => caller.PlayerPawn.Value.ToggleNoclip());
+            caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            
+            Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
+            Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+            
+            player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            
+            Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+            Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+
+            // Set a timer to toggle collision back after 4 seconds
+            AddTimer(4, () =>
+            {
+                if (!caller.IsValid || !caller.PawnIsAlive)
+                    return;
+                
+                caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+            
+                Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
+                Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                
+                player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+            
+                Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+                Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+            });
 
             // Prepare message key and arguments for the teleport notification
             var activityMessageKey = "sa_admin_tp_message";
@@ -798,15 +827,43 @@ public partial class CS2_SimpleAdmin
         // Process each player to teleport
         foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PawnIsAlive: true }).Where(caller.CanTarget))
         {
-            if (caller.PlayerPawn.Value == null)
+            if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
                 continue;
 
             // Teleport the player to the caller and toggle noclip
             player.TeleportPlayer(caller);
-            caller.PlayerPawn.Value.ToggleNoclip();
+            // caller.PlayerPawn.Value.ToggleNoclip();
+            
+            caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            
+            Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
+            Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+            
+            player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            
+            Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+            Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
 
-            // Set a timer to toggle noclip back after 3 seconds
-            AddTimer(3, () => caller.PlayerPawn.Value.ToggleNoclip());
+            // Set a timer to toggle collision back after 4 seconds
+            AddTimer(4, () =>
+            {
+                if (!player.IsValid || !player.PawnIsAlive)
+                    return;
+                
+                caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+            
+                Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
+                Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                
+                player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+            
+                Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+                Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+            });
 
             // Prepare message key and arguments for the bring notification
             var activityMessageKey = "sa_admin_bring_message";

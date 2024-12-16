@@ -56,7 +56,9 @@ public partial class CS2_SimpleAdmin
         if (!CheckValidBan(caller, time)) return;
 
         // Set default caller name if not provided
-        callerName ??= _localizer?["sa_console"] ?? "Console";
+        callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
 
         // Freeze player pawn if alive
         if (player.PawnIsAlive)
@@ -321,12 +323,15 @@ public partial class CS2_SimpleAdmin
         if (!CheckValidBan(caller, time)) return;
 
         // Set default caller name if not provided
-        callerName ??= _localizer?["sa_console"] ?? "Console";
+        callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
 
         // Freeze player pawn if alive
         if (player.PawnIsAlive)
         {
             player.Pawn.Value?.Freeze();
+            AddTimer(5.0f, () => player.Pawn.Value?.Unfreeze(), CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
         }
 
         // Get player and admin information

@@ -124,7 +124,7 @@ public class PlayerManager
                         var victim = Utilities.GetPlayerFromUserid(userId);
 
                         if (victim == null || !victim.UserId.HasValue) return;
-
+                        
                         if (CS2_SimpleAdmin.UnlockedCommands)
                             Server.ExecuteCommand($"banid 1 {userId}");
 
