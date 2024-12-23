@@ -27,7 +27,7 @@ public class ServerManager
             {
                 ipAddress = Helper.GetServerIp();
 
-                if (_getIpTryCount <= 32)
+                if (_getIpTryCount <= 32 && (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0")))
                 {
                     _getIpTryCount++;
                     
