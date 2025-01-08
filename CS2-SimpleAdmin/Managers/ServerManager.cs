@@ -38,6 +38,7 @@ public class ServerManager
 
             var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
             var hostname = ConVar.Find("hostname")!.StringValue;
+            var rconPassword = ConVar.Find("rcon_password")!.StringValue;
             CS2_SimpleAdmin.IpAddress = address;
             
             CS2_SimpleAdmin._logger?.LogInformation("Loaded server with ip {ip}", ipAddress);
@@ -47,26 +48,27 @@ public class ServerManager
                 try
                 {
                     await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
-                    var addressExists = await connection.ExecuteScalarAsync<bool>(
-                        "SELECT COUNT(*) FROM sa_servers WHERE address = @address",
+                    
+                    int? serverId = await connection.ExecuteScalarAsync<int?>(
+                        "SELECT id FROM sa_servers WHERE address = @address",
                         new { address });
 
-                    if (!addressExists)
+                    if (serverId == null)
                     {
                         await connection.ExecuteAsync(
-                            "INSERT INTO sa_servers (address, hostname) VALUES (@address, @hostname)",
-                            new { address, hostname });
+                            "INSERT INTO sa_servers (address, hostname, rcon_password) VALUES (@address, @hostname, @rconPassword)",
+                            new { address, hostname, rconPassword });
+
+                        serverId = await connection.ExecuteScalarAsync<int>(
+                            "SELECT id FROM sa_servers WHERE address = @address",
+                            new { address });
                     }
                     else
                     {
                         await connection.ExecuteAsync(
-                            "UPDATE `sa_servers` SET `hostname` = @hostname WHERE `address` = @address",
-                            new { address, hostname });
+                            "UPDATE sa_servers SET hostname = @hostname, rcon_password = @rconPassword WHERE address = @address",
+                            new { address, hostname, rconPassword });
                     }
-
-                    int? serverId = await connection.ExecuteScalarAsync<int>(
-                        "SELECT `id` FROM `sa_servers` WHERE `address` = @address",
-                        new { address });
 
                     CS2_SimpleAdmin.ServerId = serverId;
 

@@ -36,6 +36,14 @@ public static class PlayerExtensions
                                       AdminManager.GetPlayerImmunity(controller) >= AdminManager.GetPlayerImmunity(target);
     }
 
+    public static bool CanTarget(this CCSPlayerController? controller, SteamID steamId)
+    {
+        if (controller is null) return true;
+
+        return AdminManager.CanPlayerTarget(new SteamID(controller.SteamID), steamId) || 
+               AdminManager.GetPlayerImmunity(controller) >= AdminManager.GetPlayerImmunity(steamId);
+    }
+
     public static void SetSpeed(this CCSPlayerController? controller, float speed)
     {
         var playerPawnValue = controller?.PlayerPawn.Value;

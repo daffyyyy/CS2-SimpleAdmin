@@ -79,11 +79,11 @@ internal static class Helper
         );
     }
 
-    public static bool IsValidSteamId64(string input)
-    {
-        const string pattern = @"^\d{17}$";
-        return Regex.IsMatch(input, pattern);
-    }
+    // public static bool IsValidSteamId64(string input)
+    // {
+    //     const string pattern = @"^\d{17}$";
+    //     return Regex.IsMatch(input, pattern);
+    // }
 
     public static bool ValidateSteamId(string input, out SteamID? steamId)
     {
@@ -93,7 +93,7 @@ internal static class Helper
         {
             return false;
         }
-
+        
         if (!SteamID.TryParse(input, out var parsedSteamId)) return false;
 
         steamId = parsedSteamId;
@@ -137,14 +137,35 @@ internal static class Helper
         }
     }
 
-    public static void KickPlayer(int userId, NetworkDisconnectionReason reason = NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED)
+    public static void KickPlayer(int userId, NetworkDisconnectionReason reason = NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED, int delay = 0)
     {
         var player = Utilities.GetPlayerFromUserid(userId);
 
         if (player == null || !player.IsValid || player.IsHLTV)
             return;
+        
+        if (player.UserId.HasValue)
+            CS2_SimpleAdmin.PlayersInfo[player.UserId.Value].WaitingForKick = true;
 
-        player.Disconnect(reason);
+        player.CommitSuicide(true, true);
+        
+        if (delay > 0)
+        {
+            CS2_SimpleAdmin.Instance.AddTimer(delay, () =>
+            {
+                if (!player.IsValid || player.IsHLTV)
+                    return;
+                
+                player.Disconnect(reason);
+            });
+        }
+        else
+        {
+            player.Disconnect(reason);
+        }
+        
+        if (CS2_SimpleAdmin.UnlockedCommands && reason == NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED)
+            Server.ExecuteCommand($"banid 1 {new SteamID(player.SteamID).SteamId3}");
 
         // if (!string.IsNullOrEmpty(reason))
         // {
@@ -159,9 +180,33 @@ internal static class Helper
         // Server.ExecuteCommand($"kickid {userId} {reason}");
     }
     
-    public static void KickPlayer(CCSPlayerController player, NetworkDisconnectionReason reason = NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED)
+    public static void KickPlayer(CCSPlayerController player, NetworkDisconnectionReason reason = NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED, int delay = 0)
     {
-        player.Disconnect(reason);
+        if (!player.IsValid || player.IsHLTV)
+            return;
+
+        if (player.UserId.HasValue)
+            CS2_SimpleAdmin.PlayersInfo[player.UserId.Value].WaitingForKick = true;
+        
+        player.CommitSuicide(true, true);
+        
+        if (delay > 0)
+        {
+            CS2_SimpleAdmin.Instance.AddTimer(delay, () =>
+            {
+                if (!player.IsValid || player.IsHLTV)
+                    return;
+
+                player.Disconnect(reason);
+            });
+        }
+        else
+        {
+            player.Disconnect(reason);
+        }
+        
+        if (CS2_SimpleAdmin.UnlockedCommands && reason == NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED)
+            Server.ExecuteCommand($"banid 1 {new SteamID(player.SteamID).SteamId3}");
 
         // if (!string.IsNullOrEmpty(reason))
         // {
@@ -174,6 +219,54 @@ internal static class Helper
         // }
         //
         // Server.ExecuteCommand($"kickid {userId} {reason}");
+    }
+
+    public static int ParsePenaltyTime(string time)
+    {
+        if (string.IsNullOrWhiteSpace(time))
+        {
+            CS2_SimpleAdmin._logger?.LogError("Time string cannot be null or empty.");
+            return -1;
+        }
+
+        var timeUnits = new Dictionary<string, int>
+        {
+            { "m", 1 },            // Minute
+            { "h", 60 },           // Hour
+            { "d", 1440 },         // Day (24 * 60)
+            { "w", 10080 },        // Week (7 * 24 * 60)
+            { "mo", 43200 },        // Month (30 * 24 * 60)
+            { "y", 525600 }         // Year (365 * 24 * 60)
+        };
+
+        
+        // Check if the input is purely numeric (e.g., "10" for 10 minutes)
+        if (int.TryParse(time, out var numericMinutes))
+        {
+            return numericMinutes;
+        }
+        
+        int totalMinutes = 0;
+        
+        var regex = new Regex(@"(\d+)([a-z]+)");
+        var matches = regex.Matches(time);
+
+        foreach (Match match in matches)
+        {
+            var value = int.Parse(match.Groups[1].Value); // Numeric part
+            var unit = match.Groups[2].Value;            // Unit part
+
+            if (timeUnits.TryGetValue(unit, out var minutesPerUnit))
+            {
+                totalMinutes += value * minutesPerUnit;
+            }
+            else
+            {
+                throw new ArgumentException($"Invalid time unit '{unit}' in time string.", nameof(time));
+            }
+        }
+
+        return totalMinutes;
     }
 
     public static void PrintToCenterAll(string message)
@@ -632,28 +725,28 @@ internal static class Helper
                 commandString]));
     }
 
-    public static IMenu? CreateMenu(string title)
+    public static IMenu? CreateMenu(string title, Action<CCSPlayerController>? backAction = null)
     {
         var menuType = CS2_SimpleAdmin.Instance.Config.MenuConfigs.MenuType.ToLower();
         
         var menu = menuType switch
         {
             _ when menuType.Equals("selectable", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.NewMenu(title),
+                CS2_SimpleAdmin.MenuApi?.GetMenu(title),
 
             _ when menuType.Equals("dynamic", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ButtonMenu),
+                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ButtonMenu),
 
             _ when menuType.Equals("center", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.CenterMenu),
+                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.CenterMenu),
 
             _ when menuType.Equals("chat", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ChatMenu),
+                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ChatMenu),
 
             _ when menuType.Equals("console", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.NewMenuForcetype(title, MenuType.ConsoleMenu),
+                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ConsoleMenu),
 
-            _ => CS2_SimpleAdmin.MenuApi?.NewMenu(title)
+            _ => CS2_SimpleAdmin.MenuApi?.GetMenu(title)
         };
 
         return menu;

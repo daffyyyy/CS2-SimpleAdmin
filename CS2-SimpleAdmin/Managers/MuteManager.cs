@@ -6,9 +6,9 @@ namespace CS2_SimpleAdmin.Managers;
 
 internal class MuteManager(Database.Database? database)
 {
-    public async Task MutePlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0, int type = 0)
+    public async Task<int?> MutePlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0, int type = 0)
     {
-        if (database == null) return;
+        if (database == null) return null;
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
@@ -23,11 +23,16 @@ internal class MuteManager(Database.Database? database)
         try
         {
             await using var connection = await database.GetConnectionAsync();
-            const string sql =
-                "INSERT INTO `sa_mutes` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
-                "VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid)";
+            const string sql = """
+                               
+                                               INSERT INTO `sa_mutes` 
+                                               (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) 
+                                               VALUES 
+                                               (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid);
+                                               SELECT LAST_INSERT_ID();
+                               """;
 
-            await connection.ExecuteAsync(sql, new
+            var muteId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
                 playerSteamid = player.SteamId.SteamId64.ToString(),
                 playerName = player.Name,
@@ -40,19 +45,20 @@ internal class MuteManager(Database.Database? database)
                 type = muteType,
                 serverid = CS2_SimpleAdmin.ServerId
             });
+
+            return muteId;
         }
         catch (Exception ex)
         {
             CS2_SimpleAdmin._logger?.LogError(ex.Message);
-        };
+            return null;
+        }
     }
 
-    public async Task AddMuteBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0, int type = 0)
+    public async Task<int?> AddMuteBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0, int type = 0)
     {
-        if (database == null) return;
-
-        if (string.IsNullOrEmpty(playerSteamId)) return;
-
+        if (database == null) return null;
+        if (string.IsNullOrEmpty(playerSteamId)) return null;
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
@@ -67,10 +73,16 @@ internal class MuteManager(Database.Database? database)
         try
         {
             await using var connection = await database.GetConnectionAsync();
-            const string sql = "INSERT INTO `sa_mutes` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) " +
-                               "VALUES (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid)";
+            const string sql = """
+                               
+                                               INSERT INTO `sa_mutes` 
+                                               (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `type`, `server_id`) 
+                                               VALUES 
+                                               (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @type, @serverid);
+                                               SELECT LAST_INSERT_ID();
+                               """;
 
-            await connection.ExecuteAsync(sql, new
+            var muteId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
                 playerSteamid = playerSteamId,
                 adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
@@ -82,8 +94,13 @@ internal class MuteManager(Database.Database? database)
                 type = muteType,
                 serverid = CS2_SimpleAdmin.ServerId
             });
+
+            return muteId;
         }
-        catch { };
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task<List<dynamic>> IsPlayerMuted(string steamId)

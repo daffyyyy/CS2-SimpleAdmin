@@ -25,6 +25,7 @@ public class PlayerInfo(
     public int TotalGags { get; set; } = totalGags;
     public int TotalSilences { get; set; } = totalSilences;
     public int TotalWarns { get; set; } = totalWarns;
+    public bool WaitingForKick { get; set; } = false;
     public DiePosition? DiePosition { get; set; }
 }
 

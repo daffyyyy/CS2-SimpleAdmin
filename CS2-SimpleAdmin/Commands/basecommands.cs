@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Globalization;
 using System.Reflection;
+using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using MenuManager;
 
 namespace CS2_SimpleAdmin;
@@ -40,7 +41,7 @@ public partial class CS2_SimpleAdmin
             playersToTarget.ForEach(player =>
             {
                 if (!player.UserId.HasValue) return;
-                if (!caller!.CanTarget(player)) return;
+                if (!caller.CanTarget(player)) return;
 
                 userId = player.UserId.Value;
             });
@@ -140,6 +141,38 @@ public partial class CS2_SimpleAdmin
         });
     }
 
+    [RequiresPermissions("@css/chat")]
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
+    public void OnAdminVoiceCommand(CCSPlayerController? caller, CommandInfo command)
+    {
+        if (caller == null || caller.IsValid == false)
+            return;
+
+        if (command.ArgCount > 1)
+        {
+            if (command.GetArg(2).ToLower().Equals("muteAll"))
+            {
+                foreach (var player in Helper.GetValidPlayers().Where(p => p != caller && !AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
+                {
+                    player.VoiceFlags = VoiceFlags.Muted;
+                }
+            }
+            
+            if (command.GetArg(2).ToLower().Equals("unmuteAll"))
+            {
+                foreach (var player in Helper.GetValidPlayers().Where(p => p != caller))
+                {
+                    if (PlayerPenaltyManager.GetPlayerPenalties(player.Slot, PenaltyType.Mute).Count == 0)
+                        player.VoiceFlags = VoiceFlags.Normal;
+                }
+            }
+
+            return;
+        }
+            
+        caller.VoiceFlags = caller.VoiceFlags == VoiceFlags.All ? VoiceFlags.Normal : VoiceFlags.All;
+    }
+    
     [RequiresPermissions("@css/generic")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -192,7 +225,7 @@ public partial class CS2_SimpleAdmin
         var globalAdmin = command.GetArg(4).ToLower().Equals("-g") || command.GetArg(5).ToLower().Equals("-g") ||
                           command.GetArg(6).ToLower().Equals("-g");
         int.TryParse(command.GetArg(4), out var immunity);
-        int.TryParse(command.GetArg(5), out var time);
+        var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(5)));
 
         AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin, command);
     }
@@ -512,6 +545,23 @@ public partial class CS2_SimpleAdmin
                         ReasonMenu.OpenMenu(caller, PenaltyType.Ban, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addban {player.SteamId.SteamId64} {duration} \"{reason}\"");
+                            
+                            // Determine message keys and arguments based on ban time
+                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
+                                ? ("sa_player_ban_message_perm", "sa_admin_ban_message_perm",
+                                    [reason, "CALLER"],
+                                    ["CALLER", player.Name, reason])
+                                : ("sa_player_ban_message_time", "sa_admin_ban_message_time",
+                                    new object[] { reason, duration, "CALLER" },
+                                    new object[] { "CALLER", player.Name, reason, duration });
+
+                            // Display admin activity message if necessary
+                            if (!SilentPlayers.Contains(caller.Slot))
+                            {
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                            }
+                            
+                            MenuApi?.CloseMenu(caller);
                         }));
                 });
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_mute"], (_, _) =>
@@ -520,6 +570,23 @@ public partial class CS2_SimpleAdmin
                         ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addmute {player.SteamId.SteamId64} {duration} \"{reason}\"");
+                            
+                            // Determine message keys and arguments based on mute time (permanent or timed)
+                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
+                                ? ("sa_player_mute_message_perm", "sa_admin_mute_message_perm",
+                                    [reason, "CALLER"],
+                                    ["CALLER", player.Name, reason])
+                                : ("sa_player_mute_message_time", "sa_admin_mute_message_time",
+                                    new object[] { reason, duration, "CALLER" },
+                                    new object[] { "CALLER", player.Name, reason, duration });
+
+                            // Display admin activity message to other players
+                            if (!SilentPlayers.Contains(caller.Slot))
+                            {
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                            }
+                            
+                            MenuApi?.CloseMenu(caller);
                         }));
                 });
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_gag"], (_, _) =>
@@ -528,6 +595,23 @@ public partial class CS2_SimpleAdmin
                         ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addgag {player.SteamId.SteamId64} {duration} \"{reason}\"");
+                            
+                            // Determine message keys and arguments based on gag time (permanent or timed)
+                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
+                                ? ("sa_player_gag_message_perm", "sa_admin_gag_message_perm",
+                                    [reason, "CALLER"],
+                                    ["CALLER", player.Name, reason])
+                                : ("sa_player_gag_message_time", "sa_admin_gag_message_time",
+                                    new object[] { reason, duration, "CALLER" },
+                                    new object[] { "CALLER", player.Name, reason, duration});
+
+                            // Display admin activity message to other players
+                            if (!SilentPlayers.Contains(caller.Slot))
+                            {
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                            }
+                            
+                            MenuApi?.CloseMenu(caller);
                         }));
                 });
                 disconnectedMenuAction?.AddMenuOption(_localizer["sa_silence"], (_, _) =>
@@ -536,6 +620,23 @@ public partial class CS2_SimpleAdmin
                         ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
                         {
                             caller.ExecuteClientCommandFromServer($"css_addsilence {player.SteamId.SteamId64} {duration} \"{reason}\"");
+                            
+                            // Determine message keys and arguments based on silence time (permanent or timed)
+                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
+                                ? ("sa_player_silence_message_perm", "sa_admin_silence_message_perm",
+                                    [reason, "CALLER"],
+                                    ["CALLER", player.Name, reason])
+                                : ("sa_player_silence_message_time", "sa_admin_silence_message_time",
+                                    new object[] { reason, duration, "CALLER" },
+                                    new object[] { "CALLER", player.Name, reason, duration });
+
+                            // Display admin activity message to other players
+                            if (!SilentPlayers.Contains(caller.Slot))
+                            {
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                            }
+                            
+                            MenuApi?.CloseMenu(caller);
                         }));
                 });
 
@@ -565,7 +666,7 @@ public partial class CS2_SimpleAdmin
         playersToTarget.ForEach(player =>
         {
             if (!player.UserId.HasValue) return;
-            if (!caller!.CanTarget(player)) return;
+            if (!caller.CanTarget(player)) return;
 
             var userId = player.UserId.Value;
 
@@ -615,30 +716,30 @@ public partial class CS2_SimpleAdmin
         {
             if (caller != null)
             {
-                caller.PrintToConsole($"--------- PLAYER LIST ---------");
+                caller.PrintToConsole("--------- PLAYER LIST ---------");
                 playersToTarget.ForEach(player =>
                 {
                     caller.PrintToConsole(
                         $"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{(AdminManager.PlayerHasPermissions(caller, "@css/showip") ? player.IpAddress?.Split(":")[0] : "Unknown")}\" SteamID64: \"{player.SteamID}\")");
                 });
-                caller.PrintToConsole($"--------- END PLAYER LIST ---------");
+                caller.PrintToConsole("--------- END PLAYER LIST ---------");
             }
             else
             {
-                Server.PrintToConsole($"--------- PLAYER LIST ---------");
+                Server.PrintToConsole("--------- PLAYER LIST ---------");
                 playersToTarget.ForEach(player =>
                 {
                     Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
                 });
-                Server.PrintToConsole($"--------- END PLAYER LIST ---------");
+                Server.PrintToConsole("--------- END PLAYER LIST ---------");
             }
         }
         else
         {
-            var playersJson = JsonConvert.SerializeObject(playersToTarget.Select((CCSPlayerController player) =>
+            var playersJson = JsonConvert.SerializeObject(playersToTarget.Select(player =>
             {
                 var matchStats = player.ActionTrackingServices?.MatchStats;
-
+                
                 return new
                 {
                     player.UserId,
@@ -669,7 +770,6 @@ public partial class CS2_SimpleAdmin
     public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
     {
         var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-        var reason = _localizer?["sa_unknown"] ?? "Unknown";
 
         var targets = GetTarget(command);
 
@@ -682,8 +782,9 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        if (command.ArgCount >= 2 && command.GetArg(2).Length > 0)
-            reason = command.GetArg(2);
+        var reason = command.ArgCount >= 2
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg))
+            : _localizer?["sa_unknown"] ?? "Unknown";
 
         playersToTarget.ForEach(player =>
         {
@@ -709,13 +810,7 @@ public partial class CS2_SimpleAdmin
         
         var playerInfo = PlayersInfo[player.UserId.Value];
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
-
-        // Freeze player pawn if alive
-        if (player.PawnIsAlive)
-        {
-            player.Pawn.Value?.Freeze();
-        }
-
+        
         // Determine message keys and arguments for the kick notification
         var (messageKey, activityMessageKey, centerArgs, adminActivityArgs) =
             ("sa_player_kick_message", "sa_admin_kick_message",
@@ -734,13 +829,7 @@ public partial class CS2_SimpleAdmin
         // Schedule the kick for the player
         if (player.UserId.HasValue)
         {
-            AddTimer(Config.OtherSettings.KickTime, () =>
-            {
-                if (player.IsValid)
-                {
-                    Helper.KickPlayer(player.UserId.Value);
-                }
-            }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            Helper.KickPlayer(player.UserId.Value, NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED, Config.OtherSettings.KickTime);
         }
 
         // Log the command and send Discord notification
@@ -749,7 +838,7 @@ public partial class CS2_SimpleAdmin
         else
             Helper.LogCommand(caller, command);
         
-        SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Kick, reason);
+        SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Kick, reason, -1, null);
     }
 
     [RequiresPermissions("@css/changemap")]

@@ -6,9 +6,9 @@ namespace CS2_SimpleAdmin.Managers;
 
 internal class WarnManager(Database.Database? database)
 {
-    public async Task WarnPlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0)
+    public async Task<int?> WarnPlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0)
     {
-        if (database == null) return;
+        if (database == null) return null;
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
@@ -16,11 +16,16 @@ internal class WarnManager(Database.Database? database)
         try
         {
             await using var connection = await database.GetConnectionAsync();
-            const string sql =
-                "INSERT INTO `sa_warns` (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
-                               "VALUES (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @serverid)";
+            const string sql = """
+                               
+                                               INSERT INTO `sa_warns` 
+                                               (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) 
+                                               VALUES 
+                                               (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @serverid);
+                                               SELECT LAST_INSERT_ID();
+                               """;
 
-            await connection.ExecuteAsync(sql, new
+            var warnId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
                 playerSteamid = player.SteamId.SteamId64.ToString(),
                 playerName = player.Name,
@@ -32,14 +37,19 @@ internal class WarnManager(Database.Database? database)
                 created = now,
                 serverid = CS2_SimpleAdmin.ServerId
             });
+
+            return warnId;
         }
-        catch { };
+        catch
+        {
+            return null;
+        }
     }
 
-    public async Task AddWarnBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0)
+    public async Task<int?> AddWarnBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0)
     {
-        if (database == null) return;
-        if (string.IsNullOrEmpty(playerSteamId)) return;
+        if (database == null) return null;
+        if (string.IsNullOrEmpty(playerSteamId)) return null;
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
@@ -47,10 +57,16 @@ internal class WarnManager(Database.Database? database)
         try
         {
             await using var connection = await database.GetConnectionAsync();
-            const string sql = "INSERT INTO `sa_warns` (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) " +
-                               "VALUES (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @serverid)";
+            const string sql = """
+                               
+                                               INSERT INTO `sa_warns` 
+                                               (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) 
+                                               VALUES 
+                                               (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @serverid);
+                                               SELECT LAST_INSERT_ID();
+                               """;
 
-            await connection.ExecuteAsync(sql, new
+            var warnId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
                 playerSteamid = playerSteamId,
                 adminSteamid = issuer?.SteamId.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
@@ -61,8 +77,13 @@ internal class WarnManager(Database.Database? database)
                 created = now,
                 serverid = CS2_SimpleAdmin.ServerId
             });
+
+            return warnId;
         }
-        catch { };
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task<List<dynamic>> GetPlayerWarns(PlayerInfo player, bool active = true)

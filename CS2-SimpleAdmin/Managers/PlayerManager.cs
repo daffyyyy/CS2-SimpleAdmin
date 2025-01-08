@@ -14,7 +14,7 @@ public class PlayerManager
 {
     private readonly CS2_SimpleAdminConfig _config = CS2_SimpleAdmin.Instance.Config;
 
-    public void LoadPlayerData(CCSPlayerController player)
+    public void LoadPlayerData(CCSPlayerController player, bool fullConnect = false)
     {
         if (player.IsBot || string.IsNullOrEmpty(player.IpAddress) || player.IpAddress.Contains("127.0.0.1"))
             return;
@@ -125,67 +125,67 @@ public class PlayerManager
 
                         if (victim == null || !victim.UserId.HasValue) return;
                         
-                        if (CS2_SimpleAdmin.UnlockedCommands)
-                            Server.ExecuteCommand($"banid 1 {userId}");
-
                         Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
                     });
 
                     return;
                 }
 
-                var warns = await CS2_SimpleAdmin.Instance.WarnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
-                var (totalMutes, totalGags, totalSilences) =
-                    await CS2_SimpleAdmin.Instance.MuteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId]);
+                if (fullConnect)
+                {
+                    var warns = await CS2_SimpleAdmin.Instance.WarnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
+                    var (totalMutes, totalGags, totalSilences) =
+                        await CS2_SimpleAdmin.Instance.MuteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId]);
 
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalBans =
-                    await CS2_SimpleAdmin.Instance.BanManager.GetPlayerBans(CS2_SimpleAdmin.PlayersInfo[userId]);
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes = totalMutes;
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalGags = totalGags;
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences = totalSilences;
-                CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns = warns.Count;
+                    CS2_SimpleAdmin.PlayersInfo[userId].TotalBans =
+                        await CS2_SimpleAdmin.Instance.BanManager.GetPlayerBans(CS2_SimpleAdmin.PlayersInfo[userId]);
+                    CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes = totalMutes;
+                    CS2_SimpleAdmin.PlayersInfo[userId].TotalGags = totalGags;
+                    CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences = totalSilences;
+                    CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns = warns.Count;
 
                 // Check if the player is muted
-                var activeMutes = await CS2_SimpleAdmin.Instance.MuteManager.IsPlayerMuted(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString());
+                    var activeMutes = await CS2_SimpleAdmin.Instance.MuteManager.IsPlayerMuted(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString());
 
-                if (activeMutes.Count > 0)
-                {
-                    foreach (var mute in activeMutes)
+                    if (activeMutes.Count > 0)
                     {
-                        string muteType = mute.type;
-                        DateTime ends = mute.ends;
-                        int duration = mute.duration;
-                        switch (muteType)
+                        foreach (var mute in activeMutes)
                         {
-                            // Apply mute penalty based on mute type
-                            case "GAG":
-                                PlayerPenaltyManager.AddPenalty(CS2_SimpleAdmin.PlayersInfo[userId].Slot, PenaltyType.Gag, ends, duration);
-                                // if (CS2_SimpleAdmin._localizer != null)
-                                // 	mutesList[PenaltyType.Gag].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_gag", ends.ToLocalTime().ToString(CultureInfo.CurrentCulture)]);
-                                break;
-                            case "MUTE":
-                                PlayerPenaltyManager.AddPenalty(CS2_SimpleAdmin.PlayersInfo[userId].Slot, PenaltyType.Mute, ends, duration);
-                                await Server.NextFrameAsync(() =>
-                                {
-                                    player.VoiceFlags = VoiceFlags.Muted;
-                                });
-                                // if (CS2_SimpleAdmin._localizer != null)
-                                // 	mutesList[PenaltyType.Mute].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_mute", ends.ToLocalTime().ToString(CultureInfo.InvariantCulture)]);
-                                break;
-                            default:
-                                PlayerPenaltyManager.AddPenalty(CS2_SimpleAdmin.PlayersInfo[userId].Slot, PenaltyType.Silence, ends, duration);
-                                await Server.NextFrameAsync(() =>
-                                {
-                                    player.VoiceFlags = VoiceFlags.Muted;
-                                });
-                                // if (CS2_SimpleAdmin._localizer != null)
-                                // 	mutesList[PenaltyType.Silence].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_silence", ends.ToLocalTime().ToString(CultureInfo.CurrentCulture)]);
-                                break;
+                            string muteType = mute.type;
+                            DateTime ends = mute.ends;
+                            int duration = mute.duration;
+                            switch (muteType)
+                            {
+                                // Apply mute penalty based on mute type
+                                case "GAG":
+                                    PlayerPenaltyManager.AddPenalty(CS2_SimpleAdmin.PlayersInfo[userId].Slot, PenaltyType.Gag, ends, duration);
+                                    // if (CS2_SimpleAdmin._localizer != null)
+                                    // 	mutesList[PenaltyType.Gag].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_gag", ends.ToLocalTime().ToString(CultureInfo.CurrentCulture)]);
+                                    break;
+                                case "MUTE":
+                                    PlayerPenaltyManager.AddPenalty(CS2_SimpleAdmin.PlayersInfo[userId].Slot, PenaltyType.Mute, ends, duration);
+                                    await Server.NextFrameAsync(() =>
+                                    {
+                                        player.VoiceFlags = VoiceFlags.Muted;
+                                    });
+                                    // if (CS2_SimpleAdmin._localizer != null)
+                                    // 	mutesList[PenaltyType.Mute].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_mute", ends.ToLocalTime().ToString(CultureInfo.InvariantCulture)]);
+                                    break;
+                                default:
+                                    PlayerPenaltyManager.AddPenalty(CS2_SimpleAdmin.PlayersInfo[userId].Slot, PenaltyType.Silence, ends, duration);
+                                    await Server.NextFrameAsync(() =>
+                                    {
+                                        player.VoiceFlags = VoiceFlags.Muted;
+                                    });
+                                    // if (CS2_SimpleAdmin._localizer != null)
+                                    // 	mutesList[PenaltyType.Silence].Add(CS2_SimpleAdmin._localizer["sa_player_penalty_info_active_silence", ends.ToLocalTime().ToString(CultureInfo.CurrentCulture)]);
+                                    break;
+                            }
                         }
                     }
                 }
 
-                if (CS2_SimpleAdmin.Instance.Config.OtherSettings.NotifyPenaltiesToAdminOnConnect)
+                if (CS2_SimpleAdmin.Instance.Config.OtherSettings.NotifyPenaltiesToAdminOnConnect && fullConnect)
                 {
                     await Server.NextFrameAsync(() =>
                     {

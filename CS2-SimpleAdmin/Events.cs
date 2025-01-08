@@ -59,7 +59,7 @@ public partial class CS2_SimpleAdmin
         new ServerManager().LoadServerData();
     }
 
-    [GameEventHandler]
+    [GameEventHandler(HookMode.Pre)]
     public HookResult OnClientDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
         var player = @event.Userid;
@@ -101,9 +101,14 @@ public partial class CS2_SimpleAdmin
             GodPlayers.Remove(player.Slot);
             SpeedPlayers.Remove(player.Slot);
             GravityPlayers.Remove(player);
-            
+
             if (player.UserId.HasValue)
+            {
+                if (@event.Reason == 149)
+                    info.DontBroadcast = true;
+                
                 PlayersInfo.TryRemove(player.UserId.Value, out _);
+            }
 
             var authorizedSteamId = player.AuthorizedSteamID;
             if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
@@ -150,8 +155,12 @@ public partial class CS2_SimpleAdmin
 
         if (player == null || !player.IsValid || player.IsBot)
             return HookResult.Continue;
+
+        if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.UserId.Value, out PlayerInfo? value) &&
+value.WaitingForKick)
+            return HookResult.Continue;
         
-        new PlayerManager().LoadPlayerData(player);
+        new PlayerManager().LoadPlayerData(player, true);
 
         return HookResult.Continue;
     }

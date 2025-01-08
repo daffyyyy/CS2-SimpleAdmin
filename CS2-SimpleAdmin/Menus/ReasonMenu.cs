@@ -46,7 +46,7 @@ public static class ReasonMenu
         {
             menu?.AddMenuOption(reason, (_, _) => onSelectAction(admin, player, reason));
         }
-
+        
         if (menu != null) AdminMenu.OpenMenu(admin, menu);
     }
 }
