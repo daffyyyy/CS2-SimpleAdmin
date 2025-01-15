@@ -28,9 +28,11 @@ public partial class CS2_SimpleAdmin
         }
         
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
         
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+
         var time = Helper.ParsePenaltyTime(command.GetArg(2));
         
         playersToTarget.ForEach(player =>
@@ -124,8 +126,10 @@ public partial class CS2_SimpleAdmin
 
         var steamid = steamId.SteamId64.ToString();
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         if (!CheckValidMute(caller, time)) return;
@@ -175,9 +179,11 @@ public partial class CS2_SimpleAdmin
         var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
         var reason = command.ArgCount >= 2
-            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
 
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
         if (pattern.Length <= 1)
         {
             command.ReplyToCommand($"Too short pattern to search.");
@@ -252,8 +258,10 @@ public partial class CS2_SimpleAdmin
         }
 
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
         
         var time = Helper.ParsePenaltyTime(command.GetArg(2));
 
@@ -351,8 +359,10 @@ public partial class CS2_SimpleAdmin
 
         var steamid = steamId.SteamId64.ToString();
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         if (!CheckValidMute(caller, time)) return;
@@ -402,9 +412,11 @@ public partial class CS2_SimpleAdmin
         var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
         var reason = command.ArgCount >= 2
-            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
 
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
         if (pattern.Length <= 1)
         {
             command.ReplyToCommand("Too short pattern to search.");
@@ -481,8 +493,10 @@ public partial class CS2_SimpleAdmin
         }
         
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         var time = Helper.ParsePenaltyTime(command.GetArg(2));
         
@@ -578,8 +592,10 @@ public partial class CS2_SimpleAdmin
 
         var steamid = steamId.SteamId64.ToString();
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         if (!CheckValidMute(caller, time)) return;
@@ -629,9 +645,11 @@ public partial class CS2_SimpleAdmin
         var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
         var reason = command.ArgCount >= 2
-            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
 
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
         if (pattern.Length <= 1)
         {
             command.ReplyToCommand("Too short pattern to search.");

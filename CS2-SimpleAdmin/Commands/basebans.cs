@@ -30,8 +30,11 @@ public partial class CS2_SimpleAdmin
         }
         
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+
 
         var time = Helper.ParsePenaltyTime(command.GetArg(2));
 
@@ -134,8 +137,10 @@ public partial class CS2_SimpleAdmin
 
         var steamid = steamId.SteamId64.ToString();
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         
@@ -195,8 +200,10 @@ public partial class CS2_SimpleAdmin
         }
 
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
 
@@ -264,8 +271,10 @@ public partial class CS2_SimpleAdmin
 
         var pattern = command.GetArg(1);
         var reason = command.ArgCount >= 2
-            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         Task.Run(async () => await BanManager.UnbanPlayer(pattern, callerSteamId, reason));
 
@@ -297,8 +306,10 @@ public partial class CS2_SimpleAdmin
 
         var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         var reason = command.ArgCount >= 3
-            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg))
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         playersToTarget.ForEach(player =>
         {

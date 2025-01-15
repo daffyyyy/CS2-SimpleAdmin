@@ -782,9 +782,11 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        var reason = command.ArgCount >= 2
-            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg))
+        var reason = command.ArgCount >= 2 
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim() 
             : _localizer?["sa_unknown"] ?? "Unknown";
+
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
         playersToTarget.ForEach(player =>
         {

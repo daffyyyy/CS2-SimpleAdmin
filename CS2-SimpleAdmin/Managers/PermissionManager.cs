@@ -315,53 +315,72 @@ public class PermissionManager(Database.Database? database)
     {
         List<(string identity, string name, List<string> flags, int immunity, DateTime? ends)> allPlayers = await GetAllPlayersFlags();
         var validPlayers = allPlayers
-            .Where(player => SteamID.TryParse(player.identity, out _)) // Filter invalid SteamID
+            .Where(player => SteamID.TryParse(player.identity, out _))
             .ToList();
 
-        /*
-		foreach (var player in allPlayers)
-		{
-			var (steamId, name, flags, immunity, ends) = player;
-            
-			// Print or process each item
-			Console.WriteLine($"Player SteamID: {steamId}");
-			Console.WriteLine($"Player Name: {name}");
-			Console.WriteLine($"Flags: {string.Join(", ", flags)}");
-			Console.WriteLine($"Immunity: {immunity}");
-			Console.WriteLine($"Ends: {(ends.HasValue ? ends.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Never")}");
-			Console.WriteLine(); // New line for better readability
-		}
-		*/
+		// foreach (var player in allPlayers)
+		// {
+		// 	var (steamId, name, flags, immunity, ends) = player;
+		//           
+		// 	Console.WriteLine($"Player SteamID: {steamId}");
+		// 	Console.WriteLine($"Player Name: {name}");
+		// 	Console.WriteLine($"Flags: {string.Join(", ", flags)}");
+		// 	Console.WriteLine($"Immunity: {immunity}");
+		// 	Console.WriteLine($"Ends: {(ends.HasValue ? ends.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Never")}");
+		// 	Console.WriteLine();
+		// }
 
-        var jsonData = validPlayers
-            .Select(player =>
-            {
-                SteamID.TryParse(player.identity, out var steamId);
+		var jsonData = validPlayers
+			.GroupBy(player => player.name) // Group by player name
+			.ToDictionary(
+				group => group.Key, // Use the player name as the key
+				group =>
+				{
+					// Consolidate data for players with the same name
+					var consolidatedData = group.Aggregate(
+						new
+						{
+							identity = string.Empty,
+							immunity = 0,
+							flags = new List<string>(),
+							groups = new List<string>()
+						},
+						(acc, player) =>
+						{
+							// Merge identities and use the latest or first non-null identity
+							if (string.IsNullOrEmpty(acc.identity) && !string.IsNullOrEmpty(player.identity))
+							{
+								acc = acc with { identity = player.identity };
+							}
 
-                // Update cache if SteamID is valid and not already cached
-                if (steamId != null && !AdminCache.ContainsKey(steamId))
-                {
-                    AdminCache.TryAdd(steamId, player.ends);
-                }
+							// Combine immunities by taking the maximum value
+							acc = acc with { immunity = Math.Max(acc.immunity, player.immunity) };
 
-                // Create an anonymous object with player data
-                return new
-                {
-                    playerName = player.name,
-                    playerData = new
-                    {
-                        player.identity,
-                        player.immunity,
-                        flags = player.flags.Where(flag => flag.StartsWith("@")).ToList(),
-                        groups = player.flags.Where(flag => flag.StartsWith("#")).ToList()
-                    }
-                };
-            })
-            .ToDictionary(item => item.playerName, item => (object)item.playerData);
+							// Combine flags and groups, ensuring no duplicates
+							acc = acc with
+							{
+								flags = acc.flags.Concat(player.flags.Where(flag => flag.StartsWith($"@"))).Distinct().ToList(),
+								groups = acc.groups.Concat(player.flags.Where(flag => flag.StartsWith($"#"))).Distinct().ToList()
+							};
 
+							return acc;
+						});
+
+					foreach (var player in group)
+					{
+						SteamID.TryParse(player.identity, out var steamId);
+						if (steamId != null && !AdminCache.ContainsKey(steamId))
+						{
+							AdminCache.TryAdd(steamId, player.ends);
+						}
+					}
+
+					return (object)consolidatedData;
+				});
+		
         var json = JsonConvert.SerializeObject(jsonData, Formatting.Indented);
-
         var filePath = Path.Combine(CS2_SimpleAdmin.Instance.ModuleDirectory, "data", "admins.json");
+        
         await File.WriteAllTextAsync(filePath, json);
 
         //await File.WriteAllTextAsync(CS2_SimpleAdmin.Instance.ModuleDirectory + "/data/admins.json", json);

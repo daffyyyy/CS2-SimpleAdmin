@@ -174,14 +174,32 @@ internal class WarnManager(Database.Database? database)
             await using var connection = await database.GetConnectionAsync();
 
             var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
-                ? "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND player_steamid = @steamid AND id = (SELECT MAX(id) FROM sa_warns WHERE player_steamid = @steamid AND status = 'ACTIVE')"
-                : "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND player_steamid = @steamid AND id = (SELECT MAX(id) FROM sa_warns WHERE player_steamid = @steamid AND status = 'ACTIVE' AND server_id = @serverid)";
+                ? """
+                  UPDATE sa_warns 
+                  JOIN (
+                      SELECT MAX(id) AS max_id
+                      FROM sa_warns
+                      WHERE player_steamid = @steamid AND status = 'ACTIVE'
+                  ) AS subquery ON sa_warns.id = subquery.max_id
+                  SET sa_warns.status = 'EXPIRED'
+                  WHERE sa_warns.status = 'ACTIVE' AND sa_warns.player_steamid = @steamid;
+                  """
+                : """
+                  UPDATE sa_warns 
+                  JOIN (
+                      SELECT MAX(id) AS max_id
+                      FROM sa_warns
+                      WHERE player_steamid = @steamid AND status = 'ACTIVE' AND server_id = @serverid
+                  ) AS subquery ON sa_warns.id = subquery.max_id
+                  SET sa_warns.status = 'EXPIRED'
+                  WHERE sa_warns.status = 'ACTIVE' AND sa_warns.player_steamid = @steamid AND sa_warns.server_id = @serverid;
+                  """;
 
             await connection.ExecuteAsync(sql, new { steamid = playerPattern, serverid = CS2_SimpleAdmin.ServerId });
         }
         catch (Exception ex)
         {
-            CS2_SimpleAdmin._logger?.LogCritical($"Unable to remove last warn + {ex}");
+            CS2_SimpleAdmin._logger?.LogCritical("Unable to remove last warn {exception}", ex.Message);
         }
     }
 

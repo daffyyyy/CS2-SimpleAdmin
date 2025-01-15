@@ -9,6 +9,16 @@ public class ServerManager
 {
     private int _getIpTryCount;
 
+    public void CheckHibernationStatus()
+    {
+        ConVar? convar = ConVar.Find("sv_hibernate_when_empty");
+        
+        if (convar == null || !convar.GetPrimitiveValue<bool>())
+            return;
+        
+        CS2_SimpleAdmin._logger?.LogError("Detected setting \"sv_hibernate_when_empty true\", set false to make plugin work properly");
+    }
+    
     public void LoadServerData()
     {
         CS2_SimpleAdmin.Instance.AddTimer(1.2f, () =>
