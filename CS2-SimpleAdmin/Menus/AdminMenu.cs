@@ -6,9 +6,9 @@ namespace CS2_SimpleAdmin.Menus;
 
 public static class AdminMenu
 {
-    public static IMenu? CreateMenu(string title)
+    public static IMenu? CreateMenu(string title, Action<CCSPlayerController>? backAction = null)
     {
-        return Helper.CreateMenu(title);
+        return Helper.CreateMenu(title, backAction);
         // return CS2_SimpleAdmin.Instance.Config.UseChatMenu ? new ChatMenu(title) : new CenterHtmlMenu(title, CS2_SimpleAdmin.Instance);
     }
 

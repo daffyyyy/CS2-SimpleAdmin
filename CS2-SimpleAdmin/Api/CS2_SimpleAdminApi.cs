@@ -25,14 +25,14 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         return PlayerPenaltyManager.GetAllPlayerPenalties(player.Slot);
     }
     
-    public event Action<PlayerInfo, PlayerInfo?, PenaltyType, string, int, int?>? OnPlayerPenaltied;
-    public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?>? OnPlayerPenaltiedAdded;
+    public event Action<PlayerInfo, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltied;
+    public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltiedAdded;
 
     public void OnPlayerPenaltiedEvent(PlayerInfo player, PlayerInfo? admin, PenaltyType penaltyType, string reason,
-        int duration = -1) =>  OnPlayerPenaltied?.Invoke(player, admin, penaltyType, reason, duration, CS2_SimpleAdmin.ServerId);
+        int duration, int? penaltyId) =>  OnPlayerPenaltied?.Invoke(player, admin, penaltyType, reason, duration, penaltyId, CS2_SimpleAdmin.ServerId);
     
     public void OnPlayerPenaltiedAddedEvent(SteamID player, PlayerInfo? admin, PenaltyType penaltyType, string reason,
-        int duration) =>  OnPlayerPenaltiedAdded?.Invoke(player, admin, penaltyType, reason, duration, CS2_SimpleAdmin.ServerId);
+        int duration, int? penaltyId) =>  OnPlayerPenaltiedAdded?.Invoke(player, admin, penaltyType, reason, duration, penaltyId, CS2_SimpleAdmin.ServerId);
 
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1)
     {

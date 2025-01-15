@@ -78,7 +78,8 @@ public static class RegisterCommands
         new CommandMapping("css_respawn", CS2_SimpleAdmin.Instance.OnRespawnCommand),
         new CommandMapping("css_tp", CS2_SimpleAdmin.Instance.OnGotoCommand),
         new CommandMapping("css_bring", CS2_SimpleAdmin.Instance.OnBringCommand),
-        new CommandMapping("css_pluginsmanager", CS2_SimpleAdmin.Instance.OnPluginManagerCommand)
+        new CommandMapping("css_pluginsmanager", CS2_SimpleAdmin.Instance.OnPluginManagerCommand),
+        new CommandMapping("css_adminvoice", CS2_SimpleAdmin.Instance.OnAdminVoiceCommand)
     ];
 
     public static void InitializeCommands()
@@ -160,7 +161,8 @@ public static class RegisterCommands
                 { "css_respawn", new Command { Aliases = ["css_respawn"] } },
                 { "css_tp", new Command { Aliases = ["css_tp", "css_tpto", "css_goto"] } },
                 { "css_bring", new Command { Aliases = ["css_bring", "css_tphere"] } },
-                { "css_pluginsmanager", new Command { Aliases = ["css_pluginsmanager", "css_pluginmanager"] } }
+                { "css_pluginsmanager", new Command { Aliases = ["css_pluginsmanager", "css_pluginmanager"] } },
+                { "css_adminvoice", new Command { Aliases = ["css_adminvoice", "css_listenall"] } }
             }
         };
         

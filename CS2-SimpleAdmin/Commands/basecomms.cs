@@ -2,6 +2,7 @@ using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Entities;
 using CS2_SimpleAdmin.Managers;
 using CS2_SimpleAdmin.Menus;
 using CS2_SimpleAdminApi;
@@ -16,9 +17,7 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null) return;
         var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-
-        var reason = _localizer?["sa_unknown"] ?? "Unknown";
-
+        
         var targets = GetTarget(command);
         if (targets == null) return;
         var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
@@ -28,13 +27,18 @@ public partial class CS2_SimpleAdmin
             return;
         }
         
-        if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
-            reason = command.GetArg(3);
+        var reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
+        var time = Helper.ParsePenaltyTime(command.GetArg(2));
+        
         playersToTarget.ForEach(player =>
         {
             if (!caller!.CanTarget(player)) return;
-            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
+            if (time < 0 && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
             {
                 DurationMenu.OpenMenu(caller, $"{_localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player,
                     ManagePlayersMenu.GagMenu);
@@ -61,7 +65,8 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle gag logic
         Task.Run(async () =>
         {
-            await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time);
+            int? penaltyId = await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time);
+            SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Gag, reason, time, penaltyId);
         });
 
         // Add penalty to the player's penalty manager
@@ -98,7 +103,6 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.SendDiscordPenaltyMessage(caller, player, reason, time, PenaltyType.Gag, _localizer);
-        SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Gag, reason, time);
     }
 
     [RequiresPermissions("@css/chat")]
@@ -121,11 +125,13 @@ public partial class CS2_SimpleAdmin
         }
 
         var steamid = steamId.SteamId64.ToString();
-        var reason = command.ArgCount >= 3 && command.GetArg(3).Length > 0
-            ? command.GetArg(3)
-            : (_localizer?["sa_unknown"] ?? "Unknown");
+        var reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
-        int.TryParse(command.GetArg(2), out var time);
+        var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         if (!CheckValidMute(caller, time)) return;
 
         // Get player and admin info
@@ -145,10 +151,14 @@ public partial class CS2_SimpleAdmin
         }
         else
         {
+            if (!caller.CanTarget(new SteamID(steamId.SteamId64)))
+                return;
+
             // Asynchronous gag operation for offline players
             Task.Run(async () =>
             {
-                await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time);
+                int? penaltyId = await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Gag, reason, time, penaltyId);
             });
 
             Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Gag, _localizer);
@@ -158,7 +168,6 @@ public partial class CS2_SimpleAdmin
 
         // Log the gag command and respond to the command
         Helper.LogCommand(caller, command);
-        SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Gag, reason, time);
     }
 
     [RequiresPermissions("@css/chat")]
@@ -169,8 +178,12 @@ public partial class CS2_SimpleAdmin
 
         var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
-        var reason = command.GetArg(2);
+        var reason = command.ArgCount >= 2
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
 
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
         if (pattern.Length <= 1)
         {
             command.ReplyToCommand($"Too short pattern to search.");
@@ -235,8 +248,6 @@ public partial class CS2_SimpleAdmin
         if (Database == null) return;
         var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
-        var reason = _localizer?["sa_unknown"] ?? "Unknown";
-
         var targets = GetTarget(command);
         if (targets == null) return;
         var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
@@ -246,13 +257,18 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
-            reason = command.GetArg(3);
+        var reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
+        var time = Helper.ParsePenaltyTime(command.GetArg(2));
 
         playersToTarget.ForEach(player =>
         {
             if (!caller!.CanTarget(player)) return;
-            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
+            if (time < 0 && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
             {
                 DurationMenu.OpenMenu(caller, $"{_localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player,
                     ManagePlayersMenu.MuteMenu);
@@ -283,7 +299,8 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle mute logic
         Task.Run(async () =>
         {
-            await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
+            int? penaltyId = await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time, 1);
+            SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Mute, reason, time, penaltyId);
         });
 
         // Add penalty to the player's penalty manager
@@ -320,7 +337,6 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.SendDiscordPenaltyMessage(caller, player, reason, time, PenaltyType.Mute, _localizer);
-        SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Mute, reason, time);
     }
 
     [RequiresPermissions("@css/chat")]
@@ -343,11 +359,13 @@ public partial class CS2_SimpleAdmin
         }
 
         var steamid = steamId.SteamId64.ToString();
-        var reason = command.ArgCount >= 3 && command.GetArg(3).Length > 0
-            ? command.GetArg(3)
-            : (_localizer?["sa_unknown"] ?? "Unknown");
+        var reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
-        int.TryParse(command.GetArg(2), out var time);
+        var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         if (!CheckValidMute(caller, time)) return;
 
         // Get player and admin info
@@ -367,10 +385,14 @@ public partial class CS2_SimpleAdmin
         }
         else
         {
+            if (!caller.CanTarget(new SteamID(steamId.SteamId64)))
+                return;
+
             // Asynchronous mute operation for offline players
             Task.Run(async () =>
             {
-                await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
+                int? penaltyId = await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 1);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Mute, reason, time, penaltyId);
             });
 
             Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Mute, _localizer);
@@ -380,7 +402,6 @@ public partial class CS2_SimpleAdmin
 
         // Log the mute command and respond to the command
         Helper.LogCommand(caller, command);
-        SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Mute, reason, time);
     }
 
     [RequiresPermissions("@css/chat")]
@@ -391,8 +412,12 @@ public partial class CS2_SimpleAdmin
 
         var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
-        var reason = command.GetArg(2);
+        var reason = command.ArgCount >= 2
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
 
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
         if (pattern.Length <= 1)
         {
             command.ReplyToCommand("Too short pattern to search.");
@@ -460,9 +485,7 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null) return;
         var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-
-        var reason = _localizer?["sa_unknown"] ?? "Unknown";
-
+        
         var targets = GetTarget(command);
         if (targets == null) return;
         var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
@@ -472,13 +495,18 @@ public partial class CS2_SimpleAdmin
             return;
         }
         
-        if (command.ArgCount >= 3 && command.GetArg(3).Length > 0)
-            reason = command.GetArg(3);
+        var reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
+        var time = Helper.ParsePenaltyTime(command.GetArg(2));
+        
         playersToTarget.ForEach(player =>
         {
             if (!caller!.CanTarget(player)) return;
-            if (!int.TryParse(command.GetArg(2), out var time) && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
+            if (time < 0 && caller != null && caller.IsValid && Config.OtherSettings.ShowBanMenuIfNoTime)
             {
                 DurationMenu.OpenMenu(caller, $"{_localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player,
                     ManagePlayersMenu.SilenceMenu);
@@ -509,7 +537,8 @@ public partial class CS2_SimpleAdmin
         // Asynchronously handle silence logic
         Task.Run(async () =>
         {
-            await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2); // Assuming 2 is the type for silence
+            int? penaltyId = await MuteManager.MutePlayer(playerInfo, adminInfo, reason, time, 2); // Assuming 2 is the type for silence
+            SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Silence, reason, time, penaltyId);
         });
 
         // Add penalty to the player's penalty manager
@@ -547,7 +576,6 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.SendDiscordPenaltyMessage(caller, player, reason, time, PenaltyType.Silence, _localizer);
-        SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Silence, reason, time);
     }
 
     [RequiresPermissions("@css/chat")]
@@ -570,11 +598,13 @@ public partial class CS2_SimpleAdmin
         }
 
         var steamid = steamId.SteamId64.ToString();
-        var reason = command.ArgCount >= 3 && command.GetArg(3).Length > 0
-            ? command.GetArg(3)
-            : (_localizer?["sa_unknown"] ?? "Unknown");
+        var reason = command.ArgCount >= 3
+            ? string.Join(" ", Enumerable.Range(3, command.ArgCount - 3).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
+        
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
 
-        int.TryParse(command.GetArg(2), out var time);
+        var time = Math.Max(0, Helper.ParsePenaltyTime(command.GetArg(2)));
         if (!CheckValidMute(caller, time)) return;
 
         // Get player and admin info
@@ -594,10 +624,14 @@ public partial class CS2_SimpleAdmin
         }
         else
         {
+            if (!caller.CanTarget(new SteamID(steamId.SteamId64)))
+                return;
+
             // Asynchronous silence operation for offline players
             Task.Run(async () =>
             {
-                await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 2);
+                int? penaltyId = await MuteManager.AddMuteBySteamid(steamid, adminInfo, reason, time, 2);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Silence, reason, time, penaltyId);
             });
 
             Helper.SendDiscordPenaltyMessage(caller, steamid, reason, time, PenaltyType.Silence, _localizer);
@@ -607,7 +641,6 @@ public partial class CS2_SimpleAdmin
 
         // Log the silence command and respond to the command
         Helper.LogCommand(caller, command);
-        SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamId, adminInfo, PenaltyType.Silence, reason, time);
     }
 
     [RequiresPermissions("@css/chat")]
@@ -618,14 +651,18 @@ public partial class CS2_SimpleAdmin
 
         var callerSteamId = caller?.SteamID.ToString() ?? _localizer?["sa_console"] ?? "Console";
         var pattern = command.GetArg(1);
-        var reason = command.GetArg(2);
+        var reason = command.ArgCount >= 2
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
+            : _localizer?["sa_unknown"] ?? "Unknown";
 
+        reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
+        
         if (pattern.Length <= 1)
         {
             command.ReplyToCommand("Too short pattern to search.");
             return;
         }
-
+        
         Helper.LogCommand(caller, command);
 
         // Check if pattern is a valid SteamID64
