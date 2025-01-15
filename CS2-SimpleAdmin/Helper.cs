@@ -192,7 +192,7 @@ internal static class Helper
         {
             Server.ExecuteCommand($"kickid {player.UserId}");
 
-            player.Disconnect(reason); // Broken after last update
+            // player.Disconnect(reason); // Broken after last update
         }
         
         if (CS2_SimpleAdmin.UnlockedCommands && reason == NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED)
