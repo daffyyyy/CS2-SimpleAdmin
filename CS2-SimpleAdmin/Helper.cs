@@ -144,8 +144,8 @@ internal static class Helper
         if (player == null || !player.IsValid || player.IsHLTV)
             return;
         
-        if (player.UserId.HasValue)
-            CS2_SimpleAdmin.PlayersInfo[player.UserId.Value].WaitingForKick = true;
+        if (player.UserId.HasValue && CS2_SimpleAdmin.PlayersInfo.TryGetValue(player.UserId.Value, out var value))
+            value.WaitingForKick = true;
 
         player.CommitSuicide(true, true);
         
@@ -156,16 +156,16 @@ internal static class Helper
                 if (!player.IsValid || player.IsHLTV)
                     return;
                 
-                Server.ExecuteCommand($"kickid {player.UserId}");
+                // Server.ExecuteCommand($"kickid {player.UserId}");
 
-                // player.Disconnect(reason); Broken after last update
+                player.Disconnect(reason);
             });
         }
         else
         {
-            Server.ExecuteCommand($"kickid {player.UserId}");
+            // Server.ExecuteCommand($"kickid {player.UserId}");
 
-            // player.Disconnect(reason); // Broken after last update
+            player.Disconnect(reason); 
         }
         
         if (CS2_SimpleAdmin.UnlockedCommands && reason == NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED)
@@ -189,8 +189,8 @@ internal static class Helper
         if (!player.IsValid || player.IsHLTV)
             return;
 
-        if (player.UserId.HasValue)
-            CS2_SimpleAdmin.PlayersInfo[player.UserId.Value].WaitingForKick = true;
+        if (player.UserId.HasValue && CS2_SimpleAdmin.PlayersInfo.TryGetValue(player.UserId.Value, out var value))
+            value.WaitingForKick = true;
         
         player.CommitSuicide(true, true);
         
@@ -211,15 +211,15 @@ internal static class Helper
                 // 	}
                 // }
                 //
-                Server.ExecuteCommand($"kickid {player.UserId}");
-                // player.Disconnect(reason); // Broken after last update
+                // Server.ExecuteCommand($"kickid {player.UserId}");
+                player.Disconnect(reason);
             });
         }
         else
         {
-            Server.ExecuteCommand($"kickid {player.UserId}");
+            // Server.ExecuteCommand($"kickid {player.UserId}");
 
-            // player.Disconnect(reason); // Broken after last update
+            player.Disconnect(reason);
         }
         
         if (CS2_SimpleAdmin.UnlockedCommands && reason == NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED)
