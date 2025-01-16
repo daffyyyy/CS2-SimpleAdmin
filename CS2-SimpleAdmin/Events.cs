@@ -396,6 +396,8 @@ value.WaitingForKick)
         if (Config.OtherSettings.ReloadAdminsEveryMapChange && ServerLoaded && ServerId != null)
             AddTimer(3.0f, () => ReloadAdmins(null));
 
+        AddTimer(1.0f, () => new ServerManager().CheckHibernationStatus());
+
         // AddTimer(34, () =>
         // {
         //     if (!ServerLoaded)
