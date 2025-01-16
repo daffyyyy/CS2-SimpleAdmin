@@ -46,11 +46,11 @@ public class ServerManager
                 }
             }
 
-            var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
+            string? address = !string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) ? CS2_SimpleAdmin.Instance.Config.DefaultServerIP : $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
             var hostname = ConVar.Find("hostname")!.StringValue;
             var rcon = ConVar.Find("rcon_password")!.StringValue;
             CS2_SimpleAdmin.IpAddress = address;
-            
+
             CS2_SimpleAdmin._logger?.LogInformation("Loaded server with ip {ip}", ipAddress);
 
             Task.Run(async () =>

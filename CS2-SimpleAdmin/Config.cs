@@ -303,6 +303,9 @@ public class CS2_SimpleAdminConfig : BasePluginConfig
     [JsonPropertyName("MenuConfig")]
     public MenuConfig MenuConfigs { get; set; } = new();
 
+    [JsonPropertyName("DefaultServerIP")]
+	public string DefaultServerIP { get; set; } = "";
+
     [JsonPropertyName("ChatLog")]
 	public ChatLog ChatLog { get; set; } = new ChatLog();
 
