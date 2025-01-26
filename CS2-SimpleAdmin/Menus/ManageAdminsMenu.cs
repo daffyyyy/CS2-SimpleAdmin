@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 
 namespace CS2_SimpleAdmin.Menus;
 
@@ -11,7 +12,7 @@ public static class ManageAdminsMenu
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(admin, "@css/root") == false)
+        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/root") == false)
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
                               "[SimpleAdmin] " +

@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 
 namespace CS2_SimpleAdmin.Menus;
 
@@ -11,7 +12,7 @@ public static class ManageServerMenu
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
+        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/generic") == false)
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
                               "[SimpleAdmin] " +
@@ -25,8 +26,8 @@ public static class ManageServerMenu
 
 
         // permissions
-        var hasMap = AdminManager.CommandIsOverriden("css_map") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_map")) : AdminManager.PlayerHasPermissions(admin, "@css/changemap");
-        var hasPlugins = AdminManager.CommandIsOverriden("css_pluginsmanager") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_pluginsmanager")) : AdminManager.PlayerHasPermissions(admin, "@css/root");
+        var hasMap = AdminManager.CommandIsOverriden("css_map") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_map")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/changemap");
+        var hasPlugins = AdminManager.CommandIsOverriden("css_pluginsmanager") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_pluginsmanager")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/root");
 
         //bool hasMap = AdminManager.PlayerHasPermissions(admin, "@css/changemap");
 

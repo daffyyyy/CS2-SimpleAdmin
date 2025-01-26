@@ -717,7 +717,7 @@ public partial class CS2_SimpleAdmin
     {
         if (caller == null) return true;
 
-        var canPermMute = AdminManager.PlayerHasPermissions(caller, "@css/permmute");
+        var canPermMute = AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/permmute");
 
         if (duration <= 0 && canPermMute == false)
         {

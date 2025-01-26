@@ -98,7 +98,7 @@ public class PlayerManager
             {
                 if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(userId))
                 {
-                    Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION);
+                    await Server.NextFrameAsync(() => Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION));
                 }
                 
                 // Check if the player is banned
@@ -190,8 +190,8 @@ public class PlayerManager
                     await Server.NextFrameAsync(() =>
                     {
                         foreach (var admin in Helper.GetValidPlayers()
-                                     .Where(p => (AdminManager.PlayerHasPermissions(p, "@css/kick") ||
-                                                  AdminManager.PlayerHasPermissions(p, "@css/ban")) &&
+                                     .Where(p => (AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/kick") ||
+                                                  AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/ban")) &&
                                                  p.Connected == PlayerConnectedState.PlayerConnected && !CS2_SimpleAdmin.AdminDisabledJoinComms.Contains(p.SteamID)))
                         {
                             if (CS2_SimpleAdmin._localizer != null && admin != player)

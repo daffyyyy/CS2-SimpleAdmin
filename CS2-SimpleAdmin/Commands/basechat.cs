@@ -5,6 +5,7 @@ using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Memory;
 using CounterStrikeSharp.API.Modules.Utils;
 using System.Text;
+using CounterStrikeSharp.API.Modules.Entities;
 
 namespace CS2_SimpleAdmin;
 
@@ -20,7 +21,7 @@ public partial class CS2_SimpleAdmin
         var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
         foreach (var player in Helper.GetValidPlayers()
-                     .Where(p => AdminManager.PlayerHasPermissions(p, "@css/chat")))
+                     .Where(p => AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
         {
             if (_localizer != null)
                 player.PrintToChat(_localizer["sa_adminchat_template_admin",

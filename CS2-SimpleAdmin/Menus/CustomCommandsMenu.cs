@@ -1,6 +1,7 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 
 namespace CS2_SimpleAdmin.Menus;
 
@@ -12,7 +13,7 @@ public static class CustomCommandsMenu
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
+        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/generic") == false)
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
                               "[SimpleAdmin] " +
@@ -27,7 +28,7 @@ public static class CustomCommandsMenu
         var customCommands = CS2_SimpleAdmin.Instance.Config.CustomServerCommands;
         options.AddRange(from customCommand in customCommands
                          where !string.IsNullOrEmpty(customCommand.DisplayName) && !string.IsNullOrEmpty(customCommand.Command)
-                         let hasRights = AdminManager.PlayerHasPermissions(admin, customCommand.Flag)
+                         let hasRights = AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), customCommand.Flag)
                          where hasRights
                          select new ChatMenuOptionData(customCommand.DisplayName, () =>
                          {
