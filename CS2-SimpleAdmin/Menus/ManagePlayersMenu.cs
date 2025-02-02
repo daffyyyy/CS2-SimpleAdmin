@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Utils;
 using CS2_SimpleAdminApi;
 
@@ -13,7 +14,7 @@ public static class ManagePlayersMenu
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
+        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/generic") == false)
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
                               "[SimpleAdmin] " +
@@ -26,10 +27,10 @@ public static class ManagePlayersMenu
         List<ChatMenuOptionData> options = [];
 
         // permissions
-        var hasSlay = AdminManager.CommandIsOverriden("css_slay") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_slay")) : AdminManager.PlayerHasPermissions(admin, "@css/slay");
-        var hasKick = AdminManager.CommandIsOverriden("css_kick") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_kick")) : AdminManager.PlayerHasPermissions(admin, "@css/kick");
-        var hasBan = AdminManager.CommandIsOverriden("css_ban") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_ban")) : AdminManager.PlayerHasPermissions(admin, "@css/ban");
-        var hasChat = AdminManager.CommandIsOverriden("css_gag") ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_gag")) : AdminManager.PlayerHasPermissions(admin, "@css/chat");
+        var hasSlay = AdminManager.CommandIsOverriden("css_slay") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_slay")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay");
+        var hasKick = AdminManager.CommandIsOverriden("css_kick") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_kick")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/kick");
+        var hasBan = AdminManager.CommandIsOverriden("css_ban") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_ban")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/ban");
+        var hasChat = AdminManager.CommandIsOverriden("css_gag") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_gag")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat");
 
         // TODO: Localize options
         // options added in order
@@ -46,8 +47,8 @@ public static class ManagePlayersMenu
         }
 
         if (AdminManager.CommandIsOverriden("css_warn")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_warn"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/kick"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_warn"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/kick"))
             options.Add(new ChatMenuOptionData(localizer?["sa_warn"] ?? "Warn", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_warn"] ?? "Warn", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_warn"] ?? "Warn"}: {player.PlayerName}", player, WarnMenu))));
 
         if (hasBan)
@@ -56,22 +57,22 @@ public static class ManagePlayersMenu
         if (hasChat)
         {
             if (AdminManager.CommandIsOverriden("css_gag")
-                    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_gag"))
-                    : AdminManager.PlayerHasPermissions(admin, "@css/chat"))
+                    ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_gag"))
+                    : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat"))
                 options.Add(new ChatMenuOptionData(localizer?["sa_gag"] ?? "Gag", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_gag"] ?? "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player, GagMenu))));
             if (AdminManager.CommandIsOverriden("css_mute")
-                    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_mute"))
-                    : AdminManager.PlayerHasPermissions(admin, "@css/chat"))
+                    ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_mute"))
+                    : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat"))
                 options.Add(new ChatMenuOptionData(localizer?["sa_mute"] ?? "Mute", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_mute"] ?? "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player, MuteMenu))));
             if (AdminManager.CommandIsOverriden("css_silence")
-                    ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_silence"))
-                    : AdminManager.PlayerHasPermissions(admin, "@css/chat"))
+                    ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_silence"))
+                    : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat"))
                 options.Add(new ChatMenuOptionData(localizer?["sa_silence"] ?? "Silence", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_silence"] ?? "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player, SilenceMenu))));
         }
 
         if (AdminManager.CommandIsOverriden("css_team")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_team"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/kick"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_team"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/kick"))
             options.Add(new ChatMenuOptionData(localizer?["sa_team_force"] ?? "Force Team", () => PlayersMenu.OpenMenu(admin, localizer?["sa_team_force"] ?? "Force Team", ForceTeamMenu)));
 
         foreach (var menuOptionData in options)

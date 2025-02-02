@@ -273,7 +273,7 @@ value.WaitingForKick)
             return HookResult.Stop;
         
         if (command == "say" && info.GetArg(1).StartsWith($"@") &&
-            AdminManager.PlayerHasPermissions(player, "@css/chat"))
+            AdminManager.PlayerHasPermissions(new SteamID(player.SteamID), "@css/chat"))
         {
             player.ExecuteClientCommandFromServer($"css_say {info.GetArg(1).Remove(0, 1)}");
             return HookResult.Stop;
@@ -312,10 +312,10 @@ value.WaitingForKick)
         if (command != "say_team" || !info.GetArg(1).StartsWith($"@")) return HookResult.Continue;
 
         StringBuilder sb = new();
-        if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
+        if (AdminManager.PlayerHasPermissions(new SteamID(player.SteamID), "@css/chat"))
         {
             sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -324,7 +324,7 @@ value.WaitingForKick)
         {
             sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
             player.PrintToChat(sb.ToString());
-            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -370,10 +370,10 @@ value.WaitingForKick)
 
         StringBuilder sb = new();
 
-        if (AdminManager.PlayerHasPermissions(player, "@css/chat"))
+        if (AdminManager.PlayerHasPermissions(new SteamID(player.SteamID), "@css/chat"))
         {
             sb.Append(_localizer!["sa_adminchat_template_admin", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
-            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p.IsValid && p is { IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }
@@ -382,7 +382,7 @@ value.WaitingForKick)
         {
             sb.Append(_localizer!["sa_adminchat_template_player", player.PlayerName, info.GetArg(1).Remove(0, 1)]);
             player.PrintToChat(sb.ToString());
-            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(p, "@css/chat")))
+            foreach (var p in Utilities.GetPlayers().Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false } && AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
             {
                 p.PrintToChat(sb.ToString());
             }

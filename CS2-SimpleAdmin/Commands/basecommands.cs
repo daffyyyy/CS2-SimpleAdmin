@@ -30,7 +30,7 @@ public partial class CS2_SimpleAdmin
         
         var userId = caller.UserId.Value;
         
-        if (!string.IsNullOrEmpty(command.GetArg(1)) && AdminManager.PlayerHasPermissions(caller, "@css/kick"))
+        if (!string.IsNullOrEmpty(command.GetArg(1)) && AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/kick"))
         {
             var targets = GetTarget(command);
             
@@ -510,7 +510,7 @@ public partial class CS2_SimpleAdmin
                         printMethod($"• SteamID2: \"{playerInfo.SteamId.SteamId2}\"");
                         printMethod($"• Community link: \"{playerInfo.SteamId.ToCommunityUrl()}\"");
                     }
-                    if (playerInfo.IpAddress != null && AdminManager.PlayerHasPermissions(caller, "@css/showip"))
+                    if (playerInfo.IpAddress != null && AdminManager.PlayerHasPermissions(new SteamID(caller!.SteamID), "@css/showip"))
                         printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
                     printMethod($"• Ping: \"{player.Ping}\"");
                     if (player.Connected == PlayerConnectedState.PlayerConnected)
@@ -722,7 +722,7 @@ public partial class CS2_SimpleAdmin
                 playersToTarget.ForEach(player =>
                 {
                     caller.PrintToConsole(
-                        $"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{(AdminManager.PlayerHasPermissions(caller, "@css/showip") ? player.IpAddress?.Split(":")[0] : "Unknown")}\" SteamID64: \"{player.SteamID}\")");
+                        $"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{(AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/showip") ? player.IpAddress?.Split(":")[0] : "Unknown")}\" SteamID64: \"{player.SteamID}\")");
                 });
                 caller.PrintToConsole("--------- END PLAYER LIST ---------");
             }
@@ -747,9 +747,9 @@ public partial class CS2_SimpleAdmin
                     player.UserId,
                     Name = player.PlayerName,
                     SteamId = player.SteamID.ToString(),
-                    IpAddress = AdminManager.PlayerHasPermissions(caller, "@css/showip") ? player.IpAddress?.Split(":")[0] ?? "Unknown" : "Unknown",
+                    IpAddress = AdminManager.PlayerHasPermissions(new SteamID(caller!.SteamID), "@css/showip") ? player.IpAddress?.Split(":")[0] ?? "Unknown" : "Unknown",
                     player.Ping,
-                    IsAdmin = AdminManager.PlayerHasPermissions(player, "@css/ban") || AdminManager.PlayerHasPermissions(player, "@css/generic"),
+                    IsAdmin = AdminManager.PlayerHasPermissions(new SteamID(player.SteamID), "@css/ban") || AdminManager.PlayerHasPermissions(new SteamID(player.SteamID), "@css/generic"),
                     Stats = new
                     {
                         player.Score,
@@ -961,7 +961,7 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        if (cvar.Name.Equals("sv_cheats") && !AdminManager.PlayerHasPermissions(caller, "@css/cheats"))
+        if (cvar.Name.Equals("sv_cheats") && !AdminManager.PlayerHasPermissions(new SteamID(caller!.SteamID), "@css/cheats"))
         {
             command.ReplyToCommand($"You don't have permissions to change \"{command.GetArg(1)}\".");
             return;

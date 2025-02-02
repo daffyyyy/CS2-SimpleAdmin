@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 
 namespace CS2_SimpleAdmin.Menus;
@@ -36,7 +37,7 @@ public static class FunActionsMenu
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(admin, "@css/generic") == false)
+        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/generic") == false)
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
                               "[SimpleAdmin] " +
@@ -54,45 +55,45 @@ public static class FunActionsMenu
         // options added in order
 
         if (AdminManager.CommandIsOverriden("css_god")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_god"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/cheats"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_god"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/cheats"))
             options.Add(new ChatMenuOptionData(localizer?["sa_godmode"] ?? "God Mode", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_godmode"] ?? "God Mode", GodMode)));
         if (AdminManager.CommandIsOverriden("css_noclip")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_noclip"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/cheats"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_noclip"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/cheats"))
             options.Add(new ChatMenuOptionData(localizer?["sa_noclip"] ?? "No Clip", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_noclip"] ?? "No Clip", NoClip)));
         if (AdminManager.CommandIsOverriden("css_respawn")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_respawn"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/cheats"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_respawn"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/cheats"))
             options.Add(new ChatMenuOptionData(localizer?["sa_respawn"] ?? "Respawn", () => PlayersMenu.OpenDeadMenu(admin, localizer?["sa_respawn"] ?? "Respawn", Respawn)));
         if (AdminManager.CommandIsOverriden("css_give")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_give"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/cheats"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_give"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/cheats"))
             options.Add(new ChatMenuOptionData(localizer?["sa_give_weapon"] ?? "Give Weapon", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_give_weapon"] ?? "Give Weapon", GiveWeaponMenu)));
 
         if (AdminManager.CommandIsOverriden("css_strip")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_strip"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/slay"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_strip"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay"))
             options.Add(new ChatMenuOptionData(localizer?["sa_strip_weapons"] ?? "Strip Weapons", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_strip_weapons"] ?? "Strip Weapons", StripWeapons)));
         if (AdminManager.CommandIsOverriden("css_freeze")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_freeze"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/slay"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_freeze"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay"))
             options.Add(new ChatMenuOptionData(localizer?["sa_freeze"] ?? "Freeze", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_freeze"] ?? "Freeze", Freeze)));
         if (AdminManager.CommandIsOverriden("css_hp")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_hp"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/slay"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_hp"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay"))
             options.Add(new ChatMenuOptionData(localizer?["sa_set_hp"] ?? "Set Hp", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_set_hp"] ?? "Set Hp", SetHpMenu)));
         if (AdminManager.CommandIsOverriden("css_speed")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_speed"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/slay"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_speed"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay"))
             options.Add(new ChatMenuOptionData(localizer?["sa_set_speed"] ?? "Set Speed", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_set_speed"] ?? "Set Speed", SetSpeedMenu)));
         if (AdminManager.CommandIsOverriden("css_gravity")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_gravity"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/slay"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_gravity"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay"))
             options.Add(new ChatMenuOptionData(localizer?["sa_set_gravity"] ?? "Set Gravity", () => PlayersMenu.OpenAliveMenu(admin, localizer?["sa_set_gravity"] ?? "Set Gravity", SetGravityMenu)));
         if (AdminManager.CommandIsOverriden("css_money")
-                ? AdminManager.PlayerHasPermissions(admin, AdminManager.GetPermissionOverrides("css_money"))
-                : AdminManager.PlayerHasPermissions(admin, "@css/slay"))
+                ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_money"))
+                : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/slay"))
             options.Add(new ChatMenuOptionData(localizer?["sa_set_money"] ?? "Set Money", () => PlayersMenu.OpenMenu(admin, localizer?["sa_set_money"] ?? "Set Money", SetMoneyMenu)));
 
         foreach (var menuOptionData in options)
