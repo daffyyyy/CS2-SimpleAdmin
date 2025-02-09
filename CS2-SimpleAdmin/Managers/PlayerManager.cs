@@ -124,14 +124,14 @@ public class PlayerManager
                         var victim = Utilities.GetPlayerFromUserid(userId);
 
                         if (victim == null || !victim.UserId.HasValue) return;
-                        
+
                         Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
                     });
 
                     return;
                 }
 
-                if (fullConnect)
+                if (fullConnect || !fullConnect) // Temp skip
                 {
                     var warns = await CS2_SimpleAdmin.Instance.WarnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
                     var (totalMutes, totalGags, totalSilences) =

@@ -12,6 +12,7 @@ using System.Text;
 using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.UserMessages;
+using CounterStrikeSharp.API.ValveConstants.Protobuf;
 
 namespace CS2_SimpleAdmin;
 
@@ -62,6 +63,9 @@ public partial class CS2_SimpleAdmin
     [GameEventHandler(HookMode.Pre)]
     public HookResult OnClientDisconnect(EventPlayerDisconnect @event, GameEventInfo info)
     {
+        if (@event.Reason is 149 or 6)
+            info.DontBroadcast = true;
+
         var player = @event.Userid;
 
 #if DEBUG
@@ -69,9 +73,7 @@ public partial class CS2_SimpleAdmin
 #endif
 
         if (player == null || !player.IsValid || player.IsBot)
-        {
             return HookResult.Continue;
-        }
 
 #if DEBUG
         Logger.LogCritical("[OnClientDisconnect] After Check");
@@ -103,12 +105,7 @@ public partial class CS2_SimpleAdmin
             GravityPlayers.Remove(player);
 
             if (player.UserId.HasValue)
-            {
-                if (@event.Reason == 149)
-                    info.DontBroadcast = true;
-                
                 PlayersInfo.TryRemove(player.UserId.Value, out _);
-            }
 
             var authorizedSteamId = player.AuthorizedSteamID;
             if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
@@ -132,16 +129,27 @@ public partial class CS2_SimpleAdmin
 #if DEBUG
         Logger.LogCritical("[OnClientConnect]");
 #endif
+        if (!CS2_SimpleAdmin.BannedPlayers.Contains(ipaddress.Split(":")[0]))
+            return;
 
-        Server.NextFrame(() =>
+        Server.NextFrame((() =>
         {
             var player = Utilities.GetPlayerFromSlot(playerslot);
-
             if (player == null || !player.IsValid || player.IsBot)
                 return;
+
+            Helper.KickPlayer(player, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+        }));
         
-            new PlayerManager().LoadPlayerData(player);
-        });
+        // Server.NextFrame(() =>
+        // {
+        //     var player = Utilities.GetPlayerFromSlot(playerslot);
+        //
+        //     if (player == null || !player.IsValid || player.IsBot)
+        //         return;
+        //
+        //     new PlayerManager().LoadPlayerData(player);
+        // });
     }
 
     [GameEventHandler]
@@ -156,11 +164,11 @@ public partial class CS2_SimpleAdmin
         if (player == null || !player.IsValid || player.IsBot)
             return HookResult.Continue;
 
-        if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.UserId.Value, out PlayerInfo? value) &&
-value.WaitingForKick)
-            return HookResult.Continue;
+//         if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.UserId.Value, out PlayerInfo? value) &&
+// value.WaitingForKick)
+//             return HookResult.Continue;
         
-        new PlayerManager().LoadPlayerData(player, true);
+        new PlayerManager().LoadPlayerData(player);
 
         return HookResult.Continue;
     }
@@ -209,6 +217,7 @@ value.WaitingForKick)
         if (!PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Gag, out DateTime? endDateTime) &&
             !PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Silence, out endDateTime))
             return HookResult.Continue;
+        
         if (_localizer != null && endDateTime is not null)
             author.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", author.GetLanguage()));
         return HookResult.Stop;

@@ -409,8 +409,19 @@ internal static class Helper
         // 		_ => arg
         // 	};
         // }
+        var validPlayers = GetValidPlayers().Where(c => c is { IsValid: true, IsBot: false });
 
-        foreach (var controller in GetValidPlayers().Where(c => c is { IsValid: true, IsBot: false }))
+        if (!validPlayers.Any())
+            return;
+
+        if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 3)
+        {
+            validPlayers = validPlayers.Where(c =>
+                AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/kick") ||
+                AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/ban"));
+        }
+        
+        foreach (var controller in validPlayers.ToList())
         {
             var currentMessageArgs = (string[])formattedMessageArgs.Clone();
 
@@ -421,8 +432,7 @@ internal static class Helper
                 currentMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
                 {
                     1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/kick") || AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
-                    2 => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
-                    _ => arg
+                    _ => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
                 };
             }
 
@@ -452,7 +462,6 @@ internal static class Helper
             formattedMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
             {
                 1 => arg.Replace("CALLER", CS2_SimpleAdmin._localizer["sa_admin"]),
-                2 => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
                 _ => arg
             };
         }

@@ -21,6 +21,7 @@ public interface ICS2_SimpleAdminApi
     public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltiedAdded;
     
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1);
+    public void IssuePenalty(SteamID steamid, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1);
     public void LogCommand(CCSPlayerController? caller, string command);
     public void LogCommand(CCSPlayerController? caller, CommandInfo command);
 

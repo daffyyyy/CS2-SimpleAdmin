@@ -446,9 +446,20 @@ public class PermissionManager(Database.Database? database)
             {
                 if (flag.StartsWith($"#"))
                 {
-                    const string sql = "SELECT id FROM `sa_groups` WHERE name = @groupName";
-                    var groupId = await connection.QuerySingleOrDefaultAsync<int?>(sql, new { groupName = flag });
+                    // const string sql = "SELECT id FROM `sa_groups` WHERE name = @groupName";
+                    // var groupId = await connection.QuerySingleOrDefaultAsync<int?>(sql, new { groupName = flag });
 
+                    const string sql = """
+                                           SELECT sgs.group_id 
+                                           FROM sa_groups_servers sgs
+                                           JOIN sa_groups sg ON sgs.group_id = sg.id
+                                           WHERE sg.name = @groupName 
+                                           ORDER BY (sgs.server_id = @serverId) DESC, sgs.server_id ASC
+                                           LIMIT 1
+                                       """;
+
+                    var groupId = await connection.QuerySingleOrDefaultAsync<int?>(sql, new { groupName = flag, CS2_SimpleAdmin.ServerId });
+                    
                     if (groupId != null)
                     {
                         const string updateAdminGroup = "UPDATE `sa_admins` SET group_id = @groupId WHERE id = @adminId";

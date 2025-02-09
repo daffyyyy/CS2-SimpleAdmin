@@ -72,6 +72,40 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
                 throw new ArgumentOutOfRangeException(nameof(penaltyType), penaltyType, null);
         }
     }
+    
+    public void IssuePenalty(SteamID steamid, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1)
+    {
+        switch (penaltyType)
+        {
+            case PenaltyType.Ban:
+            {
+                CS2_SimpleAdmin.Instance.AddBan(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Gag:
+            {
+                CS2_SimpleAdmin.Instance.AddGag(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Mute:
+            {
+                CS2_SimpleAdmin.Instance.AddMute(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Silence:
+            {
+                CS2_SimpleAdmin.Instance.AddSilence(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Warn:
+            {
+                CS2_SimpleAdmin.Instance.AddWarn(admin, steamid, duration, reason);
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(penaltyType), penaltyType, null);
+        }
+    }
 
     public void LogCommand(CCSPlayerController? caller, string command)
     {
