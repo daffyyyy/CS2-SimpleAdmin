@@ -94,7 +94,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message if necessary
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Schedule a kick timer
@@ -420,7 +420,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message if necessary
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Log the warning command

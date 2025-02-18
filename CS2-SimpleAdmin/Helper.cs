@@ -388,15 +388,23 @@ internal static class Helper
         _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
     }
 
-    public static void ShowAdminActivity(string messageKey, string? callerName = null, params object[] messageArgs)
+    public static void ShowAdminActivity(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs)
     {
+        string[] publishActions = ["ban", "gag", "silence", "mute"];
+        
         if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 0) return;
         if (CS2_SimpleAdmin._localizer == null) return;
+        
+        if (string.IsNullOrWhiteSpace(callerName))
+            callerName = CS2_SimpleAdmin._localizer["sa_console"];
 
-        // Determine the localized message key
-        var localizedMessageKey = $"{messageKey}";
         var formattedMessageArgs = messageArgs.Select(arg => arg.ToString() ?? string.Empty).ToArray();
-
+        
+        if (dontPublish == false && publishActions.Any(messageKey.Contains))
+        {
+            CS2_SimpleAdmin.SimpleAdminApi?.OnAdminShowActivityEvent(messageKey, callerName, dontPublish, messageArgs);
+        }
+        
         // // Replace placeholder based on showActivityType
         // for (var i = 0; i < formattedMessageArgs.Length; i++)
         // {
@@ -437,7 +445,7 @@ internal static class Helper
             }
 
             // Send the localized message to each player
-            controller.SendLocalizedMessage(CS2_SimpleAdmin._localizer, localizedMessageKey, currentMessageArgs.Cast<object>().ToArray());
+            controller.SendLocalizedMessage(CS2_SimpleAdmin._localizer, messageKey, currentMessageArgs.Cast<object>().ToArray());
         }
     }
 
