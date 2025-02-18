@@ -102,7 +102,7 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
         else
         {
             Server.ExecuteCommand(Config.CommandToExecute.Replace("{steamid64}", player.SteamID.ToString())
-                .Replace("{duration}", Config.Duration.ToString().Replace("{reason}", $"\"{Config.Reason}\""))
+                .Replace("{duration}", Config.Duration.ToString()).Replace("{reason}", $"\"{Config.Reason}\"")
                 .Replace("{userid}", player.UserId.Value.ToString()));
         }
     }
