@@ -34,8 +34,6 @@ public partial class CS2_SimpleAdmin
             : _localizer?["sa_unknown"] ?? "Unknown";
 
         reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
-
-
         var time = Helper.ParsePenaltyTime(command.GetArg(2));
 
         playersToTarget.ForEach(player =>
@@ -96,7 +94,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message if necessary
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Schedule a kick timer
@@ -120,6 +118,42 @@ public partial class CS2_SimpleAdmin
         }
         
         Helper.SendDiscordPenaltyMessage(caller, player, reason, time, PenaltyType.Ban, _localizer);
+    }
+
+    internal void AddBan(CCSPlayerController? caller, SteamID steamid, int time, string reason, BanManager? banManager = null)
+    {
+        // Set default caller name if not provided
+        var callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
+        
+        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
+
+        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
+        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+
+        if (player != null && player.IsValid)
+        {
+            if (!caller.CanTarget(player))
+                return;
+
+            Ban(caller, player, time, reason, callerName, silent: true);
+            //command.ReplyToCommand($"Banned player {player.PlayerName}.");
+        }
+        else
+        {
+            if (!caller.CanTarget(steamid))
+                return;
+            
+            // Asynchronous ban operation if player is not online or not found
+            Task.Run(async () =>
+            {
+                int? penaltyId = await BanManager.AddBanBySteamid(steamid.SteamId64.ToString(), adminInfo, reason, time);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamid, adminInfo, PenaltyType.Ban, reason, time, penaltyId);
+            });
+            
+            Helper.SendDiscordPenaltyMessage(caller, steamid.SteamId64.ToString(), reason, time, PenaltyType.Ban, _localizer);
+        }
     }
 
     [RequiresPermissions("@css/ban")]
@@ -386,7 +420,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message if necessary
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Log the warning command
@@ -397,6 +431,63 @@ public partial class CS2_SimpleAdmin
 
         // Send Discord notification for the warning
         Helper.SendDiscordPenaltyMessage(caller, player, reason, time, PenaltyType.Warn, _localizer);
+    }
+    
+    internal void AddWarn(CCSPlayerController? caller, SteamID steamid, int time, string reason, WarnManager? warnManager = null)
+    {
+        // Set default caller name if not provided
+        var callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
+        
+        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
+
+        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
+        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+
+        if (player != null && player.IsValid)
+        {
+            if (!caller.CanTarget(player))
+                return;
+
+            Warn(caller, player, time, reason, callerName);
+            //command.ReplyToCommand($"Banned player {player.PlayerName}.");
+        }
+        else
+        {
+            if (!caller.CanTarget(steamid))
+                return;
+            
+            // Asynchronous ban operation if player is not online or not found
+            Task.Run(async () =>
+            {
+                int? penaltyId = await WarnManager.AddWarnBySteamid(steamid.SteamId64.ToString(), adminInfo, reason, time);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamid, adminInfo, PenaltyType.Warn, reason, time, penaltyId);
+
+                // Check for warn thresholds and execute punish command if applicable
+                var totalWarns = await WarnManager.GetPlayerWarnsCount(steamid.SteamId64.ToString());
+                if (Config.WarnThreshold.Count > 0)
+                {
+                    string? punishCommand = null;
+                    var lastKey = Config.WarnThreshold.Keys.Max();
+
+                    if (totalWarns >= lastKey)
+                        punishCommand = Config.WarnThreshold[lastKey];
+                    else if (Config.WarnThreshold.TryGetValue(totalWarns, out var value))
+                        punishCommand = value;
+
+                    if (!string.IsNullOrEmpty(punishCommand))
+                    {
+                        await Server.NextFrameAsync(() =>
+                        {
+                            Server.ExecuteCommand(punishCommand.Replace("STEAMID64", steamid.SteamId64.ToString()));
+                        });
+                    }
+                }
+            });
+            
+            Helper.SendDiscordPenaltyMessage(caller, steamid.SteamId64.ToString(), reason, time, PenaltyType.Warn, _localizer);
+        }
     }
     
     [RequiresPermissions("@css/kick")]

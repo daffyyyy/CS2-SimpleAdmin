@@ -62,7 +62,7 @@ public partial class CS2_SimpleAdmin
     private static readonly PluginCapability<IMenuApi> MenuCapability = new("menu:nfcore");
 
     // Shared API
-    private Api.CS2_SimpleAdminApi? SimpleAdminApi { get; set; }
+    internal static Api.CS2_SimpleAdminApi? SimpleAdminApi { get; set; }
     
     // Managers
     internal PermissionManager PermissionManager = new(Database);

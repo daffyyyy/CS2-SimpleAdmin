@@ -87,7 +87,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Increment the player's total gags count
@@ -103,6 +103,41 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.SendDiscordPenaltyMessage(caller, player, reason, time, PenaltyType.Gag, _localizer);
+    }
+    
+    internal void AddGag(CCSPlayerController? caller, SteamID steamid, int time, string reason, MuteManager? muteManager = null)
+    {
+        // Set default caller name if not provided
+        var callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
+        
+        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
+
+        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
+        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+
+        if (player != null && player.IsValid)
+        {
+            if (!caller.CanTarget(player))
+                return;
+            
+            Gag(caller, player, time, reason, callerName, silent: true);
+        }
+        else
+        {
+            if (!caller.CanTarget(steamid))
+                return;
+            
+            // Asynchronous ban operation if player is not online or not found
+            Task.Run(async () =>
+            {
+                int? penaltyId = await MuteManager.AddMuteBySteamid(steamid.SteamId64.ToString(), adminInfo, reason, time, 3);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamid, adminInfo, PenaltyType.Gag, reason, time, penaltyId);
+            });
+            
+            Helper.SendDiscordPenaltyMessage(caller, steamid.SteamId64.ToString(), reason, time, PenaltyType.Gag, _localizer);
+        }
     }
 
     [RequiresPermissions("@css/chat")]
@@ -321,7 +356,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Increment the player's total mutes count
@@ -402,6 +437,41 @@ public partial class CS2_SimpleAdmin
 
         // Log the mute command and respond to the command
         Helper.LogCommand(caller, command);
+    }
+    
+    internal void AddMute(CCSPlayerController? caller, SteamID steamid, int time, string reason, MuteManager? muteManager = null)
+    {
+        // Set default caller name if not provided
+        var callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
+        
+        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
+
+        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
+        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+
+        if (player != null && player.IsValid)
+        {
+            if (!caller.CanTarget(player))
+                return;
+            
+            Mute(caller, player, time, reason, callerName, silent: true);
+        }
+        else
+        {
+            if (!caller.CanTarget(steamid))
+                return;
+            
+            // Asynchronous ban operation if player is not online or not found
+            Task.Run(async () =>
+            {
+                int? penaltyId = await MuteManager.AddMuteBySteamid(steamid.SteamId64.ToString(), adminInfo, reason, time, 1);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamid, adminInfo, PenaltyType.Mute, reason, time, penaltyId);
+            });
+            
+            Helper.SendDiscordPenaltyMessage(caller, steamid.SteamId64.ToString(), reason, time, PenaltyType.Mute, _localizer);
+        }
     }
 
     [RequiresPermissions("@css/chat")]
@@ -560,7 +630,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Increment the player's total silences count
@@ -641,6 +711,41 @@ public partial class CS2_SimpleAdmin
 
         // Log the silence command and respond to the command
         Helper.LogCommand(caller, command);
+    }
+    
+    internal void AddSilence(CCSPlayerController? caller, SteamID steamid, int time, string reason, MuteManager? muteManager = null)
+    {
+        // Set default caller name if not provided
+        var callerName = !string.IsNullOrEmpty(caller?.PlayerName) 
+            ? caller.PlayerName 
+            : (_localizer?["sa_console"] ?? "Console");
+        
+        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
+
+        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
+        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+
+        if (player != null && player.IsValid)
+        {
+            if (!caller.CanTarget(player))
+                return;
+            
+            Silence(caller, player, time, reason, callerName, silent: true);
+        }
+        else
+        {
+            if (!caller.CanTarget(steamid))
+                return;
+            
+            // Asynchronous ban operation if player is not online or not found
+            Task.Run(async () =>
+            {
+                int? penaltyId = await MuteManager.AddMuteBySteamid(steamid.SteamId64.ToString(), adminInfo, reason, time, 2);
+                SimpleAdminApi?.OnPlayerPenaltiedAddedEvent(steamid, adminInfo, PenaltyType.Silence, reason, time, penaltyId);
+            });
+            
+            Helper.SendDiscordPenaltyMessage(caller, steamid.SteamId64.ToString(), reason, time, PenaltyType.Silence, _localizer);
+        }
     }
 
     [RequiresPermissions("@css/chat")]

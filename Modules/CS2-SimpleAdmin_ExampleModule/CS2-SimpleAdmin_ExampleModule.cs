@@ -12,7 +12,7 @@ namespace CS2_SimpleAdmin_ExampleModule;
 public class CS2_SimpleAdmin_ExampleModule: BasePlugin
 {
     public override string ModuleName => "[CS2-SimpleAdmin] Example module";
-    public override string ModuleVersion => "v1.0.0";
+    public override string ModuleVersion => "v1.0.1";
     public override string ModuleAuthor => "daffyy";
 
     private int? _serverId;
@@ -67,6 +67,13 @@ public class CS2_SimpleAdmin_ExampleModule: BasePlugin
         commandInfo.ReplyToCommand($"Your total gags: {playerInfo?.TotalGags}");
         commandInfo.ReplyToCommand($"Your total mutes: {playerInfo?.TotalMutes}");
         commandInfo.ReplyToCommand($"Your total silences: {playerInfo?.SteamId}");
+    }
+    
+    [ConsoleCommand("css_testaddban")]
+    [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
+    public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo commandInfo)
+    {
+        _sharedApi?.IssuePenalty(new SteamID(76561197960287930), null, PenaltyType.Ban, "My super reason", 10);
     }
 
     private void OnPlayerPenaltied(PlayerInfo player, PlayerInfo? admin, PenaltyType penaltyType,

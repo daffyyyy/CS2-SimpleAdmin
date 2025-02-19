@@ -27,12 +27,15 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     
     public event Action<PlayerInfo, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltied;
     public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltiedAdded;
+    public event Action<string, string?, bool, object>? OnAdminShowActivity;
 
     public void OnPlayerPenaltiedEvent(PlayerInfo player, PlayerInfo? admin, PenaltyType penaltyType, string reason,
         int duration, int? penaltyId) =>  OnPlayerPenaltied?.Invoke(player, admin, penaltyType, reason, duration, penaltyId, CS2_SimpleAdmin.ServerId);
     
     public void OnPlayerPenaltiedAddedEvent(SteamID player, PlayerInfo? admin, PenaltyType penaltyType, string reason,
         int duration, int? penaltyId) =>  OnPlayerPenaltiedAdded?.Invoke(player, admin, penaltyType, reason, duration, penaltyId, CS2_SimpleAdmin.ServerId);
+    
+    public void OnAdminShowActivityEvent(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs) =>  OnAdminShowActivity?.Invoke(messageKey, callerName, dontPublish, messageArgs);
 
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1)
     {
@@ -72,6 +75,40 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
                 throw new ArgumentOutOfRangeException(nameof(penaltyType), penaltyType, null);
         }
     }
+    
+    public void IssuePenalty(SteamID steamid, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1)
+    {
+        switch (penaltyType)
+        {
+            case PenaltyType.Ban:
+            {
+                CS2_SimpleAdmin.Instance.AddBan(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Gag:
+            {
+                CS2_SimpleAdmin.Instance.AddGag(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Mute:
+            {
+                CS2_SimpleAdmin.Instance.AddMute(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Silence:
+            {
+                CS2_SimpleAdmin.Instance.AddSilence(admin, steamid, duration, reason);
+                break;
+            }
+            case PenaltyType.Warn:
+            {
+                CS2_SimpleAdmin.Instance.AddWarn(admin, steamid, duration, reason);
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(penaltyType), penaltyType, null);
+        }
+    }
 
     public void LogCommand(CCSPlayerController? caller, string command)
     {
@@ -86,5 +123,10 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     public bool IsAdminSilent(CCSPlayerController player)
     {
         return CS2_SimpleAdmin.SilentPlayers.Contains(player.Slot);
+    }
+
+    public void ShowAdminActivity(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs)
+    {
+        Helper.ShowAdminActivity(messageKey, callerName, dontPublish, messageArgs);
     }
 }

@@ -49,7 +49,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Log the command and send Discord notification
@@ -133,7 +133,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -161,7 +161,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -212,7 +212,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -261,7 +261,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -317,7 +317,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -373,7 +373,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -425,7 +425,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -483,7 +483,7 @@ public partial class CS2_SimpleAdmin
 
         if (_localizer != null)
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -580,7 +580,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 
-        Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+        Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
     }
 
     [CommandHelper(1, "<#userid or name> <new name>")]
@@ -621,7 +621,7 @@ public partial class CS2_SimpleAdmin
             // Display admin activity message to other players
             if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
             
             // Rename the player
             player.Rename(newName);
@@ -662,7 +662,7 @@ public partial class CS2_SimpleAdmin
             // Display admin activity message to other players
             if (caller != null && !SilentPlayers.Contains(caller.Slot))
             {
-                Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+                Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
             }
             
             // Determine if the new name is valid and update the renamed players list
@@ -732,7 +732,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
 
-        Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+        Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
     }
 
     [CommandHelper(1, "<#userid or name>")]
@@ -801,7 +801,7 @@ public partial class CS2_SimpleAdmin
             // Show admin activity
             if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)
             {
-                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
             }
         }
     }
@@ -872,7 +872,7 @@ public partial class CS2_SimpleAdmin
             // Show admin activity
             if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)
             {
-                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
             }
         }
     }

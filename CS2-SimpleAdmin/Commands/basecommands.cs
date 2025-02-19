@@ -560,7 +560,7 @@ public partial class CS2_SimpleAdmin
                             // Display admin activity message if necessary
                             if (!SilentPlayers.Contains(caller.Slot))
                             {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false ,adminActivityArgs);
                             }
                             
                             MenuApi?.CloseMenu(caller);
@@ -585,7 +585,7 @@ public partial class CS2_SimpleAdmin
                             // Display admin activity message to other players
                             if (!SilentPlayers.Contains(caller.Slot))
                             {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
                             }
                             
                             MenuApi?.CloseMenu(caller);
@@ -610,7 +610,7 @@ public partial class CS2_SimpleAdmin
                             // Display admin activity message to other players
                             if (!SilentPlayers.Contains(caller.Slot))
                             {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
                             }
                             
                             MenuApi?.CloseMenu(caller);
@@ -635,7 +635,7 @@ public partial class CS2_SimpleAdmin
                             // Display admin activity message to other players
                             if (!SilentPlayers.Contains(caller.Slot))
                             {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, adminActivityArgs);
+                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
                             }
                             
                             MenuApi?.CloseMenu(caller);
@@ -827,7 +827,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Schedule the kick for the player
@@ -905,7 +905,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         Helper.LogCommand(caller, command?.GetCommandString ?? $"css_map {map}");
@@ -935,7 +935,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, ["CALLER", map]);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, ["CALLER", map]);
         }
 
         // Add timer to execute the map change command after a delay

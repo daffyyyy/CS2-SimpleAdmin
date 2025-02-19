@@ -134,7 +134,7 @@ public class PlayerManager
                     return;
                 }
 
-                if (fullConnect)
+                if (fullConnect || !fullConnect) // Temp skip
                 {
                     var warns = await CS2_SimpleAdmin.Instance.WarnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
                     var (totalMutes, totalGags, totalSilences) =

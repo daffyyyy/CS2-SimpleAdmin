@@ -46,7 +46,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Log the command
@@ -109,7 +109,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
     }
 
@@ -152,7 +152,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Schedule unfreeze for the player if time is specified
@@ -203,7 +203,7 @@ public partial class CS2_SimpleAdmin
         // Display admin activity message to other players
         if (caller == null || !SilentPlayers.Contains(caller.Slot))
         {
-            Helper.ShowAdminActivity(activityMessageKey, callerName, adminActivityArgs);
+            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
         }
 
         // Log the command and send Discord notification
