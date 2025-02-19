@@ -245,11 +245,14 @@ public class OtherSettings
 
     [JsonPropertyName("AdditionalCommandsToLog")]
     public List<string> AdditionalCommandsToLog { get; set; } = new();
+
+    [JsonPropertyName("HideStealthPlayersFromSpecList")]
+    public bool HideStealthPlayersFromSpecList  {get; set; } = false;
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
 {
-    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 24;
+    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 25;
 
     [JsonPropertyName("DatabaseHost")]
     public string DatabaseHost { get; set; } = "";

@@ -24,7 +24,7 @@ public class ServerManager
         CS2_SimpleAdmin.Instance.AddTimer(1.2f, () =>
         {
             if (CS2_SimpleAdmin.ServerLoaded || CS2_SimpleAdmin.ServerId != null || CS2_SimpleAdmin.Database == null) return;
-            
+
             if (_getIpTryCount > 32 && Helper.GetServerIp().StartsWith("0.0.0.0") || string.IsNullOrEmpty(Helper.GetServerIp()))
             {
                 CS2_SimpleAdmin._logger?.LogError("Unable to load server data - can't fetch ip address!");
@@ -40,13 +40,22 @@ public class ServerManager
                 if (_getIpTryCount <= 32 && (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0")))
                 {
                     _getIpTryCount++;
-                    
+
                     LoadServerData();
                     return;
                 }
             }
 
-            string? address = !string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) ? CS2_SimpleAdmin.Instance.Config.DefaultServerIP : $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
+            string address = CS2_SimpleAdmin.Instance.Config.DefaultServerIP;
+
+            if(string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) || !CS2_SimpleAdmin.Instance.Config.DefaultServerIP.Contains(":"))
+            {
+                if(!string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) && !CS2_SimpleAdmin.Instance.Config.DefaultServerIP.Contains(":"))
+                    CS2_SimpleAdmin._logger?.LogError("DefaultServerIP was set but no port was provided!");
+
+                address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
+            }
+
             var hostname = ConVar.Find("hostname")!.StringValue;
             var rcon = ConVar.Find("rcon_password")!.StringValue;
             CS2_SimpleAdmin.IpAddress = address;
