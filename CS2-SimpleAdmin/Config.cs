@@ -250,6 +250,9 @@ public class CS2_SimpleAdminConfig : BasePluginConfig
 
     [JsonPropertyName("DatabaseName")]
     public string DatabaseName { get; set; } = "";
+    
+    [JsonPropertyName("DatabaseSSlMode")]
+    public string DatabaseSSlMode { get; set; } = "preferred";
 
     [JsonPropertyName("OtherSettings")]
     public OtherSettings OtherSettings { get; set; } = new();
