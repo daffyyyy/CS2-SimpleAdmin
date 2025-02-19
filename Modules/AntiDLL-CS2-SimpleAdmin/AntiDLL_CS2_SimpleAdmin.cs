@@ -86,8 +86,15 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
         _bannedPlayers.Remove(playerSlot);
     }
 
-    private void OnDetection(CCSPlayerController player, string eventName)
+    private void OnDetection(CCSPlayerController? player, string eventName)
     {
+        if (player == null || !player.IsValid || player.IsBot) return;
+        if (player.Connected != PlayerConnectedState.PlayerConnected)
+        {
+            AddTimer(3.0f, () => OnDetection(player, eventName));
+            return;
+        }
+        
         if (!_bannedPlayers.Add(player.Slot))
             return;
 
