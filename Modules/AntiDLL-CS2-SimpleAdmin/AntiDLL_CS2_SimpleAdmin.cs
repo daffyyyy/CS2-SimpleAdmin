@@ -1,7 +1,7 @@
-﻿using CounterStrikeSharp.API.ValveConstants.Protobuf;
+﻿namespace AntiDLL_CS2_SimpleAdmin;
 
-namespace AntiDLL_CS2_SimpleAdmin;
-
+using CounterStrikeSharp.API.Core.Attributes.Registration;
+using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using System.Text.Json.Serialization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Modules.Entities;
@@ -9,7 +9,6 @@ using CS2_SimpleAdminApi;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using Microsoft.Extensions.Logging;
-
 using AntiDLL.API;
 
 public class PluginConfig : IBasePluginConfig
@@ -23,16 +22,17 @@ public class PluginConfig : IBasePluginConfig
 
 public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginConfig>
 {
+    private int _banType;
     public PluginConfig Config { get; set; } = new();
     private readonly HashSet<int> _bannedPlayers = [];
+    private readonly HashSet<int> _detections = [];
     private static PluginCapability<IAntiDLL> AntiDll { get; } = new("AntiDLL");
     private static PluginCapability<ICS2_SimpleAdminApi> SimpleAdminApi { get; } = new("simpleadmin:api");
-    private int _banType = 0;
     private static ICS2_SimpleAdminApi? _simpleAdminApi;
     
     public override string ModuleName => "AntiDLL [CS2-SimpleAdmin Module]";
     public override string ModuleDescription => "AntiDLL module for CS2-SimpleAdmin integration";
-    public override string ModuleVersion => "1.0.0";
+    public override string ModuleVersion => "1.0.1";
     public override string ModuleAuthor => "daffyy";
 
     public override void Load(bool hotReload)
@@ -65,6 +65,9 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
             Unload(false);
         }
 
+        if (Config.BanType != "auto" && Config.BanType != "simpleadmin")
+            return;
+
         try
         {
             _simpleAdminApi = SimpleAdminApi.Get();
@@ -79,32 +82,55 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
 
     private void OnClientDisconnect(int playerSlot)
     {
-        var player = Utilities.GetPlayerFromSlot(playerSlot);
-        if (player == null || !player.IsValid || player.IsBot)
-            return;
+        // var player = Utilities.GetPlayerFromSlot(playerSlot);
+        // if (player == null || !player.IsValid || player.IsBot)
+        //     return;
 
         _bannedPlayers.Remove(playerSlot);
+        _detections.Remove(playerSlot);
+    }
+
+    [GameEventHandler]
+    public HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo _)
+    {
+        var player = @event.Userid;
+        if (player == null || !player.IsValid || player.IsBot || !_detections.Contains(player.Slot)) 
+            return HookResult.Continue;
+        
+        if (!_bannedPlayers.Contains(player.Slot) && player.Connected == PlayerConnectedState.PlayerConnected && player.TeamNum != 0)
+            PunishPlayer(player);
+
+        return HookResult.Continue;
     }
 
     private void OnDetection(CCSPlayerController? player, string eventName)
     {
         if (player == null || !player.IsValid || player.IsBot) return;
-        if (player.Connected != PlayerConnectedState.PlayerConnected)
-        {
-            AddTimer(3.0f, () => OnDetection(player, eventName));
+        if (!_detections.Add(player.Slot))
             return;
-        }
         
+        // if (player.Connected != PlayerConnectedState.PlayerConnected)
+        // {
+        //     _detections.Add(player.Slot);
+        //     // AddTimer(3.0f, () => OnDetection(player, eventName));
+        //     return;
+        // }
+        
+        Logger.LogInformation("Detected \"{eventName}\" for \"{player}({steamid})\"", eventName, player.PlayerName, player.SteamID.ToString());
+    }
+
+    private void PunishPlayer(CCSPlayerController player)
+    {
         if (!_bannedPlayers.Add(player.Slot))
             return;
-
+        
         if (_banType == 1 && _simpleAdminApi != null)
         {
             _simpleAdminApi.IssuePenalty(new SteamID(player.SteamID), null, PenaltyType.Ban, Config.Reason, Config.Duration);
         }
         else if (Config.BanType == "kick")
         {
-            player.Disconnect(NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED_UNTRUSTEDACCOUNT);
+            player.Disconnect(NetworkDisconnectionReason.NETWORK_DISCONNECT_KICKED_VACNETABNORMALBEHAVIOR);
         }
         else
         {
