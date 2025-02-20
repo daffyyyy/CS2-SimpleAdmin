@@ -518,7 +518,7 @@ internal static class Helper
     public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, CCSPlayerController? target, string reason, int duration, PenaltyType penalty, IStringLocalizer? localizer)
     {
         if (localizer == null) return;
-        
+
         var penaltySetting = penalty switch
         {
             PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyBanSettings,
@@ -532,7 +532,7 @@ internal static class Helper
         var webhookUrl = penaltySetting.FirstOrDefault(s => s.Name.Equals("Webhook"))?.Value;
 
         if (string.IsNullOrEmpty(webhookUrl)) return;
-        
+
         const string defaultCommunityUrl = "<https://steamcommunity.com/profiles/0>";
         var callerCommunityUrl = caller != null ? $"<{new SteamID(caller.SteamID).ToCommunityUrl()}>" : defaultCommunityUrl;
         var targetCommunityUrl = target != null ? $"<{new SteamID(target.SteamID).ToCommunityUrl()}>" : defaultCommunityUrl;
@@ -612,10 +612,10 @@ internal static class Helper
         });
     }
     
-        public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, string steamId, string reason, int duration, PenaltyType penalty, IStringLocalizer? localizer)
+    public static void SendDiscordPenaltyMessage(CCSPlayerController? caller, string steamId, string reason, int duration, PenaltyType penalty, IStringLocalizer? localizer)
     {
         if (localizer == null) return;
-        
+
         var penaltySetting = penalty switch
         {
             PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.Discord.DiscordPenaltyBanSettings,
