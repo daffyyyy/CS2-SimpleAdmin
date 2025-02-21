@@ -73,7 +73,9 @@ public class CS2_SimpleAdmin_ExampleModule: BasePlugin
     [CommandHelper(whoCanExecute: CommandUsage.SERVER_ONLY)]
     public void OnAddBanCommand(CCSPlayerController? caller, CommandInfo commandInfo)
     {
-        _sharedApi?.IssuePenalty(new SteamID(76561197960287930), null, PenaltyType.Ban, "My super reason", 10);
+        var player = Utilities.GetPlayerFromSteamId(76561197960287930);
+        if(player != null)
+            _sharedApi?.IssuePenalty(player, null, PenaltyType.Ban, "My super reason", 10);
     }
 
     private void OnPlayerPenaltied(PlayerInfo player, PlayerInfo? admin, PenaltyType penaltyType,

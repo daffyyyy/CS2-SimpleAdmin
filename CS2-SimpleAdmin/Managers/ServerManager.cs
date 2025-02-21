@@ -46,15 +46,7 @@ public class ServerManager
                 }
             }
 
-            string address = CS2_SimpleAdmin.Instance.Config.DefaultServerIP;
-
-            if(string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) || !CS2_SimpleAdmin.Instance.Config.DefaultServerIP.Contains(":"))
-            {
-                if(!string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) && !CS2_SimpleAdmin.Instance.Config.DefaultServerIP.Contains(":"))
-                    CS2_SimpleAdmin._logger?.LogError("DefaultServerIP was set but no port was provided!");
-
-                address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
-            }
+            string address = $"{(!string.IsNullOrWhiteSpace(CS2_SimpleAdmin.Instance.Config.DefaultServerIP) ? CS2_SimpleAdmin.Instance.Config.DefaultServerIP : ConVar.Find("ip")!.StringValue)}:{ConVar.Find("hostport")!.GetPrimitiveValue<int>()}";
 
             var hostname = ConVar.Find("hostname")!.StringValue;
             var rcon = ConVar.Find("rcon_password")!.StringValue;
