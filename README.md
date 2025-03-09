@@ -36,7 +36,7 @@
 The configuration file (`CS2-SimpleAdmin.json`) will be auto-generated after the first launch. It contains settings for MySQL connections, command permissions, and other plugin-specific configurations.
 
 ## 📙 Wiki
-For detailed documentation, guides, and tutorials, please visit [Wiki](https://cs2-simpleadmin.daffyy.love).
+For detailed documentation, guides, and tutorials, please visit [Wiki](https://cs2-simpleadmin.daffyy.dev).
 
 ## 🛠️ Development
 This project started as a base for other plugins but has grown into a standalone admin management tool. Contributions are welcome! If you'd like to help with development or have ideas for new features, feel free to submit a pull request or open an issue.

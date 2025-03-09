@@ -101,7 +101,7 @@ public class ServerManager
 
                     try
                     {
-                        await client.GetAsync($"https://api.daffyy.love/index.php{queryString}");
+                        await client.GetAsync($"https://api.daffyy.dev/index.php{queryString}");
                     }
                     catch (HttpRequestException ex)
                     {

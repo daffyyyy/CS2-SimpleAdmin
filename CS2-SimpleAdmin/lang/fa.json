@@ -107,6 +107,7 @@
 	"sa_admin_gravity_message": "{lightred}{0}{default} جاذبه {lightred}{1}{default} را تغییر داد!",
 	"sa_admin_money_message": "{lightred}{0}{default} پول {lightred}{1}{default} را تغییر داد!",
 	"sa_admin_god_message": "{lightred}{0}{default} حالت خدا را برای {lightred}{1}{default} تغییر داد!",
+	"sa_admin_resize_message": "{lightred}{0}{default} اندازه {lightred}{1}{default} را تغییر داد!",
 	"sa_admin_slay_message": "{lightred}{0}{default} {lightred}{1}{default} را کشت!",
 	"sa_admin_slap_message": "{lightred}{0}{default} به {lightred}{1}{default} سیلی زد!",
 	"sa_admin_changemap_message": "{lightred}{0}{default} نقشه را به {lightred}{1}{default} تغییر داد!",

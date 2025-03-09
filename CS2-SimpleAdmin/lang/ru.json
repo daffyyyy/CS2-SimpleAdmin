@@ -107,6 +107,7 @@
 	"sa_admin_gravity_message": "{lightred}{0}{default} изменил гравитацию для {lightred}{1}{default}!",
 	"sa_admin_money_message": "{lightred}{0}{default} изменил количество денег у {lightred}{1}{default}!",
 	"sa_admin_god_message": "{lightred}{0}{default} изменил режим бога для {lightred}{1}{default}!",
+	"sa_admin_resize_message": "{lightred}{0}{default} изменил размер {lightred}{1}{default}!",
 	"sa_admin_slay_message": "{lightred}{0}{default} убил {lightred}{1}{default}!",
 	"sa_admin_slap_message": "{lightred}{0}{default} дал пощечину {lightred}{1}{default}!",
 	"sa_admin_changemap_message": "{lightred}{0}{default} изменил карту на {lightred}{1}{default}!",

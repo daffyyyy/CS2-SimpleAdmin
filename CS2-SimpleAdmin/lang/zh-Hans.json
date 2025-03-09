@@ -105,6 +105,7 @@
 	"sa_admin_gravity_message": "{lightred}{0}{default} 修改了 {lightred}{1}{default} 的重力!",
 	"sa_admin_money_message": "{lightred}{0}{default} 修改了 {lightred}{1}{default} 的金钱!",
 	"sa_admin_god_message": "{lightred}{0}{default} 切换了 {lightred}{1}{default} 的上帝模式!",
+	"sa_admin_resize_message": "{lightred}{0}{default} 更改了 {lightred}{1}{default} 的大小!",
 	"sa_admin_slay_message": "{lightred}{0}{default} 击杀了 {lightred}{1}{default}!",
 	"sa_admin_slap_message": "{lightred}{0}{default} 掌掴了 {lightred}{1}{default}!",
 	"sa_admin_changemap_message": "{lightred}{0}{default} 将地图更换为 {lightred}{1}{default}!",

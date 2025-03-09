@@ -52,46 +52,49 @@ public class PlayerManager
         // Perform asynchronous database operations within a single method
         Task.Run(async () =>
         {
-            try
+            if (_config.OtherSettings.CheckMultiAccountsByIp)
             {
-                await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
-                const string selectQuery = "SELECT COUNT(*) FROM `sa_players_ips` WHERE steamid = @SteamID AND address = @IPAddress;";
-                var recordExists = await connection.ExecuteScalarAsync<int>(selectQuery, new
+                try
                 {
-                    SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
-                    IPAddress = ipAddress
-                });
-                
-                if (recordExists > 0)
-                {
-                    const string updateQuery = """
-                                               UPDATE `sa_players_ips`
-                                               SET used_at = CURRENT_TIMESTAMP
-                                               WHERE steamid = @SteamID AND address = @IPAddress;
-                                               """;
-                    await connection.ExecuteAsync(updateQuery, new
+                    await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
+                    const string selectQuery = "SELECT COUNT(*) FROM `sa_players_ips` WHERE steamid = @SteamID AND address = @IPAddress;";
+                    var recordExists = await connection.ExecuteScalarAsync<int>(selectQuery, new
                     {
                         SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
                         IPAddress = ipAddress
                     });
-                }
-                else
-                {
-                    const string insertQuery = """
-                                               INSERT INTO `sa_players_ips` (steamid, address, used_at)
-                                               VALUES (@SteamID, @IPAddress, CURRENT_TIMESTAMP);
-                                               """;
-                    await connection.ExecuteAsync(insertQuery, new
+                    
+                    if (recordExists > 0)
                     {
-                        SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
-                        IPAddress = ipAddress
-                    });
+                        const string updateQuery = """
+                                                   UPDATE `sa_players_ips`
+                                                   SET used_at = CURRENT_TIMESTAMP
+                                                   WHERE steamid = @SteamID AND address = @IPAddress;
+                                                   """;
+                        await connection.ExecuteAsync(updateQuery, new
+                        {
+                            SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                            IPAddress = ipAddress
+                        });
+                    }
+                    else
+                    {
+                        const string insertQuery = """
+                                                   INSERT INTO `sa_players_ips` (steamid, address, used_at)
+                                                   VALUES (@SteamID, @IPAddress, CURRENT_TIMESTAMP);
+                                                   """;
+                        await connection.ExecuteAsync(insertQuery, new
+                        {
+                            SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                            IPAddress = ipAddress
+                        });
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                CS2_SimpleAdmin._logger?.LogError(
-                    $"Unable to save ip address for {CS2_SimpleAdmin.PlayersInfo[userId].Name} ({ipAddress}) {ex.Message}");   
+                catch (Exception ex)
+                {
+                    CS2_SimpleAdmin._logger?.LogError(
+                        $"Unable to save ip address for {CS2_SimpleAdmin.PlayersInfo[userId].Name} ({ipAddress}) {ex.Message}");   
+                }
             }
 
             try
@@ -122,9 +125,7 @@ public class PlayerManager
                     await Server.NextFrameAsync(() =>
                     {
                         var victim = Utilities.GetPlayerFromUserid(userId);
-
                         if (victim == null || !victim.UserId.HasValue) return;
-
                         Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
                     });
 
