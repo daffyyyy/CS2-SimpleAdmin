@@ -1,4 +1,13 @@
 ALTER TABLE `sa_servers` ADD `rcon` varchar(64) NOT NULL AFTER `address`;
+ALTER TABLE `sa_admins` ADD `servers_groups` int(11) NOT NULL AFTER `server_id`;
+
+CREATE TABLE IF NOT EXISTS `sa_servers_groups` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(64) NOT NULL,
+  `servers` varchar(64) NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `sa_players_ips` (
                                   `id` int(11) NOT NULL AUTO_INCREMENT,
