@@ -1,3 +1,5 @@
+using System.Globalization;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
@@ -131,6 +133,46 @@ public partial class CS2_SimpleAdmin
                 Freeze(caller, player, time, callerName, command);
             }
         });
+    }
+    
+    [CommandHelper(1, "<#userid or name> [size]")]
+    [RequiresPermissions("@css/slay")]
+    public void OnResizeCommand(CCSPlayerController? caller, CommandInfo command)
+    {
+        var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
+        float.TryParse(command.GetArg(2), NumberStyles.Float, CultureInfo.InvariantCulture, out var size);
+
+        var targets = GetTarget(command);
+        if (targets == null) return;
+        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
+
+        playersToTarget.ForEach(player =>
+        {
+            if (!caller!.CanTarget(player)) return;
+            
+            var sceneNode = player.PlayerPawn.Value!.CBodyComponent?.SceneNode;
+            if (sceneNode == null) return;
+            
+            sceneNode.GetSkeletonInstance().Scale = size;
+            player.PlayerPawn.Value.AcceptInput("SetScale", null, null, size.ToString(CultureInfo.InvariantCulture));
+
+            Server.NextFrame(() =>
+            {
+                Utilities.SetStateChanged(player.PlayerPawn.Value, "CBaseEntity", "m_CBodyComponent");
+            });
+            
+            var (activityMessageKey, adminActivityArgs) =
+                ("sa_admin_resize_message",
+                    new object[] { "CALLER", player.PlayerName });
+
+            // Display admin activity message to other players
+            if (caller == null || !SilentPlayers.Contains(caller.Slot))
+            {
+                Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
+            }
+        });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void Freeze(CCSPlayerController? caller, CCSPlayerController player, int time, string? callerName = null, CommandInfo? command = null)

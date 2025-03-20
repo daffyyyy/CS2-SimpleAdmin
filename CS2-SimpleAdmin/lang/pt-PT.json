@@ -107,6 +107,7 @@
 	"sa_admin_gravity_message": "{lightred}{0}{default} mudou a gravidade de {lightred}{1}{default}!",
 	"sa_admin_money_message": "{lightred}{0}{default} mudou a quantidade de dinheiro de {lightred}{1}{default}!",
 	"sa_admin_god_message": "{lightred}{0}{default} mudou o modo Deus de {lightred}{1}{default}!",
+	"sa_admin_resize_message": "{lightred}{0}{default} alterou o tamanho de {lightred}{1}{default}!",
 	"sa_admin_slay_message": "{lightred}{0}{default} matou {lightred}{1}{default}!",
 	"sa_admin_slap_message": "{lightred}{0}{default} deu um tapa em {lightred}{1}{default}!",
 	"sa_admin_changemap_message": "{lightred}{0}{default} mudou o mapa para {lightred}{1}{default}!",
