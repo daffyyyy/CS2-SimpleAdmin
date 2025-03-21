@@ -107,6 +107,7 @@
 	"sa_admin_gravity_message": "{lightred}{0}{default} غيّر الجاذبية لـ {lightred}{1}{default}!",
 	"sa_admin_money_message": "{lightred}{0}{default} غيّر المال لـ {lightred}{1}{default}!",
 	"sa_admin_god_message": "{lightred}{0}{default} غيّر وضع الله لـ {lightred}{1}{default}!",
+	"sa_admin_resize_message": "{lightred}{0}{default} قام بتغيير الحجم لـ {lightred}{1}{default}!",
 	"sa_admin_slay_message": "{lightred}{0}{default} قتل {lightred}{1}{default}!",
 	"sa_admin_slap_message": "{lightred}{0}{default} صفع {lightred}{1}{default}!",
 	"sa_admin_changemap_message": "{lightred}{0}{default} غيّر الخريطة إلى {lightred}{1}{default}!",

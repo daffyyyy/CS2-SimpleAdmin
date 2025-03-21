@@ -186,7 +186,7 @@ public partial class CS2_SimpleAdmin
         
         foreach (var player in PlayersInfo.Values)
         {
-            player.DiePosition = default;
+            player.DiePosition = null;
         }
 
         AddTimer(0.41f, () =>
