@@ -390,16 +390,7 @@ public partial class CS2_SimpleAdmin
     public void ReloadAdmins(CCSPlayerController? caller)
     {
         if (Database == null) return;
-
-        for (var index = 0; index < PermissionManager.AdminCache.Keys.ToList().Count; index++)
-        {
-            var steamId = PermissionManager.AdminCache.Keys.ToList()[index];
-            if (!PermissionManager.AdminCache.TryRemove(steamId, out _)) continue;
-
-            AdminManager.ClearPlayerPermissions(steamId);
-            AdminManager.RemovePlayerAdminData(steamId);
-        }
-
+        
         Task.Run(async () =>
         {
             await PermissionManager.CrateGroupsJsonFile();
@@ -411,11 +402,11 @@ public partial class CS2_SimpleAdmin
             await Server.NextWorldUpdateAsync(() =>
             {
                 if (!string.IsNullOrEmpty(adminsFile))
-                    AddTimer(1.8f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                    AddTimer(1.3f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
                 if (!string.IsNullOrEmpty(groupsFile))
                     AddTimer(2.5f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
                 if (!string.IsNullOrEmpty(adminsFile))
-                    AddTimer(3.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                    AddTimer(3.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
 
                 _logger?.LogInformation("Loaded admins!");
             });
@@ -443,8 +434,8 @@ public partial class CS2_SimpleAdmin
         {
             Server.ExecuteCommand("sv_disable_teamselect_menu 1");
 
-            if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
-                caller.PlayerPawn.Value.CommitSuicide(true, false);
+            if (caller.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
+                caller.PlayerPawn.Value?.CommitSuicide(true, false);
 
             AddTimer(1.0f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
             AddTimer(1.4f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);

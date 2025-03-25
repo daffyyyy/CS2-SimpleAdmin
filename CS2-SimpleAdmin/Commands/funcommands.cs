@@ -18,7 +18,7 @@ public partial class CS2_SimpleAdmin
         if (targets == null) return;
         var playersToTarget = targets.Players.Where(player =>
             player.IsValid &&
-            player is { PawnIsAlive: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
+            player is { IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -70,7 +70,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is {IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -124,7 +124,7 @@ public partial class CS2_SimpleAdmin
 
         var targets = GetTarget(command);
         if (targets == null) return;
-        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -144,7 +144,7 @@ public partial class CS2_SimpleAdmin
 
         var targets = GetTarget(command);
         if (targets == null) return;
-        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -218,7 +218,7 @@ public partial class CS2_SimpleAdmin
 
         var targets = GetTarget(command);
         if (targets == null) return;
-        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {

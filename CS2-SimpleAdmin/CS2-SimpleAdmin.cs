@@ -19,7 +19,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.7.5a";
+    public override string ModuleVersion => "1.7.6a";
     
     public override void Load(bool hotReload)
     {
@@ -56,7 +56,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        AddTimer(3.0f, () => ReloadAdmins(null));
+        AddTimer(5.0f, () => ReloadAdmins(null));
 
         try
         {
