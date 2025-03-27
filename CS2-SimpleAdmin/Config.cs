@@ -230,6 +230,8 @@ public class OtherSettings
 
     [JsonPropertyName("AdditionalCommandsToLog")]
     public List<string> AdditionalCommandsToLog { get; set; } = new();
+    [JsonPropertyName("IgnoredIps")]
+    public List<string> IgnoredIps { get; set; } = new();
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig

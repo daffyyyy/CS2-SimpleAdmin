@@ -145,7 +145,7 @@ internal class BanManager(Database.Database? database)
         {
             string sql;
             
-            if (CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp)
+            if (CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp && !CS2_SimpleAdmin.Instance.Config.OtherSettings.IgnoredIps.Contains(player.IpAddress))
             {
                 sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode ? """
                                                                             SELECT COALESCE((
@@ -232,7 +232,8 @@ internal class BanManager(Database.Database? database)
             {
                 PlayerSteamID = player.SteamId.SteamId64.ToString(),
                 PlayerIP = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType == 0 ||
-                           string.IsNullOrEmpty(player.IpAddress)
+                           string.IsNullOrEmpty(player.IpAddress) ||
+                           CS2_SimpleAdmin.Instance.Config.OtherSettings.IgnoredIps.Contains(player.IpAddress)
                     ? null
                     : player.IpAddress,
                 PlayerName = !string.IsNullOrEmpty(player.Name) ? player.Name : string.Empty,

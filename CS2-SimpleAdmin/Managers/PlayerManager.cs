@@ -229,7 +229,7 @@ public class PlayerManager
             foreach (var value in CS2_SimpleAdmin.GravityPlayers)
             {
                 if (value.Key is not
-                    { IsValid: true, Connected: PlayerConnectedState.PlayerConnected, PawnIsAlive: true })
+                    { IsValid: true, Connected: PlayerConnectedState.PlayerConnected } && value.Key.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
                     continue;
 
                 value.Key.SetGravity(value.Value);

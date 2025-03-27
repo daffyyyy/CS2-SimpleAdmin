@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is {IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -67,7 +67,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
         var weaponName = command.GetArg(2);
 
         // check if item is typed
@@ -173,7 +173,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -192,7 +192,7 @@ public partial class CS2_SimpleAdmin
         callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
 
         // Check if player is valid, alive, and connected
-        if (!player.IsValid || !player.PawnIsAlive || player.Connected != PlayerConnectedState.PlayerConnected)
+        if (!player.IsValid || player.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE || player.Connected != PlayerConnectedState.PlayerConnected)
             return;
 
         // Strip weapons from the player
@@ -225,7 +225,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -274,7 +274,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -330,7 +330,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -387,7 +387,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         playersToTarget.ForEach(player =>
         {
@@ -438,7 +438,7 @@ public partial class CS2_SimpleAdmin
         var targets = GetTarget(command);
         if (targets == null) return;
 
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { PawnIsAlive: true, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
 
         if (command.ArgCount >= 2)
         {
@@ -549,7 +549,7 @@ public partial class CS2_SimpleAdmin
         // Change team based on the provided teamName and conditions
         if (!teamName.Equals("swap", StringComparison.OrdinalIgnoreCase))
         {
-            if (player.PawnIsAlive && teamNum != CsTeam.Spectator && !kill && Instance.Config.OtherSettings.TeamSwitchType == 1)
+            if (player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && teamNum != CsTeam.Spectator && !kill && Instance.Config.OtherSettings.TeamSwitchType == 1)
                 player.SwitchTeam(teamNum);
             else
                 player.ChangeTeam(teamNum);
@@ -560,7 +560,7 @@ public partial class CS2_SimpleAdmin
             {
                 var _teamNum = (CsTeam)player.TeamNum == CsTeam.Terrorist ? CsTeam.CounterTerrorist : CsTeam.Terrorist;
                 teamName = _teamNum == CsTeam.Terrorist ? "TT" : "CT";
-                if (player.PawnIsAlive && !kill && Instance.Config.OtherSettings.TeamSwitchType == 1)
+                if (player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && !kill && Instance.Config.OtherSettings.TeamSwitchType == 1)
                     player.SwitchTeam(_teamNum);
                 else
                     player.ChangeTeam(_teamNum);
@@ -740,7 +740,7 @@ public partial class CS2_SimpleAdmin
     public void OnGotoCommand(CCSPlayerController? caller, CommandInfo command)
     {
         // Check if the caller is valid and has a live pawn
-        if (caller == null || !caller.PawnIsAlive) return;
+        if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE) return;
 
         // Get the target players
         var targets = GetTarget(command);
@@ -754,7 +754,7 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
 
         // Process each player to teleport
-        foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PawnIsAlive: true }).Where(caller.CanTarget))
+        foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).Where(caller.CanTarget))
         {
             if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
                 continue;
@@ -778,7 +778,7 @@ public partial class CS2_SimpleAdmin
             // Set a timer to toggle collision back after 4 seconds
             AddTimer(4, () =>
             {
-                if (!caller.IsValid || !caller.PawnIsAlive)
+                if (!caller.IsValid || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
                     return;
                 
                 caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
@@ -811,7 +811,8 @@ public partial class CS2_SimpleAdmin
     public void OnBringCommand(CCSPlayerController? caller, CommandInfo command)
     {
         // Check if the caller is valid and has a live pawn
-        if (caller == null || !caller.PawnIsAlive) return;
+        if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE) 
+            return;
 
         // Get the target players
         var targets = GetTarget(command);
@@ -825,7 +826,7 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
 
         // Process each player to teleport
-        foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PawnIsAlive: true }).Where(caller.CanTarget))
+        foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).Where(caller.CanTarget))
         {
             if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
                 continue;
@@ -849,7 +850,7 @@ public partial class CS2_SimpleAdmin
             // Set a timer to toggle collision back after 4 seconds
             AddTimer(4, () =>
             {
-                if (!player.IsValid || !player.PawnIsAlive)
+                if (!player.IsValid || player.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
                     return;
                 
                 caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
