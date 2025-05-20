@@ -73,12 +73,6 @@ public partial class CS2_SimpleAdmin
             SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Ban, reason, time, penaltyId);
         });
 
-        // Update banned players list
-        if (playerInfo.IpAddress != null && !BannedPlayers.Contains(playerInfo.IpAddress))
-            BannedPlayers.Add(playerInfo.IpAddress);
-        if (!BannedPlayers.Contains(player.SteamID.ToString()))
-            BannedPlayers.Add(player.SteamID.ToString());
-
         // Determine message keys and arguments based on ban time
         var (messageKey, activityMessageKey, centerArgs, adminActivityArgs) = time == 0
             ? ("sa_player_ban_message_perm", "sa_admin_ban_message_perm",
@@ -129,8 +123,7 @@ public partial class CS2_SimpleAdmin
         
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
-        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
 
         if (player != null && player.IsValid)
         {
@@ -184,8 +177,7 @@ public partial class CS2_SimpleAdmin
             ? PlayersInfo[caller.UserId.Value]
             : null;
 
-        var matches = Helper.GetPlayerFromSteamid64(steamid);
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid);
 
         if (player != null && player.IsValid)
         {
@@ -247,8 +239,7 @@ public partial class CS2_SimpleAdmin
             ? PlayersInfo[caller.UserId.Value]
             : null;
 
-        var matches = Helper.GetPlayerFromIp(ipAddress);
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromIp(ipAddress);
 
         if (player != null && player.IsValid)
         {
@@ -442,8 +433,7 @@ public partial class CS2_SimpleAdmin
         
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
-        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
 
         if (player != null && player.IsValid)
         {

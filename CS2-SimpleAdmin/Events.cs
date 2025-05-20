@@ -137,8 +137,8 @@ public partial class CS2_SimpleAdmin
 #if DEBUG
         Logger.LogCritical("[OnClientConnect]");
 #endif
-        if (!CS2_SimpleAdmin.BannedPlayers.Contains(ipaddress.Split(":")[0]))
-            return;
+        if (Config.OtherSettings.BanType == 1 && !Instance.CacheManager.IsPlayerBanned(null, ipaddress.Split(":")[0]))
+                return;
 
         Server.NextFrame((() =>
         {
@@ -225,13 +225,26 @@ public partial class CS2_SimpleAdmin
         if (!PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Gag, out DateTime? endDateTime) &&
             !PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Silence, out endDateTime))
             return HookResult.Continue;
+
+        var message = um.ReadString("param2");
+
+        if (_localizer == null || endDateTime is null) return HookResult.Continue;
+
+        if (CoreConfig.PublicChatTrigger.Concat(CoreConfig.SilentChatTrigger).Any(trigger => message.StartsWith(trigger)))
+        {
+            foreach (var recipient in um.Recipients)
+            {
+                if (recipient == author)
+                    continue;
+            
+                um.Recipients.Remove(recipient);
+            }
+
+            return HookResult.Continue;
+        }
         
-        if (_localizer != null && endDateTime is not null)
-            author.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", author.GetLanguage()));
+        author.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", author.GetLanguage()));
         return HookResult.Stop;
-
-        // um.Recipients.Clear();
-
     }
 
     private HookResult ComamndListenerHandler(CCSPlayerController? player, CommandInfo info)
@@ -382,7 +395,7 @@ public partial class CS2_SimpleAdmin
         if (Config.OtherSettings.ReloadAdminsEveryMapChange && ServerLoaded && ServerId != null)
             AddTimer(5.0f, () => ReloadAdmins(null));
 
-        AddTimer(1.0f, () => new ServerManager().CheckHibernationStatus());
+        AddTimer(1.0f, () => ServerManager.CheckHibernationStatus());
 
         // AddTimer(34, () =>
         // {

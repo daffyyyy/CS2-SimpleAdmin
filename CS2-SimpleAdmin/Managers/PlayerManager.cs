@@ -7,6 +7,7 @@ using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using CS2_SimpleAdminApi;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using ZLinq;
 
 namespace CS2_SimpleAdmin.Managers;
 
@@ -29,6 +30,7 @@ public class PlayerManager
 
         CS2_SimpleAdmin.PlayersInfo[player.UserId.Value] =
             new PlayerInfo(player.UserId.Value, player.Slot, new SteamID(player.SteamID), player.PlayerName, ipAddress);
+        
 
         // if (!player.UserId.HasValue)
         // {
@@ -37,13 +39,32 @@ public class PlayerManager
         // }
         
         var userId = player.UserId.Value;
+        if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(userId))
+        {
+            Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION);
+        }
+        
+        var steamId64 = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64;
+        var steamId = steamId64.ToString();
 
-        // Check if the player's IP or SteamID is in the bannedPlayers list
-        if (_config.OtherSettings.BanType > 0 && CS2_SimpleAdmin.BannedPlayers.Contains(ipAddress) ||
-            CS2_SimpleAdmin.BannedPlayers.Contains(player.SteamID.ToString()))
+        var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
+        {
+            0 => // SteamID only check
+                CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(steamId, null),
+            _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp // SteamID and IP address check
+                ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(steamId64) // All associated IP addresses
+                : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(steamId, ipAddress) // Only current IP address
+        };
+
+        if (isBanned)
         {
             // Kick the player if banned
-            Helper.KickPlayer(player.UserId.Value, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+            Server.NextFrame(() =>
+            {
+                if (!player.UserId.HasValue) return;
+                Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+            });
+
             return;
         }
 
@@ -52,20 +73,15 @@ public class PlayerManager
         // Perform asynchronous database operations within a single method
         Task.Run(async () =>
         {
-            if (_config.OtherSettings.CheckMultiAccountsByIp)
+            if (_config.OtherSettings.CheckMultiAccountsByIp && ipAddress != null)
             {
                 try
                 {
-                    await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
-                    const string selectQuery = "SELECT COUNT(*) FROM `sa_players_ips` WHERE steamid = @SteamID AND address = @IPAddress;";
-                    var recordExists = await connection.ExecuteScalarAsync<int>(selectQuery, new
+                    if (CS2_SimpleAdmin.Instance.CacheManager.HasIpForPlayer(
+                            CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64, ipAddress))
                     {
-                        SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
-                        IPAddress = ipAddress
-                    });
-                    
-                    if (recordExists > 0)
-                    {
+                        await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
+                        
                         const string updateQuery = """
                                                    UPDATE `sa_players_ips`
                                                    SET used_at = CURRENT_TIMESTAMP
@@ -79,15 +95,41 @@ public class PlayerManager
                     }
                     else
                     {
-                        const string insertQuery = """
-                                                   INSERT INTO `sa_players_ips` (steamid, address, used_at)
-                                                   VALUES (@SteamID, @IPAddress, CURRENT_TIMESTAMP);
-                                                   """;
-                        await connection.ExecuteAsync(insertQuery, new
+                        await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
+
+                        const string selectQuery =
+                            "SELECT COUNT(*) FROM `sa_players_ips` WHERE steamid = @SteamID AND address = @IPAddress;";
+                        var recordExists = await connection.ExecuteScalarAsync<int>(selectQuery, new
                         {
                             SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
                             IPAddress = ipAddress
                         });
+
+                        if (recordExists > 0)
+                        {
+                            const string updateQuery = """
+                                                       UPDATE `sa_players_ips`
+                                                       SET used_at = CURRENT_TIMESTAMP
+                                                       WHERE steamid = @SteamID AND address = @IPAddress;
+                                                       """;
+                            await connection.ExecuteAsync(updateQuery, new
+                            {
+                                SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                                IPAddress = ipAddress
+                            });
+                        }
+                        else
+                        {
+                            const string insertQuery = """
+                                                       INSERT INTO `sa_players_ips` (steamid, address, used_at)
+                                                       VALUES (@SteamID, @IPAddress, CURRENT_TIMESTAMP);
+                                                       """;
+                            await connection.ExecuteAsync(insertQuery, new
+                            {
+                                SteamID = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64,
+                                IPAddress = ipAddress
+                            });
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -99,47 +141,21 @@ public class PlayerManager
 
             try
             {
-                if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(userId))
-                {
-                    await Server.NextFrameAsync(() => Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION));
-                }
+                // var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType == 0
+                //     ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(
+                //         CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString(), null)
+                //     : CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
+                //         ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(CS2_SimpleAdmin
+                //             .PlayersInfo[userId].SteamId.SteamId64)
+                //         : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString(), ipAddress);
                 
-                // Check if the player is banned
-                var isBanned = await CS2_SimpleAdmin.Instance.BanManager.IsPlayerBanned(CS2_SimpleAdmin.PlayersInfo[userId]);
-                
-                if (isBanned)
-                {
-                    // Add player's IP and SteamID to bannedPlayers list if not already present
-                    if (_config.OtherSettings.BanType > 0 && ipAddress != null &&
-                        !CS2_SimpleAdmin.BannedPlayers.Contains(ipAddress))
-                    {
-                        CS2_SimpleAdmin.BannedPlayers.Add(ipAddress);
-                    }
-
-                    if (!CS2_SimpleAdmin.BannedPlayers.Contains(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString()))
-                    {
-                        CS2_SimpleAdmin.BannedPlayers.Add(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString());
-                    }
-
-                    // Kick the player if banned
-                    await Server.NextFrameAsync(() =>
-                    {
-                        var victim = Utilities.GetPlayerFromUserid(userId);
-                        if (victim == null || !victim.UserId.HasValue) return;
-                        Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
-                    });
-
-                    return;
-                }
-
                 if (fullConnect || !fullConnect) // Temp skip
                 {
                     var warns = await CS2_SimpleAdmin.Instance.WarnManager.GetPlayerWarns(CS2_SimpleAdmin.PlayersInfo[userId], false);
                     var (totalMutes, totalGags, totalSilences) =
                         await CS2_SimpleAdmin.Instance.MuteManager.GetPlayerMutes(CS2_SimpleAdmin.PlayersInfo[userId]);
 
-                    CS2_SimpleAdmin.PlayersInfo[userId].TotalBans =
-                        await CS2_SimpleAdmin.Instance.BanManager.GetPlayerBans(CS2_SimpleAdmin.PlayersInfo[userId]);
+                    CS2_SimpleAdmin.PlayersInfo[userId].TotalBans = CS2_SimpleAdmin.Instance.CacheManager.GetPlayerBansBySteamId(CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64.ToString()).Count;
                     CS2_SimpleAdmin.PlayersInfo[userId].TotalMutes = totalMutes;
                     CS2_SimpleAdmin.PlayersInfo[userId].TotalGags = totalGags;
                     CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences = totalSilences;
@@ -225,13 +241,10 @@ public class PlayerManager
         CS2_SimpleAdmin.Instance.AddTimer(0.1f, () =>
         {
             if (CS2_SimpleAdmin.GravityPlayers.Count <= 0) return;
-            
-            foreach (var value in CS2_SimpleAdmin.GravityPlayers)
-            {
-                if (value.Key is not
-                    { IsValid: true, Connected: PlayerConnectedState.PlayerConnected } && value.Key.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
-                    continue;
 
+            foreach (var value in CS2_SimpleAdmin.GravityPlayers.Where(value => value.Key is
+                         { IsValid: true, Connected: PlayerConnectedState.PlayerConnected } || value.Key.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE))
+            {
                 value.Key.SetGravity(value.Value);
             }
         }, TimerFlags.REPEAT);
@@ -244,19 +257,29 @@ public class PlayerManager
             if (CS2_SimpleAdmin.Database == null)
                 return;
             
-            var players = Helper.GetValidPlayers();
-            var onlinePlayers = new List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)>();
-            // var onlinePlayers = players
-            //     .Where(player => player.IpAddress != null)
-            //     .Select(player => (player.IpAddress, player.SteamID, player.UserId, player.Slot))
-            //     .ToList();
+            var players = Helper.GetValidPlayers().ToList();
+            
+            var bannedPlayers = players.AsValueEnumerable()
+                .Where(player =>
+                {
+                    return CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
+                    {
+                        0 => CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(player.SteamID.ToString(), null),
+                        _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
+                            ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(player.SteamID)
+                            : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(player.SteamID.ToString(), player.IpAddress)
+                    };
+                })
+                .ToList();
 
-            foreach (var player in players)
+            foreach (var player in bannedPlayers)
             {
-                if (player.IpAddress != null)
-                    onlinePlayers.Add((player.IpAddress, player.SteamID, player.UserId, player.Slot));
+                Helper.KickPlayer(player, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+                players.Remove(player);
             }
             
+            var onlinePlayers = players.AsValueEnumerable().Select(player => (player.SteamID, player.UserId, player.Slot)).ToList();
+
             try
             {
                 var expireTasks = new[]
@@ -264,6 +287,7 @@ public class PlayerManager
                     CS2_SimpleAdmin.Instance.BanManager.ExpireOldBans(),
                     CS2_SimpleAdmin.Instance.MuteManager.ExpireOldMutes(),
                     CS2_SimpleAdmin.Instance.WarnManager.ExpireOldWarns(),
+                    CS2_SimpleAdmin.Instance.CacheManager.RefreshCacheAsync(),
                     CS2_SimpleAdmin.Instance.PermissionManager.DeleteOldAdmins()
                 };
 
@@ -273,77 +297,71 @@ public class PlayerManager
                     
                     foreach (var ex in t.Exception.InnerExceptions)
                     {
-                        CS2_SimpleAdmin._logger?.LogError($"Error expiring penalties: {ex.Message}");
+                        CS2_SimpleAdmin._logger?.LogError($"Error processing players timer tasks: {ex.Message}");
                     }
                 });
+
             }
             catch (Exception ex)
             {
                 CS2_SimpleAdmin._logger?.LogError("Unexpected error: {exception}", ex.Message);
             }
             
-            CS2_SimpleAdmin.BannedPlayers.Clear();
+            if (players.Count == 0 || onlinePlayers.Count == 0) return;
 
-            if (onlinePlayers.Count > 0)
+            try
             {
-                try
+                Task.Run(async () =>
                 {
-                    Task.Run(async () =>
-                    {
-                        await CS2_SimpleAdmin.Instance.BanManager.CheckOnlinePlayers(onlinePlayers);
+                    // await CS2_SimpleAdmin.Instance.BanManager.CheckOnlinePlayers(onlinePlayers);
 
-                        if (_config.OtherSettings.TimeMode == 0)
-                        {
-                            await CS2_SimpleAdmin.Instance.MuteManager.CheckOnlineModeMutes(onlinePlayers);
-                        }
-                    }).ContinueWith(t =>
+                    if (_config.OtherSettings.TimeMode == 0)
                     {
-                        if (t is not { IsFaulted: true, Exception: not null }) return;
-                        
-                        foreach (var ex in t.Exception.InnerExceptions)
-                        {
-                            CS2_SimpleAdmin._logger?.LogError($"Error checking online players: {ex.Message}");
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    CS2_SimpleAdmin._logger?.LogError($"Unexpected error: {ex.Message}");
-                }
-            }
-
-            if (onlinePlayers.Count <= 0) return;
-            
-            {
-                try
-                {
-                    var penalizedSlots = players
-                        .Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot))
-                        .Select(player => new 
-                        { 
-                            Player = player, 
-                            IsMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute, out _), 
-                            IsSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out _), 
-                            IsGagged = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag, out _) 
-                        });
-
-                    foreach (var entry in penalizedSlots)
-                    {
-                        // If the player is not muted or silenced, set voice flags to normal
-                        if (!entry.IsMuted && !entry.IsSilenced)
-                        {
-                            entry.Player.VoiceFlags = VoiceFlags.Normal;
-                        }
+                        await CS2_SimpleAdmin.Instance.MuteManager.CheckOnlineModeMutes(onlinePlayers);
                     }
-
-                    PlayerPenaltyManager.RemoveExpiredPenalties();
-                }
-                catch (Exception ex)
+                }).ContinueWith(t =>
                 {
-                    CS2_SimpleAdmin._logger?.LogError($"Unable to remove old penalties: {ex.Message}");
-                }
+                    if (t is not { IsFaulted: true, Exception: not null }) return;
+                    
+                    foreach (var ex in t.Exception.InnerExceptions)
+                    {
+                        CS2_SimpleAdmin._logger?.LogError($"Error checking online players: {ex.Message}");
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                CS2_SimpleAdmin._logger?.LogError($"Unexpected error: {ex.Message}");
             }
 
-        }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.REPEAT);
+            try
+            {
+                var penalizedSlots = players
+                    .Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot))
+                    .Select(player => new 
+                    { 
+                        Player = player, 
+                        IsMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute, out _), 
+                        IsSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out _), 
+                        IsGagged = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag, out _) 
+                    });
+
+                foreach (var entry in penalizedSlots)
+                {
+                    // If the player is not muted or silenced, set voice flags to normal
+                    if (!entry.IsMuted && !entry.IsSilenced)
+                    {
+                        entry.Player.VoiceFlags = VoiceFlags.Normal;
+                    }
+                }
+
+                PlayerPenaltyManager.RemoveExpiredPenalties();
+            }
+            catch (Exception ex)
+            {
+                CS2_SimpleAdmin._logger?.LogError($"Unable to remove old penalties: {ex.Message}");
+            }
+
+        }, TimerFlags.REPEAT);
     }
 }

@@ -28,6 +28,8 @@ public partial class CS2_SimpleAdmin
         {
             Slay(caller, player, callerName, command);
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void Slay(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
@@ -55,8 +57,6 @@ public partial class CS2_SimpleAdmin
         // Log the command and send Discord notification
         if (command == null)
             Helper.LogCommand(caller, $"css_slay {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
-        else
-            Helper.LogCommand(caller, command);
     }
 
     [RequiresPermissions("@css/cheats")]
@@ -94,6 +94,8 @@ public partial class CS2_SimpleAdmin
 
             GiveWeapon(caller, player, weaponName, callerName, command);
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     private static void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null, CommandInfo? command = null)
@@ -122,8 +124,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_giveweapon {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {weaponName}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the weapon give notification
         var (activityMessageKey, adminActivityArgs) =
@@ -150,8 +150,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_giveweapon {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {weapon.ToString()}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the weapon give notification
         var (activityMessageKey, adminActivityArgs) =
@@ -182,6 +180,8 @@ public partial class CS2_SimpleAdmin
                 StripWeapons(caller, player, callerName, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void StripWeapons(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
@@ -201,8 +201,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_strip {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the weapon strip notification
         var (activityMessageKey, adminActivityArgs) =
@@ -234,6 +232,8 @@ public partial class CS2_SimpleAdmin
                 SetHp(caller, player, health, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void SetHp(CCSPlayerController? caller, CCSPlayerController player, int health, CommandInfo? command = null)
@@ -250,8 +250,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_hp {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {health}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the HP set notification
         var (activityMessageKey, adminActivityArgs) =
@@ -286,6 +284,8 @@ public partial class CS2_SimpleAdmin
                 SetSpeed(caller, player, speed, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void SetSpeed(CCSPlayerController? caller, CCSPlayerController player, float speed, CommandInfo? command = null)
@@ -306,8 +306,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_speed {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {speed}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the speed set notification
         var (activityMessageKey, adminActivityArgs) =
@@ -342,6 +340,8 @@ public partial class CS2_SimpleAdmin
                 SetGravity(caller, player, gravity, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void SetGravity(CCSPlayerController? caller, CCSPlayerController player, float gravity, CommandInfo? command = null)
@@ -362,8 +362,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_gravity {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {gravity}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the gravity set notification
         var (activityMessageKey, adminActivityArgs) =
@@ -399,6 +397,8 @@ public partial class CS2_SimpleAdmin
                 SetMoney(caller, player, money, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void SetMoney(CCSPlayerController? caller, CCSPlayerController player, int money, CommandInfo? command = null)
@@ -414,8 +414,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_money {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {money}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message keys and arguments for the money set notification
         var (activityMessageKey, adminActivityArgs) =
@@ -455,6 +453,8 @@ public partial class CS2_SimpleAdmin
                 Slap(caller, player, damage, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage, CommandInfo? command = null)
@@ -470,9 +470,7 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_slap {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {damage}");
-        else
-            Helper.LogCommand(caller, command);
-
+        
         // Determine message key and arguments for the slap notification
         var (activityMessageKey, adminActivityArgs) =
             ("sa_admin_slap_message",
@@ -532,6 +530,8 @@ public partial class CS2_SimpleAdmin
         {
             ChangeTeam(caller, player, _teamName, teamNum, kill, command);
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, CommandInfo? command = null)
@@ -570,8 +570,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_team {player.PlayerName} {teamName}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message key and arguments for the team change notification
         var activityMessageKey = "sa_admin_team_message";
@@ -698,6 +696,8 @@ public partial class CS2_SimpleAdmin
                 Respawn(caller, player, callerName, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void Respawn(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
@@ -722,8 +722,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_respawn {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message key and arguments for the respawn notification
         var activityMessageKey = "sa_admin_respawn_message";

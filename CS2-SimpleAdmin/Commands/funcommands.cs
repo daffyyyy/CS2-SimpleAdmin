@@ -27,6 +27,8 @@ public partial class CS2_SimpleAdmin
                 NoClip(caller, player, callerName);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void NoClip(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
@@ -53,13 +55,7 @@ public partial class CS2_SimpleAdmin
 
         // Log the command
         if (command == null)
-        {
             Helper.LogCommand(caller, $"css_noclip {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
-        }
-        else
-        {
-            Helper.LogCommand(caller, command);
-        }
     }
     
     [RequiresPermissions("@css/cheats")]
@@ -82,6 +78,8 @@ public partial class CS2_SimpleAdmin
                 God(caller, player, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void God(CCSPlayerController? caller, CCSPlayerController player, CommandInfo? command = null)
@@ -100,8 +98,6 @@ public partial class CS2_SimpleAdmin
         // Log the command
         if (command == null)
             Helper.LogCommand(caller, $"css_god {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
-        else
-            Helper.LogCommand(caller, command);
 
         // Determine message key and arguments for the god mode notification
         var (activityMessageKey, adminActivityArgs) =
@@ -133,6 +129,8 @@ public partial class CS2_SimpleAdmin
                 Freeze(caller, player, time, callerName, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
     
     [CommandHelper(1, "<#userid or name> [size]")]
@@ -206,8 +204,6 @@ public partial class CS2_SimpleAdmin
         // Log the command and send Discord notification
         if (command == null)
             Helper.LogCommand(caller, $"css_freeze {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {time}");
-        else
-            Helper.LogCommand(caller, command);
     }
 
     [CommandHelper(1, "<#userid or name>")]
@@ -224,6 +220,8 @@ public partial class CS2_SimpleAdmin
         {
             Unfreeze(caller, player, callerName, command);
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     internal static void Unfreeze(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
@@ -251,7 +249,5 @@ public partial class CS2_SimpleAdmin
         // Log the command and send Discord notification
         if (command == null)
             Helper.LogCommand(caller, $"css_unfreeze {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
-        else
-            Helper.LogCommand(caller, command);
     }
 }

@@ -100,7 +100,6 @@ public partial class CS2_SimpleAdmin
         var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
         Helper.LogCommand(caller, command);
-
         Helper.PrintToCenterAll(utf8String.ReplaceColorTags());
     }
 

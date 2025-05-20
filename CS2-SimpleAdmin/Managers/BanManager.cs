@@ -394,7 +394,7 @@ internal class BanManager(Database.Database? database)
                 {
                     SteamIDs = steamIds,
                     IpAddresses = checkIpBans ? ipAddresses : [],
-                    ServerId = CS2_SimpleAdmin.ServerId
+                    CS2_SimpleAdmin.ServerId
                 });
 
             var valueTuples = bannedPlayers.ToList();

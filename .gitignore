@@ -4,5 +4,6 @@ obj/
 .git
 .vscode/
 .idea/
+Modules/CS2-SimpleAdmin_PlayTimeModule
 CS2-SimpleAdmin.sln.DotSettings.user
 Modules/CS2-SimpleAdmin_ExampleModule/CS2-SimpleAdmin_ExampleModule.sln.DotSettings.user

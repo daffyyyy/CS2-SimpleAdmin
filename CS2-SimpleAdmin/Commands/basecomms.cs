@@ -114,8 +114,7 @@ public partial class CS2_SimpleAdmin
         
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
-        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
 
         if (player != null && player.IsValid)
         {
@@ -173,8 +172,7 @@ public partial class CS2_SimpleAdmin
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
         // Attempt to match player based on SteamID
-        var matches = Helper.GetPlayerFromSteamid64(steamid);
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid);
 
         if (player != null && player.IsValid)
         {
@@ -230,8 +228,7 @@ public partial class CS2_SimpleAdmin
         // Check if pattern is a valid SteamID64
         if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
         {
-            var matches = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
-            var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+            var player = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
 
             if (player != null && player.IsValid)
             {
@@ -406,8 +403,7 @@ public partial class CS2_SimpleAdmin
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
         // Attempt to match player based on SteamID
-        var matches = Helper.GetPlayerFromSteamid64(steamid);
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid);
 
         if (player != null && player.IsValid)
         {
@@ -447,8 +443,7 @@ public partial class CS2_SimpleAdmin
         
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
-        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
 
         if (player != null && player.IsValid)
         {
@@ -498,8 +493,7 @@ public partial class CS2_SimpleAdmin
         // Check if pattern is a valid SteamID64
         if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
         {
-            var matches = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
-            var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+            var player = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
 
             if (player != null && player.IsValid)
             {
@@ -674,8 +668,7 @@ public partial class CS2_SimpleAdmin
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
         // Attempt to match player based on SteamID
-        var matches = Helper.GetPlayerFromSteamid64(steamid);
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid);
 
         if (player != null && player.IsValid)
         {
@@ -715,8 +708,7 @@ public partial class CS2_SimpleAdmin
         
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
-        var matches = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
-        var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+        var player = Helper.GetPlayerFromSteamid64(steamid.SteamId64.ToString());
 
         if (player != null && player.IsValid)
         {
@@ -766,8 +758,7 @@ public partial class CS2_SimpleAdmin
         // Check if pattern is a valid SteamID64
         if (Helper.ValidateSteamId(pattern, out var steamId) && steamId != null)
         {
-            var matches = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
-            var player = matches.Count == 1 ? matches.FirstOrDefault() : null;
+            var player = Helper.GetPlayerFromSteamid64(steamId.SteamId64.ToString());
 
             if (player != null && player.IsValid)
             {
