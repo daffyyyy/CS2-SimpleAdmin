@@ -26,6 +26,9 @@
 		<None Update="Database\Migrations\010_CreateWarnsTable.sql">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Update="Database\Migrations\012_AddUpdatedAtColumnToSaBansTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

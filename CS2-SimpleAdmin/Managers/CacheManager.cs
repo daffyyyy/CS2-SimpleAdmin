@@ -9,6 +9,7 @@ internal class CacheManager
 {
     private readonly ConcurrentDictionary<int, BanRecord> _banCache = new();
     private readonly ConcurrentDictionary<ulong, (HashSet<string> ips, DateTime used_at)> _playerIpsCache = new();
+    private readonly HashSet<string> _cachedIgnoredIps = [..CS2_SimpleAdmin.Instance.Config.OtherSettings.IgnoredIps];
     
     private DateTime _lastUpdateTime = DateTime.MinValue;
     private bool _isInitialized;
@@ -132,7 +133,8 @@ internal class CacheManager
         return _banCache.Values.Any(b => 
             b.Status == "ACTIVE" && 
             !string.IsNullOrEmpty(b.PlayerIp) &&
-            b.PlayerIp.Equals(ipAddress, StringComparison.OrdinalIgnoreCase));
+            b.PlayerIp.Equals(ipAddress, StringComparison.OrdinalIgnoreCase) &&
+            !_cachedIgnoredIps.Contains(ipAddress));
     }
     
     public bool IsPlayerBanned(string? steamId, string? ipAddress) => 
@@ -143,7 +145,8 @@ internal class CacheManager
                  b.PlayerSteamId.Equals(steamId, StringComparison.OrdinalIgnoreCase)) ||
                 (ipAddress != null && 
                  b.PlayerIp != null && 
-                 b.PlayerIp.Equals(ipAddress, StringComparison.OrdinalIgnoreCase))
+                 b.PlayerIp.Equals(ipAddress, StringComparison.OrdinalIgnoreCase) &&
+                 !_cachedIgnoredIps.Contains(ipAddress))
             ));
     
     public bool IsPlayerOrAnyIpBanned(ulong steamId)
@@ -155,8 +158,9 @@ internal class CacheManager
         {
             return true;
         }
-
-        return _playerIpsCache.TryGetValue(steamId, out var ipList) && ipList.ips.Any(IsIpBanned);
+        
+        return _playerIpsCache.TryGetValue(steamId, out var ipList) && ipList.ips.Any(ip =>
+            !_cachedIgnoredIps.Contains(ip) && IsIpBanned(ip));
     }
     
     public bool HasIpForPlayer(ulong steamId, string ipAddress)
