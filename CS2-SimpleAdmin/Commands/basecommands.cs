@@ -386,6 +386,16 @@ public partial class CS2_SimpleAdmin
 
         command.ReplyToCommand("Reloaded sql admins and groups");
     }
+    
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+    [RequiresPermissions("@css/root")]
+    public void OnRelBans(CCSPlayerController? caller, CommandInfo command)
+    {
+        if (Database == null) return;
+
+        _ = Instance.CacheManager.ForceReInitializeCacheAsync();
+        command.ReplyToCommand("Reloaded bans");
+    }
 
     public void ReloadAdmins(CCSPlayerController? caller)
     {

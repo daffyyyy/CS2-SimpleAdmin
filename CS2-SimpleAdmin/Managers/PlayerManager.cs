@@ -46,33 +46,32 @@ public class PlayerManager
         
         var steamId64 = CS2_SimpleAdmin.PlayersInfo[userId].SteamId.SteamId64;
         var steamId = steamId64.ToString();
-
-        var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
-        {
-            0 => // SteamID only check
-                CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(steamId, null),
-            _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp // SteamID and IP address check
-                ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(steamId64) // All associated IP addresses
-                : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(steamId, ipAddress) // Only current IP address
-        };
-
-        if (isBanned)
-        {
-            // Kick the player if banned
-            Server.NextFrame(() =>
-            {
-                if (!player.UserId.HasValue) return;
-                Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
-            });
-
-            return;
-        }
-
+        
         if (CS2_SimpleAdmin.Database == null) return;
 
         // Perform asynchronous database operations within a single method
         Task.Run(async () =>
         {
+            var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
+            {
+                0 => CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(steamId, null),
+                _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
+                    ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(steamId64)
+                    : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(steamId, ipAddress)
+            };
+
+            if (isBanned)
+            {
+                // Kick the player if banned
+                await Server.NextFrameAsync(() =>
+                {
+                    if (!player.UserId.HasValue) return;
+                    Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+                });
+
+                return;
+            }
+
             if (_config.OtherSettings.CheckMultiAccountsByIp && ipAddress != null)
             {
                 try

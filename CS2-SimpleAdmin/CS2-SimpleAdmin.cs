@@ -40,10 +40,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                 
                 var playerManager = new PlayerManager();
 
-                Parallel.ForEach(Helper.GetValidPlayers(), player => 
+                foreach (var player in Helper.GetValidPlayers()) 
                 {
                     playerManager.LoadPlayerData(player);
-                });
+                };
             });
         }
         _cBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
