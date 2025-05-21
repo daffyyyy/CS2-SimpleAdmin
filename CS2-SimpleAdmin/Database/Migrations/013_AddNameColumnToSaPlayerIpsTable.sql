@@ -1,0 +1,1 @@
+ALTER TABLE `sa_players_ips` ADD `name` VARCHAR(64) NULL DEFAULT NULL AFTER `steamid`;
