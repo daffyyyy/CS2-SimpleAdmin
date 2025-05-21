@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nPenalizaciones del jugador para {lightred}{0}{default},\nNúmero de prohibiciones: {lightred}{1}{default}, Número de boqueos: {lightred}{2}{default}, Número de silenciamientos: {lightred}{3}{default}, Número de silencios: {lightred}{4}{default}, Número de advertencias: {lightred}{5}{default}\nPenalizaciones activas:\n{6}\nAdvertencias activas:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}Penalizaciones del jugador para {lightred}{0}{grey}, Prohibiciones: {lightred}{1}{grey}, Boqueos: {lightred}{2}{grey}, Silenciamientos: {lightred}{3}{grey}, Silencios: {lightred}{4}{grey}, Advertencias: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}Cuentas asociadas del jugador {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "Has sido baneado por {lightred}{0}{default} durante {lightred}{1}{default} minutos por {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Has sido baneado permanentemente por {lightred}{0}{default} por {lightred}{1}{default}!",
 	"sa_player_kick_message": "Has sido expulsado por {lightred}{0}{default} durante {lightred}{1}{default}!",

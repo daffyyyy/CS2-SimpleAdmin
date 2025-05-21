@@ -669,12 +669,11 @@ internal static class Helper
             }
             catch (Exception ex)
             {
-                // Log or handle the exception
                 Console.WriteLine(ex);
             }
         });
     }
-
+    
     private static string GenerateMessageDiscord(string message)
     {
         var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";

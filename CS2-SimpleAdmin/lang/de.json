@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nSpielerstrafe für {lightred}{0}{default},\nAnzahl der Sperren: {lightred}{1}{default}, Anzahl der Mundtot: {lightred}{2}{default}, Anzahl der Stummschaltungen: {lightred}{3}{default}, Anzahl der Stille: {lightred}{4}{default}, Anzahl der Warnungen: {lightred}{5}{default}\nAktive Strafen:\n{6}\nAktive Warnungen:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}Spielerstrafe für {lightred}{0}{grey}, Sperren: {lightred}{1}{grey}, Mundtot: {lightred}{2}{grey}, Stummschaltungen: {lightred}{3}{grey}, Stille: {lightred}{4}{grey}, Warnungen: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}Verknüpfte Konten des Spielers {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "Du wurdest wegen {lightred}{0}{default} für {lightred}{1}{default} Minuten von {lightred}{2}{default} gebannt!",
 	"sa_player_ban_message_perm": "Du wurdest wegen {lightred}{0}{default} von {lightred}{1}{default} permanent gebannt!",
 	"sa_player_kick_message": "Du wurdest wegen {lightred}{0}{default} von {lightred}{1}{default} gekickt!",

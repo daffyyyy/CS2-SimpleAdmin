@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nШтрафы игрока для {lightred}{0}{default},\nКоличество банов: {lightred}{1}{default}, Количество гэгов: {lightred}{2}{default}, Количество мутов: {lightred}{3}{default}, Количество тишин: {lightred}{4}{default}, Количество предупреждений: {lightred}{5}{default}\nАктивные штрафы:\n{6}\nАктивные предупреждения:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}Штрафы игрока для {lightred}{0}{grey}, Баны: {lightred}{1}{grey}, Гэги: {lightred}{2}{grey}, Муты: {lightred}{3}{grey}, Тишины: {lightred}{4}{grey}, Предупреждения: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}Связанные аккаунты игрока {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "Вы были забанены по причине {lightred}{0}{default} на {lightred}{1}{default} минут(ы) администратором {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Вас забанили навсегда по причине {lightred}{0}{default} администратором {lightred}{1}{default}!",
 	"sa_player_kick_message": "Вы были выгнаны {lightred}{0}{default} администратором {lightred}{1}{default}!",

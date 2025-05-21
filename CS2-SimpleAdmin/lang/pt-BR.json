@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nPenalidades do jogador para {lightred}{0}{default},\nNúmero de banimentos: {lightred}{1}{default}, Número de gags: {lightred}{2}{default}, Número de mutes: {lightred}{3}{default}, Número de silêncios: {lightred}{4}{default}, Número de avisos: {lightred}{5}{default}\nPenalidades ativas:\n{6}\nAvisos ativos:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}Penalidades do jogador para {lightred}{0}{grey}, Banimentos: {lightred}{1}{grey}, Gags: {lightred}{2}{grey}, Mutes: {lightred}{3}{grey}, Silêncios: {lightred}{4}{grey}, Avisos: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}Contas associadas do jogador {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "Você foi banido por {lightred}{0}{default} por {lightred}{1}{default} minutos por {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Você foi banido permanentemente por {lightred}{0}{default} por {lightred}{1}{default}!",
 	"sa_player_kick_message": "Você foi expulso por {lightred}{0}{default} por {lightred}{1}{default}!",

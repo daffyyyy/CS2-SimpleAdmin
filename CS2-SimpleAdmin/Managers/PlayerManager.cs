@@ -137,6 +137,10 @@ public class PlayerManager
                     CS2_SimpleAdmin._logger?.LogError(
                         $"Unable to save ip address for {CS2_SimpleAdmin.PlayersInfo[userId].Name} ({ipAddress}) {ex.Message}");   
                 }
+
+                // Get all accounts associated to the player (ip address)
+                CS2_SimpleAdmin.PlayersInfo[userId].AccountsAssociated =
+                    CS2_SimpleAdmin.Instance.CacheManager.GetAccountsByIp(ipAddress);
             }
 
             try
@@ -204,6 +208,8 @@ public class PlayerManager
 
                 if (CS2_SimpleAdmin.Instance.Config.OtherSettings.NotifyPenaltiesToAdminOnConnect && fullConnect)
                 {
+                    var associatedAcccountsChunks = CS2_SimpleAdmin.PlayersInfo[userId].AccountsAssociated.ChunkBy(5).ToList();
+                    
                     await Server.NextFrameAsync(() =>
                     {
                         foreach (var admin in Helper.GetValidPlayers()
@@ -212,6 +218,7 @@ public class PlayerManager
                                                  p.Connected == PlayerConnectedState.PlayerConnected && !CS2_SimpleAdmin.AdminDisabledJoinComms.Contains(p.SteamID)))
                         {
                             if (CS2_SimpleAdmin._localizer != null && admin != player)
+                            {
                                 admin.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_admin_penalty_info",
                                     player.PlayerName,
                                     CS2_SimpleAdmin.PlayersInfo[userId].TotalBans,
@@ -220,6 +227,16 @@ public class PlayerManager
                                     CS2_SimpleAdmin.PlayersInfo[userId].TotalSilences,
                                     CS2_SimpleAdmin.PlayersInfo[userId].TotalWarns
                                 );
+
+                                foreach (var chunk in associatedAcccountsChunks)
+                                {
+                                    admin.SendLocalizedMessage(CS2_SimpleAdmin._localizer, "sa_admin_associated_accounts",
+                                        player.PlayerName,
+                                        string.Join(", ", 
+                                            chunk.Select(a => $"{a.PlayerName} ({a.SteamId})"))
+                                    );
+                                }
+                            }
                         }
                     });
                 }

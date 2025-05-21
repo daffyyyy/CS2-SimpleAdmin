@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nBlokady gracza {lightred}{0}{default},\nIlość banów: {lightred}{1}{default}, Ilość zakneblowań: {lightred}{2}{default}, Ilość wyciszeń: {lightred}{3}{default}, Ilość uciszeń: {lightred}{4}{default}Ilość ostrzeżeń: {lightred}{5}{default}\nAktywne blokady:\n{6}\nAktywne ostrzeżenia:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}Blokady gracza {lightred}{0}{grey} - bany: {lightred}{1}{grey}, zakneblowania: {lightred}{2}{grey}, wyciszenia: {lightred}{3}{grey}, uciszenia: {lightred}{4}{grey}, ostrzeżenia: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}Powiązane konta gracza {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "Zostałeś zbanowany za {lightred}{0}{default} na {lightred}{1}{default} minut przez {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "Zostałeś zbanowany na zawsze za {lightred}{0}{default} przez {lightred}{1}{default}!",
 	"sa_player_kick_message": "Zostałeś wyrzucony za {lightred}{0}{default} przez {lightred}{1}{default}!",

@@ -509,6 +509,10 @@ public partial class CS2_SimpleAdmin
                         printMethod($"• Total Mutes: \"{playerInfo.TotalMutes}\"");
                         printMethod($"• Total Silences: \"{playerInfo.TotalSilences}\"");
                         printMethod($"• Total Warns: \"{playerInfo.TotalWarns}\"");
+
+                        var chunkedAccounts = playerInfo.AccountsAssociated.ChunkBy(3).ToList();
+                        foreach (var chunk in chunkedAccounts)
+                            printMethod($"• Associated Accounts: \"{string.Join(", ", chunk.Select(a => $"{a.PlayerName} ({a.SteamId})"))}\"");
                     }
 
                     printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");

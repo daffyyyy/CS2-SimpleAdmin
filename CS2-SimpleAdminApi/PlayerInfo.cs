@@ -26,6 +26,7 @@ public class PlayerInfo(
     public int TotalSilences { get; set; } = totalSilences;
     public int TotalWarns { get; set; } = totalWarns;
     public bool WaitingForKick { get; set; } = false;
+    public List<(ulong SteamId, string PlayerName)> AccountsAssociated { get; set; } = [];
     public DiePosition? DiePosition { get; set; }
 }
 

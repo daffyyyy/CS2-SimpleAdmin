@@ -2,14 +2,15 @@ using System.Collections.Concurrent;
 using CS2_SimpleAdmin.Models;
 using Dapper;
 using Microsoft.Extensions.Logging;
+using ZLinq;
 
 namespace CS2_SimpleAdmin.Managers;
 
 internal class CacheManager
 {
     private readonly ConcurrentDictionary<int, BanRecord> _banCache = new();
-    private readonly ConcurrentDictionary<ulong, (HashSet<string> ips, DateTime used_at)> _playerIpsCache = new();
-    private readonly HashSet<string> _cachedIgnoredIps = [..CS2_SimpleAdmin.Instance.Config.OtherSettings.IgnoredIps];
+    private readonly ConcurrentDictionary<ulong, (HashSet<string> ips, DateTime usedAt, string playerName)> _playerIpsCache = new();
+    private HashSet<string> _cachedIgnoredIps;
     
     private DateTime _lastUpdateTime = DateTime.MinValue;
     private bool _isInitialized;
@@ -20,6 +21,8 @@ internal class CacheManager
         if (!CS2_SimpleAdmin.ServerLoaded)
             return;
         if (_isInitialized) return;
+
+        _cachedIgnoredIps = [..CS2_SimpleAdmin.Instance.Config.OtherSettings.IgnoredIps];
         
         try
         {
@@ -42,8 +45,8 @@ internal class CacheManager
                         updated_at AS UpdatedAt
                       FROM sa_bans
                 """);            
-            var ipHistory = await connection.QueryAsync<(ulong steamid, string address, DateTime used_at)>(
-                "SELECT steamid, address, used_at FROM sa_players_ips");
+            var ipHistory = await connection.QueryAsync<(ulong steamid, string? name, string address, DateTime used_at)>(
+                "SELECT steamid, name, address, used_at FROM sa_players_ips ORDER BY used_at DESC");
 
     
             foreach (var ban in bans)
@@ -55,7 +58,10 @@ internal class CacheManager
             {
                 var ips = new HashSet<string>(group.Select(x => x.address));
                 var lastUsed = group.Max(x => x.used_at);
-                _playerIpsCache[group.Key] = (ips, lastUsed);
+                var playerName = group.FirstOrDefault(x => !string.IsNullOrEmpty(x.name)).name 
+                                 ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+
+                _playerIpsCache[group.Key] = (ips, lastUsed, playerName);
             }
 
             _lastUpdateTime = DateTime.Now;
@@ -80,8 +86,8 @@ internal class CacheManager
                 new { lastUpdate = _lastUpdateTime }
             )).ToList();
             
-            var ipHistory = await connection.QueryAsync<(ulong steamid, string address, DateTime used_at)>(
-                "SELECT steamid, address, used_at FROM sa_players_ips");
+            var ipHistory = await connection.QueryAsync<(ulong steamid, string? name, string address, DateTime used_at)>(
+                "SELECT steamid, name, address, used_at FROM sa_players_ips ORDER BY used_at DESC");
 
             // foreach (var group in ipHistory.GroupBy(x => x.steamid))
             // {
@@ -90,20 +96,39 @@ internal class CacheManager
             //     _playerIpsCache[group.Key] = (ips, lastUsed);
             // }
 
-            var groupedData = ipHistory.GroupBy(x => x.steamid).ToList();
+            var groupedData = ipHistory
+                .GroupBy(x => x.steamid)
+                .AsParallel()  
+                .ToList();
+            
             Parallel.ForEach(groupedData, group =>
             {
-                var ips = new HashSet<string>(group.Select(x => x.address));
-                var lastUsed = group.Max(x => x.used_at);
+                var ips = new HashSet<string>(
+                    group.Select(x => x.address), 
+                    StringComparer.OrdinalIgnoreCase
+                );
     
+                var lastUsed = group.Max(x => x.used_at);
+                var playerName = group
+                                     .OrderByDescending(x => x.used_at)  // Prefer newer records
+                                     .Select(x => x.name)
+                                     .FirstOrDefault(name => !string.IsNullOrEmpty(name))
+                                 ?? CS2_SimpleAdmin._localizer?["sa_unknown"] 
+                                 ?? "Unknown";
+
                 _playerIpsCache.AddOrUpdate(
                     group.Key,
-                    _ => (ips, lastUsed),
+                    // Add new entry
+                    _ => (ips, lastUsed, playerName),
+                    // Update existing
                     (_, existing) => 
                     {
-                        existing.ips.UnionWith(ips);
-                        return (existing.ips, 
-                            lastUsed > existing.used_at ? lastUsed : existing.used_at);
+                        existing.ips.UnionWith(ips); 
+                        return (
+                            existing.ips,
+                            lastUsed > existing.usedAt ? lastUsed : existing.usedAt,
+                            string.IsNullOrEmpty(existing.playerName) ? playerName : existing.playerName
+                        );
                     });
             });
 
@@ -126,7 +151,13 @@ internal class CacheManager
     public List<BanRecord> GetAllBans() => _banCache.Values.ToList();
     public List<BanRecord> GetActiveBans() => _banCache.Values.Where(b => b.Status == "ACTIVE").ToList();
     public List<BanRecord> GetPlayerBansBySteamId(string steamId) => _banCache.Values.Where(b => b.PlayerSteamId == steamId).ToList();
-
+    public List<(ulong SteamId, string PlayerName)> GetAccountsByIp(string ipAddress)
+    {
+        return _playerIpsCache.AsValueEnumerable()
+            .Where(kvp => kvp.Value.ips.Contains(ipAddress))
+            .Select(kvp => (kvp.Key, kvp.Value.playerName))
+            .ToList();
+    }
 
     private bool IsIpBanned(string ipAddress)
     {

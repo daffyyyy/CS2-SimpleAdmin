@@ -76,6 +76,7 @@
 
 	"sa_player_penalty_info": "===========================\n玩家 {lightred}{0}{default} 的处罚信息,\n禁止次数: {lightred}{1}{default}, 禁言次数: {lightred}{2}{default}, 静音次数: {lightred}{3}{default}, 沉默次数: {lightred}{4}{default}, 警告次数: {lightred}{5}{default}\n活跃的处罚:\n{6}\n活跃的警告:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}玩家 {lightred}{0}{grey} 的处罚信息, 禁止: {lightred}{1}{grey}, 禁言: {lightred}{2}{grey}, 静音: {lightred}{3}{grey}, 沉默: {lightred}{4}{grey}, 警告: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}玩家 {lightred}{0}{grey} 的关联账户：{1}",
 	"sa_player_ban_message_time": "您已被 {lightred}{0}{default} 因 {lightred}{2}{default} 禁止 {lightred}{1}{default} 分钟!",
 	"sa_player_ban_message_perm": "您已被 {lightred}{0}{default} 因 {lightred}{1}{default} 永久禁止!",
 	"sa_player_kick_message": "您已被 {lightred}{0}{default} 因 {lightred}{1}{default} 踢出!",

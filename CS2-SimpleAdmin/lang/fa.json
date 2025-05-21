@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nتنبیهات بازیکن برای {lightred}{0}{default},\nتعداد مسدودیت‌ها: {lightred}{1}{default}, تعداد سکوت‌ها: {lightred}{2}{default}, تعداد بی‌صدا کردن‌ها: {lightred}{3}{default}, تعداد سکوت‌ها: {lightred}{4}{default}, تعداد هشدارها: {lightred}{5}{default}\nتنبیهات فعال:\n{6}\nهشدارهای فعال:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}تنبیهات بازیکن برای {lightred}{0}{grey}, مسدودیت‌ها: {lightred}{1}{grey}, سکوت‌ها: {lightred}{2}{grey}, بی‌صدا کردن‌ها: {lightred}{3}{grey}, سکوت‌ها: {lightred}{4}{grey}, هشدارها: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}حساب‌های مرتبط با بازیکن {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "شما توسط {lightred}{2}{default} برای {lightred}{1}{default} دقیقه به دلیل {lightred}{0}{default} مسدود شده‌اید!",
 	"sa_player_ban_message_perm": "شما توسط {lightred}{1}{default} به دلیل {lightred}{0}{default} برای همیشه مسدود شده‌اید!",
 	"sa_player_kick_message": "شما توسط {lightred}{1}{default} به دلیل {lightred}{0}{default} اخراج شده‌اید!",

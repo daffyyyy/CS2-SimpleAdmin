@@ -89,6 +89,17 @@ public class Discord
         new DiscordPenaltySetting { Name = "Footer", Value = "" },
         new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
     ];
+    
+    [JsonPropertyName("DiscordAssociatedAccountsSettings")]
+    public DiscordPenaltySetting[] DiscordAssociatedAccountsSettings { get; set; } =
+    [
+        new DiscordPenaltySetting { Name = "Color", Value = "" },
+        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
+        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
+        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
+        new DiscordPenaltySetting { Name = "Footer", Value = "" },
+        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+    ];
 }
 
 public class CustomServerCommandData

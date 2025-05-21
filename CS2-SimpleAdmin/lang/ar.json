@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nعقوبات اللاعبين لـ {lightred}{0}{default},\nعدد الحظر: {lightred}{1}{default}, عدد الصمت: {lightred}{2}{default}, عدد الكتم: {lightred}{3}{default}, عدد السكوت: {lightred}{4}{default}, عدد التحذيرات: {lightred}{5}{default}\nالعقوبات النشطة:\n{6}\nالتحذيرات النشطة:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}عقوبات اللاعبين لـ {lightred}{0}{grey}, حظر: {lightred}{1}{grey}, صمت: {lightred}{2}{grey}, كتم: {lightred}{3}{grey}, سكوت: {lightred}{4}{grey}, تحذيرات: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}الحسابات المرتبطة باللاعب {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "تم حظرك لمدة {lightred}{0}{default} لمدة {lightred}{1}{default} دقيقة من قبل {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "تم حظرك بشكل دائم لمدة {lightred}{0}{default} من قبل {lightred}{1}{default}!",
 	"sa_player_kick_message": "تم طردك لمدة {lightred}{0}{default} من قبل {lightred}{1}{default}!",
