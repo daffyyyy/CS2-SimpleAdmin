@@ -62,14 +62,14 @@ internal static class Helper
         return GetValidPlayers().FirstOrDefault(x => x.IpAddress != null && x.IpAddress.Split(":")[0].Equals(ipAddress));
     }
 
-    public static IReadOnlyList<CCSPlayerController> GetValidPlayers()
+    public static List<CCSPlayerController> GetValidPlayers()
     {
         return Utilities.GetPlayers().AsValueEnumerable()
             .Where(p => p is { IsValid: true, IsBot: false, Connected: PlayerConnectedState.PlayerConnected })
             .ToList();
     }
     
-    public static IReadOnlyList<CCSPlayerController> GetValidPlayersWithBots()
+    public static List<CCSPlayerController> GetValidPlayersWithBots()
     {
         return Utilities.GetPlayers().AsValueEnumerable()
             .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
@@ -968,5 +968,37 @@ public static class WeaponHelper
             .ToList();
 
         return filteredWeapons; // Return all relevant matches for the partial input
+    }
+}
+
+public static class IpHelper
+{
+    public static uint IpToUint(string ipAddress)
+    {
+        return (uint)BitConverter.ToInt32(System.Net.IPAddress.Parse(ipAddress).GetAddressBytes().Reverse().ToArray(),
+            0);
+    }
+    
+    public static bool TryConvertIpToUint(string ipString, out uint ipUint)
+    {
+        ipUint = 0;
+        if (string.IsNullOrWhiteSpace(ipString))
+            return false;
+
+        if (!System.Net.IPAddress.TryParse(ipString, out var ipAddress))
+            return false;
+
+        var bytes = ipAddress.GetAddressBytes();
+        if (bytes.Length != 4)
+            return false;
+
+        ipUint = IpToUint(ipString);
+        return true;
+    }
+
+    public static string UintToIp(uint ipAddress)
+    {
+        var bytes = BitConverter.GetBytes(ipAddress).Reverse().ToArray();
+        return new System.Net.IPAddress(bytes).ToString();
     }
 }

@@ -68,5 +68,5 @@ public partial class CS2_SimpleAdmin
     internal BanManager BanManager = new(Database);
     internal MuteManager MuteManager = new(Database);
     internal WarnManager WarnManager = new(Database);
-    internal readonly CacheManager CacheManager = new();
+    internal CacheManager? CacheManager = new();
 }

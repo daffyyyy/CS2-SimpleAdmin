@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CS2_SimpleAdmin.Models;
 
-public record BanRecord
+public record struct BanRecord
 {
     [Column("id")]
     public int Id { get; set; }

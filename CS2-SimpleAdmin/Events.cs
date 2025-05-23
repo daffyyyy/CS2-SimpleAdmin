@@ -137,7 +137,7 @@ public partial class CS2_SimpleAdmin
 #if DEBUG
         Logger.LogCritical("[OnClientConnect]");
 #endif
-        if (Config.OtherSettings.BanType == 1 && !Instance.CacheManager.IsPlayerBanned(null, ipaddress.Split(":")[0]))
+        if (Config.OtherSettings.BanType == 1 && Instance.CacheManager != null && !Instance.CacheManager.IsPlayerBanned(null, ipaddress.Split(":")[0]))
                 return;
 
         Server.NextFrame((() =>

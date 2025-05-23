@@ -393,7 +393,7 @@ public partial class CS2_SimpleAdmin
     {
         if (Database == null) return;
 
-        _ = Instance.CacheManager.ForceReInitializeCacheAsync();
+        _ = Instance.CacheManager?.ForceReInitializeCacheAsync();
         command.ReplyToCommand("Reloaded bans");
     }
 

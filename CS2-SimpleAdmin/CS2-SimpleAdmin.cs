@@ -31,6 +31,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         {
             ServerLoaded = false;
             _serverLoading = false;
+            
+            CacheManager = new CacheManager();
             OnGameServerSteamAPIActivated();
             OnMapStart(string.Empty);
 
@@ -148,5 +150,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
         command.ReplyToCommand($"Multiple targets found for \"{command.GetArg(1)}\".");
         return null;
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        CacheManager?.Dispose();
+        CacheManager = null;
     }
 }

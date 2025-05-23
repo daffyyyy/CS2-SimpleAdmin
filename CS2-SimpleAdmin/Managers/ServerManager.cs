@@ -88,8 +88,8 @@ public class ServerManager
                     }
 
                     CS2_SimpleAdmin.ServerLoaded = true;
-                    
-                    await CS2_SimpleAdmin.Instance.CacheManager.InitializeCacheAsync();
+                    if (CS2_SimpleAdmin.Instance.CacheManager != null)
+                        await CS2_SimpleAdmin.Instance.CacheManager.InitializeCacheAsync();
                 }
                 catch (Exception ex)
                 {
