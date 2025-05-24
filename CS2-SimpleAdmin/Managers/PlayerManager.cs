@@ -313,9 +313,8 @@ public class PlayerManager
                         return CS2_SimpleAdmin.Instance.CacheManager != null && CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
                         {
                             0 => CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(player.SteamID.ToString(), null),
-                            _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
-                                ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(player.SteamID, player.IpAddress?.Split(":")[0])
-                                : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(player.SteamID.ToString(), player.IpAddress?.Split(":")[0])
+                            _ => 
+                                CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(player.SteamID.ToString(), player.IpAddress?.Split(":")[0])
                         };
                     })
                     .ToList();
