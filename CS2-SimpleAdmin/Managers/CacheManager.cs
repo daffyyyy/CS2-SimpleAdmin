@@ -236,7 +236,7 @@ internal class CacheManager: IDisposable
             RebuildIndexes();
             _lastUpdateTime = DateTime.Now.AddSeconds(-1);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             // ignored
         }

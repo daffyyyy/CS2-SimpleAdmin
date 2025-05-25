@@ -14,5 +14,5 @@ public record BanRecord
     public string? PlayerIp { get; set; }
     
     [Column("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
 }
