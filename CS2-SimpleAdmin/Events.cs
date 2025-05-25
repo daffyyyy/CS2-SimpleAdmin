@@ -149,14 +149,22 @@ public partial class CS2_SimpleAdmin
 
             if (player.UserId.HasValue)
                 PlayersInfo.TryRemove(player.UserId.Value, out _);
-
-            var authorizedSteamId = player.AuthorizedSteamID;
-            if (authorizedSteamId == null || !PermissionManager.AdminCache.TryGetValue(authorizedSteamId,
-                                              out var expirationTime)
-                                          || !(expirationTime <= Time.ActualDateTime())) return HookResult.Continue;
-
-            AdminManager.ClearPlayerPermissions(authorizedSteamId);
-            AdminManager.RemovePlayerAdminData(authorizedSteamId);
+            
+            if (!PermissionManager.AdminCache.TryGetValue(steamId, out var data) 
+                || !(data.ExpirationTime <= Time.ActualDateTime()))
+            {
+                return HookResult.Continue;
+            }
+            
+            AdminManager.RemovePlayerPermissions(steamId, PermissionManager.AdminCache[steamId].Flags.ToArray());
+            AdminManager.RemovePlayerFromGroup(steamId, true, PermissionManager.AdminCache[steamId].Flags.ToArray());
+            var adminData = AdminManager.GetPlayerAdminData(steamId);
+            
+            if (adminData == null || data.Flags.ToList().Count != 0 && adminData.Groups.ToList().Count != 0)
+                return HookResult.Continue;
+							
+            AdminManager.ClearPlayerPermissions(steamId);
+            AdminManager.RemovePlayerAdminData(steamId);
 
             return HookResult.Continue;
         }
@@ -172,8 +180,11 @@ public partial class CS2_SimpleAdmin
 #if DEBUG
         Logger.LogCritical("[OnClientConnect]");
 #endif
-        if (!CS2_SimpleAdmin.BannedPlayers.Contains(ipaddress.Split(":")[0]))
+        if (Config.OtherSettings.BanType == 0)
             return;
+        
+        if (Instance.CacheManager != null && !Instance.CacheManager.IsPlayerBanned(null, ipaddress.Split(":")[0]))
+                return;
 
         Server.NextFrame((() =>
         {
@@ -262,13 +273,26 @@ public partial class CS2_SimpleAdmin
         if (!PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Gag, out DateTime? endDateTime) &&
             !PlayerPenaltyManager.IsPenalized(author.Slot, PenaltyType.Silence, out endDateTime))
             return HookResult.Continue;
+
+        var message = um.ReadString("param2");
+
+        if (_localizer == null || endDateTime is null) return HookResult.Continue;
+
+        if (CoreConfig.PublicChatTrigger.Concat(CoreConfig.SilentChatTrigger).Any(trigger => message.StartsWith(trigger)))
+        {
+            foreach (var recipient in um.Recipients)
+            {
+                if (recipient == author)
+                    continue;
+            
+                um.Recipients.Remove(recipient);
+            }
+
+            return HookResult.Continue;
+        }
         
-        if (_localizer != null && endDateTime is not null)
-            author.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", author.GetLanguage()));
+        author.SendLocalizedMessage(_localizer, "sa_player_penalty_chat_active", endDateTime.Value.ToString("g", author.GetLanguage()));
         return HookResult.Stop;
-
-        // um.Recipients.Clear();
-
     }
 
     private HookResult ComamndListenerHandler(CCSPlayerController? player, CommandInfo info)
@@ -448,9 +472,9 @@ public partial class CS2_SimpleAdmin
     private void OnMapStart(string mapName)
     {
         if (Config.OtherSettings.ReloadAdminsEveryMapChange && ServerLoaded && ServerId != null)
-            AddTimer(3.0f, () => ReloadAdmins(null));
+            AddTimer(5.0f, () => ReloadAdmins(null));
 
-        AddTimer(1.0f, () => new ServerManager().CheckHibernationStatus());
+        AddTimer(1.0f, () => ServerManager.CheckHibernationStatus());
 
         // AddTimer(34, () =>
         // {
@@ -471,9 +495,8 @@ public partial class CS2_SimpleAdmin
     {
         var player = @event.Userid;
 
-        if (player is null || @event.Attacker is null || !player.PawnIsAlive || player.PlayerPawn.Value == null)
+        if (player is null || @event.Attacker is null || player.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE || player.PlayerPawn.Value == null)
             return HookResult.Continue;
-        
 
         if (SpeedPlayers.TryGetValue(player.Slot, out var speedPlayer))
             AddTimer(0.15f, () => player.SetSpeed(speedPlayer));

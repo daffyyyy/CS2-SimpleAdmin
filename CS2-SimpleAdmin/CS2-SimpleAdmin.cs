@@ -19,7 +19,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.7.5a";
+    public override string ModuleVersion => "1.7.7-alpha";
     
     public override void Load(bool hotReload)
     {
@@ -31,6 +31,8 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         {
             ServerLoaded = false;
             _serverLoading = false;
+            
+            CacheManager = new CacheManager();
             OnGameServerSteamAPIActivated();
             OnMapStart(string.Empty);
 
@@ -40,10 +42,10 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                 
                 var playerManager = new PlayerManager();
 
-                Helper.GetValidPlayers().ForEach(player =>
+                foreach (var player in Helper.GetValidPlayers()) 
                 {
                     playerManager.LoadPlayerData(player);
-                });
+                };
             });
         }
         _cBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
@@ -58,7 +60,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
     public override void OnAllPluginsLoaded(bool hotReload)
     {
-        AddTimer(3.0f, () => ReloadAdmins(null));
+        AddTimer(5.0f, () => ReloadAdmins(null));
 
         try
         {
@@ -150,5 +152,11 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
         command.ReplyToCommand($"Multiple targets found for \"{command.GetArg(1)}\".");
         return null;
+    }
+
+    public override void Unload(bool hotReload)
+    {
+        CacheManager?.Dispose();
+        CacheManager = null;
     }
 }

@@ -9,9 +9,9 @@ public class ServerManager
 {
     private int _getIpTryCount;
 
-    public void CheckHibernationStatus()
+    public static void CheckHibernationStatus()
     {
-        ConVar? convar = ConVar.Find("sv_hibernate_when_empty");
+        var convar = ConVar.Find("sv_hibernate_when_empty");
         
         if (convar == null || !convar.GetPrimitiveValue<bool>())
             return;
@@ -95,6 +95,8 @@ public class ServerManager
                         new { address });
 
                     CS2_SimpleAdmin.ServerId = serverId;
+                    
+                    CS2_SimpleAdmin._logger?.LogInformation("Loaded server with ip {ip}", ipAddress);
 
                     if (CS2_SimpleAdmin.ServerId != null)
                     {
@@ -102,6 +104,8 @@ public class ServerManager
                     }
 
                     CS2_SimpleAdmin.ServerLoaded = true;
+                    if (CS2_SimpleAdmin.Instance.CacheManager != null)
+                        await CS2_SimpleAdmin.Instance.CacheManager.InitializeCacheAsync();
                 }
                 catch (Exception ex)
                 {

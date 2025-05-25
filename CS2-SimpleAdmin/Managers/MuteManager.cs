@@ -187,13 +187,13 @@ internal class MuteManager(Database.Database? database)
         }
     }
     
-    public async Task CheckOnlineModeMutes(List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)> players)
+    public async Task CheckOnlineModeMutes(List<(ulong SteamID, int? UserId, int Slot)> players)
     {
         if (database == null) return;
 
         try
         {
-            var batchSize = 10;
+            const int batchSize = 20;
             await using var connection = await database.GetConnectionAsync();
 
             var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
@@ -205,7 +205,7 @@ internal class MuteManager(Database.Database? database)
                 var batch = players.Skip(i).Take(batchSize);
                 var parametersList = new List<object>();
 
-                foreach (var (_, steamId, _, _) in batch)
+                foreach (var (steamId, _, _) in batch)
                 {
                     parametersList.Add(new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
                 }
@@ -218,7 +218,7 @@ internal class MuteManager(Database.Database? database)
                 : "SELECT * FROM `sa_mutes` WHERE player_steamid = @PlayerSteamID AND passed >= duration AND duration > 0 AND status = 'ACTIVE' AND server_id = @serverid";
 
 
-            foreach (var (_, steamId, _, slot) in players)
+            foreach (var (steamId, _, slot) in players)
             {
                 var muteRecords = await connection.QueryAsync(sql, new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
 

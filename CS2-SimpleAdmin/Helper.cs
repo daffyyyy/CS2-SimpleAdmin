@@ -22,6 +22,7 @@ using CounterStrikeSharp.API.Core.Plugin.Host;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CS2_SimpleAdmin.Managers;
 using MenuManager;
+using ZLinq;
 
 namespace CS2_SimpleAdmin;
 
@@ -78,33 +79,29 @@ internal static class Helper
         return Utilities.GetPlayers().FindAll(x => x.PlayerName.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static List<CCSPlayerController> GetPlayerFromSteamid64(string steamid)
+    public static CCSPlayerController? GetPlayerFromSteamid64(string steamid)
     {
-        return GetValidPlayers().FindAll(x =>
-            x.SteamID.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase)
-        );
+        return GetValidPlayers().FirstOrDefault(x => x.SteamID.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static List<CCSPlayerController> GetPlayerFromIp(string ipAddress)
+    public static CCSPlayerController? GetPlayerFromIp(string ipAddress)
     {
-        return GetValidPlayers().FindAll(x =>
-            x.IpAddress != null &&
-            x.IpAddress.Split(":")[0].Equals(ipAddress)
-        );
+        return GetValidPlayers().FirstOrDefault(x => x.IpAddress != null && x.IpAddress.Split(":")[0].Equals(ipAddress));
     }
 
     public static List<CCSPlayerController> GetValidPlayers()
     {
-        return Utilities.GetPlayers().FindAll(p => p is
-        { IsValid: true, IsBot: false, Connected: PlayerConnectedState.PlayerConnected });
+        return Utilities.GetPlayers().AsValueEnumerable()
+            .Where(p => p is { IsValid: true, IsBot: false, Connected: PlayerConnectedState.PlayerConnected })
+            .ToList();
+    }
+    
+    public static List<CCSPlayerController> GetValidPlayersWithBots()
+    {
+        return Utilities.GetPlayers().AsValueEnumerable()
+            .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
     }
 
-    public static IEnumerable<CCSPlayerController?> GetValidPlayersWithBots()
-    {
-        return Utilities.GetPlayers().FindAll(p =>
-            p is { IsValid: true, IsBot: false, IsHLTV: false } or { IsValid: true, IsBot: true, IsHLTV: false }
-        );
-    }
 
     // public static bool IsValidSteamId64(string input)
     // {
@@ -699,12 +696,11 @@ internal static class Helper
             }
             catch (Exception ex)
             {
-                // Log or handle the exception
                 Console.WriteLine(ex);
             }
         });
     }
-
+    
     private static string GenerateMessageDiscord(string message)
     {
         var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
@@ -827,6 +823,7 @@ internal static class Helper
         
         return pluginManager;
     }
+    
 }
 
 public static class PluginInfo
@@ -998,5 +995,37 @@ public static class WeaponHelper
             .ToList();
 
         return filteredWeapons; // Return all relevant matches for the partial input
+    }
+}
+
+public static class IpHelper
+{
+    public static uint IpToUint(string ipAddress)
+    {
+        return (uint)BitConverter.ToInt32(System.Net.IPAddress.Parse(ipAddress).GetAddressBytes().Reverse().ToArray(),
+            0);
+    }
+    
+    public static bool TryConvertIpToUint(string ipString, out uint ipUint)
+    {
+        ipUint = 0;
+        if (string.IsNullOrWhiteSpace(ipString))
+            return false;
+
+        if (!System.Net.IPAddress.TryParse(ipString, out var ipAddress))
+            return false;
+
+        var bytes = ipAddress.GetAddressBytes();
+        if (bytes.Length != 4)
+            return false;
+
+        ipUint = IpToUint(ipString);
+        return true;
+    }
+
+    public static string UintToIp(uint ipAddress)
+    {
+        var bytes = BitConverter.GetBytes(ipAddress).Reverse().ToArray();
+        return new System.Net.IPAddress(bytes).ToString();
     }
 }

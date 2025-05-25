@@ -78,6 +78,7 @@
 
 	"sa_player_penalty_info": "===========================\nPlayer penalties for {lightred}{0}{default},\nNumber of bans: {lightred}{1}{default}, Number of gags: {lightred}{2}{default}, Number of mutes: {lightred}{3}{default}, Number of silences: {lightred}{4}{default}, Number of warnings: {lightred}{5}{default}\nActive penalties:\n{6}\nActive warnings:\n{7}\n===========================",
 	"sa_admin_penalty_info": "{grey}Player penalties for {lightred}{0}{grey}, Bans: {lightred}{1}{grey}, Gags: {lightred}{2}{grey}, Mutes: {lightred}{3}{grey}, Silences: {lightred}{4}{grey}, Warns: {lightred}{5}",
+	"sa_admin_associated_accounts": "{grey}Associated accounts of player {lightred}{0}{grey}: {1}",
 	"sa_player_ban_message_time": "You have been banned for {lightred}{0}{default} for {lightred}{1}{default} minutes by {lightred}{2}{default}!",
 	"sa_player_ban_message_perm": "You have been banned permanently for {lightred}{0}{default} by {lightred}{1}{default}!",
 	"sa_player_kick_message": "You have been kicked for {lightred}{0}{default} by {lightred}{1}{default}!",

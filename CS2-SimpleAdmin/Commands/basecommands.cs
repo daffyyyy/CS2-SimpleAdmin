@@ -386,20 +386,21 @@ public partial class CS2_SimpleAdmin
 
         command.ReplyToCommand("Reloaded sql admins and groups");
     }
+    
+    [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+    [RequiresPermissions("@css/root")]
+    public void OnRelBans(CCSPlayerController? caller, CommandInfo command)
+    {
+        if (Database == null) return;
+
+        _ = Instance.CacheManager?.ForceReInitializeCacheAsync();
+        command.ReplyToCommand("Reloaded bans");
+    }
 
     public void ReloadAdmins(CCSPlayerController? caller)
     {
         if (Database == null) return;
-
-        for (var index = 0; index < PermissionManager.AdminCache.Keys.ToList().Count; index++)
-        {
-            var steamId = PermissionManager.AdminCache.Keys.ToList()[index];
-            if (!PermissionManager.AdminCache.TryRemove(steamId, out _)) continue;
-
-            AdminManager.ClearPlayerPermissions(steamId);
-            AdminManager.RemovePlayerAdminData(steamId);
-        }
-
+        
         if(!Config.IsCSSPanel)
         {
             Task.Run(async () =>
@@ -413,11 +414,11 @@ public partial class CS2_SimpleAdmin
                 await Server.NextWorldUpdateAsync(() =>
                 {
                     if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(1.8f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                        AddTimer(1.3f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
                     if (!string.IsNullOrEmpty(groupsFile))
                         AddTimer(2.5f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
                     if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(3.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                        AddTimer(3.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
 
                     _logger?.LogInformation("Loaded admins!");
                 });
@@ -445,8 +446,8 @@ public partial class CS2_SimpleAdmin
         {
             Server.ExecuteCommand("sv_disable_teamselect_menu 1");
 
-            if (caller.PlayerPawn.Value != null && caller.PawnIsAlive)
-                caller.PlayerPawn.Value.CommitSuicide(true, false);
+            if (caller.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
+                caller.PlayerPawn.Value?.CommitSuicide(true, false);
 
             AddTimer(1.0f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
             AddTimer(1.4f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
@@ -520,6 +521,10 @@ public partial class CS2_SimpleAdmin
                         printMethod($"• Total Mutes: \"{playerInfo.TotalMutes}\"");
                         printMethod($"• Total Silences: \"{playerInfo.TotalSilences}\"");
                         printMethod($"• Total Warns: \"{playerInfo.TotalWarns}\"");
+
+                        var chunkedAccounts = playerInfo.AccountsAssociated.ChunkBy(3).ToList();
+                        foreach (var chunk in chunkedAccounts)
+                            printMethod($"• Associated Accounts: \"{string.Join(", ", chunk.Select(a => $"{a.PlayerName} ({a.SteamId})"))}\"");
                     }
 
                     printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
@@ -661,7 +666,6 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
 
         var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsBot: false }).ToList();
-
         if (playersToTarget.Count > 1)
             return;
 
@@ -719,20 +723,20 @@ public partial class CS2_SimpleAdmin
             if (caller != null)
             {
                 caller.PrintToConsole("--------- PLAYER LIST ---------");
-                playersToTarget.ForEach(player =>
+                foreach (var player in playersToTarget)
                 {
                     caller.PrintToConsole(
                         $"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{(AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/showip") ? player.IpAddress?.Split(":")[0] : "Unknown")}\" SteamID64: \"{player.SteamID}\")");
-                });
+                };
                 caller.PrintToConsole("--------- END PLAYER LIST ---------");
             }
             else
             {
                 Server.PrintToConsole("--------- PLAYER LIST ---------");
-                playersToTarget.ForEach(player =>
+                foreach (var player in playersToTarget)
                 {
                     Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
-                });
+                };
                 Server.PrintToConsole("--------- END PLAYER LIST ---------");
             }
         }
@@ -800,6 +804,8 @@ public partial class CS2_SimpleAdmin
                 Kick(caller, player, reason, callerName, command);
             }
         });
+        
+        Helper.LogCommand(caller, command);
     }
 
     public void Kick(CCSPlayerController? caller, CCSPlayerController player, string? reason = "Unknown", string? callerName = null, CommandInfo? command = null)
@@ -839,8 +845,6 @@ public partial class CS2_SimpleAdmin
         // Log the command and send Discord notification
         if (command == null)
             Helper.LogCommand(caller, $"css_kick {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {reason}");
-        else
-            Helper.LogCommand(caller, command);
         
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Kick, reason, -1, null);
     }

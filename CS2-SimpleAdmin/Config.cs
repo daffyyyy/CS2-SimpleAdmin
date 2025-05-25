@@ -89,6 +89,17 @@ public class Discord
         new DiscordPenaltySetting { Name = "Footer", Value = "" },
         new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
     ];
+    
+    [JsonPropertyName("DiscordAssociatedAccountsSettings")]
+    public DiscordPenaltySetting[] DiscordAssociatedAccountsSettings { get; set; } =
+    [
+        new DiscordPenaltySetting { Name = "Color", Value = "" },
+        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
+        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
+        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
+        new DiscordPenaltySetting { Name = "Footer", Value = "" },
+        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+    ];
 }
 
 public class ChatLog
@@ -247,7 +258,10 @@ public class OtherSettings
     public List<string> AdditionalCommandsToLog { get; set; } = new();
 
     [JsonPropertyName("HideStealthPlayersFromSpecList")]
-    public bool HideStealthPlayersFromSpecList  {get; set; } = false;
+    public bool HideStealthPlayersFromSpecList { get; set; } = false;
+
+    [JsonPropertyName("IgnoredIps")]
+    public List<string> IgnoredIps { get; set; } = new();
 }
 
 public class CS2_SimpleAdminConfig : BasePluginConfig

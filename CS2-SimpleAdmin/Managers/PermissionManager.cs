@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using CounterStrikeSharp.API.Modules.Admin;
 
 namespace CS2_SimpleAdmin.Managers;
 
@@ -13,7 +14,8 @@ public class PermissionManager(Database.Database? database)
 {
     // Unused for now
     //public static readonly ConcurrentDictionary<string, ConcurrentBag<string>> _adminCache = new ConcurrentDictionary<string, ConcurrentBag<string>>();
-    public static readonly ConcurrentDictionary<SteamID, DateTime?> AdminCache = new();
+    // public static readonly ConcurrentDictionary<SteamID, DateTime?> AdminCache = new();
+    public static readonly ConcurrentDictionary<SteamID, (DateTime? ExpirationTime, List<string> Flags)> AdminCache = new();
 
     // Get the relevant server groups from the sa_servers_groups table by searching if the serverId is in the servers set column
 	public async Task<List<string>> GetServerGroups()
@@ -236,7 +238,7 @@ public class PermissionManager(Database.Database? database)
 			{
 				if (!AdminCache.ContainsKey(steamId))
 				{
-					AdminCache.TryAdd(steamId, ends);
+					AdminCache.TryAdd(steamId, (ends, flags));
 					//_adminCacheTimestamps.Add(steamId, ends);
 				}
 
@@ -400,7 +402,7 @@ public class PermissionManager(Database.Database? database)
 			.GroupBy(player => player.name) // Group by player name
 			.ToDictionary(
 				group => group.Key, // Use the player name as the key
-				group =>
+				object (group) =>
 				{
 					// Consolidate data for players with the same name
 					var consolidatedData = group.Aggregate(
@@ -431,17 +433,77 @@ public class PermissionManager(Database.Database? database)
 
 							return acc;
 						});
-
-					foreach (var player in group)
+					
+					Server.NextFrameAsync(() =>
 					{
-						SteamID.TryParse(player.identity, out var steamId);
-						if (steamId != null && !AdminCache.ContainsKey(steamId))
-						{
-							AdminCache.TryAdd(steamId, player.ends);
-						}
-					}
+						var keysToRemove = new List<SteamID>();
 
-					return (object)consolidatedData;
+						foreach (var steamId in AdminCache.Keys.ToList()) 
+						{
+							var data = AdminManager.GetPlayerAdminData(steamId);
+							if (data != null)
+							{
+								var flagsArray = AdminCache[steamId].Flags.ToArray();
+								AdminManager.RemovePlayerPermissions(steamId, flagsArray);
+								AdminManager.RemovePlayerFromGroup(steamId, true, flagsArray);
+							}
+
+							keysToRemove.Add(steamId);
+						}
+
+						foreach (var steamId in keysToRemove)
+						{
+							if (!AdminCache.TryRemove(steamId, out _)) continue;
+
+							var data = AdminManager.GetPlayerAdminData(steamId);
+							if (data == null) continue;
+							if (data.Flags.Count != 0 && data.Groups.Count != 0) continue;
+
+							AdminManager.ClearPlayerPermissions(steamId);
+							AdminManager.RemovePlayerAdminData(steamId);
+						}
+
+						foreach (var player in group)
+						{
+							if (SteamID.TryParse(player.identity, out var steamId) && steamId != null)
+							{
+								AdminCache.TryAdd(steamId, (player.ends, player.flags));
+							}
+						}
+					});
+
+					// Server.NextFrameAsync(() =>
+					// {
+					// 	for (var index = 0; index < AdminCache.Keys.ToList().Count; index++)
+					// 	{
+					// 		var steamId = AdminCache.Keys.ToList()[index];
+					// 		
+					// 		var data = AdminManager.GetPlayerAdminData(steamId);
+					// 		if (data != null)
+					// 		{
+					// 			AdminManager.RemovePlayerPermissions(steamId, AdminCache[steamId].Flags.ToArray());
+					// 			AdminManager.RemovePlayerFromGroup(steamId, true, AdminCache[steamId].Flags.ToArray());
+					// 		}
+					// 		
+					// 		if (!AdminCache.TryRemove(steamId, out _)) continue;
+					//
+					// 		if (data == null) continue;
+					// 		if (data.Flags.ToList().Count != 0 && data.Groups.ToList().Count != 0)
+					// 			continue;
+					// 		
+					// 		AdminManager.ClearPlayerPermissions(steamId);
+					// 		AdminManager.RemovePlayerAdminData(steamId);
+					// 	}
+					// 	
+					// 	foreach (var player in group)
+					// 	{
+					// 		SteamID.TryParse(player.identity, out var steamId);
+					// 		if (steamId == null) continue;
+					// 		AdminCache.TryAdd(steamId, (player.ends, player.flags));
+					// 	}
+					// });
+
+					return consolidatedData;
 				});
 		
         var json = JsonConvert.SerializeObject(jsonData, Formatting.Indented);
