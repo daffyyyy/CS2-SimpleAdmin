@@ -10,14 +10,17 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Capabilities;
 using Microsoft.Extensions.Logging;
 using AntiDLL.API;
+using System.Text.Json;
+using System.Net.Http.Headers;
 
 public class PluginConfig : IBasePluginConfig
 {
-    [JsonPropertyName("ConfigVersion")] public int Version { get; set; } = 1;
+    [JsonPropertyName("ConfigVersion")] public int Version { get; set; } = 2;
     [JsonPropertyName("Reason")] public string Reason { get; set; } = "Invalid event detected!";
     [JsonPropertyName("Duration")] public int Duration { get; set; } = 0;
     [JsonPropertyName("CommandToExecute")] public string CommandToExecute { get; set; } = "css_addban {steamid64} {duration} {reason}";
     [JsonPropertyName("BanType")] public string BanType { get; set; } = "auto";
+    [JsonPropertyName("WebhookUrl")] public string WebhookUrl { get; set; } = "";
 }
 
 public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginConfig>
@@ -29,7 +32,7 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
     private static PluginCapability<IAntiDLL> AntiDll { get; } = new("AntiDLL");
     private static PluginCapability<ICS2_SimpleAdminApi> SimpleAdminApi { get; } = new("simpleadmin:api");
     private static ICS2_SimpleAdminApi? _simpleAdminApi;
-    
+
     public override string ModuleName => "AntiDLL [CS2-SimpleAdmin Module]";
     public override string ModuleDescription => "AntiDLL module for CS2-SimpleAdmin integration";
     public override string ModuleVersion => "1.0.1";
@@ -39,12 +42,12 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
     {
         RegisterListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
     }
-    
+
     public void OnConfigParsed(PluginConfig config)
     {
         Config = config;
     }
-    
+
     public override void OnAllPluginsLoaded(bool hotReload)
     {
         try
@@ -56,7 +59,7 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
                 Unload(false);
                 return;
             }
-            
+
             antidll.OnDetection += OnDetection;
         }
         catch (Exception)
@@ -94,9 +97,9 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
     public HookResult OnPlayerSpawn(EventPlayerSpawn @event, GameEventInfo _)
     {
         var player = @event.Userid;
-        if (player == null || !player.IsValid || player.IsBot || !_detections.Contains(player.Slot)) 
+        if (player == null || !player.IsValid || player.IsBot || !_detections.Contains(player.Slot))
             return HookResult.Continue;
-        
+
         if (!_bannedPlayers.Contains(player.Slot) && player.Connected == PlayerConnectedState.PlayerConnected && player.TeamNum != 0)
             PunishPlayer(player);
 
@@ -108,22 +111,23 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
         if (player == null || !player.IsValid || player.IsBot) return;
         if (!_detections.Add(player.Slot))
             return;
-        
+
         // if (player.Connected != PlayerConnectedState.PlayerConnected)
         // {
         //     _detections.Add(player.Slot);
         //     // AddTimer(3.0f, () => OnDetection(player, eventName));
         //     return;
         // }
-        
+
         Logger.LogInformation("Detected \"{eventName}\" for \"{player}({steamid})\"", eventName, player.PlayerName, player.SteamID.ToString());
+        _ = SendWebhook(eventName, player.PlayerName, player.SteamID.ToString());
     }
 
     private void PunishPlayer(CCSPlayerController player)
     {
         if (!_bannedPlayers.Add(player.Slot))
             return;
-        
+
         if (_banType == 1 && _simpleAdminApi != null)
         {
             _simpleAdminApi.IssuePenalty(new SteamID(player.SteamID), null, PenaltyType.Ban, Config.Reason, Config.Duration);
@@ -143,11 +147,36 @@ public sealed class AntiDLL_CS2_SimpleAdmin : BasePlugin, IPluginConfig<PluginCo
     public override void Unload(bool hotReload)
     {
         RemoveListener<Listeners.OnClientDisconnect>(OnClientDisconnect);
-        
+
         var antidll = AntiDll.Get();
         if (antidll != null)
         {
             antidll.OnDetection -= OnDetection;
+        }
+    }
+
+    // Discord Webhook
+    private async Task SendWebhook(string eventName, string playerName, string steamid)
+    {
+        var webhookUrl = Config.WebhookUrl;
+        if (string.IsNullOrEmpty(webhookUrl))
+            return;
+
+        var payload = new
+        {
+            content = $"Detected \"{eventName}\" for \"{playerName}({steamid})\""
+        };
+
+        var json = JsonSerializer.Serialize(payload);
+
+        using var client = new HttpClient();
+        using var content = new StringContent(json, System.Text.Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
+
+        var response = await client.PostAsync(webhookUrl, content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            Logger.LogError("Failed to forward event to webhook: {response}", response.ReasonPhrase);
         }
     }
 }
