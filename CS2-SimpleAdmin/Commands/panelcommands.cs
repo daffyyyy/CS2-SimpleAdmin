@@ -55,6 +55,8 @@ public partial class CS2_SimpleAdmin
         MaxPlayers = ConVar.Find("sv_visiblemaxplayers")?.GetPrimitiveValue<int>() ?? -1;
 		MaxPlayers = MaxPlayers <= -1 ? Server.MaxPlayers : MaxPlayers;
 
+        string ServerName = ConVar.Find("hostname")?.StringValue ?? "Unknown";
+
         try
         {
             Maps = Server.GetMapList();
@@ -67,6 +69,7 @@ public partial class CS2_SimpleAdmin
         var server = new
         {
             map = Map,
+            hN = ServerName,
             p = Players,
             mP = MaxPlayers,
             // maps = Maps,
@@ -91,6 +94,7 @@ public partial class CS2_SimpleAdmin
                 // accountId = player.AuthorizedSteamID?.AccountId.ToString(),
                 // steamId2 = player.AuthorizedSteamID?.SteamId2,
                 // steamId3 = player.AuthorizedSteamID?.SteamId3,
+                pn = player.PlayerName,
                 s64 = player.AuthorizedSteamID?.SteamId64.ToString(),
                 // ping = player.Ping,
                 t = player.Team,
