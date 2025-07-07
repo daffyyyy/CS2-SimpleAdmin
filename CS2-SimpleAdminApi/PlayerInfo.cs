@@ -1,5 +1,5 @@
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Utils;
+using FixVectorLeak;
 
 namespace CS2_SimpleAdminApi;
 
@@ -30,8 +30,8 @@ public class PlayerInfo(
     public DiePosition? DiePosition { get; set; }
 }
 
-public struct DiePosition(Vector position, QAngle angle)
+public struct DiePosition(Vector_t position, QAngle_t angle)
 {
-    public Vector Position { get; set; } = position;
-    public QAngle Angle { get; set; } = angle;
+    public Vector_t Position { get; set; } = position;
+    public QAngle_t Angle { get; set; } = angle;
 }

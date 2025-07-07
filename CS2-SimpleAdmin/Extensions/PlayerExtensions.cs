@@ -7,7 +7,7 @@ using CounterStrikeSharp.API.Modules.Memory;
 using Microsoft.Extensions.Localization;
 using System.Text;
 using CounterStrikeSharp.API.Modules.UserMessages;
-using Vector = CounterStrikeSharp.API.Modules.Utils.Vector;
+using FixVectorLeak;
 
 namespace CS2_SimpleAdmin;
 
@@ -87,18 +87,18 @@ public static class PlayerExtensions
 
     public static void Bury(this CBasePlayerPawn pawn, float depth = 10f)
     {
-        var newPos = new Vector(pawn.AbsOrigin!.X, pawn.AbsOrigin.Y,
+        var newPos = new Vector_t(pawn.AbsOrigin!.X, pawn.AbsOrigin.Y,
             pawn.AbsOrigin!.Z - depth);
 
-        pawn.Teleport(newPos, pawn.AbsRotation!, pawn.AbsVelocity);
+        pawn.Teleport(newPos, pawn.AbsRotation!.ToQAngle_t(), pawn.AbsVelocity.ToVector_t());
     }
 
     public static void Unbury(this CBasePlayerPawn pawn, float depth = 15f)
     {
-        var newPos = new Vector(pawn.AbsOrigin!.X, pawn.AbsOrigin.Y,
+        var newPos = new Vector_t(pawn.AbsOrigin!.X, pawn.AbsOrigin.Y,
             pawn.AbsOrigin!.Z + depth);
 
-        pawn.Teleport(newPos, pawn.AbsRotation!, pawn.AbsVelocity);
+        pawn.Teleport(newPos, pawn.AbsRotation!.ToQAngle_t(), pawn.AbsVelocity.ToVector_t());
     }
 
     public static void Freeze(this CBasePlayerPawn pawn)
@@ -186,7 +186,7 @@ public static class PlayerExtensions
         /* Teleport in a random direction - thank you, Mani!*/
         /* Thank you AM & al!*/
         var random = new Random();
-        var vel = new Vector(pawn.AbsVelocity.X, pawn.AbsVelocity.Y, pawn.AbsVelocity.Z);
+        var vel = new Vector_t(pawn.AbsVelocity.X, pawn.AbsVelocity.Y, pawn.AbsVelocity.Z);
 
         vel.X += (random.Next(180) + 50) * (random.Next(2) == 1 ? -1 : 1);
         vel.Y += (random.Next(180) + 50) * (random.Next(2) == 1 ? -1 : 1);

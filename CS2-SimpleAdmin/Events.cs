@@ -13,6 +13,7 @@ using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.UserMessages;
 using CounterStrikeSharp.API.ValveConstants.Protobuf;
+using FixVectorLeak;
 
 namespace CS2_SimpleAdmin;
 
@@ -523,16 +524,16 @@ public partial class CS2_SimpleAdmin
         if (!PlayersInfo.ContainsKey(player.UserId.Value) || @event.Attacker == null)
             return HookResult.Continue;
 
-        var playerPosition = player.PlayerPawn.Value?.AbsOrigin; 
-        var playerRotation = player.PlayerPawn.Value?.AbsRotation;
-        
+        var playerPosition = player.PlayerPawn.Value?.AbsOrigin?.ToVector_t();
+        var playerRotation = player.PlayerPawn.Value?.AbsRotation?.ToQAngle_t();
+
         PlayersInfo[player.UserId.Value].DiePosition = new DiePosition(
-            new Vector(
+            new Vector_t(
                 playerPosition?.X ?? 0,
                 playerPosition?.Y ?? 0,
                 playerPosition?.Z ?? 0
             ),
-            new QAngle(
+            new QAngle_t(
                 playerRotation?.X ?? 0,
                 playerRotation?.Y ?? 0,
                 playerRotation?.Z ?? 0

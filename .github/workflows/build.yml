@@ -88,7 +88,7 @@ jobs:
       with:
         artifacts: "${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip"
         name: "CS2-SimpleAdmin - Build ${{ env.BUILD_NUMBER }}"
-        tag: "build-${{ env.BUILD_NUMBER }}"
+        tag: "fork-build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}"
         body: |
           Place files in addons/counterstrikesharp
           After first launch, configure the plugins in the respective configs:
