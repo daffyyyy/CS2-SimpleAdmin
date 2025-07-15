@@ -169,9 +169,9 @@ public static class PlayerExtensions
         )
         {
             controller.PlayerPawn.Value.Teleport(
-                target.PlayerPawn.Value.AbsOrigin,
-                target.PlayerPawn.Value.AbsRotation,
-                target.PlayerPawn.Value.AbsVelocity
+                target.PlayerPawn.Value.AbsOrigin!.ToVector_t(),
+                target.PlayerPawn.Value.AbsRotation!.ToQAngle_t(),
+                target.PlayerPawn.Value.AbsVelocity.ToVector_t()
             );
         }
     }
