@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <RootNamespace>AntiDLL_CS2_SimpleAdmin</RootNamespace>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="CounterStrikeSharp.API" Version="1.0.305" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="AntiDLL.API">
+        <HintPath>AntiDLL.API.dll</HintPath>
+      </Reference>
+      <Reference Include="CS2-SimpleAdminApi">
+        <HintPath>CS2-SimpleAdminApi.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

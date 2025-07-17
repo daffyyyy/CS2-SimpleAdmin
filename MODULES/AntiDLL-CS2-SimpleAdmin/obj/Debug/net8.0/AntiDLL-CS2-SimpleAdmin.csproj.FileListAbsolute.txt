@@ -1,0 +1,16 @@
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\bin\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.deps.json
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\bin\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.dll
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\bin\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.pdb
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\bin\Debug\net8.0\AntiDLL.API.dll
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\bin\Debug\net8.0\CS2-SimpleAdminApi.dll
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.csproj.AssemblyReference.cache
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.GeneratedMSBuildEditorConfig.editorconfig
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.AssemblyInfoInputs.cache
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.AssemblyInfo.cs
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.csproj.CoreCompileInputs.cache
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.sourcelink.json
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-.6CA02C21.Up2Date
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.dll
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\refint\AntiDLL-CS2-SimpleAdmin.dll
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\AntiDLL-CS2-SimpleAdmin.pdb
+L:\GITHUB\CS2-SimpleAdmin\Modules\AntiDLL-CS2-SimpleAdmin\obj\Debug\net8.0\ref\AntiDLL-CS2-SimpleAdmin.dll
