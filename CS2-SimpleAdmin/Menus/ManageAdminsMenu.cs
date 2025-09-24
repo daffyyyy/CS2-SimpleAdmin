@@ -1,6 +1,8 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
+using Menu;
+using Menu.Enums;
 
 namespace CS2_SimpleAdmin.Menus;
 
@@ -8,51 +10,87 @@ public static class ManageAdminsMenu
 {
     public static void OpenMenu(CCSPlayerController admin)
     {
-        if (admin.IsValid == false)
+        if (!admin.IsValid)
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/root") == false)
+
+        if (!AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/root"))
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
-                              "[SimpleAdmin] " +
-                              (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command")
-            );
+                            "[SimpleAdmin] " +
+                            (localizer?["sa_no_permission"] ?? "You do not have permissions to use this command"));
             return;
         }
 
-        var menu = AdminMenu.CreateMenu(localizer?["sa_menu_admins_manage"] ?? "Admins Manage");
-        List<ChatMenuOptionData> options =
-        [
-            new ChatMenuOptionData(localizer?["sa_admin_add"] ?? "Add Admin",
-                () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_admin_add"] ?? "Add Admin", AddAdminMenu)),
-            new ChatMenuOptionData(localizer?["sa_admin_remove"] ?? "Remove Admin",
-                () => PlayersMenu.OpenAdminPlayersMenu(admin, localizer?["sa_admin_remove"] ?? "Remove Admin", RemoveAdmin,
-                    player => player != admin && admin.CanTarget(player))),
-            new ChatMenuOptionData(localizer?["sa_admin_reload"] ?? "Reload Admins", () => ReloadAdmins(admin))
-        ];
+        List<MenuItem> items = new();
+        var optionMap = new Dictionary<int, Action>();
+        int i = 0;
 
-        foreach (var menuOptionData in options)
+        void AddOption(string name, Action action, bool disabled = false)
         {
-            var menuName = menuOptionData.Name;
-            menu?.AddMenuOption(menuName, (_, _) => { menuOptionData.Action.Invoke(); }, menuOptionData.Disabled);
+            if (disabled) return; // skip disabled options
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(name)]));
+            optionMap[i++] = action;
         }
 
-        if (menu != null) AdminMenu.OpenMenu(admin, menu);
+        AddOption(localizer?["sa_admin_add"] ?? "Add Admin",
+            () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_admin_add"] ?? "Add Admin", AddAdminMenu));
+
+        AddOption(localizer?["sa_admin_remove"] ?? "Remove Admin",
+            () => PlayersMenu.OpenAdminPlayersMenu(admin, localizer?["sa_admin_remove"] ?? "Remove Admin",
+                RemoveAdmin, player => player != admin && admin.CanTarget(player)));
+
+        AddOption(localizer?["sa_admin_reload"] ?? "Reload Admins", () => ReloadAdmins(admin));
+
+        if (i == 0) return; // nothing to show
+
+        CS2_SimpleAdmin.Menu?.ShowScrollableMenu(
+            admin,
+            localizer?["sa_menu_admins_manage"] ?? "Admins Manage",
+            items,
+            (buttons, menu, selected) =>
+            {
+                if (selected == null) return;
+                if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var action))
+                    action.Invoke();
+            },
+            true, freezePlayer: false, disableDeveloper: true);
     }
 
     private static void AddAdminMenu(CCSPlayerController admin, CCSPlayerController player)
     {
-        var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_admin_add"] ?? "Add Admin"}: {player.PlayerName}");
+        var menuTitle = $"{CS2_SimpleAdmin._localizer?["sa_admin_add"] ?? "Add Admin"}: {player.PlayerName}";
+
+        List<MenuItem> items = new();
+        var optionMap = new Dictionary<int, Action>();
+        int i = 0;
 
         foreach (var adminFlag in CS2_SimpleAdmin.Instance.Config.MenuConfigs.AdminFlags)
         {
-            var disabled = AdminManager.PlayerHasPermissions(player, adminFlag.Flag);
-            menu?.AddMenuOption(adminFlag.Name, (_, _) => { AddAdmin(admin, player, adminFlag.Flag); }, disabled);
+            bool disabled = AdminManager.PlayerHasPermissions(player, adminFlag.Flag);
+            if (disabled) continue; // skip disabled flags
+
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(adminFlag.Name)]));
+            int index = i++;
+            optionMap[index] = () => AddAdmin(admin, player, adminFlag.Flag);
         }
 
-        if (menu != null) AdminMenu.OpenMenu(admin, menu);
+        if (i == 0) return;
+
+        CS2_SimpleAdmin.Menu?.ShowScrollableMenu(
+            admin,
+            menuTitle,
+            items,
+            (buttons, menu, selected) =>
+            {
+                if (selected == null) return;
+                if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var action))
+                    action.Invoke();
+            },
+            true, freezePlayer: false, disableDeveloper: true);
     }
+
 
     private static void AddAdmin(CCSPlayerController admin, CCSPlayerController player, string flag)
     {

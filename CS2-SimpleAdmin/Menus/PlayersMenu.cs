@@ -1,5 +1,7 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
+using Menu;
+using Menu.Enums;
 using System.Web;
 
 namespace CS2_SimpleAdmin.Menus;
@@ -26,30 +28,47 @@ public static class PlayersMenu
         OpenMenu(admin, menuName, onSelectAction, p => p.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE);
     }
 
-    public static void OpenMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
+    public static void OpenMenu(
+    CCSPlayerController admin,
+    string menuName,
+    Action<CCSPlayerController, CCSPlayerController> onSelectAction,
+    Func<CCSPlayerController, bool>? enableFilter = null)
     {
-        var menu = AdminMenu.CreateMenu(menuName);
-
         var players = Helper.GetValidPlayersWithBots();
+        List<MenuItem> items = new();
+        var optionMap = new Dictionary<int, CCSPlayerController>();
+        int i = 0;
 
         foreach (var player in players)
         {
-            var playerName = player != null && player.PlayerName.Length > 26 ? player.PlayerName[..26] : player?.PlayerName;
+            if (player == null) continue;
 
+            var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
             var optionName = HttpUtility.HtmlEncode(playerName);
-            if (player != null && enableFilter != null && enableFilter(player) == false)
-                continue;
 
-            var enabled = admin.CanTarget(player);
+            if (enableFilter != null && !enableFilter(player)) continue;
 
-            if (optionName != null)
-                menu?.AddMenuOption(optionName, (_, _) =>
-                    {
-                        if (player != null) onSelectAction.Invoke(admin, player);
-                    },
-                    enabled == false);
+            bool enabled = admin.CanTarget(player);
+            if (!enabled) continue; // skip disabled options
+
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(optionName)]));
+            optionMap[i++] = player;
         }
 
-        if (menu != null) AdminMenu.OpenMenu(admin, menu);
+        if (items.Count == 0) return;
+
+        CS2_SimpleAdmin.Menu?.ShowScrollableMenu(
+            admin,
+            menuName,
+            items,
+            (buttons, menu, selected) =>
+            {
+                if (selected == null) return;
+                if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var player))
+                    onSelectAction(admin, player);
+            },
+            true,
+            freezePlayer: false,
+            disableDeveloper: true);
     }
 }

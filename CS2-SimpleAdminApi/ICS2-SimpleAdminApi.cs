@@ -10,7 +10,7 @@ public interface ICS2_SimpleAdminApi
     public static readonly PluginCapability<ICS2_SimpleAdminApi?> PluginCapability = new("simpleadmin:api");
 
     public PlayerInfo GetPlayerInfo(CCSPlayerController player);
-    
+
     public string GetConnectionString();
     public string GetServerAddress();
     public int? GetServerId();
@@ -20,7 +20,7 @@ public interface ICS2_SimpleAdminApi
     public event Action<PlayerInfo, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltied;
     public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltiedAdded;
     public event Action<string, string?, bool, object>? OnAdminShowActivity;
-    
+
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1);
     public void IssuePenalty(SteamID steamid, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1);
     public void LogCommand(CCSPlayerController? caller, string command);

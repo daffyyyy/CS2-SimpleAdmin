@@ -73,14 +73,16 @@ public partial class CS2_SimpleAdmin
         {
             if (player is null || player.IsValid is not true) continue;
 
-            //itereate cached players
-            for (int i = 0; i < CachedPlayers.Count(); i++) {
+            //iterate cached players
+            for (int i = 0; i < CachedPlayers.Count(); i++)
+            {
                 //leave self's observerPawn so it can spectate and check if feature is enabled
                 //we are clearing the whole spectator list as it doesn't work relaibly per person basis
                 if (CachedPlayers[i] is null || CachedPlayers[i].IsValid is not true) continue;
 
                 //check if it 'us' in the current context and do the magic only if it's not
-                if (CachedPlayers[i].Slot != player.Slot) {
+                if (CachedPlayers[i].Slot != player.Slot)
+                {
 
                     //get the target's pawn
                     var targetPawn = CachedPlayers[i].PlayerPawn.Value;
@@ -121,6 +123,9 @@ public partial class CS2_SimpleAdmin
 #if DEBUG
         Logger.LogCritical("[OnClientDisconnect] After Check");
 #endif
+
+        Server.ExecuteCommand($"mm_removeexcludeslot {player.Slot}");
+
         try
         {
             if (DisconnectedPlayers.Count >= Config.OtherSettings.DisconnectedPlayersHistoryCount)
@@ -150,20 +155,20 @@ public partial class CS2_SimpleAdmin
 
             if (player.UserId.HasValue)
                 PlayersInfo.TryRemove(player.UserId.Value, out _);
-            
-            if (!PermissionManager.AdminCache.TryGetValue(steamId, out var data) 
+
+            if (!PermissionManager.AdminCache.TryGetValue(steamId, out var data)
                 || !(data.ExpirationTime <= Time.ActualDateTime()))
             {
                 return HookResult.Continue;
             }
-            
+
             AdminManager.RemovePlayerPermissions(steamId, PermissionManager.AdminCache[steamId].Flags.ToArray());
             AdminManager.RemovePlayerFromGroup(steamId, true, PermissionManager.AdminCache[steamId].Flags.ToArray());
             var adminData = AdminManager.GetPlayerAdminData(steamId);
-            
+
             if (adminData == null || data.Flags.ToList().Count != 0 && adminData.Groups.ToList().Count != 0)
                 return HookResult.Continue;
-							
+
             AdminManager.ClearPlayerPermissions(steamId);
             AdminManager.RemovePlayerAdminData(steamId);
 
@@ -187,7 +192,7 @@ public partial class CS2_SimpleAdmin
         if (Instance.CacheManager != null && !Instance.CacheManager.IsPlayerBanned(null, ipaddress.Split(":")[0]))
                 return;
 
-        Server.NextFrame((() =>
+        Server.NextWorldUpdate((() =>
         {
             var player = Utilities.GetPlayerFromSlot(playerslot);
             if (player == null || !player.IsValid || player.IsBot)
@@ -195,7 +200,7 @@ public partial class CS2_SimpleAdmin
 
             Helper.KickPlayer(player, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
         }));
-        
+
         // Server.NextFrame(() =>
         // {
         //     var player = Utilities.GetPlayerFromSlot(playerslot);
@@ -218,14 +223,24 @@ public partial class CS2_SimpleAdmin
 
         if (player == null || !player.IsValid || player.IsBot)
             return HookResult.Continue;
-        
+
         CachedPlayers.Add(player);
 
-//         if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.UserId.Value, out PlayerInfo? value) &&
-// value.WaitingForKick)
-//             return HookResult.Continue;
-        
         new PlayerManager().LoadPlayerData(player);
+
+        if (Config.OtherSettings.HideAdminsOnJoinPermission.Count() == 0 || !Config.OtherSettings.HideAdminsOnJoinPermission.Any((string permission) => AdminManager.PlayerHasPermissions(player, permission)))
+        {
+            return HookResult.Continue;
+        }
+
+        AddTimer(0.5f, () =>
+        {
+            player.ChangeTeam(CsTeam.Spectator);
+        });
+        AddTimer(0.65f, () =>
+        {
+            player.ExecuteClientCommandFromServer("css_hide");
+        });
 
         return HookResult.Continue;
     }
@@ -557,7 +572,11 @@ public partial class CS2_SimpleAdmin
         info.DontBroadcast = true;
 
         if (@event.Team > 1)
+        {
             SilentPlayers.Remove(player.Slot);
+            Server.ExecuteCommand($"mm_removeexcludeslot {player.Slot}");
+            player.PrintToChat($"You aren't hidden now!");
+        }
 
         return HookResult.Continue;
     }

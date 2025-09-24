@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dev" ]
     paths-ignore:
       - '**/README.md'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "dev" ]
     paths-ignore:
       - '**/README.md'
 
@@ -77,19 +77,28 @@ jobs:
         mkdir -p ${{ env.OUTPUT_PATH }}/shared
         cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }} ${{ env.OUTPUT_PATH }}/plugins/
         cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }} ${{ env.OUTPUT_PATH }}/shared/
+        mkdir -p ${{ env.OUTPUT_PATH }}/shared/KitsuneMenu
+        cp ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/KitsuneMenu.dll ${{ env.OUTPUT_PATH }}/shared/KitsuneMenu/
     - name: Zip combined
       uses: thedoctor0/zip-release@0.7.6
       with:
         type: 'zip'
         filename: '${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip'
         path: ${{ env.OUTPUT_PATH }}
+    - name: Zip statusblocker
+      uses: thedoctor0/zip-release@0.7.6
+      with:
+        type: 'zip'
+        filename: 'statusblocker-${{ env.BUILD_NUMBER }}.zip'
+        path: 'CS2-SimpleAdmin/3rd_party/statusblocker'
     - name: Publish combined release
       uses: ncipollo/release-action@v1.14.0
       with:
-        artifacts: "${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip"
+        artifacts: "${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip,statusblocker-${{ env.BUILD_NUMBER }}.zip"
         name: "CS2-SimpleAdmin - Build ${{ env.BUILD_NUMBER }}"
         tag: "fork-build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}"
         body: |
+          # Note: This is a dev build. Use with caution
           Place files in addons/counterstrikesharp
           After first launch, configure the plugins in the respective configs:
           - CS2-SimpleAdmin: addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json

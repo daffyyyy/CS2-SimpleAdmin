@@ -21,7 +21,6 @@ using System.Text.RegularExpressions;
 using CounterStrikeSharp.API.Core.Plugin.Host;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
 using CS2_SimpleAdmin.Managers;
-using MenuManager;
 using ZLinq;
 
 namespace CS2_SimpleAdmin;
@@ -103,11 +102,11 @@ internal static class Helper
     }
 
 
-    // public static bool IsValidSteamId64(string input)
-    // {
-    //     const string pattern = @"^\d{17}$";
-    //     return Regex.IsMatch(input, pattern);
-    // }
+    public static bool IsValidSteamId64(string input)
+    {
+        const string pattern = @"^\d{17}$";
+        return Regex.IsMatch(input, pattern);
+    }
 
     public static bool ValidateSteamId(string input, out SteamID? steamId)
     {
@@ -117,7 +116,7 @@ internal static class Helper
         {
             return false;
         }
-        
+
         if (!SteamID.TryParse(input, out var parsedSteamId)) return false;
 
         steamId = parsedSteamId;
@@ -319,15 +318,6 @@ internal static class Helper
         {
             controller.PrintToCenter(message);
         });
-    }
-
-    internal static void HandleVotes(CCSPlayerController player, ChatMenuOption option)
-    {
-        if (!CS2_SimpleAdmin.VoteInProgress)
-            return;
-
-        option.Disabled = true;
-        CS2_SimpleAdmin.VoteAnswers[option.Text]++;
     }
 
     internal static void LogCommand(CCSPlayerController? caller, CommandInfo command)
@@ -785,33 +775,6 @@ internal static class Helper
                 commandString]));
     }
 
-    public static IMenu? CreateMenu(string title, Action<CCSPlayerController>? backAction = null)
-    {
-        var menuType = CS2_SimpleAdmin.Instance.Config.MenuConfigs.MenuType.ToLower();
-        
-        var menu = menuType switch
-        {
-            _ when menuType.Equals("selectable", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenu(title),
-
-            _ when menuType.Equals("dynamic", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ButtonMenu),
-
-            _ when menuType.Equals("center", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.CenterMenu),
-
-            _ when menuType.Equals("chat", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ChatMenu),
-
-            _ when menuType.Equals("console", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ConsoleMenu),
-
-            _ => CS2_SimpleAdmin.MenuApi?.GetMenu(title)
-        };
-
-        return menu;
-    }
-
     internal static IPluginManager? GetPluginManager()
     {
         // Access the singleton instance of Application
@@ -830,7 +793,7 @@ public static class PluginInfo
 {
     internal static async Task CheckVersion(string localVersion, ILogger logger)
     {
-        const string versionUrl = "https://raw.githubusercontent.com/daffyyyy/CS2-SimpleAdmin/main/CS2-SimpleAdmin/VERSION";
+        const string versionUrl = "https://raw.githubusercontent.com/cruze03/CS2-SimpleAdmin/main/CS2-SimpleAdmin/VERSION";
         var client = CS2_SimpleAdmin.HttpClient;
 
         try
@@ -847,7 +810,7 @@ public static class PluginInfo
                 switch (comparisonResult)
                 {
                     case < 0:
-                        logger.LogWarning("Plugin is outdated! Check https://github.com/daffyyyy/CS2-SimpleAdmin");
+                        logger.LogWarning("Plugin is outdated! Check https://github.com/cruze03/CS2-SimpleAdmin");
                         break;
                     case > 0:
                         logger.LogInformation("Probably dev version detected");
@@ -883,7 +846,7 @@ public static class PluginInfo
         Console.WriteLine(" _____| ||   | | ||_|| ||   |    |       ||   |___ |   _   ||       || ||_|| ||   | | | |   |");
         Console.WriteLine("|_______||___| |_|   |_||___|    |_______||_______||__| |__||______| |_|   |_||___| |_|  |__|");
         Console.WriteLine("				>> Version: " + moduleVersion);
-        Console.WriteLine("		>> GitHub: https://github.com/daffyyyy/CS2-SimpleAdmin");
+        Console.WriteLine("		>> GitHub: https://github.com/cruze03/CS2-SimpleAdmin");
         Console.WriteLine(" ");
     }
 }

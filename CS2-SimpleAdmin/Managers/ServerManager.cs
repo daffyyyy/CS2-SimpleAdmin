@@ -111,21 +111,6 @@ public class ServerManager
                 {
                     CS2_SimpleAdmin._logger?.LogCritical("Unable to create or get server_id: " + ex.Message);
                 }
-
-                if (CS2_SimpleAdmin.Instance.Config.EnableMetrics)
-                {
-                    var queryString = $"?address={address}&hostname={hostname}";
-                    var client = CS2_SimpleAdmin.HttpClient;
-
-                    try
-                    {
-                        await client.GetAsync($"https://api.daffyy.dev/index.php{queryString}");
-                    }
-                    catch (HttpRequestException ex)
-                    {
-                        CS2_SimpleAdmin._logger?.LogWarning($"Unable to make metrics call: {ex.Message}");
-                    }
-                }
             });
         });
     }

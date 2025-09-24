@@ -17,9 +17,7 @@
 ## ⚙️ Requirements
 **Ensure all the following dependencies are installed before proceeding**
 - [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp)  
-- [PlayerSettings](https://github.com/NickFox007/PlayerSettingsCS2) - Required by MenuManagerCS2
-- [AnyBaseLibCS2](https://github.com/NickFox007/AnyBaseLibCS2) - Required by PlayerSettings
-- [MenuManagerCS2](https://github.com/NickFox007/MenuManagerCS2)
+- KitsuneMenu (attached binary with release)
 - MySQL database
 
 ## 🚀 Getting Started

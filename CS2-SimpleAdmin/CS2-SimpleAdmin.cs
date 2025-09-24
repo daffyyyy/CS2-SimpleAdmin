@@ -3,27 +3,34 @@ using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Capabilities;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
-using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CS2_SimpleAdmin.Managers;
 using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
 
+using Menu;
+
 namespace CS2_SimpleAdmin;
 
-[MinimumApiVersion(300)]
+// TODO:
+// Speed fix
+// Gravity fix
+
+[MinimumApiVersion(340)]
 public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdminConfig>
 {
     internal static CS2_SimpleAdmin Instance { get; private set; } = new();
 
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
-    public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.7.7-alpha";
-    
+    public override string ModuleAuthor => "daffyy, Dliix66, ShiNxz & Cruze";
+    public override string ModuleVersion => "1.7.8-alpha";
+
     public override void Load(bool hotReload)
     {
         Instance = this;
+
+        Menu = new KitsuneMenu(this);
 
         RegisterEvents();
 
@@ -31,7 +38,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         {
             ServerLoaded = false;
             _serverLoading = false;
-            
+
             CacheManager = new CacheManager();
             OnGameServerSteamAPIActivated();
             OnMapStart(string.Empty);
@@ -39,38 +46,24 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
             AddTimer(2.0f, () =>
             {
                 if (Database == null) return;
-                
+
                 var playerManager = new PlayerManager();
 
-                foreach (var player in Helper.GetValidPlayers()) 
+                foreach (var player in Helper.GetValidPlayers())
                 {
                     playerManager.LoadPlayerData(player);
-                };
+                }
+                ;
             });
         }
-        _cBasePlayerControllerSetPawnFunc = new MemoryFunctionVoid<CBasePlayerController, CCSPlayerPawn, bool, bool>(GameData.GetSignature("CBasePlayerController_SetPawn"));
 
         SimpleAdminApi = new Api.CS2_SimpleAdminApi();
         Capabilities.RegisterPluginCapability(ICS2_SimpleAdminApi.PluginCapability, () => SimpleAdminApi);
-        
+
         new PlayerManager().CheckPlayersTimer();
 
         ChatManager = new ChatManager();
-    }
 
-    public override void OnAllPluginsLoaded(bool hotReload)
-    {
-        AddTimer(5.0f, () => ReloadAdmins(null));
-
-        try
-        {
-            MenuApi = MenuCapability.Get();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError("Unable to load required plugins ... \n{exception}", ex.Message);
-        }
-        
         RegisterCommands.InitializeCommands();
     }
 
@@ -78,12 +71,12 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     {
         Instance = this;
         _logger = Logger;
-        
+
         if (config.DatabaseHost.Length < 1 || config.DatabaseName.Length < 1 || config.DatabaseUser.Length < 1)
         {
             throw new Exception("[CS2-SimpleAdmin] You need to setup Database credentials in config!");
         }
-        
+
         MySqlConnectionStringBuilder builder = new()
         {
             Server = config.DatabaseHost,
@@ -99,18 +92,18 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
         DbConnectionString = builder.ConnectionString;
         Database = new Database.Database(DbConnectionString);
-        
+
         if (!Database.CheckDatabaseConnection(out var exception))
         {
             if (exception != null)
                 Logger.LogError("Problem with database connection! \n{exception}", exception);
-            
+
             Unload(false);
             return;
         }
 
         Task.Run(() => Database.DatabaseMigration());
-        
+
         Config = config;
         Helper.UpdateConfig(config);
 
@@ -127,7 +120,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         PluginInfo.ShowAd(ModuleVersion);
         if (Config.EnableUpdateCheck)
             Task.Run(async () => await PluginInfo.CheckVersion(ModuleVersion, _logger));
-        
+
         PermissionManager = new PermissionManager(Database);
         BanManager = new BanManager(Database);
         MuteManager = new MuteManager(Database);

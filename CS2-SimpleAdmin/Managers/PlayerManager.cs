@@ -19,7 +19,7 @@ public class PlayerManager
     {
         if (player.IsBot || string.IsNullOrEmpty(player.IpAddress) || player.IpAddress.Contains("127.0.0.1"))
             return;
-        
+
         if (!player.UserId.HasValue)
         {
             Helper.KickPlayer(player, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_INVALIDCONNECTION);
@@ -29,7 +29,6 @@ public class PlayerManager
         var ipAddress = player.IpAddress?.Split(":")[0];
         CS2_SimpleAdmin.PlayersInfo[player.UserId.Value] =
             new PlayerInfo(player.UserId.Value, player.Slot, new SteamID(player.SteamID), player.PlayerName, ipAddress);
-        
 
         // if (!player.UserId.HasValue)
         // {

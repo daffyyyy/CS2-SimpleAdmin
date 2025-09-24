@@ -16,7 +16,9 @@ using Newtonsoft.Json;
 using System.Globalization;
 using System.Reflection;
 using CounterStrikeSharp.API.ValveConstants.Protobuf;
-using MenuManager;
+
+using Menu;
+using Menu.Enums;
 
 namespace CS2_SimpleAdmin;
 
@@ -27,16 +29,16 @@ public partial class CS2_SimpleAdmin
     {
         if (caller == null || caller.IsValid == false || !caller.UserId.HasValue || Database == null)
             return;
-        
+
         var userId = caller.UserId.Value;
-        
+
         if (!string.IsNullOrEmpty(command.GetArg(1)) && AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/kick"))
         {
             var targets = GetTarget(command);
-            
+
             if (targets == null)
                 return;
-            
+
             var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
             playersToTarget.ForEach(player =>
             {
@@ -157,7 +159,7 @@ public partial class CS2_SimpleAdmin
                     player.VoiceFlags = VoiceFlags.Muted;
                 }
             }
-            
+
             if (command.GetArg(2).ToLower().Equals("unmuteAll"))
             {
                 foreach (var player in Helper.GetValidPlayers().Where(p => p != caller))
@@ -169,10 +171,10 @@ public partial class CS2_SimpleAdmin
 
             return;
         }
-            
+
         caller.VoiceFlags = caller.VoiceFlags == VoiceFlags.All ? VoiceFlags.Normal : VoiceFlags.All;
     }
-    
+
     [RequiresPermissions("@css/generic")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
@@ -233,7 +235,7 @@ public partial class CS2_SimpleAdmin
     public static void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
     {
         if (Database == null) return;
-        
+
         var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
         _ = Instance.PermissionManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
 
@@ -386,7 +388,7 @@ public partial class CS2_SimpleAdmin
 
         command.ReplyToCommand("Reloaded sql admins and groups");
     }
-    
+
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnRelBans(CCSPlayerController? caller, CommandInfo command)
@@ -400,8 +402,8 @@ public partial class CS2_SimpleAdmin
     public void ReloadAdmins(CCSPlayerController? caller)
     {
         if (Database == null) return;
-        
-        if(!Config.IsCSSPanel)
+
+        if (!Config.IsCSSPanel)
         {
             Task.Run(async () =>
             {
@@ -441,18 +443,20 @@ public partial class CS2_SimpleAdmin
             SilentPlayers.Remove(caller.Slot);
             caller.PrintToChat($"You aren't hidden now!");
             caller.ChangeTeam(CsTeam.Spectator);
+            Server.ExecuteCommand($"mm_removeexcludeslot {caller.Slot}");
         }
         else
         {
             Server.ExecuteCommand("sv_disable_teamselect_menu 1");
+            Server.ExecuteCommand($"mm_excludeslot {caller.Slot}");
 
             if (caller.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
                 caller.PlayerPawn.Value?.CommitSuicide(true, false);
 
-            AddTimer(1.0f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
-            AddTimer(1.4f, () => { Server.NextFrame(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            AddTimer(1.0f, () => { Server.NextWorldUpdateAsync(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            AddTimer(1.4f, () => { Server.NextWorldUpdateAsync(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
             caller.PrintToChat($"You are hidden now!");
-            AddTimer(2.0f, () => { Server.NextFrame(() => Server.ExecuteCommand("sv_disable_teamselect_menu 0")); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            AddTimer(2.0f, () => { Server.NextWorldUpdateAsync(() => Server.ExecuteCommand("sv_disable_teamselect_menu 0")); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
         }
     }
 
@@ -539,119 +543,100 @@ public partial class CS2_SimpleAdmin
     {
         if (_localizer == null || caller == null) return;
 
-        var disconnectedMenu = Helper.CreateMenu(_localizer["sa_menu_disconnected_title"]);
+        List<MenuItem> items = new();
+        var optionMap = new Dictionary<int, Action>();
+        int i = 0;
 
-        DisconnectedPlayers.ForEach(player =>
+        foreach (var player in DisconnectedPlayers)
         {
-            disconnectedMenu?.AddMenuOption(player.Name, (_, _) =>
+            var menuName = player.Name;
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(menuName)]));
+
+            optionMap[i++] = () =>
             {
-                var disconnectedMenuAction = Helper.CreateMenu(_localizer["sa_menu_disconnected_action_title"]);
-                disconnectedMenuAction?.AddMenuOption(_localizer["sa_ban"], (_, _) =>
+                // Build submenu for actions (ban, mute, gag, silence)
+                List<MenuItem> subItems = new();
+                var subOptionMap = new Dictionary<int, Action>();
+                int j = 0;
+
+                void AddSubMenuOption(string title, string command, string permMsgKey, string timeMsgKey, string adminPermMsgKey, string adminTimeMsgKey)
                 {
-                    DurationMenu.OpenMenu(caller, _localizer["sa_ban"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Ban, _localizer["sa_reason"], player, (_, _, reason) =>
-                        {
-                            caller.ExecuteClientCommandFromServer($"css_addban {player.SteamId.SteamId64} {duration} \"{reason}\"");
-                            
-                            // Determine message keys and arguments based on ban time
-                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
-                                ? ("sa_player_ban_message_perm", "sa_admin_ban_message_perm",
-                                    [reason, "CALLER"],
-                                    ["CALLER", player.Name, reason])
-                                : ("sa_player_ban_message_time", "sa_admin_ban_message_time",
-                                    new object[] { reason, duration, "CALLER" },
-                                    new object[] { "CALLER", player.Name, reason, duration });
-
-                            // Display admin activity message if necessary
-                            if (!SilentPlayers.Contains(caller.Slot))
+                    subItems.Add(new MenuItem(MenuItemType.Button, [new MenuValue(title)]));
+                    subOptionMap[j++] = () =>
+                    {
+                        DurationMenu.OpenMenu(caller, title, player, (_, _, duration) =>
+                            ReasonMenu.OpenMenu(caller, PenaltyType.Ban, _localizer?["sa_reason"] ?? "reason", player, (_, _, reason) =>
                             {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false ,adminActivityArgs);
-                            }
-                            
-                            MenuApi?.CloseMenu(caller);
-                        }));
-                });
-                disconnectedMenuAction?.AddMenuOption(_localizer["sa_mute"], (_, _) =>
+                                caller.ExecuteClientCommandFromServer($"{command} {player.SteamId.SteamId64} {duration} \"{reason}\"");
+
+                                // Message handling
+                                var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
+                                    ? (permMsgKey, adminPermMsgKey,
+                                        new object[] { reason, "CALLER" },
+                                        new object[] { "CALLER", player.Name, reason })
+                                    : (timeMsgKey, adminTimeMsgKey,
+                                        new object[] { reason, duration, "CALLER" },
+                                        new object[] { "CALLER", player.Name, reason, duration });
+
+                                if (!SilentPlayers.Contains(caller.Slot))
+                                {
+                                    Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
+                                }
+                            }));
+                    };
+                }
+
+                // Add each option
+                AddSubMenuOption(_localizer["sa_ban"], "css_addban",
+                    "sa_player_ban_message_perm", "sa_player_ban_message_time",
+                    "sa_admin_ban_message_perm", "sa_admin_ban_message_time");
+
+                AddSubMenuOption(_localizer["sa_mute"], "css_addmute",
+                    "sa_player_mute_message_perm", "sa_player_mute_message_time",
+                    "sa_admin_mute_message_perm", "sa_admin_mute_message_time");
+
+                AddSubMenuOption(_localizer["sa_gag"], "css_addgag",
+                    "sa_player_gag_message_perm", "sa_player_gag_message_time",
+                    "sa_admin_gag_message_perm", "sa_admin_gag_message_time");
+
+                AddSubMenuOption(_localizer["sa_silence"], "css_addsilence",
+                    "sa_player_silence_message_perm", "sa_player_silence_message_time",
+                    "sa_admin_silence_message_perm", "sa_admin_silence_message_time");
+
+                // Show submenu
+                Menu?.ShowScrollableMenu(caller,
+                    _localizer["sa_menu_disconnected_action_title"],
+                    subItems,
+                    (buttons, menu, selected) =>
+                    {
+                        if (selected == null) return;
+
+                        if (buttons == MenuButtons.Select && subOptionMap.TryGetValue(menu.Option, out var action))
+                        {
+                            action.Invoke();
+                        }
+                    },
+                    false, freezePlayer: false, disableDeveloper: true);
+            };
+        }
+
+        // Main disconnected menu
+        if (i > 0)
+        {
+            Menu?.ShowScrollableMenu(caller,
+                _localizer["sa_menu_disconnected_title"],
+                items,
+                (buttons, menu, selected) =>
                 {
-                    DurationMenu.OpenMenu(caller, _localizer["sa_mute"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
-                        {
-                            caller.ExecuteClientCommandFromServer($"css_addmute {player.SteamId.SteamId64} {duration} \"{reason}\"");
-                            
-                            // Determine message keys and arguments based on mute time (permanent or timed)
-                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
-                                ? ("sa_player_mute_message_perm", "sa_admin_mute_message_perm",
-                                    [reason, "CALLER"],
-                                    ["CALLER", player.Name, reason])
-                                : ("sa_player_mute_message_time", "sa_admin_mute_message_time",
-                                    new object[] { reason, duration, "CALLER" },
-                                    new object[] { "CALLER", player.Name, reason, duration });
+                    if (selected == null) return;
 
-                            // Display admin activity message to other players
-                            if (!SilentPlayers.Contains(caller.Slot))
-                            {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
-                            }
-                            
-                            MenuApi?.CloseMenu(caller);
-                        }));
-                });
-                disconnectedMenuAction?.AddMenuOption(_localizer["sa_gag"], (_, _) =>
-                {
-                    DurationMenu.OpenMenu(caller, _localizer["sa_gag"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
-                        {
-                            caller.ExecuteClientCommandFromServer($"css_addgag {player.SteamId.SteamId64} {duration} \"{reason}\"");
-                            
-                            // Determine message keys and arguments based on gag time (permanent or timed)
-                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
-                                ? ("sa_player_gag_message_perm", "sa_admin_gag_message_perm",
-                                    [reason, "CALLER"],
-                                    ["CALLER", player.Name, reason])
-                                : ("sa_player_gag_message_time", "sa_admin_gag_message_time",
-                                    new object[] { reason, duration, "CALLER" },
-                                    new object[] { "CALLER", player.Name, reason, duration});
-
-                            // Display admin activity message to other players
-                            if (!SilentPlayers.Contains(caller.Slot))
-                            {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
-                            }
-                            
-                            MenuApi?.CloseMenu(caller);
-                        }));
-                });
-                disconnectedMenuAction?.AddMenuOption(_localizer["sa_silence"], (_, _) =>
-                {
-                    DurationMenu.OpenMenu(caller, _localizer["sa_silence"], player, (_, _, duration) =>
-                        ReasonMenu.OpenMenu(caller, PenaltyType.Mute, _localizer["sa_reason"], player, (_, _, reason) =>
-                        {
-                            caller.ExecuteClientCommandFromServer($"css_addsilence {player.SteamId.SteamId64} {duration} \"{reason}\"");
-                            
-                            // Determine message keys and arguments based on silence time (permanent or timed)
-                            var (_, activityMessageKey, _, adminActivityArgs) = duration == 0
-                                ? ("sa_player_silence_message_perm", "sa_admin_silence_message_perm",
-                                    [reason, "CALLER"],
-                                    ["CALLER", player.Name, reason])
-                                : ("sa_player_silence_message_time", "sa_admin_silence_message_time",
-                                    new object[] { reason, duration, "CALLER" },
-                                    new object[] { "CALLER", player.Name, reason, duration });
-
-                            // Display admin activity message to other players
-                            if (!SilentPlayers.Contains(caller.Slot))
-                            {
-                                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
-                            }
-                            
-                            MenuApi?.CloseMenu(caller);
-                        }));
-                });
-
-                disconnectedMenuAction?.Open(caller);
-            });
-        });
-
-        disconnectedMenu?.Open(caller);
+                    if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var action))
+                    {
+                        action.Invoke();
+                    }
+                },
+                false, freezePlayer: false, disableDeveloper: true);
+        }
     }
 
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_ONLY)]
@@ -676,8 +661,6 @@ public partial class CS2_SimpleAdmin
 
             var userId = player.UserId.Value;
 
-            IMenu? warnsMenu = Helper.CreateMenu(_localizer["sa_admin_warns_menu_title", player.PlayerName]);
-
             Task.Run(async () =>
             {
                 var warnsList = await WarnManager.GetPlayerWarns(PlayersInfo[userId], false);
@@ -686,21 +669,52 @@ public partial class CS2_SimpleAdmin
                     .ThenByDescending(warn => (int)warn.id)
                     .ToList();
 
-                sortedWarns.ForEach(w =>
+                List<MenuItem> items = new();
+                var optionMap = new Dictionary<int, Action>();
+                int i = 0;
+
+                foreach (var w in sortedWarns)
                 {
-                    warnsMenu?.AddMenuOption($"[{((string)w.status == "ACTIVE" ? $"{ChatColors.LightRed}X" : $"{ChatColors.Lime}✔️")}{ChatColors.Default}] {(string)w.reason}",
-                        (controller, option) =>
-                        {
-                            _ = WarnManager.UnwarnPlayer(PlayersInfo[userId], (int)w.id);
-                            player.PrintToChat(_localizer["sa_admin_warns_unwarn", player.PlayerName, (string)w.reason]);
-                        });
-                });
+                    string statusSymbol = (string)w.status == "ACTIVE"
+                        ? $"{ChatColors.LightRed}X{ChatColors.Default}"
+                        : $"{ChatColors.Lime}✔️{ChatColors.Default}";
+
+                    string label = $"[{statusSymbol}] {(string)w.reason}";
+
+                    items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(label)]));
+
+                    optionMap[i++] = () =>
+                    {
+                        _ = WarnManager.UnwarnPlayer(PlayersInfo[userId], (int)w.id);
+                        player.PrintToChat(_localizer["sa_admin_warns_unwarn", player.PlayerName, (string)w.reason]);
+                    };
+                }
+
+                if (i == 0)
+                {
+                    player.PrintToChat(_localizer["sa_admin_warns_no_warns", player.PlayerName]);
+                    return;
+                }
 
                 await Server.NextFrameAsync(() =>
                 {
-                    warnsMenu?.Open(caller);
+                    Menu?.ShowScrollableMenu(
+                        caller,
+                        _localizer["sa_admin_warns_menu_title", player.PlayerName],
+                        items,
+                        (buttons, menu, selected) =>
+                        {
+                            if (selected == null) return;
+
+                            if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var action))
+                            {
+                                action.Invoke();
+                            }
+                        },
+                        false, freezePlayer: false, disableDeveloper: true);
                 });
             });
+
         });
     }
 
@@ -727,7 +741,8 @@ public partial class CS2_SimpleAdmin
                 {
                     caller.PrintToConsole(
                         $"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{(AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/showip") ? player.IpAddress?.Split(":")[0] : "Unknown")}\" SteamID64: \"{player.SteamID}\")");
-                };
+                }
+                ;
                 caller.PrintToConsole("--------- END PLAYER LIST ---------");
             }
             else
@@ -736,7 +751,8 @@ public partial class CS2_SimpleAdmin
                 foreach (var player in playersToTarget)
                 {
                     Server.PrintToConsole($"• [#{player.UserId}] \"{player.PlayerName}\" (IP Address: \"{player.IpAddress?.Split(":")[0]}\" SteamID64: \"{player.SteamID}\")");
-                };
+                }
+                ;
                 Server.PrintToConsole("--------- END PLAYER LIST ---------");
             }
         }
@@ -745,7 +761,7 @@ public partial class CS2_SimpleAdmin
             var playersJson = JsonConvert.SerializeObject(playersToTarget.Select(player =>
             {
                 var matchStats = player.ActionTrackingServices?.MatchStats;
-                
+
                 return new
                 {
                     player.UserId,
@@ -788,8 +804,8 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        var reason = command.ArgCount >= 2 
-            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim() 
+        var reason = command.ArgCount >= 2
+            ? string.Join(" ", Enumerable.Range(2, command.ArgCount - 2).Select(command.GetArg)).Trim()
             : _localizer?["sa_unknown"] ?? "Unknown";
 
         reason = string.IsNullOrWhiteSpace(reason) ? _localizer?["sa_unknown"] ?? "Unknown" : reason;
@@ -804,7 +820,7 @@ public partial class CS2_SimpleAdmin
                 Kick(caller, player, reason, callerName, command);
             }
         });
-        
+
         Helper.LogCommand(caller, command);
     }
 
@@ -813,14 +829,14 @@ public partial class CS2_SimpleAdmin
         if (!player.IsValid) return;
         if (!caller.CanTarget(player)) return;
         if (!player.UserId.HasValue) return;
-        
+
         // Set default caller name if not provided
         callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
         reason ??= _localizer?["sa_unknown"] ?? "Unknown";
-        
+
         var playerInfo = PlayersInfo[player.UserId.Value];
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
-        
+
         // Determine message keys and arguments for the kick notification
         var (messageKey, activityMessageKey, centerArgs, adminActivityArgs) =
             ("sa_player_kick_message", "sa_admin_kick_message",
@@ -845,7 +861,7 @@ public partial class CS2_SimpleAdmin
         // Log the command and send Discord notification
         if (command == null)
             Helper.LogCommand(caller, $"css_kick {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)} {reason}");
-        
+
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Kick, reason, -1, null);
     }
 
@@ -879,7 +895,7 @@ public partial class CS2_SimpleAdmin
         {
             if (!Server.IsMapValid(map))
             {
-                if(wsMaps.ContainsKey(map))
+                if (wsMaps.ContainsKey(map))
                 {
                     map = wsMaps.Where(m => m.Key == map).FirstOrDefault().Key;
                 }
@@ -1005,9 +1021,9 @@ public partial class CS2_SimpleAdmin
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnPluginManagerCommand(CCSPlayerController? caller, CommandInfo commandInfo)
     {
-        if (MenuApi == null || caller == null)
+        if (caller == null)
             return;
-        
+
         var pluginManager = Helper.GetPluginManager();
         if (pluginManager == null)
         {
@@ -1022,8 +1038,10 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
-        var pluginsMenu = Helper.CreateMenu(Localizer["sa_menu_pluginsmanager_title"]);
-        
+        List<MenuItem> items = new();
+        var optionMap = new Dictionary<int, Action>();
+        int i = 0;
+
         foreach (var plugin in plugins)
         {
             var pluginType = plugin.GetType();
@@ -1037,19 +1055,21 @@ public partial class CS2_SimpleAdmin
             // Access nested properties within "Plugin" (like ModuleName, ModuleVersion, etc.)
             var nestedPlugin = pluginType.GetProperty("Plugin")?.GetValue(plugin);
             if (nestedPlugin == null) continue;
-            
-            var status = state?.ToUpper() != "UNLOADED" ? "ON" : "OFF";
-            var allowedMenuTypes = new[] { "chat", "console" };
 
-            if (!allowedMenuTypes.Contains(Config.MenuConfigs.MenuType) && MenuApi.GetMenuType(caller) >= MenuType.CenterMenu)
-                status = state?.ToUpper() != "UNLOADED" ? "<font color='lime'>ON</font>" : "<font color='red'>OFF</font>";
+            var status = state?.ToUpper() != "UNLOADED" ? "ON" : "OFF";
+
+            status = state?.ToUpper() != "UNLOADED"
+                    ? "<font color='lime'>ON</font>"
+                    : "<font color='red'>OFF</font>";
+
             var nestedType = nestedPlugin.GetType();
             var moduleName = nestedType.GetProperty("ModuleName")?.GetValue(nestedPlugin)?.ToString() ?? "Unknown";
             var moduleVersion = nestedType.GetProperty("ModuleVersion")?.GetValue(nestedPlugin)?.ToString();
-            // var moduleAuthor = nestedType.GetProperty("ModuleAuthor")?.GetValue(nestedPlugin)?.ToString();
-            // var moduleDescription = nestedType.GetProperty("ModuleDescription")?.GetValue(nestedPlugin)?.ToString();
 
-            pluginsMenu?.AddMenuOption($"({status}) [{moduleName} {moduleVersion}]", (_, _) =>
+            string label = $"({status}) [{moduleName} {moduleVersion}]";
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(label)]));
+
+            optionMap[i++] = () =>
             {
                 if (state?.ToUpper() != "UNLOADED")
                 {
@@ -1062,13 +1082,30 @@ public partial class CS2_SimpleAdmin
                     Server.ExecuteCommand($"css_plugins load {path}");
                 }
 
+                // refresh menu after a short delay
                 AddTimer(0.1f, () => OnPluginManagerCommand(caller, commandInfo));
-            });
-                
-            // Console.WriteLine($"[#{pluginId}:{state?.ToUpper()}]: \"{moduleName ?? "Unknown"}\" ({moduleVersion ?? "Unknown"}) by {moduleAuthor}");
+            };
         }
-        
-        pluginsMenu?.Open(caller);
+
+        // Only show if there are plugins
+        if (i > 0)
+        {
+            Menu?.ShowScrollableMenu(
+                caller,
+                Localizer["sa_menu_pluginsmanager_title"],
+                items,
+                (buttons, menu, selected) =>
+                {
+                    if (selected == null) return;
+
+                    if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var action))
+                    {
+                        action.Invoke();
+                    }
+                },
+                true, freezePlayer: false, disableDeveloper: true);
+        }
+
     }
 
     public static void RestartGame(CCSPlayerController? admin)

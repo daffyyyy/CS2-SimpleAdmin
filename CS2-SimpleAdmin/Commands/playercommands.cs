@@ -697,7 +697,7 @@ public partial class CS2_SimpleAdmin
                 Respawn(caller, player, callerName, command);
             }
         });
-        
+
         Helper.LogCommand(caller, command);
     }
 
@@ -710,12 +710,11 @@ public partial class CS2_SimpleAdmin
         callerName ??= caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
 
         // Ensure the player's pawn is valid before attempting to respawn
-        if (_cBasePlayerControllerSetPawnFunc == null || player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
+        if (player.PlayerPawn.Value == null || !player.PlayerPawn.IsValid) return;
 
         // Perform the respawn operation
         var playerPawn = player.PlayerPawn.Value;
-        _cBasePlayerControllerSetPawnFunc.Invoke(player, playerPawn, true, false);
-        VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle, GameData.GetOffset("CCSPlayerController_Respawn"))(player);
+        player.Respawn();
 
         if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.UserId.Value, out var value) && value.DiePosition != null)
             playerPawn.Teleport(value.DiePosition?.Position, value.DiePosition?.Angle);

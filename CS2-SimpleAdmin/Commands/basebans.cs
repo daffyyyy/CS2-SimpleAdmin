@@ -365,6 +365,7 @@ public partial class CS2_SimpleAdmin
 
         // Get player and admin information
         var playerInfo = PlayersInfo[player.UserId.Value];
+
         var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
 
         // Asynchronously handle warning logic
@@ -388,7 +389,7 @@ public partial class CS2_SimpleAdmin
 
                 if (!string.IsNullOrEmpty(punishCommand))
                 {
-                    await Server.NextFrameAsync(() =>
+                    await Server.NextWorldUpdateAsync(() =>
                     {
                         Server.ExecuteCommand(punishCommand.Replace("USERID", playerInfo.UserId.ToString()).Replace("STEAMID64", playerInfo.SteamId?.ToString()));
                     });
@@ -468,7 +469,7 @@ public partial class CS2_SimpleAdmin
 
                     if (!string.IsNullOrEmpty(punishCommand))
                     {
-                        await Server.NextFrameAsync(() =>
+                        await Server.NextWorldUpdateAsync(() =>
                         {
                             Server.ExecuteCommand(punishCommand.Replace("STEAMID64", steamid.SteamId64.ToString()));
                         });
