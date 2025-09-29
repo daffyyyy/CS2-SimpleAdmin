@@ -1,32 +1,13 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Menu;
+using Menu;
+using Menu.Enums;
 
 namespace CS2_SimpleAdmin.Menus;
 
 public static class AdminMenu
 {
-    public static IMenu? CreateMenu(string title, Action<CCSPlayerController>? backAction = null)
-    {
-        return Helper.CreateMenu(title, backAction);
-        // return CS2_SimpleAdmin.Instance.Config.UseChatMenu ? new ChatMenu(title) : new CenterHtmlMenu(title, CS2_SimpleAdmin.Instance);
-    }
-
-    public static void OpenMenu(CCSPlayerController player, IMenu menu)
-    {
-        menu.Open(player);
-        // switch (menu)
-        // {
-        // 	case CenterHtmlMenu centerHtmlMenu:
-        // 		MenuManager.OpenCenterHtmlMenu(CS2_SimpleAdmin.Instance, player, centerHtmlMenu);
-        // 		break;
-        // 	case ChatMenu chatMenu:
-        // 		MenuManager.OpenChatMenu(player, chatMenu);
-        // 		break;
-        // }
-    }
-
     public static void OpenMenu(CCSPlayerController admin)
     {
         if (admin.IsValid == false)
@@ -42,7 +23,6 @@ public static class AdminMenu
             return;
         }
 
-        var menu = CreateMenu(localizer?["sa_title"] ?? "SimpleAdmin");
         List<ChatMenuOptionData> options =
         [
             new ChatMenuOptionData(localizer?["sa_menu_players_manage"] ?? "Players Manage", () => ManagePlayersMenu.OpenMenu(admin)),
@@ -59,12 +39,30 @@ public static class AdminMenu
         if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/root"))
             options.Add(new ChatMenuOptionData(localizer?["sa_menu_admins_manage"] ?? "Admins Manage", () => ManageAdminsMenu.OpenMenu(admin)));
 
+        List<MenuItem> items = [];
+        var optionMap = new Dictionary<int, ChatMenuOptionData>();
+        int i = 0;
+
         foreach (var menuOptionData in options)
         {
             var menuName = menuOptionData.Name;
-            menu?.AddMenuOption(menuName, (_, _) => { menuOptionData.Action.Invoke(); }, menuOptionData.Disabled);
+            if (!menuOptionData.Disabled)
+            {
+                items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(menuName)]));
+                optionMap[i++] = menuOptionData;
+            }
         }
 
-        if (menu != null) OpenMenu(admin, menu);
+        if(i == 0) return;
+
+        CS2_SimpleAdmin.Menu?.ShowScrollableMenu(admin, localizer?["sa_title"] ?? "SimpleAdmin", items, (buttons, menu, selected) =>
+        {
+            if (selected == null) return;
+
+            if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var menuOptionData))
+            {
+                menuOptionData.Action.Invoke();
+            }
+        }, false, freezePlayer: false, disableDeveloper: true);
     }
 }

@@ -258,7 +258,10 @@ public class OtherSettings
     public List<string> AdditionalCommandsToLog { get; set; } = new();
 
     [JsonPropertyName("HideStealthPlayersFromSpecList")]
-    public bool HideStealthPlayersFromSpecList { get; set; } = false;
+    public bool HideStealthPlayersFromSpecList { get; set; } = true;
+
+    [JsonPropertyName("HideAdminsOnJoinPermission")]
+    public List<string> HideAdminsOnJoinPermission { get; set; } = ["@css/unban"];
 
     [JsonPropertyName("IgnoredIps")]
     public List<string> IgnoredIps { get; set; } = new();
@@ -288,9 +291,6 @@ public class CS2_SimpleAdminConfig : BasePluginConfig
 
     [JsonPropertyName("OtherSettings")]
     public OtherSettings OtherSettings { get; set; } = new();
-
-    [JsonPropertyName("EnableMetrics")]
-    public bool EnableMetrics { get; set; } = true;
 
     [JsonPropertyName("EnableUpdateCheck")]
     public bool EnableUpdateCheck { get; set; } = true;

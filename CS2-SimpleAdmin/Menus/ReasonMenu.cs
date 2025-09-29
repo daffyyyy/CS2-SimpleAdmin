@@ -1,15 +1,20 @@
 using CounterStrikeSharp.API.Core;
 using CS2_SimpleAdmin.Models;
 using CS2_SimpleAdminApi;
+using Menu;
+using Menu.Enums;
 
 namespace CS2_SimpleAdmin.Menus;
 
 public static class ReasonMenu
 {
-    public static void OpenMenu(CCSPlayerController admin, PenaltyType penaltyType, string menuName, CCSPlayerController player, Action<CCSPlayerController, CCSPlayerController, string> onSelectAction)
+    public static void OpenMenu(
+    CCSPlayerController admin,
+    PenaltyType penaltyType,
+    string menuName,
+    CCSPlayerController player,
+    Action<CCSPlayerController, CCSPlayerController, string> onSelectAction)
     {
-        var menu = AdminMenu.CreateMenu(menuName);
-
         var reasons = penaltyType switch
         {
             PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons,
@@ -21,18 +26,38 @@ public static class ReasonMenu
             _ => CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons
         };
 
-        foreach (var reason in reasons)
+        var items = new List<MenuItem>();
+        for (int i = 0; i < reasons.Count; i++)
         {
-            menu?.AddMenuOption(reason, (_, _) => onSelectAction(admin, player, reason));
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(reasons[i])]));
         }
 
-        if (menu != null) AdminMenu.OpenMenu(admin, menu);
+        if (items.Count == 0) return;
+
+        CS2_SimpleAdmin.Menu?.ShowScrollableMenu(
+            admin,
+            menuName,
+            items,
+            (buttons, menu, selected) =>
+            {
+                if (selected == null) return;
+                if (buttons == MenuButtons.Select && menu.Option >= 0 && menu.Option < reasons.Count)
+                {
+                    onSelectAction(admin, player, reasons[menu.Option]);
+                }
+            },
+            true,
+            freezePlayer: false,
+            disableDeveloper: true);
     }
 
-    public static void OpenMenu(CCSPlayerController admin, PenaltyType penaltyType, string menuName, DisconnectedPlayer player, Action<CCSPlayerController, DisconnectedPlayer, string> onSelectAction)
+    public static void OpenMenu(
+        CCSPlayerController admin,
+        PenaltyType penaltyType,
+        string menuName,
+        DisconnectedPlayer player,
+        Action<CCSPlayerController, DisconnectedPlayer, string> onSelectAction)
     {
-        var menu = AdminMenu.CreateMenu(menuName);
-
         var reasons = penaltyType switch
         {
             PenaltyType.Ban => CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons,
@@ -42,11 +67,28 @@ public static class ReasonMenu
             _ => CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons
         };
 
-        foreach (var reason in reasons)
+        var items = new List<MenuItem>();
+        for (int i = 0; i < reasons.Count; i++)
         {
-            menu?.AddMenuOption(reason, (_, _) => onSelectAction(admin, player, reason));
+            items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(reasons[i])]));
         }
-        
-        if (menu != null) AdminMenu.OpenMenu(admin, menu);
+
+        if (items.Count == 0) return;
+
+        CS2_SimpleAdmin.Menu?.ShowScrollableMenu(
+            admin,
+            menuName,
+            items,
+            (buttons, menu, selected) =>
+            {
+                if (selected == null) return;
+                if (buttons == MenuButtons.Select && menu.Option >= 0 && menu.Option < reasons.Count)
+                {
+                    onSelectAction(admin, player, reasons[menu.Option]);
+                }
+            },
+            true,
+            freezePlayer: false,
+            disableDeveloper: true);
     }
 }

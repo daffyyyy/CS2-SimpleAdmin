@@ -115,6 +115,6 @@ public partial class CS2_SimpleAdmin
         VirtualFunctions.ClientPrintAll(
             HudDestination.Alert,
             utf8String.ReplaceColorTags(),
-            0, 0, 0, 0);
+            0, 0, 0, 0, 0);
     }
 }

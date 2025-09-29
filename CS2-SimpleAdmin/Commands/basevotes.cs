@@ -3,6 +3,8 @@ using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Menu;
+using Menu;
+using Menu.Enums;
 
 namespace CS2_SimpleAdmin;
 
@@ -33,28 +35,55 @@ public partial class CS2_SimpleAdmin
             {
                 using (new WithTemporaryCulture(player.GetLanguage()))
                 {
-                    IMenu? voteMenu = Helper.CreateMenu(_localizer["sa_admin_vote_menu_title", question]);
-                    if (voteMenu == null)
-                        return;
-                    //ChatMenu voteMenu = new(_localizer!["sa_admin_vote_menu_title", question]);
+                    List<MenuItem> items = new();
+                    var optionMap = new Dictionary<int, Action>();
+                    int i = 0;
 
-                    for (var i = 2; i <= answersCount - 1; i++)
+                    for (var argIndex = 2; argIndex <= answersCount - 1; argIndex++)
                     {
-                        voteMenu.AddMenuOption(command.GetArg(i), Helper.HandleVotes);
+                        string answer = command.GetArg(argIndex);
+
+                        items.Add(new MenuItem(MenuItemType.Button, [new MenuValue(answer)]));
+
+                        optionMap[i++] = () =>
+                        {
+                            if (!VoteInProgress)
+                                return;
+
+                            VoteAnswers[answer]++;
+                        };
                     }
 
-                    voteMenu.PostSelectAction = PostSelectAction.Close;
+                    // If no answers, stop
+                    if (i == 0) return;
 
-                    Helper.PrintToCenterAll(_localizer["sa_admin_vote_message", caller == null ? _localizer["sa_console"] : caller.PlayerName, question]);
+                    // Broadcast vote message
+                    Helper.PrintToCenterAll(
+                        _localizer["sa_admin_vote_message",
+                            caller == null ? _localizer["sa_console"] : caller.PlayerName,
+                            question]);
 
-                    player.SendLocalizedMessage(_localizer,
+                    player.SendLocalizedMessage(
+                        _localizer,
                         "sa_admin_vote_message",
                         caller == null ? _localizer["sa_console"] : caller.PlayerName,
                         question);
 
-                    voteMenu.Open(player);
+                    // Show the vote menu
+                    Menu?.ShowScrollableMenu(
+                        player,
+                        _localizer["sa_admin_vote_menu_title", question],
+                        items,
+                        (buttons, menu, selected) =>
+                        {
+                            if (selected == null) return;
 
-                    //MenuManager.OpenChatMenu(player, voteMenu);
+                            if (buttons == MenuButtons.Select && optionMap.TryGetValue(menu.Option, out var action))
+                            {
+                                action.Invoke();
+                            }
+                        },
+                        false, freezePlayer: false, disableDeveloper: true);
                 }
             }
 
@@ -67,6 +96,7 @@ public partial class CS2_SimpleAdmin
             {
                 foreach (var player in Helper.GetValidPlayers())
                 {
+                    Menu?.ClearMenus(player);
                     if (_localizer != null)
                         player.SendLocalizedMessage(_localizer,
                             "sa_admin_vote_message_results",

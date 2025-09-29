@@ -77,16 +77,22 @@ jobs:
         mkdir -p ${{ env.OUTPUT_PATH }}/shared
         cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }} ${{ env.OUTPUT_PATH }}/plugins/
         cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }} ${{ env.OUTPUT_PATH }}/shared/
+        mkdir -p ${{ env.OUTPUT_PATH }}/shared/KitsuneMenu
+        cp ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/KitsuneMenu.dll ${{ env.OUTPUT_PATH }}/shared/KitsuneMenu/
     - name: Zip combined
       uses: thedoctor0/zip-release@0.7.6
       with:
         type: 'zip'
         filename: '${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip'
         path: ${{ env.OUTPUT_PATH }}
+    - name: Zip statusblocker
+      run: |
+        cd CS2-SimpleAdmin/3rd_party/statusblocker
+        zip -r ../../../statusblocker.zip *
     - name: Publish combined release
       uses: ncipollo/release-action@v1.14.0
       with:
-        artifacts: "${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip"
+        artifacts: "${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip,statusblocker.zip"
         name: "CS2-SimpleAdmin - Build ${{ env.BUILD_NUMBER }}"
         tag: "fork-build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}"
         body: |

@@ -15,6 +15,7 @@ using System.Text;
 using System.Text.Json;
 
 namespace CS2_SimpleAdmin;
+
 public partial class CS2_SimpleAdmin
 {
     [ConsoleCommand("css_panel_say", "Say to all players from the panel.")]
@@ -117,5 +118,38 @@ public partial class CS2_SimpleAdmin
         {
             Logger.LogError(ex, "Unexpected error while query command");
         }
+    }
+
+    [ConsoleCommand("css_fexec")]
+    [CommandHelper(minArgs: 2, usage: "<#userid or name or steamid> <command>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+    [RequiresPermissions("@css/root")]
+    public void OnFexecCommand(CCSPlayerController? caller, CommandInfo command)
+    {
+        var target = command.GetArg(1);
+        var exec = command.GetArg(2);
+
+        List<CCSPlayerController> playersToTarget = Helper.GetValidPlayers();
+
+        // Find the player by name, userid or steamid
+        if (target.StartsWith("#"))
+        {
+            playersToTarget = playersToTarget.Where(player => player.UserId.ToString() == target.Replace("#", "")).ToList();
+        }
+        else if (Helper.IsValidSteamId64(target))
+        {
+            playersToTarget = playersToTarget.Where(player => player.SteamID.ToString() == target).ToList();
+        }
+        else
+        {
+            playersToTarget = playersToTarget.Where(player => player.PlayerName.ToLower().Contains(target.ToLower())).ToList();
+        }
+
+        playersToTarget.ForEach(player =>
+        {
+            if (caller.CanTarget(player))
+            {
+                player.ExecuteClientCommandFromServer(exec);
+            }
+        });
     }
 }

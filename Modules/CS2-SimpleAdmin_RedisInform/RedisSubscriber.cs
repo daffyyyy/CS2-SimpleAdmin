@@ -51,7 +51,7 @@ public class RedisSubscriber(string serverIdentifier)
                     if (deserializedMessage == null)
                         return;
                     
-                    Server.NextFrame(() => CS2_SimpleAdmin_RedisInform.SharedApi?.ShowAdminActivity(deserializedMessage.MessageKey.ToString(), deserializedMessage.CallerName.ToString(), true, GetMessageArgsAsStringArray(deserializedMessage.MessageArgs)));
+                    Server.NextWorldUpdate(() => CS2_SimpleAdmin_RedisInform.SharedApi?.ShowAdminActivity(deserializedMessage.MessageKey.ToString(), deserializedMessage.CallerName.ToString(), true, GetMessageArgsAsStringArray(deserializedMessage.MessageArgs)));
                 });
         }
         catch (Exception ex)
