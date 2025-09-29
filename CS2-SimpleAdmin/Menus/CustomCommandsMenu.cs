@@ -42,9 +42,9 @@ public static class CustomCommandsMenu
             (buttons, menu, selected) =>
             {
                 if (selected == null) return;
-                if (buttons == MenuButtons.Select && selected.Option >= 0 && selected.Option < customCommands.Count)
+                if (buttons == MenuButtons.Select && menu.Option >= 0 && menu.Option < customCommands.Count)
                 {
-                    var cmd = customCommands[selected.Option];
+                    var cmd = customCommands[menu.Option];
                     Helper.TryLogCommandOnDiscord(admin, cmd.Command);
 
                     if (cmd.ExecuteOnClient)

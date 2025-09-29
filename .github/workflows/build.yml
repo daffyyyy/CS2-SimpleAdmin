@@ -2,11 +2,11 @@ name: Build
 
 on:
   push:
-    branches: [ "dev" ]
+    branches: [ "main" ]
     paths-ignore:
       - '**/README.md'
   pull_request:
-    branches: [ "dev" ]
+    branches: [ "main" ]
     paths-ignore:
       - '**/README.md'
 
@@ -96,7 +96,6 @@ jobs:
         name: "CS2-SimpleAdmin - Build ${{ env.BUILD_NUMBER }}"
         tag: "fork-build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}"
         body: |
-          # Note: This is a dev build. Use with caution
           Place files in addons/counterstrikesharp
           After first launch, configure the plugins in the respective configs:
           - CS2-SimpleAdmin: addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json

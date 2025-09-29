@@ -41,9 +41,9 @@ public static class ReasonMenu
             (buttons, menu, selected) =>
             {
                 if (selected == null) return;
-                if (buttons == MenuButtons.Select && selected.Option >= 0 && selected.Option < reasons.Count)
+                if (buttons == MenuButtons.Select && menu.Option >= 0 && menu.Option < reasons.Count)
                 {
-                    onSelectAction(admin, player, reasons[selected.Option]);
+                    onSelectAction(admin, player, reasons[menu.Option]);
                 }
             },
             true,
@@ -82,9 +82,9 @@ public static class ReasonMenu
             (buttons, menu, selected) =>
             {
                 if (selected == null) return;
-                if (buttons == MenuButtons.Select && selected.Option >= 0 && selected.Option < reasons.Count)
+                if (buttons == MenuButtons.Select && menu.Option >= 0 && menu.Option < reasons.Count)
                 {
-                    onSelectAction(admin, player, reasons[selected.Option]);
+                    onSelectAction(admin, player, reasons[menu.Option]);
                 }
             },
             true,
