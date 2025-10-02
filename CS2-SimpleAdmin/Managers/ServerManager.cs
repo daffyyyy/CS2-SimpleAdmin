@@ -9,22 +9,32 @@ public class ServerManager
 {
     private int _getIpTryCount;
 
+    /// <summary>
+    /// Checks whether the server setting <c>sv_hibernate_when_empty</c> is enabled.
+    /// Logs an error if this setting is true, since it prevents the plugin from working properly.
+    /// </summary>
     public static void CheckHibernationStatus()
     {
         var convar = ConVar.Find("sv_hibernate_when_empty");
-        
         if (convar == null || !convar.GetPrimitiveValue<bool>())
             return;
         
         CS2_SimpleAdmin._logger?.LogError("Detected setting \"sv_hibernate_when_empty true\", set false to make plugin work properly");
     }
     
+    /// <summary>
+    /// Initiates the asynchronous process to load server data such as IP address, port, hostname, and RCON password.
+    /// Handles retry attempts if IP address is not immediately available.
+    /// Updates or inserts the server record in the database accordingly.
+    /// After loading, triggers admin reload and cache initialization.
+    /// Also optionally sends plugin usage metrics if enabled in configuration.
+    /// </summary>
     public void LoadServerData()
     {
-        CS2_SimpleAdmin.Instance.AddTimer(1.2f, () =>
+        CS2_SimpleAdmin.Instance.AddTimer(2.0f, () =>
         {
-            if (CS2_SimpleAdmin.ServerLoaded || CS2_SimpleAdmin.ServerId != null || CS2_SimpleAdmin.Database == null) return;
-            
+            if (CS2_SimpleAdmin.ServerLoaded || CS2_SimpleAdmin.DatabaseProvider == null) return;
+
             if (_getIpTryCount > 32 && Helper.GetServerIp().StartsWith("0.0.0.0") || string.IsNullOrEmpty(Helper.GetServerIp()))
             {
                 CS2_SimpleAdmin._logger?.LogError("Unable to load server data - can't fetch ip address!");
@@ -32,7 +42,6 @@ public class ServerManager
             }
 
             var ipAddress = ConVar.Find("ip")?.StringValue;
-
             if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
             {
                 ipAddress = Helper.GetServerIp();
@@ -40,23 +49,22 @@ public class ServerManager
                 if (_getIpTryCount <= 32 && (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0")))
                 {
                     _getIpTryCount++;
-                    
+
                     LoadServerData();
                     return;
                 }
             }
 
             var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
-            var hostname = ConVar.Find("hostname")!.StringValue;
-            var rconPassword = ConVar.Find("rcon_password")!.StringValue;
+            var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+            var rconPassword = ConVar.Find("rcon_password")?.StringValue ?? "";
             CS2_SimpleAdmin.IpAddress = address;
             
             Task.Run(async () =>
             {
                 try
                 {
-                    await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
-                    
+                    await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
                     int? serverId = await connection.ExecuteScalarAsync<int?>(
                         "SELECT id FROM sa_servers WHERE address = @address",
                         new { address });
@@ -79,7 +87,6 @@ public class ServerManager
                     }
 
                     CS2_SimpleAdmin.ServerId = serverId;
-                    
                     CS2_SimpleAdmin._logger?.LogInformation("Loaded server with ip {ip}", ipAddress);
 
                     if (CS2_SimpleAdmin.ServerId != null)

@@ -24,12 +24,12 @@ public static class ManageAdminsMenu
         var menu = AdminMenu.CreateMenu(localizer?["sa_menu_admins_manage"] ?? "Admins Manage");
         List<ChatMenuOptionData> options =
         [
-            new ChatMenuOptionData(localizer?["sa_admin_add"] ?? "Add Admin",
+            new(localizer?["sa_admin_add"] ?? "Add Admin",
                 () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_admin_add"] ?? "Add Admin", AddAdminMenu)),
-            new ChatMenuOptionData(localizer?["sa_admin_remove"] ?? "Remove Admin",
+            new(localizer?["sa_admin_remove"] ?? "Remove Admin",
                 () => PlayersMenu.OpenAdminPlayersMenu(admin, localizer?["sa_admin_remove"] ?? "Remove Admin", RemoveAdmin,
                     player => player != admin && admin.CanTarget(player))),
-            new ChatMenuOptionData(localizer?["sa_admin_reload"] ?? "Reload Admins", () => ReloadAdmins(admin))
+            new(localizer?["sa_admin_reload"] ?? "Reload Admins", () => ReloadAdmins(admin))
         ];
 
         foreach (var menuOptionData in options)

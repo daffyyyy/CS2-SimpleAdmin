@@ -11,9 +11,15 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    internal static readonly Dictionary<int, float> SpeedPlayers = [];
+    internal static readonly Dictionary<CCSPlayerController, float> SpeedPlayers = [];
     internal static readonly Dictionary<CCSPlayerController, float> GravityPlayers = [];
     
+    /// <summary>
+    /// Executes the 'slay' command, forcing the targeted players to commit suicide.
+    /// Checks player validity and permissions.
+    /// </summary>
+    /// <param name="caller">Player or console issuing the command.</param>
+    /// <param name="command">Command details, including targets.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSlayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -32,6 +38,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Performs the actual slay action on a player, with notification and logging.
+    /// </summary>
+    /// <param name="caller">Admin or console issuing the slay.</param>
+    /// <param name="player">Target player to slay.</param>
+    /// <param name="callerName">Optional name to display as the slayer.</param>
+    /// <param name="command">Optional command info for logging.</param>
     internal static void Slay(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
     {
         if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected) return;
@@ -59,6 +72,12 @@ public partial class CS2_SimpleAdmin
             Helper.LogCommand(caller, $"css_slay {(string.IsNullOrEmpty(player.PlayerName) ? player.SteamID.ToString() : player.PlayerName)}");
     }
 
+    /// <summary>
+    /// Executes the 'give' command to provide a specified weapon to targeted players.
+    /// Enforces server rules for prohibited weapons.
+    /// </summary>
+    /// <param name="caller">Player or console issuing the command.</param>
+    /// <param name="command">Command details, including targets and weapon name.</param>
     [RequiresPermissions("@css/cheats")]
     [CommandHelper(minArgs: 2, usage: "<#userid or name> <weapon>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGiveCommand(CCSPlayerController? caller, CommandInfo command)
@@ -69,13 +88,6 @@ public partial class CS2_SimpleAdmin
 
         var playersToTarget = targets.Players.Where(player => player.IsValid && player is { IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).ToList();
         var weaponName = command.GetArg(2);
-
-        // check if item is typed
-        // if (weaponName.Length < 2)
-        // {
-        //     command.ReplyToCommand($"No weapon typed.");
-        //     return;
-        // }
 
         // check if weapon is knife
         if (weaponName.Contains("_knife") || weaponName.Contains("bayonet"))
@@ -98,6 +110,15 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    
+    /// <summary>
+    /// Gives a weapon identified by name to a player, handling ambiguous matches and logging.
+    /// </summary>
+    /// <param name="caller">Admin issuing the command.</param>
+    /// <param name="player">Target player to receive the weapon.</param>
+    /// <param name="weaponName">Weapon name or partial name.</param>
+    /// <param name="callerName">Optional name to display in notifications.</param>
+    /// <param name="command">Optional command info for logging.</param>
     private static void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, string weaponName, string? callerName = null, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -137,6 +158,14 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Gives a specific weapon to a player, with notifications and logging.
+    /// </summary>
+    /// <param name="caller">Admin issuing the command.</param>
+    /// <param name="player">Target player.</param>
+    /// <param name="weapon">Weapon item object.</param>
+    /// <param name="callerName">Optional caller name for notifications.</param>
+    /// <param name="command">Optional command info.</param>
     internal static void GiveWeapon(CCSPlayerController? caller, CCSPlayerController player, CsItem weapon, string? callerName = null, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -163,6 +192,12 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Executes the 'strip' command, removing all weapons from targeted players.
+    /// Checks player validity and permissions.
+    /// </summary>
+    /// <param name="caller">Player or console issuing the command.</param>
+    /// <param name="command">Command details including targets.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnStripCommand(CCSPlayerController? caller, CommandInfo command)
@@ -184,6 +219,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Removes all weapons from a player, with notifications and logging.
+    /// </summary>
+    /// <param name="caller">Admin or console issuing the strip command.</param>
+    /// <param name="player">Target player.</param>
+    /// <param name="callerName">Optional caller name.</param>
+    /// <param name="command">Optional command info for logging.</param>
     internal static void StripWeapons(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -214,6 +256,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sets health value on targeted players.
+    /// </summary>
+    /// <param name="caller">Admin or console issuing the command.</param>
+    /// <param name="command">Command details including targets and health value.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <health>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnHpCommand(CCSPlayerController? caller, CommandInfo command)
@@ -236,6 +283,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Changes health of a player and logs the action.
+    /// </summary>
+    /// <param name="caller">Admin or console calling the method.</param>
+    /// <param name="player">Target player.</param>
+    /// <param name="health">Health value to set.</param>
+    /// <param name="command">Optional command info.</param>
     internal static void SetHp(CCSPlayerController? caller, CCSPlayerController player, int health, CommandInfo? command = null)
     {
         if (!player.IsValid || player.IsHLTV) return;
@@ -263,6 +317,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sets movement speed on targeted players.
+    /// </summary>
+    /// <param name="caller">Admin or console issuing the command.</param>
+    /// <param name="command">Command details including targets and speed.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <speed>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSpeedCommand(CCSPlayerController? caller, CommandInfo command)
@@ -288,6 +347,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Changes speed of a player and logs the action.
+    /// </summary>
+    /// <param name="caller">Admin or console calling the method.</param>
+    /// <param name="player">Target player.</param>
+    /// <param name="speed">Speed value to set.</param>
+    /// <param name="command">Optional command info.</param>
     internal static void SetSpeed(CCSPlayerController? caller, CCSPlayerController player, float speed, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -299,9 +365,9 @@ public partial class CS2_SimpleAdmin
         player.SetSpeed(speed);
         
         if (speed == 1f)
-            SpeedPlayers.Remove(player.Slot);
+            SpeedPlayers.Remove(player);
         else
-            SpeedPlayers[player.Slot] = speed;
+            SpeedPlayers[player] = speed;
 
         // Log the command
         if (command == null)
@@ -319,6 +385,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sets gravity on targeted players.
+    /// </summary>
+    /// <param name="caller">Admin or console issuing the command.</param>
+    /// <param name="command">Command details including targets and gravity value.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <gravity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnGravityCommand(CCSPlayerController? caller, CommandInfo command)
@@ -344,6 +415,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Changes gravity of a player and logs the action.
+    /// </summary>
+    /// <param name="caller">Admin or console calling the method.</param>
+    /// <param name="player">Target player.</param>
+    /// <param name="gravity">Gravity value to set.</param>
+    /// <param name="command">Optional command info.</param>
     internal static void SetGravity(CCSPlayerController? caller, CCSPlayerController player, float gravity, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -375,6 +453,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sets the money amount for the targeted players.
+    /// </summary>
+    /// <param name="caller">The player/admin executing the command.</param>
+    /// <param name="command">The command containing target player and money value.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> <money>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnMoneyCommand(CCSPlayerController? caller, CommandInfo command)
@@ -401,6 +484,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Applies money value to a single targeted player and logs the operation.
+    /// </summary>
+    /// <param name="caller">The player/admin setting the money.</param>
+    /// <param name="player">The player whose money will be set.</param>
+    /// <param name="money">The value of money to set.</param>
+    /// <param name="command">Optional command info for logging.</param>
     internal static void SetMoney(CCSPlayerController? caller, CCSPlayerController player, int money, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -427,6 +517,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Applies damage as a slap effect to the targeted players.
+    /// </summary>
+    /// <param name="caller">The player/admin executing the slap command.</param>
+    /// <param name="command">The command including targets and optional damage value.</param>
     [RequiresPermissions("@css/slay")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [damage]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnSlapCommand(CCSPlayerController? caller, CommandInfo command)
@@ -457,6 +552,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Applies slap damage to a specific player with notifications and logging.
+    /// </summary>
+    /// <param name="caller">The player/admin applying the slap effect.</param>
+    /// <param name="player">The target player to slap.</param>
+    /// <param name="damage">The damage amount to apply.</param>
+    /// <param name="command">Optional command info for logging.</param>
     internal static void Slap(CCSPlayerController? caller, CCSPlayerController player, int damage, CommandInfo? command = null)
     {
         if (!caller.CanTarget(player)) return;
@@ -485,6 +587,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Changes the team of targeted players with optional kill on switch.
+    /// </summary>
+    /// <param name="caller">The player/admin issuing the command.</param>
+    /// <param name="command">The command containing targets, team info, and optional kill flag.</param>
     [RequiresPermissions("@css/kick")]
     [CommandHelper(minArgs: 2, usage: "<#userid or name> [<ct/tt/spec>] [-k]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnTeamCommand(CCSPlayerController? caller, CommandInfo command)
@@ -534,6 +641,15 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Changes the team of a player with various conditions and logs the operation.
+    /// </summary>
+    /// <param name="caller">The player/admin issuing the change.</param>
+    /// <param name="player">The target player.</param>
+    /// <param name="teamName">Team name string.</param>
+    /// <param name="teamNum">Team enumeration value.</param>
+    /// <param name="kill">If true, kills player on team change.</param>
+    /// <param name="command">Optional command info for logging.</param>
     internal static void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, CommandInfo? command = null)
     {
         // Check if the player is valid and connected
@@ -581,6 +697,11 @@ public partial class CS2_SimpleAdmin
         Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
     }
 
+    /// <summary>
+    /// Renames targeted players to a new name.
+    /// </summary>
+    /// <param name="caller">The admin issuing the rename command.</param>
+    /// <param name="command">The command including targets and new name.</param>
     [CommandHelper(1, "<#userid or name> <new name>")]
     [RequiresPermissions("@css/kick")]
     public void OnRenameCommand(CCSPlayerController? caller, CommandInfo command)
@@ -626,6 +747,11 @@ public partial class CS2_SimpleAdmin
         });
     }
 
+    /// <summary>
+    /// Renames permamently targeted players to a new name.
+    /// </summary>
+    /// <param name="caller">The admin issuing the pre-rename command.</param>
+    /// <param name="command">The command containing targets and new alias.</param>
     [CommandHelper(1, "<#userid or name> <new name>")]
     [RequiresPermissions("@css/ban")]
     public void OnPrenameCommand(CCSPlayerController? caller, CommandInfo command)
@@ -676,6 +802,11 @@ public partial class CS2_SimpleAdmin
         });
     }
 
+    /// <summary>
+    /// Respawns targeted players, restoring their state.
+    /// </summary>
+    /// <param name="caller">The admin or player issuing respawn.</param>
+    /// <param name="command">The command including target players.</param>
     [CommandHelper(1, "<#userid or name>")]
     [RequiresPermissions("@css/cheats")]
     public void OnRespawnCommand(CCSPlayerController? caller, CommandInfo command)
@@ -700,6 +831,13 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+    /// <summary>
+    /// Respawns a specified player and updates admin notifications.
+    /// </summary>
+    /// <param name="caller">Admin or player executing respawn.</param>
+    /// <param name="player">Player to respawn.</param>
+    /// <param name="callerName">Optional admin name.</param>
+    /// <param name="command">Optional command info.</param>
     internal static void Respawn(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
     {
         // Check if the caller can target the player
@@ -715,8 +853,8 @@ public partial class CS2_SimpleAdmin
         var playerPawn = player.PlayerPawn.Value;
         _cBasePlayerControllerSetPawnFunc.Invoke(player, playerPawn, true, false);
         VirtualFunction.CreateVoid<CCSPlayerController>(player.Handle, GameData.GetOffset("CCSPlayerController_Respawn"))(player);
-
-        if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.UserId.Value, out var value) && value.DiePosition != null)
+        
+        if (player.UserId.HasValue && PlayersInfo.TryGetValue(player.SteamID, out var value) && value.DiePosition != null)
             playerPawn.Teleport(value.DiePosition?.Position, value.DiePosition?.Angle);
 
         // Log the command
@@ -733,146 +871,270 @@ public partial class CS2_SimpleAdmin
         Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
     }
 
-    [CommandHelper(1, "<#userid or name>")]
+    /// <summary>
+    /// Teleports targeted player(s) to another player's location.
+    /// </summary>
+    /// <param name="caller">Admin issuing teleport command.</param>
+    /// <param name="command">Command containing teleport targets and destination.</param>
+    [CommandHelper(1, "<#userid or name> [#userid or name]")]
     [RequiresPermissions("@css/kick")]
     public void OnGotoCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        // Check if the caller is valid and has a live pawn
-        if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE) return;
+        IEnumerable<CCSPlayerController> playersToTeleport;
+        CCSPlayerController? destinationPlayer;
 
-        // Get the target players
         var targets = GetTarget(command);
-        if (targets == null || targets.Count() > 1) return;
 
-        var playersToTarget = targets.Players
-            .Where(player => player is { IsValid: true, IsHLTV: false })
-            .ToList();
+        if (command.ArgCount < 3)
+        {
+            if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
+                return;
 
-        // Log the command
+            if (targets == null || targets.Count() != 1)
+                return;
+
+            destinationPlayer = targets.Players.FirstOrDefault(p =>
+                p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
+
+            if (destinationPlayer == null || !caller.CanTarget(destinationPlayer) || caller.PlayerPawn.Value == null)
+                return;
+
+            playersToTeleport = [caller];
+        }
+        else
+        {
+            var destination = GetTarget(command, 2);
+            if (targets == null || destination == null || destination.Count() != 1)
+                return;
+
+            destinationPlayer = destination.Players.FirstOrDefault(p =>
+                p is { IsValid: true, IsHLTV: false, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
+
+            if (destinationPlayer == null)
+                return;
+
+            playersToTeleport = targets.Players
+                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller.CanTarget(p))
+                .ToList();
+
+            if (!playersToTeleport.Any())
+                return;
+        }
+
+        // Log command
         Helper.LogCommand(caller, command);
 
-        // Process each player to teleport
-        foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).Where(caller.CanTarget))
+        foreach (var player in playersToTeleport)
         {
-            if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
+            if (player.PlayerPawn?.Value == null || destinationPlayer?.PlayerPawn?.Value == null)
                 continue;
 
-            // Teleport the caller to the player and toggle noclip
-            caller.TeleportPlayer(player);
-            // caller.PlayerPawn.Value.ToggleNoclip();
+            player.TeleportPlayer(destinationPlayer);
 
-            caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
-            caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
-            
-            Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
-            Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
-            
             player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
             player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
-            
             Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
             Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
 
-            // Set a timer to toggle collision back after 4 seconds
+            destinationPlayer.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            destinationPlayer.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            Utilities.SetStateChanged(destinationPlayer, "CCollisionProperty", "m_CollisionGroup");
+            Utilities.SetStateChanged(destinationPlayer, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+
             AddTimer(4, () =>
             {
-                if (!caller.IsValid || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
-                    return;
-                
-                caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-                caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-            
-                Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
-                Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
-                
-                player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-                player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-            
-                Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
-                Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                if (player is { IsValid: true, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE })
+                {
+                    player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+                    Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                }
+
+                if (destinationPlayer.IsValid && destinationPlayer.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
+                {
+                    destinationPlayer.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    destinationPlayer.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    Utilities.SetStateChanged(destinationPlayer, "CCollisionProperty", "m_CollisionGroup");
+                    Utilities.SetStateChanged(destinationPlayer, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                }
             });
 
-            // Prepare message key and arguments for the teleport notification
-            var activityMessageKey = "sa_admin_tp_message";
-            var adminActivityArgs = new object[] { "CALLER", player.PlayerName };
-
-            // Show admin activity
-            if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)
+            if (caller != null && !SilentPlayers.Contains(caller.Slot) && _localizer != null)
             {
-                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
+                Helper.ShowAdminActivity("sa_admin_tp_message", player.PlayerName, false, "CALLER", destinationPlayer.PlayerName);
             }
         }
     }
-
-    [CommandHelper(1, "<#userid or name>")]
+    
+    /// <summary>
+    /// Brings targeted player(s) to the caller or specified destination player's location.
+    /// </summary>
+    /// <param name="caller">Player issuing the bring command.</param>
+    /// <param name="command">Command containing the destination and targets.</param>
+    [CommandHelper(1, "<#destination or name> [#userid or name...]")]
     [RequiresPermissions("@css/kick")]
     public void OnBringCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        // Check if the caller is valid and has a live pawn
-        if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE) 
+        IEnumerable<CCSPlayerController> playersToTeleport;
+        CCSPlayerController? destinationPlayer;
+
+        if (command.ArgCount < 3)
+        {
+            if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
+                return;
+
+            var targets = GetTarget(command);
+            if (targets == null || !targets.Any())
+                return;
+
+            destinationPlayer = caller;
+
+            playersToTeleport = targets.Players
+                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller.CanTarget(p))
+                .ToList();
+        }
+        else
+        {
+            var destination = GetTarget(command);
+            if (destination == null || destination.Count() != 1)
+                return;
+
+            destinationPlayer = destination.Players.FirstOrDefault(p =>
+                p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
+
+            if (destinationPlayer == null)
+                return;
+
+            // Rest args = targets to teleport
+            var targets = GetTarget(command, 2);
+            if (targets == null || !targets.Any())
+                return;
+
+            playersToTeleport = targets.Players
+                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller!.CanTarget(p))
+                .ToList();
+        }
+
+        if (destinationPlayer == null || !playersToTeleport.Any())
             return;
 
-        // Get the target players
-        var targets = GetTarget(command);
-        if (targets == null || targets.Count() > 1) return;
-
-        var playersToTarget = targets.Players
-            .Where(player => player is { IsValid: true, IsHLTV: false })
-            .ToList();
-
-        // Log the command
+        // Log command
         Helper.LogCommand(caller, command);
 
-        // Process each player to teleport
-        foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).Where(caller.CanTarget))
+        foreach (var player in playersToTeleport)
         {
-            if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
+            if (player.PlayerPawn?.Value == null || destinationPlayer.PlayerPawn?.Value == null)
                 continue;
 
-            // Teleport the player to the caller and toggle noclip
-            player.TeleportPlayer(caller);
-            // caller.PlayerPawn.Value.ToggleNoclip();
-            
-            caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
-            caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
-            
-            Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
-            Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
-            
+            // Teleport
+            player.TeleportPlayer(destinationPlayer);
+
             player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
             player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
-            
             Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
             Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
 
-            // Set a timer to toggle collision back after 4 seconds
+            destinationPlayer.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            destinationPlayer.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+            Utilities.SetStateChanged(destinationPlayer, "CCollisionProperty", "m_CollisionGroup");
+            Utilities.SetStateChanged(destinationPlayer, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+
             AddTimer(4, () =>
             {
-                if (!player.IsValid || player.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
-                    return;
-                
-                caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-                caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-            
-                Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
-                Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
-                
-                player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-                player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
-            
-                Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
-                Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                if (player is { IsValid: true, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE })
+                {
+                    player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+                    Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                }
+
+                if (destinationPlayer.IsValid && destinationPlayer.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE)
+                {
+                    destinationPlayer.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    destinationPlayer.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+                    Utilities.SetStateChanged(destinationPlayer, "CCollisionProperty", "m_CollisionGroup");
+                    Utilities.SetStateChanged(destinationPlayer, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+                }
             });
 
-            // Prepare message key and arguments for the bring notification
-            var activityMessageKey = "sa_admin_bring_message";
-            var adminActivityArgs = new object[] { "CALLER", player.PlayerName };
-
-            // Show admin activity
-            if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)
+            if (caller != null && !SilentPlayers.Contains(caller.Slot) && _localizer != null)
             {
-                Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
+                Helper.ShowAdminActivity("sa_admin_bring_message", player.PlayerName, false, "CALLER", destinationPlayer.PlayerName);
             }
         }
     }
+
+    // [CommandHelper(1, "<#userid or name> [#userid or name]")]
+    // [RequiresPermissions("@css/kick")]
+    // public void OnBringCommand(CCSPlayerController? caller, CommandInfo command)
+    // {
+    //     // Check if the caller is valid and has a live pawn
+    //     if (caller == null || caller.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE) 
+    //         return;
+    //
+    //     // Get the target players
+    //     var targets = GetTarget(command);
+    //     if (targets == null || targets.Count() > 1) return;
+    //
+    //     var playersToTarget = targets.Players
+    //         .Where(player => player is { IsValid: true, IsHLTV: false })
+    //         .ToList();
+    //
+    //     // Log the command
+    //     Helper.LogCommand(caller, command);
+    //
+    //     // Process each player to teleport
+    //     foreach (var player in playersToTarget.Where(player => player is { Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE }).Where(caller.CanTarget))
+    //     {
+    //         if (caller.PlayerPawn.Value == null || player.PlayerPawn.Value == null)
+    //             continue;
+    //
+    //         // Teleport the player to the caller and toggle noclip
+    //         player.TeleportPlayer(caller);
+    //         // caller.PlayerPawn.Value.ToggleNoclip();
+    //         
+    //         caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+    //         caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+    //         
+    //         Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
+    //         Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+    //         
+    //         player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+    //         player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_DISSOLVING;
+    //         
+    //         Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+    //         Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+    //
+    //         // Set a timer to toggle collision back after 4 seconds
+    //         AddTimer(4, () =>
+    //         {
+    //             if (!player.IsValid || player.PlayerPawn?.Value?.LifeState != (int)LifeState_t.LIFE_ALIVE)
+    //                 return;
+    //             
+    //             caller.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+    //             caller.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+    //         
+    //             Utilities.SetStateChanged(caller, "CCollisionProperty", "m_CollisionGroup");
+    //             Utilities.SetStateChanged(caller, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+    //             
+    //             player.PlayerPawn.Value.Collision.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+    //             player.PlayerPawn.Value.Collision.CollisionAttribute.CollisionGroup = (byte)CollisionGroup.COLLISION_GROUP_PLAYER;
+    //         
+    //             Utilities.SetStateChanged(player, "CCollisionProperty", "m_CollisionGroup");
+    //             Utilities.SetStateChanged(player, "VPhysicsCollisionAttribute_t", "m_nCollisionGroup");
+    //         });
+    //
+    //         // Prepare message key and arguments for the bring notification
+    //         var activityMessageKey = "sa_admin_bring_message";
+    //         var adminActivityArgs = new object[] { "CALLER", player.PlayerName };
+    //
+    //         // Show admin activity
+    //         if (!SilentPlayers.Contains(caller.Slot) && _localizer != null)
+    //         {
+    //             Helper.ShowAdminActivity(activityMessageKey, caller.PlayerName, false, adminActivityArgs);
+    //         }
+    //     }
+    // }
 }

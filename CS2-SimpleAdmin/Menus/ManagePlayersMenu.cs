@@ -90,12 +90,12 @@ public static class ManagePlayersMenu
         List<ChatMenuOptionData> options =
         [
 			// options added in order
-			new ChatMenuOptionData("0 hp", () => ApplySlapAndKeepMenu(admin, player, 0)),
-            new ChatMenuOptionData("1 hp", () => ApplySlapAndKeepMenu(admin, player, 1)),
-            new ChatMenuOptionData("5 hp", () => ApplySlapAndKeepMenu(admin, player, 5)),
-            new ChatMenuOptionData("10 hp", () => ApplySlapAndKeepMenu(admin, player, 10)),
-            new ChatMenuOptionData("50 hp", () => ApplySlapAndKeepMenu(admin, player, 50)),
-            new ChatMenuOptionData("100 hp", () => ApplySlapAndKeepMenu(admin, player, 100)),
+			new("0 hp", () => ApplySlapAndKeepMenu(admin, player, 0)),
+            new("1 hp", () => ApplySlapAndKeepMenu(admin, player, 1)),
+            new("5 hp", () => ApplySlapAndKeepMenu(admin, player, 5)),
+            new("10 hp", () => ApplySlapAndKeepMenu(admin, player, 10)),
+            new("50 hp", () => ApplySlapAndKeepMenu(admin, player, 50)),
+            new("100 hp", () => ApplySlapAndKeepMenu(admin, player, 100)),
         ];
 
         foreach (var menuOptionData in options)
@@ -312,10 +312,10 @@ public static class ManagePlayersMenu
         var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_team_force"] ?? "Force Team"} {player.PlayerName}");
         List<ChatMenuOptionData> options =
         [
-            new ChatMenuOptionData(CS2_SimpleAdmin._localizer?["sa_team_ct"] ?? "CT", () => ForceTeam(admin, player, "ct", CsTeam.CounterTerrorist)),
-            new ChatMenuOptionData(CS2_SimpleAdmin._localizer?["sa_team_t"] ?? "T", () => ForceTeam(admin, player, "t", CsTeam.Terrorist)),
-            new ChatMenuOptionData(CS2_SimpleAdmin._localizer?["sa_team_swap"] ?? "Swap", () => ForceTeam(admin, player, "swap", CsTeam.Spectator)),
-            new ChatMenuOptionData(CS2_SimpleAdmin._localizer?["sa_team_spec"] ?? "Spec", () => ForceTeam(admin, player, "spec", CsTeam.Spectator)),
+            new(CS2_SimpleAdmin._localizer?["sa_team_ct"] ?? "CT", () => ForceTeam(admin, player, "ct", CsTeam.CounterTerrorist)),
+            new(CS2_SimpleAdmin._localizer?["sa_team_t"] ?? "T", () => ForceTeam(admin, player, "t", CsTeam.Terrorist)),
+            new(CS2_SimpleAdmin._localizer?["sa_team_swap"] ?? "Swap", () => ForceTeam(admin, player, "swap", CsTeam.Spectator)),
+            new(CS2_SimpleAdmin._localizer?["sa_team_spec"] ?? "Spec", () => ForceTeam(admin, player, "spec", CsTeam.Spectator)),
         ];
 
         foreach (var menuOptionData in options)

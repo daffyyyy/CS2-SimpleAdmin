@@ -7,29 +7,135 @@
     <Nullable>enable</Nullable>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.318" />
-    <PackageReference Include="Dapper" Version="2.1.66" />
+<PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <PublishTrimmed>true</PublishTrimmed>
+        <DebuggerSupport>false</DebuggerSupport>
+        <GenerateDependencyFile>false</GenerateDependencyFile>
+</PropertyGroup>
+
+    <ItemGroup>
+    <PackageReference Include="CounterStrikeSharp.API" Version="1.0.340">
+      <PrivateAssets>none</PrivateAssets>
+      <ExcludeAssets>runtime</ExcludeAssets>
+      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+        <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="*" />
-    <PackageReference Include="ZLinq" Version="1.4.6" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <PackageReference Include="System.Linq.Async" Version="6.0.3" />
+    <PackageReference Include="ZLinq" Version="1.5.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CS2-SimpleAdminApi\CS2-SimpleAdminApi.csproj" />
   </ItemGroup>
 
+    <Target Name="ClearBuildFiles" AfterTargets="PostBuildEvent">
+        <ItemGroup>
+            <FilesToDelete Include="$(OutDir)Tomlyn.dll" />
+            <FilesToDelete Include="$(OutDir)Serilog*.dll" />
+            <FilesToDelete Include="$(OutDir)CS2-SimpleAdminApi.*" />
+            <FilesToDelete Include="$(OutDir)McMaster*" />
+            <FilesToDelete Include="$(OutDir)Scrutor.dll" />
+        </ItemGroup>
+        <Delete Files="@(FilesToDelete)" />
+    </Target>
+
 	<ItemGroup>
 		<None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
-		<None Update="Database\Migrations\010_CreateWarnsTable.sql">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
-		<None Update="Database\Migrations\012_AddUpdatedAtColumnToSaBansTable.sql">
+		<None Update="Database\Migrations\Mysql\001_CreateTables.sql">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-		<None Update="Database\Migrations\013_AddNameColumnToSaPlayerIpsTable.sql">
+		<None Update="Database\Migrations\Mysql\002_CreateFlagsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\003_ChangeColumnsPosition.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\004_MoveOldFlagsToFlagsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\005_CreateUnbansTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\006_ServerGroupsFeature.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\007_ServerGroupsGlobal.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\008_OnlineTimeInPenalties.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\009_BanAllUsedIpAddress.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\010_CreateWarnsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\011_AddRconColumnToServersTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\012_AddUpdatedAtColumnToSaBansTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\013_AddNameColumnToSaPlayerIpsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\014_AddIndexesToMutesTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Mysql\015_steamidToBigInt.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\001_CreateTables.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\002_CreateFlagsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\003_ChangeColumnsPosition.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\004_MoveOldFlagsToFlagsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\005_CreateUnbansTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\006_ServerGroupsFeature.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\007_ServerGroupsGlobal.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\008_OnlineTimeInPenalties.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\009_BanAllUsedIpAddress.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\010_CreateWarnsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\011_AddRconColumnToServersTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\012_AddUpdatedAtColumnToSaBansTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\013_AddNameColumnToSaPlayerIpsTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\014_AddIndexesToMutesTable.sql">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Update="Database\Migrations\Sqlite\015_steamidToBigInt.sql">
 		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 	</ItemGroup>
@@ -45,7 +151,8 @@
 	<ItemGroup>
 		<Reference Include="MenuManagerApi">
 			<HintPath>3rd_party\MenuManagerApi.dll</HintPath>
+            <Private>False</Private>
 		</Reference>
 	</ItemGroup>
-  
+
 </Project>

@@ -1,61 +1,94 @@
-﻿using Microsoft.Extensions.Logging;
-using MySqlConnector;
+﻿using System.Data.Common;
+using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin.Database;
 
-public class Migration(Database database)
+public class Migration(string migrationsPath)
 {
-    public void ExecuteMigrations()
+    /// <summary>
+    /// Executes all migration scripts found in the configured migrations path that have not been applied yet.
+    /// Creates a migration tracking table if it does not exist.
+    /// Applies migration scripts in filename order and logs successes or failures.
+    /// </summary>
+    public async Task ExecuteMigrationsAsync()
     {
-        var migrationsDirectory = CS2_SimpleAdmin.Instance.ModuleDirectory + "/Database/Migrations";
+        if (CS2_SimpleAdmin.DatabaseProvider == null) return;
+        var files = Directory.GetFiles(migrationsPath, "*.sql").OrderBy(f => f).ToList();
+        if (files.Count == 0) return;
 
-        var files = Directory.GetFiles(migrationsDirectory, "*.sql")
-                             .OrderBy(f => f);
+        await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
 
-        using var connection = database.GetConnection();
+        await using (var cmd = connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                                              CREATE TABLE IF NOT EXISTS sa_migrations (
+                                                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                  version TEXT NOT NULL
+                                              );
+                                          
+                              """;
 
-        // Create sa_migrations table if not exists
-        using var cmd = new MySqlCommand("""
-		                                             CREATE TABLE IF NOT EXISTS `sa_migrations` (
-		                                                 `id` INT PRIMARY KEY AUTO_INCREMENT,
-		                                                 `version` VARCHAR(255) NOT NULL
-		                                             );
-		                                 """, connection);
+            await cmd.ExecuteNonQueryAsync();
+        }
 
-        cmd.ExecuteNonQuery();
-
-        // Get the last applied migration version
-        var lastAppliedVersion = GetLastAppliedVersion(connection);
+        var lastAppliedVersion = await GetLastAppliedVersionAsync(connection);
 
         foreach (var file in files)
         {
             var version = Path.GetFileNameWithoutExtension(file);
+            if (string.Compare(version, lastAppliedVersion, StringComparison.OrdinalIgnoreCase) <= 0)
+                continue;
 
-            // Check if the migration has already been applied
-            if (string.Compare(version, lastAppliedVersion, StringComparison.OrdinalIgnoreCase) <= 0) continue;
-            var sqlScript = File.ReadAllText(file);
+            try
+            {
+                var sqlScript = await File.ReadAllTextAsync(file);
 
-            using var cmdMigration = new MySqlCommand(sqlScript, connection);
-            cmdMigration.ExecuteNonQuery();
+                await using (var cmdMigration = connection.CreateCommand())
+                {
+                    cmdMigration.CommandText = sqlScript;
+                    await cmdMigration.ExecuteNonQueryAsync();
+                }
 
-            // Update the last applied migration version
-            UpdateLastAppliedVersion(connection, version);
+                await UpdateLastAppliedVersionAsync(connection, version);
 
-            CS2_SimpleAdmin._logger?.LogInformation($"Migration \"{version}\" successfully applied.");
+                CS2_SimpleAdmin._logger?.LogInformation($"Migration \"{version}\" successfully applied.");
+            }
+            catch (Exception ex)
+            {
+                CS2_SimpleAdmin._logger?.LogError(ex, $"Error applying migration \"{version}\".");
+                break;
+            }
         }
     }
 
-    private static string GetLastAppliedVersion(MySqlConnection connection)
+    /// <summary>
+    /// Retrieves the version string of the last applied migration from the database.
+    /// </summary>
+    /// <param name="connection">The open database connection.</param>
+    /// <returns>The version string of the last applied migration, or empty string if none.</returns>
+    private static async Task<string> GetLastAppliedVersionAsync(DbConnection connection)
     {
-        using var cmd = new MySqlCommand("SELECT `version` FROM `sa_migrations` ORDER BY `id` DESC LIMIT 1;", connection);
-        var result = cmd.ExecuteScalar();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT version FROM sa_migrations ORDER BY id DESC LIMIT 1;";
+        var result = await cmd.ExecuteScalarAsync();
         return result?.ToString() ?? string.Empty;
     }
 
-    private static void UpdateLastAppliedVersion(MySqlConnection connection, string version)
+    /// <summary>
+    /// Inserts a record tracking the successful application of a migration version.
+    /// </summary>
+    /// <param name="connection">The open database connection.</param>
+    /// <param name="version">The version string of the migration applied.</param>
+    private static async Task UpdateLastAppliedVersionAsync(DbConnection connection, string version)
     {
-        using var cmd = new MySqlCommand("INSERT INTO `sa_migrations` (`version`) VALUES (@Version);", connection);
-        cmd.Parameters.AddWithValue("@Version", version);
-        cmd.ExecuteNonQuery();
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = "INSERT INTO sa_migrations (version) VALUES (@Version);";
+
+        var param = cmd.CreateParameter();
+        param.ParameterName = "@Version";
+        param.Value = version;
+        cmd.Parameters.Add(param);
+
+        await cmd.ExecuteNonQueryAsync();
     }
 }

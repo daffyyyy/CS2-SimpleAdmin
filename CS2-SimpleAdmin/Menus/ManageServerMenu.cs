@@ -24,7 +24,6 @@ public static class ManageServerMenu
         var menu = AdminMenu.CreateMenu(localizer?["sa_menu_server_manage"] ?? "Server Manage");
         List<ChatMenuOptionData> options = [];
 
-
         // permissions
         var hasMap = AdminManager.CommandIsOverriden("css_map") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_map")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/changemap");
         var hasPlugins = AdminManager.CommandIsOverriden("css_pluginsmanager") ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_pluginsmanager")) : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/root");

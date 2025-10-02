@@ -1,4 +1,5 @@
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Commands;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Entities;
 using CS2_SimpleAdmin.Managers;
@@ -13,7 +14,7 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         if (!player.UserId.HasValue)
             throw new KeyNotFoundException("Player with specific UserId not found");
         
-        return CS2_SimpleAdmin.PlayersInfo[player.UserId.Value];
+        return CS2_SimpleAdmin.PlayersInfo[player.SteamID];
     }
     
     public string GetConnectionString()  => CS2_SimpleAdmin.Instance.DbConnectionString;
@@ -28,6 +29,7 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     public event Action<PlayerInfo, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltied;
     public event Action<SteamID, PlayerInfo?, PenaltyType, string, int, int?, int?>? OnPlayerPenaltiedAdded;
     public event Action<string, string?, bool, object>? OnAdminShowActivity;
+    public event Action<int, bool>? OnAdminToggleSilent;
 
     public void OnPlayerPenaltiedEvent(PlayerInfo player, PlayerInfo? admin, PenaltyType penaltyType, string reason,
         int duration, int? penaltyId) =>  OnPlayerPenaltied?.Invoke(player, admin, penaltyType, reason, duration, penaltyId, CS2_SimpleAdmin.ServerId);
@@ -36,6 +38,8 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         int duration, int? penaltyId) =>  OnPlayerPenaltiedAdded?.Invoke(player, admin, penaltyType, reason, duration, penaltyId, CS2_SimpleAdmin.ServerId);
     
     public void OnAdminShowActivityEvent(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs) =>  OnAdminShowActivity?.Invoke(messageKey, callerName, dontPublish, messageArgs);
+
+    public void OnAdminToggleSilentEvent(int slot, bool status) =>  OnAdminToggleSilent?.Invoke(slot, status);
 
     public void IssuePenalty(CCSPlayerController player, CCSPlayerController? admin, PenaltyType penaltyType, string reason, int duration = -1)
     {
@@ -123,8 +127,42 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     public bool IsAdminSilent(CCSPlayerController player)
     {
         return CS2_SimpleAdmin.SilentPlayers.Contains(player.Slot);
+    }    
+    
+    public HashSet<int> ListSilentAdminsSlots()
+    {
+        return CS2_SimpleAdmin.SilentPlayers;
     }
 
+    public void RegisterCommand(string name, string? description, CommandInfo.CommandCallback callback)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Command name cannot be null or empty.", nameof(name));
+
+        ArgumentNullException.ThrowIfNull(callback);
+
+        var definition = new CommandDefinition(name, description ?? "No description", callback);
+        if (!RegisterCommands._commandDefinitions.TryGetValue(name, out var list))
+        {
+            list = new List<CommandDefinition>();
+            RegisterCommands._commandDefinitions[name] = list;
+        }
+
+        list.Add(definition);
+    }
+
+    public void UnRegisterCommand(string commandName)
+    {
+        var definitions = RegisterCommands._commandDefinitions[commandName];
+        if (definitions.Count == 0)
+            return;
+
+        foreach (var definition in definitions)
+        {
+            CS2_SimpleAdmin.Instance.RemoveCommand(commandName, definition.Callback);
+        }
+    }
+    
     public void ShowAdminActivity(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs)
     {
         Helper.ShowAdminActivity(messageKey, callerName, dontPublish, messageArgs);

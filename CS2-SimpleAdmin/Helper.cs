@@ -49,32 +49,28 @@ internal static class Helper
 
     public static List<CCSPlayerController> GetPlayerFromName(string name)
     {
-        return Utilities.GetPlayers().FindAll(x => x.PlayerName.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return GetValidPlayers().FindAll(x => x.PlayerName.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 
-    public static CCSPlayerController? GetPlayerFromSteamid64(string steamid)
+    public static CCSPlayerController? GetPlayerFromSteamid64(ulong steamid)
     {
-        return GetValidPlayers().FirstOrDefault(x => x.SteamID.ToString().Equals(steamid, StringComparison.OrdinalIgnoreCase));
+        return GetValidPlayers().FirstOrDefault(x => x.SteamID == steamid);
     }
 
-    public static CCSPlayerController? GetPlayerFromIp(string ipAddress)
+    public static List<CCSPlayerController> GetPlayerFromIp(string ipAddress)
     {
-        return GetValidPlayers().FirstOrDefault(x => x.IpAddress != null && x.IpAddress.Split(":")[0].Equals(ipAddress));
+        return CS2_SimpleAdmin.CachedPlayers.FindAll(x => x.IpAddress != null && x.IpAddress.Split(":")[0].Equals(ipAddress));
     }
 
     public static List<CCSPlayerController> GetValidPlayers()
     {
-        return Utilities.GetPlayers().AsValueEnumerable()
-            .Where(p => p is { IsValid: true, IsBot: false, Connected: PlayerConnectedState.PlayerConnected })
-            .ToList();
+        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().ToList();
     }
     
     public static List<CCSPlayerController> GetValidPlayersWithBots()
     {
-        return Utilities.GetPlayers().AsValueEnumerable()
-            .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected }).ToList();
+        return CS2_SimpleAdmin.CachedPlayers.Concat(CS2_SimpleAdmin.BotPlayers).AsValueEnumerable().ToList();
     }
-
 
     // public static bool IsValidSteamId64(string input)
     // {
@@ -141,10 +137,36 @@ internal static class Helper
         if (player == null || !player.IsValid || player.IsHLTV)
             return;
         
-        if (player.UserId.HasValue && CS2_SimpleAdmin.PlayersInfo.TryGetValue(player.UserId.Value, out var value))
+        if (player.UserId.HasValue && CS2_SimpleAdmin.PlayersInfo.TryGetValue(player.SteamID, out var value))
             value.WaitingForKick = true;
 
-        player.CommitSuicide(true, true);
+        // player.CommitSuicide(true, true);
+        player.VoiceFlags = VoiceFlags.Muted;
+        var playerPawn = player.PlayerPawn.Value;
+
+        if (playerPawn != null && playerPawn.LifeState == (int)LifeState_t.LIFE_ALIVE)
+        {
+            playerPawn.Freeze();
+            playerPawn.Colorize(255, 0, 0);
+            
+            var weaponServices = playerPawn.WeaponServices;
+            if (weaponServices == null)
+                return;
+
+            foreach (var _weap in weaponServices.MyWeapons)
+            {
+                var weapon = _weap.Value;;
+                if (weapon == null || !weapon.IsValid)
+                    continue;
+                if (weapon.DesignerName.Contains("c4") || weapon.DesignerName.Contains("healthshot"))
+                    continue;
+
+                weapon.NextPrimaryAttackTick = Server.TickCount + 999;
+                weapon.NextSecondaryAttackTick = Server.TickCount + 999;
+                Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_nNextPrimaryAttackTick");
+                Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_nNextSecondaryAttackTick");
+            }
+        }
         
         if (delay > 0)
         {
@@ -155,6 +177,7 @@ internal static class Helper
                 
                 // Server.ExecuteCommand($"kickid {player.UserId}");
 
+                playerPawn?.Colorize();
                 player.Disconnect(reason);
             });
         }
@@ -162,6 +185,7 @@ internal static class Helper
         {
             // Server.ExecuteCommand($"kickid {player.UserId}");
 
+            playerPawn?.Colorize();
             player.Disconnect(reason); 
         }
         
@@ -186,11 +210,41 @@ internal static class Helper
         if (!player.IsValid || player.IsHLTV)
             return;
 
-        if (player.UserId.HasValue && CS2_SimpleAdmin.PlayersInfo.TryGetValue(player.UserId.Value, out var value))
+        if (CS2_SimpleAdmin.PlayersInfo.TryGetValue(player.SteamID, out var value))
+        {
+            if (value.WaitingForKick)
+                return;
+            
             value.WaitingForKick = true;
+        }
         
-        player.CommitSuicide(true, true);
-        
+        player.VoiceFlags = VoiceFlags.Muted;
+        var playerPawn = player.PlayerPawn.Value;
+        if (playerPawn != null && playerPawn.LifeState == (int)LifeState_t.LIFE_ALIVE)
+        {
+            playerPawn.Freeze();
+            playerPawn.Colorize(255, 0, 0);
+
+            var weaponServices = playerPawn.WeaponServices;
+            if (weaponServices == null)
+                return;
+
+            foreach (var _weap in weaponServices.MyWeapons)
+            {
+                var weapon = _weap.Value;
+                ;
+                if (weapon == null || !weapon.IsValid)
+                    continue;
+                if (weapon.DesignerName.Contains("c4") || weapon.DesignerName.Contains("healthshot"))
+                    continue;
+
+                weapon.NextPrimaryAttackTick = Server.TickCount + 999;
+                weapon.NextSecondaryAttackTick = Server.TickCount + 999;
+                Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_nNextPrimaryAttackTick");
+                Utilities.SetStateChanged(weapon, "CBasePlayerWeapon", "m_nNextSecondaryAttackTick");
+            }
+        }
+
         if (delay > 0)
         {
             CS2_SimpleAdmin.Instance.AddTimer(delay, () =>
@@ -237,6 +291,7 @@ internal static class Helper
 
     public static int ParsePenaltyTime(string time)
     {
+        time = time.ToLower();
         if (string.IsNullOrWhiteSpace(time) || !time.Any(char.IsDigit))
         {
             // CS2_SimpleAdmin._logger?.LogError("Time string cannot be null or empty.");
@@ -256,7 +311,6 @@ internal static class Helper
             { "y", 525600 }         // Year (365 * 24 * 60)
         };
 
-        
         // Check if the input is purely numeric (e.g., "10" for 10 minutes)
         if (int.TryParse(time, out var numericMinutes))
         {
@@ -309,7 +363,6 @@ internal static class Helper
             return;
 
         var playerName = caller?.PlayerName ?? CS2_SimpleAdmin._localizer["sa_console"];
-
         var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer["sa_unknown"];
 
         CS2_SimpleAdmin.Instance.Logger.LogInformation($"{CS2_SimpleAdmin._localizer[
@@ -454,16 +507,13 @@ internal static class Helper
     {
         if (CS2_SimpleAdmin._localizer == null) return;
 
-        // Determine the localized message key
         var localizedMessageKey = $"{messageKey}";
 
         var formattedMessageArgs = messageArgs.Select(arg => arg?.ToString() ?? string.Empty).ToArray();
 
-        // Replace placeholder based on showActivityType
         for (var i = 0; i < formattedMessageArgs.Length; i++)
         {
-            var arg = formattedMessageArgs[i]; // Convert argument to string if not null
-                                               // Replace "CALLER" placeholder in the argument string
+            var arg = formattedMessageArgs[i]; 
             formattedMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
             {
                 1 => arg.Replace("CALLER", CS2_SimpleAdmin._localizer["sa_admin"]),
@@ -471,7 +521,6 @@ internal static class Helper
             };
         }
 
-        // Print the localized message to the center of the screen for the player
         using (new WithTemporaryCulture(player.GetLanguage()))
         {
             player.PrintToCenter(CS2_SimpleAdmin._localizer[localizedMessageKey, formattedMessageArgs.Cast<object>().ToArray()]);
@@ -535,10 +584,8 @@ internal static class Helper
         
         bool[] inlineFlags = [true, true, true, false, false];
         var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
-        var colorHex = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value ?? "#FFFFFF";
-
-        if (string.IsNullOrEmpty(colorHex))
-            colorHex = "#FFFFFF";
+        var colorValue = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value;
+        var colorHex = string.IsNullOrWhiteSpace(colorValue) ? "#FFFFFF" : colorValue.Trim();
 
         var embed = new Embed
         {
@@ -631,7 +678,8 @@ internal static class Helper
         
         bool[] inlineFlags = [true, true, true, false, false];
         var hostname = ConVar.Find("hostname")?.StringValue ?? localizer["sa_unknown"];
-        var colorHex = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value ?? "#FFFFFF";
+        var colorValue = penaltySetting.FirstOrDefault(s => s.Name.Equals("Color"))?.Value;
+        var colorHex = string.IsNullOrWhiteSpace(colorValue) ? "#FFFFFF" : colorValue.Trim();
 
         var embed = new Embed
         {
@@ -803,9 +851,11 @@ public static class PluginInfo
 {
     internal static async Task CheckVersion(string localVersion, ILogger logger)
     {
+        ShowAd(localVersion);
         const string versionUrl = "https://raw.githubusercontent.com/daffyyyy/CS2-SimpleAdmin/main/CS2-SimpleAdmin/VERSION";
         var client = CS2_SimpleAdmin.HttpClient;
-
+        client.Timeout = TimeSpan.FromSeconds(3);
+        
         try
         {
             var response = await client.GetAsync(versionUrl);
@@ -844,8 +894,8 @@ public static class PluginInfo
             logger.LogError(ex, "An error occurred while checking version.");
         }
     }
-    
-    internal static void ShowAd(string moduleVersion)
+
+    private static void ShowAd(string moduleVersion)
     {
         Console.WriteLine(" ");
         Console.WriteLine(" _______  ___   __   __  _______  ___      _______  _______  ______   __   __  ___   __    _  ");
@@ -975,8 +1025,21 @@ public static class IpHelper
 {
     public static uint IpToUint(string ipAddress)
     {
-        return (uint)BitConverter.ToInt32(System.Net.IPAddress.Parse(ipAddress).GetAddressBytes().Reverse().ToArray(),
-            0);
+        if (string.IsNullOrWhiteSpace(ipAddress))
+            throw new ArgumentException("IP address cannot be null or empty.", nameof(ipAddress));
+
+        if (!System.Net.IPAddress.TryParse(ipAddress, out var ip))
+            throw new FormatException($"Invalid IP address format: {ipAddress}");
+
+        // Ensure it's IPv4 (IPv6 will throw)
+        if (ip.AddressFamily != System.Net.Sockets.AddressFamily.InterNetwork)
+            throw new FormatException("Only IPv4 addresses are supported.");
+
+        byte[] bytes = ip.GetAddressBytes();
+        if (BitConverter.IsLittleEndian)
+            Array.Reverse(bytes); // Ensure big-endian (network order)
+
+        return BitConverter.ToUInt32(bytes, 0);
     }
     
     public static bool TryConvertIpToUint(string ipString, out uint ipUint)

@@ -1,5 +1,5 @@
+using System.Numerics;
 using CounterStrikeSharp.API.Modules.Entities;
-using CounterStrikeSharp.API.Modules.Utils;
 
 namespace CS2_SimpleAdminApi;
 
@@ -28,10 +28,13 @@ public class PlayerInfo(
     public bool WaitingForKick { get; set; } = false;
     public List<(ulong SteamId, string PlayerName)> AccountsAssociated { get; set; } = [];
     public DiePosition? DiePosition { get; set; }
+    public bool IsLoaded { get; set; }
 }
 
-public struct DiePosition(Vector position, QAngle angle)
+public class DiePosition(Vector3 position, Vector3 angle)
 {
-    public Vector Position { get; set; } = position;
-    public QAngle Angle { get; set; } = angle;
+    public Vector3 Position { get; } = position;
+    public Vector3 Angle { get; } = angle;
 }
+
+

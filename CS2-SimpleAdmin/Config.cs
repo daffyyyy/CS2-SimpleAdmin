@@ -38,67 +38,67 @@ public class Discord
     [JsonPropertyName("DiscordPenaltyBanSettings")]
     public DiscordPenaltySetting[] DiscordPenaltyBanSettings { get; set; } =
     [
-        new DiscordPenaltySetting { Name = "Color", Value = "" },
-        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
-        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "Footer", Value = "" },
-        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+        new() { Name = "Color", Value = "" },
+        new() { Name = "Webhook", Value = "" },
+        new() { Name = "ThumbnailUrl", Value = "" },
+        new() { Name = "ImageUrl", Value = "" },
+        new() { Name = "Footer", Value = "" },
+        new() { Name = "Time", Value = "{relative}" },
     ];
 
     [JsonPropertyName("DiscordPenaltyMuteSettings")]
     public DiscordPenaltySetting[] DiscordPenaltyMuteSettings { get; set; } =
     [
-        new DiscordPenaltySetting { Name = "Color", Value = "" },
-        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
-        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "Footer", Value = "" },
-        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+        new() { Name = "Color", Value = "" },
+        new() { Name = "Webhook", Value = "" },
+        new() { Name = "ThumbnailUrl", Value = "" },
+        new() { Name = "ImageUrl", Value = "" },
+        new() { Name = "Footer", Value = "" },
+        new() { Name = "Time", Value = "{relative}" },
     ];
 
     [JsonPropertyName("DiscordPenaltyGagSettings")]
     public DiscordPenaltySetting[] DiscordPenaltyGagSettings { get; set; } =
     [
-        new DiscordPenaltySetting { Name = "Color", Value = "" },
-        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
-        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "Footer", Value = "" },
-        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+        new() { Name = "Color", Value = "" },
+        new() { Name = "Webhook", Value = "" },
+        new() { Name = "ThumbnailUrl", Value = "" },
+        new() { Name = "ImageUrl", Value = "" },
+        new() { Name = "Footer", Value = "" },
+        new() { Name = "Time", Value = "{relative}" },
     ];
 
     [JsonPropertyName("DiscordPenaltySilenceSettings")]
     public DiscordPenaltySetting[] DiscordPenaltySilenceSettings { get; set; } =
     [
-        new DiscordPenaltySetting { Name = "Color", Value = "" },
-        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
-        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "Footer", Value = "" },
-        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+        new() { Name = "Color", Value = "" },
+        new() { Name = "Webhook", Value = "" },
+        new() { Name = "ThumbnailUrl", Value = "" },
+        new() { Name = "ImageUrl", Value = "" },
+        new() { Name = "Footer", Value = "" },
+        new() { Name = "Time", Value = "{relative}" },
     ];
 
     [JsonPropertyName("DiscordPenaltyWarnSettings")]
     public DiscordPenaltySetting[] DiscordPenaltyWarnSettings { get; set; } =
     [
-        new DiscordPenaltySetting { Name = "Color", Value = "" },
-        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
-        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "Footer", Value = "" },
-        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+        new() { Name = "Color", Value = "" },
+        new() { Name = "Webhook", Value = "" },
+        new() { Name = "ThumbnailUrl", Value = "" },
+        new() { Name = "ImageUrl", Value = "" },
+        new() { Name = "Footer", Value = "" },
+        new() { Name = "Time", Value = "{relative}" },
     ];
     
     [JsonPropertyName("DiscordAssociatedAccountsSettings")]
     public DiscordPenaltySetting[] DiscordAssociatedAccountsSettings { get; set; } =
     [
-        new DiscordPenaltySetting { Name = "Color", Value = "" },
-        new DiscordPenaltySetting { Name = "Webhook", Value = "" },
-        new DiscordPenaltySetting { Name = "ThumbnailUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "ImageUrl", Value = "" },
-        new DiscordPenaltySetting { Name = "Footer", Value = "" },
-        new DiscordPenaltySetting { Name = "Time", Value = "{relative}" },
+        new() { Name = "Color", Value = "" },
+        new() { Name = "Webhook", Value = "" },
+        new() { Name = "ThumbnailUrl", Value = "" },
+        new() { Name = "ImageUrl", Value = "" },
+        new() { Name = "Footer", Value = "" },
+        new() { Name = "Time", Value = "{relative}" },
     ];
 }
 
@@ -124,15 +124,15 @@ public class MenuConfig
     [JsonPropertyName("Durations")]
     public DurationItem[] Durations { get; set; } =
     [
-        new DurationItem { Name = "1 minute", Duration = 1 },
-        new DurationItem { Name = "5 minutes", Duration = 5 },
-        new DurationItem { Name = "15 minutes", Duration = 15 },
-        new DurationItem { Name = "1 hour", Duration = 60 },
-        new DurationItem { Name = "1 day", Duration = 60 * 24 },
-        new DurationItem { Name = "7 days", Duration = 60 * 24 * 7 },
-        new DurationItem { Name = "14 days", Duration = 60 * 24 * 14 },
-        new DurationItem { Name = "30 days", Duration = 60 * 24 * 30 },
-        new DurationItem { Name = "Permanent", Duration = 0 }
+        new() { Name = "1 minute", Duration = 1 },
+        new() { Name = "5 minutes", Duration = 5 },
+        new() { Name = "15 minutes", Duration = 15 },
+        new() { Name = "1 hour", Duration = 60 },
+        new() { Name = "1 day", Duration = 60 * 24 },
+        new() { Name = "7 days", Duration = 60 * 24 * 7 },
+        new() { Name = "14 days", Duration = 60 * 24 * 14 },
+        new() { Name = "30 days", Duration = 60 * 24 * 30 },
+        new() { Name = "Permanent", Duration = 0 }
     ];
 
     [JsonPropertyName("BanReasons")]
@@ -177,18 +177,18 @@ public class MenuConfig
     [JsonPropertyName("AdminFlags")]
     public AdminFlag[] AdminFlags { get; set; } =
     [
-        new AdminFlag { Name = "Generic", Flag = "@css/generic" },
-        new AdminFlag { Name = "Chat", Flag = "@css/chat" },
-        new AdminFlag { Name = "Change Map", Flag = "@css/changemap" },
-        new AdminFlag { Name = "Slay", Flag = "@css/slay" },
-        new AdminFlag { Name = "Kick", Flag = "@css/kick" },
-        new AdminFlag { Name = "Ban", Flag = "@css/ban" },
-        new AdminFlag { Name = "Perm Ban", Flag = "@css/permban" },
-        new AdminFlag { Name = "Unban", Flag = "@css/unban" },
-        new AdminFlag { Name = "Show IP", Flag = "@css/showip" },
-        new AdminFlag { Name = "Cvar", Flag = "@css/cvar" },
-        new AdminFlag { Name = "Rcon", Flag = "@css/rcon" },
-        new AdminFlag { Name = "Root (all flags)", Flag = "@css/root" }
+        new() { Name = "Generic", Flag = "@css/generic" },
+        new() { Name = "Chat", Flag = "@css/chat" },
+        new() { Name = "Change Map", Flag = "@css/changemap" },
+        new() { Name = "Slay", Flag = "@css/slay" },
+        new() { Name = "Kick", Flag = "@css/kick" },
+        new() { Name = "Ban", Flag = "@css/ban" },
+        new() { Name = "Perm Ban", Flag = "@css/permban" },
+        new() { Name = "Unban", Flag = "@css/unban" },
+        new() { Name = "Show IP", Flag = "@css/showip" },
+        new() { Name = "Cvar", Flag = "@css/cvar" },
+        new() { Name = "Rcon", Flag = "@css/rcon" },
+        new() { Name = "Root (all flags)", Flag = "@css/root" }
     ];
 }
 
@@ -247,26 +247,11 @@ public class OtherSettings
 
 public class CS2_SimpleAdminConfig : BasePluginConfig
 {
-    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 24;
+    [JsonPropertyName("ConfigVersion")] public override int Version { get; set; } = 25;
 
-    [JsonPropertyName("DatabaseHost")]
-    public string DatabaseHost { get; set; } = "";
-
-    [JsonPropertyName("DatabasePort")]
-    public int DatabasePort { get; set; } = 3306;
-
-    [JsonPropertyName("DatabaseUser")]
-    public string DatabaseUser { get; set; } = "";
-
-    [JsonPropertyName("DatabasePassword")]
-    public string DatabasePassword { get; set; } = "";
-
-    [JsonPropertyName("DatabaseName")]
-    public string DatabaseName { get; set; } = "";
-    
-    [JsonPropertyName("DatabaseSSlMode")]
-    public string DatabaseSSlMode { get; set; } = "preferred";
-
+    [JsonPropertyName("DatabaseConfig")] 
+    public DatabaseConfig DatabaseConfig { get; set; } = new();
+ 
     [JsonPropertyName("OtherSettings")]
     public OtherSettings OtherSettings { get; set; } = new();
 
@@ -303,4 +288,38 @@ public class CS2_SimpleAdminConfig : BasePluginConfig
 
     [JsonPropertyName("MenuConfig")]
     public MenuConfig MenuConfigs { get; set; } = new();
+}
+
+
+public class DatabaseConfig
+{
+    [JsonPropertyName("DatabaseType")]
+    public string DatabaseType { get; set; } = "SQLite";
+    
+    [JsonPropertyName("SqliteFilePath")]
+    public string SqliteFilePath { get; set; } = "cs2-simpleadmin.sqlite";
+
+    [JsonPropertyName("DatabaseHost")]
+    public string DatabaseHost { get; set; } = "";
+
+    [JsonPropertyName("DatabasePort")]
+    public int DatabasePort { get; set; } = 3306;
+
+    [JsonPropertyName("DatabaseUser")]
+    public string DatabaseUser { get; set; } = "";
+
+    [JsonPropertyName("DatabasePassword")]
+    public string DatabasePassword { get; set; } = "";
+
+    [JsonPropertyName("DatabaseName")]
+    public string DatabaseName { get; set; } = "";
+    
+    [JsonPropertyName("DatabaseSSlMode")]
+    public string DatabaseSSlMode { get; set; } = "preferred";
+}
+
+public enum DatabaseType
+{
+    MySQL,
+    SQLite
 }
