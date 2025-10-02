@@ -51,7 +51,7 @@ jobs:
       - name: Combine projects
         run: |
           mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin
-          mkdir -p ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi
+          mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_StealthModule
           mkdir -p ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi
 
           cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/* ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin/
