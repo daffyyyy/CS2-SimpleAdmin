@@ -8,8 +8,8 @@
   <img src="https://img.shields.io/badge/Made_with-a_lot_of_tea_%F0%9F%8D%B5-red" alt="Made with a lot of tea 🍵" />
 </p>
 
-# [![Join the support Discord](https://img.shields.io/badge/Discord-Support-blue?logo=discord&logoColor=white)](https://discord.com/channels/1160907911501991946/1180627186865156126)
- CS2-SimpleAdmin
+[![Join the support Discord](https://img.shields.io/badge/Discord-Support-blue?logo=discord&logoColor=white)](https://discord.com/channels/1160907911501991946/1180627186865156126)
+# CS2-SimpleAdmin
 
 ---
 
@@ -103,4 +103,4 @@ If you find CS2-SimpleAdmin useful, consider supporting the ongoing development:
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL-3.0 license - see the [LICENSE](LICENSE) file for details.
