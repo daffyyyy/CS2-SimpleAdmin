@@ -80,7 +80,7 @@ jobs:
         with:
           name: CS2-SimpleAdmin-Build-Artifacts
           path: |
-            CS2-SimpleAdmin${{ steps.get_version.outputs.VERSION }}.zip
+            CS2-SimpleAdmin-${{ steps.get_version.outputs.VERSION }}.zip
             StatusBlocker-linux-${{ steps.get_version.outputs.VERSION }}.zip
             StatusBlocker-windows-${{ steps.get_version.outputs.VERSION }}.zip
 
