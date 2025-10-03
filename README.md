@@ -103,4 +103,4 @@ If you find CS2-SimpleAdmin useful, consider supporting the ongoing development:
 ---
 
 ## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GPL-3.0 license - see the [LICENSE](LICENSE) file for details.
