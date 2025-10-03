@@ -97,7 +97,7 @@ jobs:
           name: CS2-SimpleAdmin-Build-Artifacts
           path: .
       - name: Unzip main build artifact
-        run: unzip CS2-SimpleAdmin${{ needs.build.outputs.build_version }}.zip -d ./counterstrikesharp
+        run: unzip CS2-SimpleAdmin-${{ needs.build.outputs.build_version }}.zip -d ./counterstrikesharp
       - name: Publish combined release
         uses: ncipollo/release-action@v1.14.0
         with:
