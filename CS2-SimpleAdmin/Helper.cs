@@ -937,6 +937,7 @@ public static class Time
 {
     public static DateTime ActualDateTime()
     {
+        return DateTime.UtcNow;
         string timezoneId = CS2_SimpleAdmin.Instance.Config.Timezone;
         DateTime utcNow = DateTime.UtcNow;
 

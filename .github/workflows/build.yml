@@ -102,10 +102,10 @@ jobs:
         uses: ncipollo/release-action@v1.14.0
         with:
           artifacts: |
-            CS2-SimpleAdmin${{ needs.build.outputs.build_version }}.zip
+            CS2-SimpleAdmin-${{ needs.build.outputs.build_version }}.zip
             StatusBlocker-linux-${{ needs.build.outputs.build_version }}.zip
             StatusBlocker-windows-${{ needs.build.outputs.build_version }}.zip
-          name: "CS2-SimpleAdmin Build #${{ needs.build.outputs.build_version }}"
+          name: "CS2-SimpleAdmin-${{ needs.build.outputs.build_version }}"
           tag: "build-${{ needs.build.outputs.build_version }}"
           body: |
             Place the files in your server as follows:
