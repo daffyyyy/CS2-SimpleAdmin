@@ -1,3 +1,13 @@
+<p align="center">
+  <a href="https://github.com/daffyyyy/CS2-SimpleAdmin/actions/workflows/build.yml">
+    <img src="https://github.com/daffyyyy/CS2-SimpleAdmin/actions/workflows/build.yml/badge.svg" alt="Build and Publish" />
+  </a>
+<a href="https://github.com/daffyyyy/CS2-SimpleAdmin/releases/latest">
+  <img src="https://img.shields.io/github/v/release/daffyyyy/CS2-SimpleAdmin?color=orange" alt="GitHub Release" />
+</a>
+  <img src="https://img.shields.io/badge/Made_with-a_lot_of_tea_%F0%9F%8D%B5-red" alt="Made with a lot of tea 🍵" />
+</p>
+
 # CS2-SimpleAdmin
 
 ---
