@@ -5,15 +5,15 @@ namespace CS2_SimpleAdmin.Managers;
 
 public class ChatManager
 {
-    public void AddChatMessageDB(string playerSteam64, string playerName, string message, bool? team)
+	public void AddChatMessageDB(string playerSteam64, string playerName, string message, bool? team)
 	{
-		if (CS2_SimpleAdmin.Database == null) return;
-        
-        Task.Run(async () =>
+		if (CS2_SimpleAdmin.DatabaseProvider == null) return;
+
+		Task.Run(async () =>
 		{
 			try
 			{
-				await using var connection = await CS2_SimpleAdmin.Database.GetConnectionAsync();
+				await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
 
 				var sql = "INSERT INTO `sa_chatlogs` (`playerSteam64`, `playerName`, `message`, `team`, `created`, `serverId`) " +
 					"VALUES (@playerSteam64, @playerName, @message, @team, @created, @serverId)";

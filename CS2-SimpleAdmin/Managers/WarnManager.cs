@@ -1,35 +1,37 @@
-﻿using CS2_SimpleAdminApi;
+﻿using CS2_SimpleAdmin.Database;
+using CS2_SimpleAdminApi;
 using Dapper;
 using Microsoft.Extensions.Logging;
 
 namespace CS2_SimpleAdmin.Managers;
 
-internal class WarnManager(Database.Database? database)
+internal class WarnManager(IDatabaseProvider? databaseProvider)
 {
+    /// <summary>
+    /// Adds a warning to a player with an optional issuer and reason.
+    /// </summary>
+    /// <param name="player">The player who is being warned.</param>
+    /// <param name="issuer">The player issuing the warning; null indicates console or system.</param>
+    /// <param name="reason">The reason for the warning.</param>
+    /// <param name="time">Optional duration of the warning in minutes (0 means permanent).</param>
+    /// <returns>The identifier of the inserted warning, or null if the operation failed.</returns>
     public async Task<int?> WarnPlayer(PlayerInfo player, PlayerInfo? issuer, string reason, int time = 0)
     {
-        if (database == null) return null;
+        if (databaseProvider == null) return null;
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
-            const string sql = """
-                               
-                                               INSERT INTO `sa_warns` 
-                                               (`player_steamid`, `player_name`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) 
-                                               VALUES 
-                                               (@playerSteamid, @playerName, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @serverid);
-                                               SELECT LAST_INSERT_ID();
-                               """;
+            await using var connection = await databaseProvider.CreateConnectionAsync();
+            var sql = databaseProvider.GetAddWarnQuery(true);
 
             var warnId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
-                playerSteamid = player.SteamId.SteamId64.ToString(),
+                playerSteamid = player.SteamId.SteamId64,
                 playerName = player.Name,
-                adminSteamid = issuer?.SteamId.SteamId64.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminSteamid = issuer?.SteamId.SteamId64 ?? 0,
                 adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 muteReason = reason,
                 duration = time,
@@ -46,30 +48,30 @@ internal class WarnManager(Database.Database? database)
         }
     }
 
-    public async Task<int?> AddWarnBySteamid(string playerSteamId, PlayerInfo? issuer, string reason, int time = 0)
+    /// <summary>
+    /// Adds a warning to a player identified by SteamID with optional issuer and reason.
+    /// </summary>
+    /// <param name="playerSteamId">The SteamID64 of the player being warned.</param>
+    /// <param name="issuer">The player issuing the warning; null indicates console or system.</param>
+    /// <param name="reason">The reason for the warning.</param>
+    /// <param name="time">Optional duration of the warning in minutes (0 means permanent).</param>
+    /// <returns>The identifier of the inserted warning, or null if the operation failed.</returns>
+    public async Task<int?> AddWarnBySteamid(ulong playerSteamId, PlayerInfo? issuer, string reason, int time = 0)
     {
-        if (database == null) return null;
-        if (string.IsNullOrEmpty(playerSteamId)) return null;
+        if (databaseProvider == null) return null;
 
         var now = Time.ActualDateTime();
         var futureTime = now.AddMinutes(time);
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
-            const string sql = """
-                               
-                                               INSERT INTO `sa_warns` 
-                                               (`player_steamid`, `admin_steamid`, `admin_name`, `reason`, `duration`, `ends`, `created`, `server_id`) 
-                                               VALUES 
-                                               (@playerSteamid, @adminSteamid, @adminName, @muteReason, @duration, @ends, @created, @serverid);
-                                               SELECT LAST_INSERT_ID();
-                               """;
+            await using var connection = await databaseProvider.CreateConnectionAsync();
+            var sql = databaseProvider.GetAddWarnQuery(false);
 
             var warnId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
                 playerSteamid = playerSteamId,
-                adminSteamid = issuer?.SteamId.ToString() ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
+                adminSteamid = issuer?.SteamId.SteamId64 ?? 0,
                 adminName = issuer?.Name ?? CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console",
                 muteReason = reason,
                 duration = time,
@@ -86,30 +88,22 @@ internal class WarnManager(Database.Database? database)
         }
     }
 
+    /// <summary>
+    /// Retrieves a list of warnings for a specific player.
+    /// </summary>
+    /// <param name="player">The player whose warnings to retrieve.</param>
+    /// <param name="active">If true, returns only active (non-expired) warnings; otherwise returns all warnings.</param>
+    /// <returns>A list of dynamic objects representing warnings, or an empty list if none found or on failure.</returns>
     public async Task<List<dynamic>> GetPlayerWarns(PlayerInfo player, bool active = true)
     {
-        if (database == null) return [];
+        if (databaseProvider == null) return [];
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
+            await using var connection = await databaseProvider.CreateConnectionAsync();
 
-            string sql;
-
-            if (CS2_SimpleAdmin.Instance.Config.MultiServerMode)
-            {
-                sql = active
-                    ? "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE' ORDER BY id DESC"
-                    : "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID ORDER BY id DESC";
-            }
-            else
-            {
-                sql = active
-                    ? "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID AND server_id = @serverid AND status = 'ACTIVE' ORDER BY id DESC"
-                    : "SELECT * FROM sa_warns WHERE player_steamid = @PlayerSteamID AND server_id = @serverid ORDER BY id DESC";
-            }
-
-            var parameters = new { PlayerSteamID = player.SteamId.SteamId64.ToString(), serverid = CS2_SimpleAdmin.ServerId };
+            var sql = databaseProvider.GetPlayerWarnsQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode, active);
+            var parameters = new { PlayerSteamID = player.SteamId.SteamId64, serverid = CS2_SimpleAdmin.ServerId };
             var warns = await connection.QueryAsync<dynamic>(sql, parameters);
 
             return warns.ToList();
@@ -120,24 +114,23 @@ internal class WarnManager(Database.Database? database)
         }
     }
 
-    public async Task<int> GetPlayerWarnsCount(string steamId, bool active = true)
+    /// <summary>
+    /// Retrieves the count of warnings for a player specified by SteamID.
+    /// </summary>
+    /// <param name="steamId">The SteamID64 of the player.</param>
+    /// <param name="active">If true, counts only active (non-expired) warnings; otherwise counts all warnings.</param>
+    /// <returns>The count of warnings as an integer, or 0 if none found or on failure.</returns>
+    public async Task<int> GetPlayerWarnsCount(ulong steamId, bool active = true)
     {
-        if (database == null) return 0;
+        if (databaseProvider == null) return 0;
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
+            await using var connection = await databaseProvider.CreateConnectionAsync();
 
-            var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
-                ? active
-                    ? "SELECT COUNT(*) FROM sa_warns WHERE player_steamid = @PlayerSteamID AND status = 'ACTIVE'"
-                    : "SELECT COUNT(*) FROM sa_warns WHERE player_steamid = @PlayerSteamID"
-                : active
-                    ? "SELECT COUNT(*) FROM sa_warns WHERE player_steamid = @PlayerSteamID AND server_id = @serverid  AND status = 'ACTIVE'"
-                    : "SELECT COUNT(*) FROM sa_warns WHERE player_steamid = @PlayerSteamID'";
-
-            var muteCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
-            return muteCount;
+            var sql = databaseProvider.GetPlayerWarnsCountQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode, active);
+            var warnsCount = await connection.ExecuteScalarAsync<int>(sql, new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId });
+            return warnsCount;
         }
         catch (Exception)
         {
@@ -145,19 +138,22 @@ internal class WarnManager(Database.Database? database)
         }
     }
 
+    /// <summary>
+    /// Removes a specific warning by its identifier from a player's record.
+    /// </summary>
+    /// <param name="player">The player whose warning will be removed.</param>
+    /// <param name="warnId">The identifier of the warning to remove.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task UnwarnPlayer(PlayerInfo player, int warnId)
     {
-        if (database == null) return;
+        if (databaseProvider == null) return;
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
+            await using var connection = await databaseProvider.CreateConnectionAsync();
 
-            var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
-                ? "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND player_steamid = @steamid AND id = @warnId"
-                : "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND player_steamid = @steamid AND id = @warnId AND server_id = @serverid";
-
-            await connection.ExecuteAsync(sql, new { steamid = player.SteamId.SteamId64.ToString(), warnId, serverid = CS2_SimpleAdmin.ServerId });
+            var sql = databaseProvider.GetUnwarnByIdQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
+            await connection.ExecuteAsync(sql, new { steamid = player.SteamId.SteamId64, warnId, serverid = CS2_SimpleAdmin.ServerId });
         }
         catch (Exception ex)
         {
@@ -165,36 +161,20 @@ internal class WarnManager(Database.Database? database)
         }
     }
     
+    /// <summary>
+    /// Removes the most recent warning matching a player pattern (usually SteamID string).
+    /// </summary>
+    /// <param name="playerPattern">The pattern identifying the player whose last warning should be removed.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task UnwarnPlayer(string playerPattern)
     {
-        if (database == null) return;
+        if (databaseProvider == null) return;
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
+            await using var connection = await databaseProvider.CreateConnectionAsync();
 
-            var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
-                ? """
-                  UPDATE sa_warns 
-                  JOIN (
-                      SELECT MAX(id) AS max_id
-                      FROM sa_warns
-                      WHERE player_steamid = @steamid AND status = 'ACTIVE'
-                  ) AS subquery ON sa_warns.id = subquery.max_id
-                  SET sa_warns.status = 'EXPIRED'
-                  WHERE sa_warns.status = 'ACTIVE' AND sa_warns.player_steamid = @steamid;
-                  """
-                : """
-                  UPDATE sa_warns 
-                  JOIN (
-                      SELECT MAX(id) AS max_id
-                      FROM sa_warns
-                      WHERE player_steamid = @steamid AND status = 'ACTIVE' AND server_id = @serverid
-                  ) AS subquery ON sa_warns.id = subquery.max_id
-                  SET sa_warns.status = 'EXPIRED'
-                  WHERE sa_warns.status = 'ACTIVE' AND sa_warns.player_steamid = @steamid AND sa_warns.server_id = @serverid;
-                  """;
-
+            var sql = databaseProvider.GetUnwarnLastQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
             await connection.ExecuteAsync(sql, new { steamid = playerPattern, serverid = CS2_SimpleAdmin.ServerId });
         }
         catch (Exception ex)
@@ -203,18 +183,19 @@ internal class WarnManager(Database.Database? database)
         }
     }
 
+    /// <summary>
+    /// Expires old warnings based on the current time, removing or marking them as inactive.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task ExpireOldWarns()
     {
-        if (database == null) return;
+        if (databaseProvider == null) return;
 
         try
         {
-            await using var connection = await database.GetConnectionAsync();
+            await using var connection = await databaseProvider.CreateConnectionAsync();
 
-            var sql = CS2_SimpleAdmin.Instance.Config.MultiServerMode
-                ? "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime"
-                : "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime AND server_id = @serverid";
-
+            var sql = databaseProvider.GetExpireWarnsQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
             await connection.ExecuteAsync(sql, new { CurrentTime = Time.ActualDateTime(), serverid = CS2_SimpleAdmin.ServerId });
         }
         catch (Exception ex)

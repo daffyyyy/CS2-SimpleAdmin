@@ -12,25 +12,34 @@ using CS2_SimpleAdmin.Managers;
 using CS2_SimpleAdmin.Menus;
 using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.Globalization;
 using System.Reflection;
+using System.Text.Json;
 using CounterStrikeSharp.API.ValveConstants.Protobuf;
 
 using Menu;
 using Menu.Enums;
+using System.Diagnostics.CodeAnalysis;
 
 namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+    /// <summary>
+    /// Handles the command that shows active penalties and warns for the caller or specified player.
+    /// Queries warnings and mute status, formats them locally, and sends the result to caller's chat.
+    /// </summary>
+    /// <param name="caller">The player issuing this command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(usage: "[#userid or name]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnPenaltiesCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (caller == null || caller.IsValid == false || !caller.UserId.HasValue || Database == null)
+        if (caller == null || caller.IsValid == false || !caller.UserId.HasValue || DatabaseProvider == null)
             return;
 
         var userId = caller.UserId.Value;
+        var steamId = caller.SteamID;
+
 
         if (!string.IsNullOrEmpty(command.GetArg(1)) && AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/kick"))
         {
@@ -53,10 +62,10 @@ public partial class CS2_SimpleAdmin
         {
             try
             {
-                var warns = await WarnManager.GetPlayerWarns(PlayersInfo[userId], false);
+                var warns = await WarnManager.GetPlayerWarns(PlayersInfo[steamId], false);
 
                 // Check if the player is muted
-                var activeMutes = await MuteManager.IsPlayerMuted(PlayersInfo[userId].SteamId.SteamId64.ToString());
+                var activeMutes = await MuteManager.IsPlayerMuted(PlayersInfo[steamId].SteamId.SteamId64.ToString());
 
                 Dictionary<PenaltyType, List<string>> mutesList = new()
                 {
@@ -121,16 +130,16 @@ public partial class CS2_SimpleAdmin
                         mutesList[PenaltyType.Silence].Add(_localizer["sa_player_penalty_info_no_active_silence"]);
                 }
 
-                await Server.NextFrameAsync(() =>
+                await Server.NextWorldUpdateAsync(() =>
                 {
                     caller.SendLocalizedMessage(_localizer, "sa_player_penalty_info",
                     [
-                        PlayersInfo[userId].Name,
-                        PlayersInfo[userId].TotalBans,
-                        PlayersInfo[userId].TotalGags,
-                        PlayersInfo[userId].TotalMutes,
-                        PlayersInfo[userId].TotalSilences,
-                        PlayersInfo[userId].TotalWarns,
+                        PlayersInfo[steamId].Name,
+                        PlayersInfo[steamId].TotalBans,
+                        PlayersInfo[steamId].TotalGags,
+                        PlayersInfo[steamId].TotalMutes,
+                        PlayersInfo[steamId].TotalSilences,
+                        PlayersInfo[steamId].TotalWarns,
                         string.Join("\n", mutesList.SelectMany(kvp => kvp.Value)),
                         string.Join("\n", warnsList)
                     ]);
@@ -143,6 +152,12 @@ public partial class CS2_SimpleAdmin
         });
     }
 
+    /// <summary>
+    /// Toggles the admin voice listening mode or mutes/unmutes all players' voice.
+    /// Sends confirmation messages accordingly.
+    /// </summary>
+    /// <param name="caller">The player issuing this command.</param>
+    /// <param name="command">Command input parameters.</param>
     [RequiresPermissions("@css/chat")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnAdminVoiceCommand(CCSPlayerController? caller, CommandInfo command)
@@ -154,6 +169,7 @@ public partial class CS2_SimpleAdmin
         {
             if (command.GetArg(2).ToLower().Equals("muteAll"))
             {
+                caller.SendLocalizedMessage(_localizer, "sa_admin_voice_mute_all");
                 foreach (var player in Helper.GetValidPlayers().Where(p => p != caller && !AdminManager.PlayerHasPermissions(new SteamID(p.SteamID), "@css/chat")))
                 {
                     player.VoiceFlags = VoiceFlags.Muted;
@@ -162,9 +178,10 @@ public partial class CS2_SimpleAdmin
 
             if (command.GetArg(2).ToLower().Equals("unmuteAll"))
             {
+                caller.SendLocalizedMessage(_localizer, "sa_admin_voice_unmute_all");
                 foreach (var player in Helper.GetValidPlayers().Where(p => p != caller))
                 {
-                    if (PlayerPenaltyManager.GetPlayerPenalties(player.Slot, PenaltyType.Mute).Count == 0)
+                    if (PlayerPenaltyManager.GetPlayerPenalties(player.Slot, [PenaltyType.Silence, PenaltyType.Mute]).Count == 0)
                         player.VoiceFlags = VoiceFlags.Normal;
                 }
             }
@@ -172,8 +189,22 @@ public partial class CS2_SimpleAdmin
             return;
         }
 
+        var enabled = caller.VoiceFlags.HasFlag(VoiceFlags.ListenAll);
+        var messageKey = enabled
+            ? "sa_admin_voice_unlisten_all"
+            : "sa_admin_voice_listen_all";
+
+        caller.SendLocalizedMessage(_localizer, messageKey);
+        caller.VoiceFlags ^= VoiceFlags.ListenAll;
+
         caller.VoiceFlags = caller.VoiceFlags == VoiceFlags.All ? VoiceFlags.Normal : VoiceFlags.All;
     }
+
+    /// <summary>
+    /// Opens the admin menu for the caller.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters.</param>
 
     [RequiresPermissions("@css/generic")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
@@ -185,6 +216,12 @@ public partial class CS2_SimpleAdmin
         AdminMenu.OpenMenu(caller);
     }
 
+    /// <summary>
+    /// Displays admin help text read from a file.
+    /// Outputs lines one at a time as replies to the command.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters.</param>
     [RequiresPermissions("@css/generic")]
     public void OnAdminHelpCommand(CCSPlayerController? caller, CommandInfo command)
     {
@@ -196,12 +233,16 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Handles adding a new admin with specified SteamID, name, flags, immunity, and duration.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(minArgs: 4, usage: "<steamid> <name> <flags/groups> <immunity> <duration>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnAddAdminCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
-
+        if (DatabaseProvider == null) return;
 
         if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
         {
@@ -232,9 +273,20 @@ public partial class CS2_SimpleAdmin
         AddAdmin(caller, steamid, name, flags, immunity, time, globalAdmin, command);
     }
 
+    /// <summary>
+    /// Adds admin permissions and groups for a player.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="steamid">SteamID as string identifying the player.</param>
+    /// <param name="name">Player's name.</param>
+    /// <param name="flags">Comma-separated admin flags/groups.</param>
+    /// <param name="immunity">Admin immunity level.</param>
+    /// <param name="time">Duration of permission (default 0 = permanent).</param>
+    /// <param name="globalAdmin">Whether admin is global.</param>
+    /// <param name="command">Optional command info for confirmation messages.</param>
     public static void AddAdmin(CCSPlayerController? caller, string steamid, string name, string flags, int immunity, int time = 0, bool globalAdmin = false, CommandInfo? command = null)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
         _ = Instance.PermissionManager.AddAdminBySteamId(steamid, name, flagsList, immunity, time, globalAdmin);
@@ -250,11 +302,16 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
+    /// <summary>
+    /// Handles removing an admin's flags and groups by SteamID.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(minArgs: 1, usage: "<steamid>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnDelAdminCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         if (!Helper.ValidateSteamId(command.GetArg(1), out var steamId) || steamId == null)
         {
@@ -267,9 +324,16 @@ public partial class CS2_SimpleAdmin
         RemoveAdmin(caller, steamId.SteamId64.ToString(), globalDelete, command);
     }
 
+    /// <summary>
+    /// Removes admin permissions and groups for a player.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="steamid">SteamID as string identifying the player.</param>
+    /// <param name="globalDelete">Whether to delete globally.</param>
+    /// <param name="command">Optional command info.</param>
     public void RemoveAdmin(CCSPlayerController? caller, string steamid, bool globalDelete = false, CommandInfo? command = null)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
         _ = PermissionManager.DeleteAdminBySteamId(steamid, globalDelete);
 
         AddTimer(2, () =>
@@ -296,11 +360,16 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
+    /// <summary>
+    /// Adds a new admin group with specified flags and immunity settings.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(minArgs: 3, usage: "<group_name> <flags> <immunity>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnAddGroup(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         if (!command.GetArg(1).StartsWith("#"))
         {
@@ -322,9 +391,18 @@ public partial class CS2_SimpleAdmin
         AddGroup(caller, groupName, flags, immunity, globalGroup, command);
     }
 
+    /// <summary>
+    /// Adds a new admin group with specified flags and immunity level.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="name">Group name (prefix with #).</param>
+    /// <param name="flags">Comma-separated flags/groups string.</param>
+    /// <param name="immunity">Immunity level.</param>
+    /// <param name="globalGroup">Whether group is global.</param>
+    /// <param name="command">Optional command info.</param>
     private static void AddGroup(CCSPlayerController? caller, string name, string flags, int immunity, bool globalGroup, CommandInfo? command = null)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         var flagsList = flags.Split(',').Select(flag => flag.Trim()).ToList();
         _ = Instance.PermissionManager.AddGroup(name, flagsList, immunity, globalGroup);
@@ -340,11 +418,16 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
+    /// <summary>
+    /// Handles removing a group by name.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(minArgs: 1, usage: "<group_name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnDelGroupCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         if (!command.GetArg(1).StartsWith($"#"))
         {
@@ -357,9 +440,15 @@ public partial class CS2_SimpleAdmin
         RemoveGroup(caller, groupName, command);
     }
 
+    /// <summary>
+    /// Removes a group.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="name">The group name to remove.</param>
+    /// <param name="command">Optional command info for confirmation.</param>
     private void RemoveGroup(CCSPlayerController? caller, string name, CommandInfo? command = null)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
         _ = PermissionManager.DeleteGroup(name);
 
         AddTimer(2, () =>
@@ -378,58 +467,74 @@ public partial class CS2_SimpleAdmin
             Server.PrintToConsole(msg);
     }
 
+    /// <summary>
+    /// Reloads admin and group data from database and json files.
+    /// </summary>
+    /// <param name="caller">The player issuing the reload command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnRelAdminCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
-
+        if (DatabaseProvider == null) return;
         ReloadAdmins(caller);
-
         command.ReplyToCommand("Reloaded sql admins and groups");
     }
+
+    /// <summary>
+    /// Reloads bans cache.
+    /// </summary>
+    /// <param name="caller">The player issuing the reload command.</param>
+    /// <param name="command">Command input parameters.</param>
 
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/root")]
     public void OnRelBans(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         _ = Instance.CacheManager?.ForceReInitializeCacheAsync();
         command.ReplyToCommand("Reloaded bans");
     }
 
+    /// <summary>
+    /// Reloads admin data asynchronously and updates admin caches.
+    /// </summary>
+    /// <param name="caller">The player issuing the reload command.</param>
     public void ReloadAdmins(CCSPlayerController? caller)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
-        if (!Config.IsCSSPanel)
+        Task.Run(async () =>
         {
-            Task.Run(async () =>
+            await PermissionManager.CreateGroupsJsonFile();
+            await PermissionManager.CreateAdminsJsonFile();
+
+            var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
+            var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");
+
+            await Server.NextWorldUpdateAsync(() =>
             {
-                await PermissionManager.CreateGroupsJsonFile();
-                await PermissionManager.CreateAdminsJsonFile();
-
-                var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
-                var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");
-
-                await Server.NextWorldUpdateAsync(() =>
+                AddTimer(1, () =>
                 {
                     if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(1.3f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                        AddTimer(2.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
                     if (!string.IsNullOrEmpty(groupsFile))
-                        AddTimer(2.5f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
+                        AddTimer(3.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
                     if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(3.5f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                        AddTimer(4.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
 
                     _logger?.LogInformation("Loaded admins!");
                 });
             });
-        }
-        else
-            _ = PermissionManager.GiveAllFlags();
+        });
     }
 
+    /// <summary>
+    /// Toggles player visibility on the server, hiding or revealing them.
+    /// </summary>
+    /// <param name="caller">The player issuing the hide command.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnHideCommand(CCSPlayerController? caller, CommandInfo command)
@@ -442,6 +547,9 @@ public partial class CS2_SimpleAdmin
         {
             SilentPlayers.Remove(caller.Slot);
             caller.PrintToChat($"You aren't hidden now!");
+            if (caller.TeamNum <= 1)
+                caller.ChangeTeam(CsTeam.Spectator);
+            SimpleAdminApi?.OnAdminToggleSilentEvent(caller.Slot, false);
             caller.ChangeTeam(CsTeam.Spectator);
             Server.ExecuteCommand($"mm_removeexcludeslot {caller.Slot}");
         }
@@ -456,10 +564,20 @@ public partial class CS2_SimpleAdmin
             AddTimer(1.0f, () => { Server.NextWorldUpdateAsync(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
             AddTimer(1.4f, () => { Server.NextWorldUpdateAsync(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
             caller.PrintToChat($"You are hidden now!");
+            if (caller.TeamNum > 1)
+                AddTimer(0.15f, () => { Server.NextWorldUpdate(() => caller.ChangeTeam(CsTeam.Spectator)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            AddTimer(0.26f, () => { Server.NextWorldUpdate(() => caller.ChangeTeam(CsTeam.None)); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            AddTimer(0.50f, () => { Server.NextWorldUpdate(() => Server.ExecuteCommand("sv_disable_teamselect_menu 0")); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
+            SimpleAdminApi?.OnAdminToggleSilentEvent(caller.Slot, true);
             AddTimer(2.0f, () => { Server.NextWorldUpdateAsync(() => Server.ExecuteCommand("sv_disable_teamselect_menu 0")); }, CounterStrikeSharp.API.Modules.Timers.TimerFlags.STOP_ON_MAPCHANGE);
         }
     }
 
+    /// <summary>
+    /// Toggles penalty notification visibility to admins.
+    /// </summary>
+    /// <param name="caller">The player toggling notification visibility.</param>
+    /// <param name="command">Command input parameters.</param>
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnHideCommsCommand(CCSPlayerController? caller, CommandInfo command)
@@ -479,11 +597,16 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Displays detailed information about target players, including admin groups, permissions, and penalties.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">Command input parameters including targets.</param>
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/generic")]
     public void OnWhoCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null) return;
+        if (DatabaseProvider == null) return;
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -497,39 +620,41 @@ public partial class CS2_SimpleAdmin
             if (!player.UserId.HasValue) return;
             if (!caller!.CanTarget(player)) return;
 
-            var playerInfo = PlayersInfo[player.UserId.Value];
+            var playerInfo = PlayersInfo[player.SteamID];
 
             Task.Run(async () =>
             {
-                await Server.NextFrameAsync(() =>
+                await Server.NextWorldUpdateAsync(() =>
                 {
                     Action<string> printMethod = caller == null ? Server.PrintToConsole : caller.PrintToConsole;
 
-                    printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
+                    var adminData = AdminManager.GetPlayerAdminData(new SteamID(player.SteamID));
 
+                    printMethod($"--------- INFO ABOUT \"{playerInfo.Name}\" ---------");
                     printMethod($"• Clan: \"{player.Clan}\" Name: \"{playerInfo.Name}\"");
                     printMethod($"• UserID: \"{playerInfo.UserId}\"");
                     printMethod($"• SteamID64: \"{playerInfo.SteamId.SteamId64}\"");
-                    if (player.Connected == PlayerConnectedState.PlayerConnected)
+                    if (adminData != null)
                     {
-                        printMethod($"• SteamID2: \"{playerInfo.SteamId.SteamId2}\"");
-                        printMethod($"• Community link: \"{playerInfo.SteamId.ToCommunityUrl()}\"");
+                        var flags = string.Join(",", adminData._flags);
+                        var groups = string.Join(",", adminData.Groups);
+
+                        printMethod($"• Groups/Flags: \"{groups}{flags}\"");
                     }
+                    printMethod($"• SteamID2: \"{playerInfo.SteamId.SteamId2}\"");
+                    printMethod($"• Community link: \"{playerInfo.SteamId.ToCommunityUrl()}\"");
                     if (playerInfo.IpAddress != null && AdminManager.PlayerHasPermissions(new SteamID(caller!.SteamID), "@css/showip"))
                         printMethod($"• IP Address: \"{playerInfo.IpAddress}\"");
                     printMethod($"• Ping: \"{player.Ping}\"");
-                    if (player.Connected == PlayerConnectedState.PlayerConnected)
-                    {
-                        printMethod($"• Total Bans: \"{playerInfo.TotalBans}\"");
-                        printMethod($"• Total Gags: \"{playerInfo.TotalGags}\"");
-                        printMethod($"• Total Mutes: \"{playerInfo.TotalMutes}\"");
-                        printMethod($"• Total Silences: \"{playerInfo.TotalSilences}\"");
-                        printMethod($"• Total Warns: \"{playerInfo.TotalWarns}\"");
+                    printMethod($"• Total Bans: \"{playerInfo.TotalBans}\"");
+                    printMethod($"• Total Gags: \"{playerInfo.TotalGags}\"");
+                    printMethod($"• Total Mutes: \"{playerInfo.TotalMutes}\"");
+                    printMethod($"• Total Silences: \"{playerInfo.TotalSilences}\"");
+                    printMethod($"• Total Warns: \"{playerInfo.TotalWarns}\"");
 
-                        var chunkedAccounts = playerInfo.AccountsAssociated.ChunkBy(3).ToList();
-                        foreach (var chunk in chunkedAccounts)
-                            printMethod($"• Associated Accounts: \"{string.Join(", ", chunk.Select(a => $"{a.PlayerName} ({a.SteamId})"))}\"");
-                    }
+                    var chunkedAccounts = playerInfo.AccountsAssociated.ChunkBy(3).ToList();
+                    foreach (var chunk in chunkedAccounts)
+                        printMethod($"• Associated Accounts: \"{string.Join(", ", chunk.Select(a => $"{a.PlayerName} ({a.SteamId})"))}\"");
 
                     printMethod($"--------- END INFO ABOUT \"{player.PlayerName}\" ---------");
                 });
@@ -537,6 +662,11 @@ public partial class CS2_SimpleAdmin
         });
     }
 
+    /// <summary>
+    /// Displays a menu with disconnected players, allowing the caller to apply penalties like ban, mute, gag, or silence.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">The command containing parameters.</param>
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnDisconnectedCommand(CCSPlayerController? caller, CommandInfo command)
@@ -639,11 +769,17 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Displays the warning menu for a player specified by a command argument,
+    /// showing active and past warns with options to remove them.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">The command containing target player identifier.</param>
     [CommandHelper(minArgs: 1, usage: "<#userid or name>", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     [RequiresPermissions("@css/kick")]
     public void OnWarnsCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (Database == null || _localizer == null || caller == null) return;
+        if (DatabaseProvider == null || _localizer == null || caller == null) return;
 
         var targets = GetTarget(command);
         if (targets == null) return;
@@ -656,14 +792,13 @@ public partial class CS2_SimpleAdmin
 
         playersToTarget.ForEach(player =>
         {
-            if (!player.UserId.HasValue) return;
             if (!caller.CanTarget(player)) return;
 
-            var userId = player.UserId.Value;
+            var steamId = player.SteamID;
 
             Task.Run(async () =>
             {
-                var warnsList = await WarnManager.GetPlayerWarns(PlayersInfo[userId], false);
+                var warnsList = await WarnManager.GetPlayerWarns(PlayersInfo[steamId], false);
                 var sortedWarns = warnsList
                     .OrderBy(warn => (string)warn.status == "ACTIVE" ? 0 : 1)
                     .ThenByDescending(warn => (int)warn.id)
@@ -685,7 +820,7 @@ public partial class CS2_SimpleAdmin
 
                     optionMap[i++] = () =>
                     {
-                        _ = WarnManager.UnwarnPlayer(PlayersInfo[userId], (int)w.id);
+                        _ = WarnManager.UnwarnPlayer(PlayersInfo[steamId], (int)w.id);
                         player.PrintToChat(_localizer["sa_admin_warns_unwarn", player.PlayerName, (string)w.reason]);
                     };
                 }
@@ -718,8 +853,14 @@ public partial class CS2_SimpleAdmin
         });
     }
 
+    /// <summary>
+    /// Lists players currently connected to the server with options to output JSON or filter duplicate IPs.
+    /// </summary>
+    /// <param name="caller">The player issuing the command or null for console.</param>
+    /// <param name="command">The command containing output options.</param>
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     [RequiresPermissions("@css/generic")]
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     public void OnPlayersCommand(CCSPlayerController? caller, CommandInfo command)
     {
         var isJson = command.GetArg(1).ToLower().Equals("-json");
@@ -758,7 +899,7 @@ public partial class CS2_SimpleAdmin
         }
         else
         {
-            var playersJson = JsonConvert.SerializeObject(playersToTarget.Select(player =>
+            var playersJson = JsonSerializer.Serialize(playersToTarget.Select(player =>
             {
                 var matchStats = player.ActionTrackingServices?.MatchStats;
 
@@ -787,6 +928,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Issues a kick to one or multiple players specified in the command arguments.
+    /// </summary>
+    /// <param name="caller">The player issuing the kick command.</param>
+    /// <param name="command">The command with target player(s) and optional reason.</param>
     [RequiresPermissions("@css/kick")]
     [CommandHelper(minArgs: 1, usage: "<#userid or name> [reason]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnKickCommand(CCSPlayerController? caller, CommandInfo command)
@@ -824,6 +970,15 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command);
     }
 
+
+    /// <summary>
+    /// Kicks a specified player immediately with reason, notifying the server and logging the action.
+    /// </summary>
+    /// <param name="caller">The player issuing the kick.</param>
+    /// <param name="player">The player to be kicked.</param>
+    /// <param name="reason">The reason for the kick.</param>
+    /// <param name="callerName">Optional name of the kick issuer for notifications.</param>
+    /// <param name="command">Optional command for logging.</param>
     public void Kick(CCSPlayerController? caller, CCSPlayerController player, string? reason = "Unknown", string? callerName = null, CommandInfo? command = null)
     {
         if (!player.IsValid) return;
@@ -834,8 +989,9 @@ public partial class CS2_SimpleAdmin
         callerName ??= caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
         reason ??= _localizer?["sa_unknown"] ?? "Unknown";
 
-        var playerInfo = PlayersInfo[player.UserId.Value];
-        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.UserId.Value] : null;
+
+        var playerInfo = PlayersInfo[player.SteamID];
+        var adminInfo = caller != null && caller.UserId.HasValue ? PlayersInfo[caller.SteamID] : null;
 
         // Determine message keys and arguments for the kick notification
         var (messageKey, activityMessageKey, centerArgs, adminActivityArgs) =
@@ -865,6 +1021,11 @@ public partial class CS2_SimpleAdmin
         SimpleAdminApi?.OnPlayerPenaltiedEvent(playerInfo, adminInfo, PenaltyType.Kick, reason, -1, null);
     }
 
+    /// <summary>
+    /// Changes the current map to the specified map name or workshop map ID.
+    /// </summary>
+    /// <param name="caller">The player issuing the map change.</param>
+    /// <param name="command">The command containing the map name or ID.</param>
     [RequiresPermissions("@css/changemap")]
     [CommandHelper(minArgs: 1, usage: "<mapname>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnMapCommand(CCSPlayerController? caller, CommandInfo command)
@@ -873,6 +1034,12 @@ public partial class CS2_SimpleAdmin
         ChangeMap(caller, map, command);
     }
 
+    /// <summary>
+    /// Changes to a specified map, validating it or handling workshop maps, and notifying the server and admins.
+    /// </summary>
+    /// <param name="caller">The player issuing the change.</param>
+    /// <param name="map">The map name or identifier.</param>
+    /// <param name="command">Optional command object for logging and replies.</param>
     public void ChangeMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
     {
         var callerName = caller != null ? caller.PlayerName : _localizer?["sa_console"] ?? "Console";
@@ -931,6 +1098,11 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command?.GetCommandString ?? $"css_map {map}");
     }
 
+    /// <summary>
+    /// Changes the current map to a workshop map specified by name or ID.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">The command containing the workshop map identifier.</param>
     [CommandHelper(1, "<name or id>")]
     [RequiresPermissions("@css/changemap")]
     public void OnWorkshopMapCommand(CCSPlayerController? caller, CommandInfo command)
@@ -939,6 +1111,12 @@ public partial class CS2_SimpleAdmin
         ChangeWorkshopMap(caller, map, command);
     }
 
+    /// <summary>
+    /// Changes to a specified workshop map by name or ID and notifies admins.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="map">The workshop map identifier.</param>
+    /// <param name="command">Optional command for logging.</param>
     public void ChangeWorkshopMap(CCSPlayerController? caller, string map, CommandInfo? command = null)
     {
         map = map.ToLower();
@@ -968,6 +1146,11 @@ public partial class CS2_SimpleAdmin
         Helper.LogCommand(caller, command?.GetCommandString ?? $"css_wsmap {map}");
     }
 
+    /// <summary>
+    /// Allows changing a console variable's value.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">The command with cvar name and value.</param>
     [CommandHelper(2, "<cvar> <value>")]
     [RequiresPermissions("@css/cvar")]
     public void OnCvarCommand(CCSPlayerController? caller, CommandInfo command)
@@ -988,28 +1171,33 @@ public partial class CS2_SimpleAdmin
         }
 
         Helper.LogCommand(caller, command);
-
         var value = command.GetArg(2);
-
         Server.ExecuteCommand($"{cvar.Name} {value}");
-
         command.ReplyToCommand($"{callerName} changed cvar {cvar.Name} to {value}.");
         Logger.LogInformation($"{callerName} changed cvar {cvar.Name} to {value}.");
     }
 
+    /// <summary>
+    /// Executes an RCON command on the server.
+    /// </summary>
+    /// <param name="caller">The player issuing the command.</param>
+    /// <param name="command">The command string to execute via RCON.</param>
     [CommandHelper(1, "<command>")]
     [RequiresPermissions("@css/rcon")]
     public void OnRconCommand(CCSPlayerController? caller, CommandInfo command)
     {
         var callerName = caller == null ? _localizer?["sa_console"] ?? "Console" : caller.PlayerName;
-
         Helper.LogCommand(caller, command);
-
         Server.ExecuteCommand(command.ArgString);
         command.ReplyToCommand($"{callerName} executed command {command.ArgString}.");
         Logger.LogInformation($"{callerName} executed command ({command.ArgString}).");
     }
 
+    /// <summary>
+    /// Restarts the game.
+    /// </summary>
+    /// <param name="caller">The player or console initiating the restart.</param>
+    /// <param name="command">The restart command info.</param>
     [RequiresPermissions("@css/generic")]
     [CommandHelper(minArgs: 0, usage: "", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnRestartCommand(CCSPlayerController? caller, CommandInfo command)
@@ -1017,6 +1205,11 @@ public partial class CS2_SimpleAdmin
         RestartGame(caller);
     }
 
+    /// <summary>
+    /// Opens plugin manager menu for the caller with options to load or unload plugins.
+    /// </summary>
+    /// <param name="caller">The player opening the plugin manager.</param>
+    /// <param name="commandInfo">The command parameters.</param>
     [RequiresPermissions("@css/root")]
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnPluginManagerCommand(CCSPlayerController? caller, CommandInfo commandInfo)
@@ -1108,6 +1301,10 @@ public partial class CS2_SimpleAdmin
 
     }
 
+    /// <summary>
+    /// Restarts the game process by issuing the restart game command to the server and logging the action.
+    /// </summary>
+    /// <param name="admin">The admin or console requesting the restart.</param>
     public static void RestartGame(CCSPlayerController? admin)
     {
         Helper.LogCommand(admin, "css_restartgame");

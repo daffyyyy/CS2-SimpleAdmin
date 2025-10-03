@@ -10,6 +10,12 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+    /// <summary>
+    /// Handles the vote command, creates voting menu for players, and collects answers.
+    /// Displays results after timeout and resets voting state.
+    /// </summary>
+    /// <param name="caller">The player/admin who initiated the vote, or null for console.</param>
+    /// <param name="command">Command object containing question and options.</param>
     [RequiresPermissions("@css/generic")]
     [CommandHelper(minArgs: 2, usage: "<question> [... options ...]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
     public void OnVoteCommand(CCSPlayerController? caller, CommandInfo command)

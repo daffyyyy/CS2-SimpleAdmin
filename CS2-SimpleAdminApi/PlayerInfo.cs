@@ -1,3 +1,4 @@
+using System.Numerics;
 using CounterStrikeSharp.API.Modules.Entities;
 using FixVectorLeak;
 
@@ -28,6 +29,7 @@ public class PlayerInfo(
     public bool WaitingForKick { get; set; } = false;
     public List<(ulong SteamId, string PlayerName)> AccountsAssociated { get; set; } = [];
     public DiePosition? DiePosition { get; set; }
+    public bool IsLoaded { get; set; }
 }
 
 public struct DiePosition(Vector_t position, QAngle_t angle)
@@ -35,3 +37,5 @@ public struct DiePosition(Vector_t position, QAngle_t angle)
     public Vector_t Position { get; set; } = position;
     public QAngle_t Angle { get; set; } = angle;
 }
+
+

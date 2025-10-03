@@ -11,6 +11,12 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
+    /// <summary>
+    /// Sends a chat message only to admins that have chat permission.
+    /// The message is encoded properly to handle UTF-8 characters.
+    /// </summary>
+    /// <param name="caller">The admin player sending the message, or null for console.</param>
+    /// <param name="command">The command input containing the message.</param>
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminToAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -30,6 +36,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sends a custom chat message to all players with color tags processed.
+    /// </summary>
+    /// <param name="caller">The admin or console sending the message.</param>
+    /// <param name="command">The command input containing the message.</param>
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminCustomSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -47,6 +58,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sends a chat message to all players with localization prefix and color tags handled.
+    /// </summary>
+    /// <param name="caller">The admin or console sending the message.</param>
+    /// <param name="command">The command input containing the message.</param>
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -57,7 +73,6 @@ public partial class CS2_SimpleAdmin
         var utf8String = Encoding.UTF8.GetString(utf8BytesString);
 
         Helper.LogCommand(caller, command);
-
         foreach (var player in Helper.GetValidPlayers())
         {
             player.SendLocalizedMessage(_localizer,
@@ -66,6 +81,11 @@ public partial class CS2_SimpleAdmin
         }
     }
 
+    /// <summary>
+    /// Sends a private chat message from the caller to the specified target player(s).
+    /// </summary>
+    /// <param name="caller">The admin or console sending the private message.</param>
+    /// <param name="command">The command input containing target and message.</param>
     [CommandHelper(2, "<#userid or name> <message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminPrivateSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -92,6 +112,11 @@ public partial class CS2_SimpleAdmin
         command.ReplyToCommand($" Private message sent!");
     }
 
+    /// <summary>
+    /// Broadcasts a center-screen message to all players.
+    /// </summary>
+    /// <param name="caller">The admin or console sending the message.</param>
+    /// <param name="command">The command input containing the message.</param>
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminCenterSayCommand(CCSPlayerController? caller, CommandInfo command)
@@ -103,6 +128,11 @@ public partial class CS2_SimpleAdmin
         Helper.PrintToCenterAll(utf8String.ReplaceColorTags());
     }
 
+    /// <summary>
+    /// Sends a HUD alert message to all players.
+    /// </summary>
+    /// <param name="caller">The admin or console sending the message.</param>
+    /// <param name="command">The command input containing the message.</param>
     [CommandHelper(1, "<message>")]
     [RequiresPermissions("@css/chat")]
     public void OnAdminHudSayCommand(CCSPlayerController? caller, CommandInfo command)

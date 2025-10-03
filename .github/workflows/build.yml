@@ -1,6 +1,7 @@
-name: Build
+name: Build and Publish
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
     paths-ignore:
@@ -11,91 +12,111 @@ on:
       - '**/README.md'
 
 env:
-  BUILD_NUMBER: ${{ github.run_number }}
   PROJECT_PATH_CS2_SIMPLEADMIN: "CS2-SimpleAdmin/CS2-SimpleAdmin.csproj"
-  PROJECT_PATH_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi/CS2-SimpleAdminApi.csproj"
   PROJECT_NAME_CS2_SIMPLEADMIN: "CS2-SimpleAdmin"
+  PROJECT_PATH_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi/CS2-SimpleAdminApi.csproj"
   PROJECT_NAME_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi"
+  PROJECT_PATH_STEALTHMODULE: "Modules/CS2-SimpleAdmin_StealthModule/CS2-SimpleAdmin_StealthModule.csproj"
+  PROJECT_NAME_STEALTHMODULE: "CS2-SimpleAdmin_StealthModule"
   OUTPUT_PATH: "./counterstrikesharp"
   TMP_PATH: "./tmp"
 
 jobs:
   build:
-    permissions: write-all
     runs-on: ubuntu-latest
-
+    permissions: write-all
+    outputs:
+      build_version: ${{ steps.get_version.outputs.VERSION }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore CS2-SimpleAdmin
-      run: dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }}
-    - name: Build CS2-SimpleAdmin
-      run: dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}
-    - name: Restore CS2-SimpleAdminApi
-      run: dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }}
-    - name: Build CS2-SimpleAdminApi
-      run: dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Get Version
+        id: get_version
+        run: echo "VERSION=$(cat CS2-SimpleAdmin/VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Restore & Build All Projects
+        run: |
+          dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }}
+          dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}
+          dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }}
+          dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}
+          dotnet restore ${{ env.PROJECT_PATH_STEALTHMODULE }}
+          dotnet build ${{ env.PROJECT_PATH_STEALTHMODULE }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_STEALTHMODULE }}
+
+      - name: Combine projects
+        run: |
+          mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin
+          mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_StealthModule
+          mkdir -p ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi
+
+          cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/* ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin/
+          cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_STEALTHMODULE }}/* ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_StealthModule
+          cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/* ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi/
+
+      - name: Zip Main Build Output
+        run: zip -r CS2-SimpleAdmin-${{ steps.get_version.outputs.VERSION }}.zip ${{ env.OUTPUT_PATH }}
+
+      - name: Extract & Zip StatusBlocker Linux
+        run: |
+          mkdir -p statusblocker-linux &&
+          tar -xzf Modules/CS2-SimpleAdmin_StealthModule/METAMOD\ PLUGIN/StatusBlocker-v*-linux.tar.gz -C statusblocker-linux &&
+          cd statusblocker-linux &&
+          zip -r ../StatusBlocker-linux-${{ steps.get_version.outputs.VERSION }}.zip ./*
+
+      - name: Extract & Zip StatusBlocker Windows
+        run: |
+          mkdir -p statusblocker-windows &&
+          tar -xzf Modules/CS2-SimpleAdmin_StealthModule/METAMOD\ PLUGIN/StatusBlocker-v*-windows.tar.gz -C statusblocker-windows &&
+          cd statusblocker-windows &&
+          zip -r ../StatusBlocker-windows-${{ steps.get_version.outputs.VERSION }}.zip ./*
+
+      - name: Upload all artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: CS2-SimpleAdmin-Build-Artifacts
+          path: |
+            CS2-SimpleAdmin-${{ steps.get_version.outputs.VERSION }}.zip
+            StatusBlocker-linux-${{ steps.get_version.outputs.VERSION }}.zip
+            StatusBlocker-windows-${{ steps.get_version.outputs.VERSION }}.zip
 
   publish:
-    if: github.event_name == 'push'
-    permissions: write-all
-    runs-on: ubuntu-latest
     needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions: write-all
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore CS2-SimpleAdmin
-      run: dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }}
-    - name: Build CS2-SimpleAdmin
-      run: dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}
-    - name: Restore CS2-SimpleAdminApi
-      run: dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }}
-    - name: Build CS2-SimpleAdminApi
-      run: dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}
-    - name: Clean files
-      run: |
-        rm -f \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/CounterStrikeSharp.API.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/McMaster.NETCore.Plugins.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/Microsoft.DotNet.PlatformAbstractions.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/Microsoft.Extensions.DependencyModel.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/CS2-SimpleAdminApi.* \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/Microsoft.* \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/CounterStrikeSharp.API.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/McMaster.NETCore.Plugins.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/Microsoft.DotNet.PlatformAbstractions.dll \
-          ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/Microsoft.Extensions.DependencyModel.dll
-    - name: Combine projects
-      run: |
-        mkdir -p ${{ env.OUTPUT_PATH }}/plugins
-        mkdir -p ${{ env.OUTPUT_PATH }}/shared
-        cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }} ${{ env.OUTPUT_PATH }}/plugins/
-        cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }} ${{ env.OUTPUT_PATH }}/shared/
-        mkdir -p ${{ env.OUTPUT_PATH }}/shared/KitsuneMenu
-        cp ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/KitsuneMenu.dll ${{ env.OUTPUT_PATH }}/shared/KitsuneMenu/
-    - name: Zip combined
-      uses: thedoctor0/zip-release@0.7.6
-      with:
-        type: 'zip'
-        filename: '${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip'
-        path: ${{ env.OUTPUT_PATH }}
-    - name: Zip statusblocker
-      run: |
-        cd CS2-SimpleAdmin/3rd_party/statusblocker
-        zip -r ../../../statusblocker.zip *
-    - name: Publish combined release
-      uses: ncipollo/release-action@v1.14.0
-      with:
-        artifacts: "${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}-${{ env.BUILD_NUMBER }}.zip,statusblocker.zip"
-        name: "CS2-SimpleAdmin - Build ${{ env.BUILD_NUMBER }}"
-        tag: "fork-build-${{ env.BUILD_NUMBER }}-${{ github.run_id }}"
-        body: |
-          Place files in addons/counterstrikesharp
-          After first launch, configure the plugins in the respective configs:
-          - CS2-SimpleAdmin: addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json
+      - uses: actions/checkout@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: CS2-SimpleAdmin-Build-Artifacts
+          path: .
+      - name: Unzip main build artifact
+        run: unzip CS2-SimpleAdmin-${{ needs.build.outputs.build_version }}.zip -d ./counterstrikesharp
+      - name: Publish combined release
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          artifacts: |
+            CS2-SimpleAdmin-${{ needs.build.outputs.build_version }}.zip
+            StatusBlocker-linux-${{ needs.build.outputs.build_version }}.zip
+            StatusBlocker-windows-${{ needs.build.outputs.build_version }}.zip
+          name: "CS2-SimpleAdmin-${{ needs.build.outputs.build_version }}"
+          tag: "fork-build-${{ needs.build.outputs.build_version }}-${{ github.run_id }}"
+          body: |
+            Place the files in your server as follows:
+
+            - CS2-SimpleAdmin:
+              Place the files inside the addons/counterstrikesharp directory.
+              After the first launch, configure the plugin using the JSON config file at:
+              addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json
+
+            - StatusBlocker:
+              Place the plugin files directly into the addons directory.
+              This plugin is a Metamod module for the StealthModule and does not require a subfolder.
+
+            Remember to restart or reload your game server after installing and configuring the plugins.

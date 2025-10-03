@@ -11,6 +11,11 @@ public class Database(string dbConnectionString)
         {
             var connection = new MySqlConnection(dbConnectionString);
             connection.Open();
+            
+            // using var cmd = connection.CreateCommand();
+            // cmd.CommandText = "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci';";
+            // cmd.ExecuteNonQueryAsync();
+            
             return connection;
         }
         catch (Exception ex)
@@ -26,6 +31,11 @@ public class Database(string dbConnectionString)
         {
             var connection = new MySqlConnection(dbConnectionString);
             await connection.OpenAsync();
+
+            // await using var cmd = connection.CreateCommand();
+            // cmd.CommandText = "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci';";
+            // await cmd.ExecuteNonQueryAsync();
+            
             return connection;
         }
         catch (Exception ex)
@@ -35,11 +45,11 @@ public class Database(string dbConnectionString)
         }
     }
 
-    public void DatabaseMigration()
-    {
-        Migration migrator = new(this);
-        migrator.ExecuteMigrations();
-    }
+    // public async Task DatabaseMigration()
+    // {
+    //     Migration migrator = new(this);
+    //     await migrator.ExecuteMigrationsAsync();
+    // }
 
     public bool CheckDatabaseConnection(out string? exception)
     {

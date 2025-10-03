@@ -1,89 +1,99 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Commands;
 using CounterStrikeSharp.API.Modules.Commands;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace CS2_SimpleAdmin;
 
 public static class RegisterCommands
 {
+    internal static readonly Dictionary<string, IList<CommandDefinition>> _commandDefinitions =
+        new(StringComparer.InvariantCultureIgnoreCase);
+    
     private delegate void CommandCallback(CCSPlayerController? caller, CommandInfo.CommandCallback callback);
     
     private static readonly string CommandsPath = Path.Combine(CS2_SimpleAdmin.ConfigDirectory, "Commands.json");
     private static readonly List<CommandMapping> CommandMappings =
     [
-        new CommandMapping("css_ban", CS2_SimpleAdmin.Instance.OnBanCommand),
-        new CommandMapping("css_addban", CS2_SimpleAdmin.Instance.OnAddBanCommand),
-        new CommandMapping("css_banip", CS2_SimpleAdmin.Instance.OnBanIpCommand),
-        new CommandMapping("css_unban", CS2_SimpleAdmin.Instance.OnUnbanCommand),
-        new CommandMapping("css_warn", CS2_SimpleAdmin.Instance.OnWarnCommand),
-        new CommandMapping("css_unwarn", CS2_SimpleAdmin.Instance.OnUnwarnCommand),
+        new("css_ban", CS2_SimpleAdmin.Instance.OnBanCommand),
+        new("css_addban", CS2_SimpleAdmin.Instance.OnAddBanCommand),
+        new("css_banip", CS2_SimpleAdmin.Instance.OnBanIpCommand),
+        new("css_unban", CS2_SimpleAdmin.Instance.OnUnbanCommand),
+        new("css_warn", CS2_SimpleAdmin.Instance.OnWarnCommand),
+        new("css_unwarn", CS2_SimpleAdmin.Instance.OnUnwarnCommand),
 
-        new CommandMapping("css_asay", CS2_SimpleAdmin.Instance.OnAdminToAdminSayCommand),
-        new CommandMapping("css_cssay", CS2_SimpleAdmin.Instance.OnAdminCustomSayCommand),
-        new CommandMapping("css_say", CS2_SimpleAdmin.Instance.OnAdminSayCommand),
-        new CommandMapping("css_psay", CS2_SimpleAdmin.Instance.OnAdminPrivateSayCommand),
-        new CommandMapping("css_csay", CS2_SimpleAdmin.Instance.OnAdminCenterSayCommand),
-        new CommandMapping("css_hsay", CS2_SimpleAdmin.Instance.OnAdminHudSayCommand),
+        new("css_asay", CS2_SimpleAdmin.Instance.OnAdminToAdminSayCommand),
+        new("css_cssay", CS2_SimpleAdmin.Instance.OnAdminCustomSayCommand),
+        new("css_say", CS2_SimpleAdmin.Instance.OnAdminSayCommand),
+        new("css_psay", CS2_SimpleAdmin.Instance.OnAdminPrivateSayCommand),
+        new("css_csay", CS2_SimpleAdmin.Instance.OnAdminCenterSayCommand),
+        new("css_hsay", CS2_SimpleAdmin.Instance.OnAdminHudSayCommand),
 
-        new CommandMapping("css_penalties", CS2_SimpleAdmin.Instance.OnPenaltiesCommand),
-        new CommandMapping("css_admin", CS2_SimpleAdmin.Instance.OnAdminCommand),
-        new CommandMapping("css_adminhelp", CS2_SimpleAdmin.Instance.OnAdminHelpCommand),
-        new CommandMapping("css_addadmin", CS2_SimpleAdmin.Instance.OnAddAdminCommand),
-        new CommandMapping("css_deladmin", CS2_SimpleAdmin.Instance.OnDelAdminCommand),
-        new CommandMapping("css_addgroup", CS2_SimpleAdmin.Instance.OnAddGroup),
-        new CommandMapping("css_delgroup", CS2_SimpleAdmin.Instance.OnDelGroupCommand),
-        new CommandMapping("css_reloadadmins", CS2_SimpleAdmin.Instance.OnRelAdminCommand),
-        new CommandMapping("css_reloadbans", CS2_SimpleAdmin.Instance.OnRelBans),
-        new CommandMapping("css_hide", CS2_SimpleAdmin.Instance.OnHideCommand),
-        new CommandMapping("css_hidecomms", CS2_SimpleAdmin.Instance.OnHideCommsCommand),
-        new CommandMapping("css_who", CS2_SimpleAdmin.Instance.OnWhoCommand),
-        new CommandMapping("css_disconnected", CS2_SimpleAdmin.Instance.OnDisconnectedCommand),
-        new CommandMapping("css_warns", CS2_SimpleAdmin.Instance.OnWarnsCommand),
-        new CommandMapping("css_players", CS2_SimpleAdmin.Instance.OnPlayersCommand),
-        new CommandMapping("css_kick", CS2_SimpleAdmin.Instance.OnKickCommand),
-        new CommandMapping("css_map", CS2_SimpleAdmin.Instance.OnMapCommand),
-        new CommandMapping("css_wsmap", CS2_SimpleAdmin.Instance.OnWorkshopMapCommand),
-        new CommandMapping("css_cvar", CS2_SimpleAdmin.Instance.OnCvarCommand),
-        new CommandMapping("css_rcon", CS2_SimpleAdmin.Instance.OnRconCommand),
-        new CommandMapping("css_rr", CS2_SimpleAdmin.Instance.OnRestartCommand),
+        new("css_penalties", CS2_SimpleAdmin.Instance.OnPenaltiesCommand),
+        new("css_admin", CS2_SimpleAdmin.Instance.OnAdminCommand),
+        new("css_adminhelp", CS2_SimpleAdmin.Instance.OnAdminHelpCommand),
+        new("css_addadmin", CS2_SimpleAdmin.Instance.OnAddAdminCommand),
+        new("css_deladmin", CS2_SimpleAdmin.Instance.OnDelAdminCommand),
+        new("css_addgroup", CS2_SimpleAdmin.Instance.OnAddGroup),
+        new("css_delgroup", CS2_SimpleAdmin.Instance.OnDelGroupCommand),
+        new("css_reloadadmins", CS2_SimpleAdmin.Instance.OnRelAdminCommand),
+        new("css_reloadbans", CS2_SimpleAdmin.Instance.OnRelBans),
+        new("css_hide", CS2_SimpleAdmin.Instance.OnHideCommand),
+        new("css_hidecomms", CS2_SimpleAdmin.Instance.OnHideCommsCommand),
+        new("css_who", CS2_SimpleAdmin.Instance.OnWhoCommand),
+        new("css_disconnected", CS2_SimpleAdmin.Instance.OnDisconnectedCommand),
+        new("css_warns", CS2_SimpleAdmin.Instance.OnWarnsCommand),
+        new("css_players", CS2_SimpleAdmin.Instance.OnPlayersCommand),
+        new("css_kick", CS2_SimpleAdmin.Instance.OnKickCommand),
+        new("css_map", CS2_SimpleAdmin.Instance.OnMapCommand),
+        new("css_wsmap", CS2_SimpleAdmin.Instance.OnWorkshopMapCommand),
+        new("css_cvar", CS2_SimpleAdmin.Instance.OnCvarCommand),
+        new("css_rcon", CS2_SimpleAdmin.Instance.OnRconCommand),
+        new("css_rr", CS2_SimpleAdmin.Instance.OnRestartCommand),
 
-        new CommandMapping("css_gag", CS2_SimpleAdmin.Instance.OnGagCommand),
-        new CommandMapping("css_addgag", CS2_SimpleAdmin.Instance.OnAddGagCommand),
-        new CommandMapping("css_ungag", CS2_SimpleAdmin.Instance.OnUngagCommand),
-        new CommandMapping("css_mute", CS2_SimpleAdmin.Instance.OnMuteCommand),
-        new CommandMapping("css_addmute", CS2_SimpleAdmin.Instance.OnAddMuteCommand),
-        new CommandMapping("css_unmute", CS2_SimpleAdmin.Instance.OnUnmuteCommand),
-        new CommandMapping("css_silence", CS2_SimpleAdmin.Instance.OnSilenceCommand),
-        new CommandMapping("css_addsilence", CS2_SimpleAdmin.Instance.OnAddSilenceCommand),
-        new CommandMapping("css_unsilence", CS2_SimpleAdmin.Instance.OnUnsilenceCommand),
+        new("css_gag", CS2_SimpleAdmin.Instance.OnGagCommand),
+        new("css_addgag", CS2_SimpleAdmin.Instance.OnAddGagCommand),
+        new("css_ungag", CS2_SimpleAdmin.Instance.OnUngagCommand),
+        new("css_mute", CS2_SimpleAdmin.Instance.OnMuteCommand),
+        new("css_addmute", CS2_SimpleAdmin.Instance.OnAddMuteCommand),
+        new("css_unmute", CS2_SimpleAdmin.Instance.OnUnmuteCommand),
+        new("css_silence", CS2_SimpleAdmin.Instance.OnSilenceCommand),
+        new("css_addsilence", CS2_SimpleAdmin.Instance.OnAddSilenceCommand),
+        new("css_unsilence", CS2_SimpleAdmin.Instance.OnUnsilenceCommand),
 
-        new CommandMapping("css_vote", CS2_SimpleAdmin.Instance.OnVoteCommand),
+        new("css_vote", CS2_SimpleAdmin.Instance.OnVoteCommand),
 
-        new CommandMapping("css_noclip", CS2_SimpleAdmin.Instance.OnNoclipCommand),
-        new CommandMapping("css_freeze", CS2_SimpleAdmin.Instance.OnFreezeCommand),
-        new CommandMapping("css_unfreeze", CS2_SimpleAdmin.Instance.OnUnfreezeCommand),
-        new CommandMapping("css_godmode", CS2_SimpleAdmin.Instance.OnGodCommand),
+        new("css_noclip", CS2_SimpleAdmin.Instance.OnNoclipCommand),
+        new("css_freeze", CS2_SimpleAdmin.Instance.OnFreezeCommand),
+        new("css_unfreeze", CS2_SimpleAdmin.Instance.OnUnfreezeCommand),
+        new("css_godmode", CS2_SimpleAdmin.Instance.OnGodCommand),
 
-        new CommandMapping("css_slay", CS2_SimpleAdmin.Instance.OnSlayCommand),
-        new CommandMapping("css_slap", CS2_SimpleAdmin.Instance.OnSlapCommand),
-        new CommandMapping("css_give", CS2_SimpleAdmin.Instance.OnGiveCommand),
-        new CommandMapping("css_strip", CS2_SimpleAdmin.Instance.OnStripCommand),
-        new CommandMapping("css_hp", CS2_SimpleAdmin.Instance.OnHpCommand),
-        new CommandMapping("css_speed", CS2_SimpleAdmin.Instance.OnSpeedCommand),
-        new CommandMapping("css_gravity", CS2_SimpleAdmin.Instance.OnGravityCommand),
-        new CommandMapping("css_resize", CS2_SimpleAdmin.Instance.OnResizeCommand),
-        new CommandMapping("css_money", CS2_SimpleAdmin.Instance.OnMoneyCommand),
-        new CommandMapping("css_team", CS2_SimpleAdmin.Instance.OnTeamCommand),
-        new CommandMapping("css_rename", CS2_SimpleAdmin.Instance.OnRenameCommand),
-        new CommandMapping("css_prename", CS2_SimpleAdmin.Instance.OnPrenameCommand),
-        new CommandMapping("css_respawn", CS2_SimpleAdmin.Instance.OnRespawnCommand),
-        new CommandMapping("css_tp", CS2_SimpleAdmin.Instance.OnGotoCommand),
-        new CommandMapping("css_bring", CS2_SimpleAdmin.Instance.OnBringCommand),
-        new CommandMapping("css_pluginsmanager", CS2_SimpleAdmin.Instance.OnPluginManagerCommand),
-        new CommandMapping("css_adminvoice", CS2_SimpleAdmin.Instance.OnAdminVoiceCommand)
+        new("css_slay", CS2_SimpleAdmin.Instance.OnSlayCommand),
+        new("css_slap", CS2_SimpleAdmin.Instance.OnSlapCommand),
+        new("css_give", CS2_SimpleAdmin.Instance.OnGiveCommand),
+        new("css_strip", CS2_SimpleAdmin.Instance.OnStripCommand),
+        new("css_hp", CS2_SimpleAdmin.Instance.OnHpCommand),
+        new("css_speed", CS2_SimpleAdmin.Instance.OnSpeedCommand),
+        new("css_gravity", CS2_SimpleAdmin.Instance.OnGravityCommand),
+        new("css_resize", CS2_SimpleAdmin.Instance.OnResizeCommand),
+        new("css_money", CS2_SimpleAdmin.Instance.OnMoneyCommand),
+        new("css_team", CS2_SimpleAdmin.Instance.OnTeamCommand),
+        new("css_rename", CS2_SimpleAdmin.Instance.OnRenameCommand),
+        new("css_prename", CS2_SimpleAdmin.Instance.OnPrenameCommand),
+        new("css_respawn", CS2_SimpleAdmin.Instance.OnRespawnCommand),
+        new("css_tp", CS2_SimpleAdmin.Instance.OnGotoCommand),
+        new("css_bring", CS2_SimpleAdmin.Instance.OnBringCommand),
+        new("css_pluginsmanager", CS2_SimpleAdmin.Instance.OnPluginManagerCommand),
+        new("css_adminvoice", CS2_SimpleAdmin.Instance.OnAdminVoiceCommand)
     ];
 
+    /// <summary>
+    /// Initializes command registration.
+    /// If the commands config file does not exist, creates it and then recurses to register commands.
+    /// Otherwise, directly registers commands from the configuration.
+    /// </summary>
     public static void InitializeCommands()
     {
         if (!File.Exists(CommandsPath))
@@ -97,6 +107,10 @@ public static class RegisterCommands
         }
     }
 
+    /// <summary>
+    /// Creates the default commands configuration JSON file with built-in commands and aliases.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     private static void CreateConfig()
     {
         var commands = new CommandsConfig
@@ -170,14 +184,26 @@ public static class RegisterCommands
             }
         };
         
-        var json = JsonConvert.SerializeObject(commands, Formatting.Indented);
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        var json = JsonSerializer.Serialize(commands, options);
         File.WriteAllText(CommandsPath, json);
     }
-    
+
+    /// <summary>
+    /// Reads the command configuration JSON file and registers all commands and their aliases with their callbacks.
+    /// Also registers any custom commands previously stored.
+    /// </summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2026:Members annotated with 'RequiresUnreferencedCodeAttribute' require dynamic access otherwise can break functionality when trimming application code", Justification = "<Pending>")]
     private static void Register()
     {
         var json = File.ReadAllText(CommandsPath);
-        var commandsConfig = JsonConvert.DeserializeObject<CommandsConfig>(json);
+        var commandsConfig = JsonSerializer.Deserialize<CommandsConfig>(json, 
+            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
         if (commandsConfig?.Commands == null) return;
         
@@ -195,19 +221,37 @@ public static class RegisterCommands
             {
                 CS2_SimpleAdmin.Instance.AddCommand(alias, "", mapping.Callback);
             }
-        }    
+        }
+        
+        foreach (var (name, definitions) in RegisterCommands._commandDefinitions)
+        {
+            foreach (var definition in definitions)
+            {
+                CS2_SimpleAdmin._logger?.LogInformation($"Registering custom command: `{name}`");
+                CS2_SimpleAdmin.Instance.AddCommand(name, definition.Description, definition.Callback);
+            }
+        }
     }
     
+    /// <summary>
+    /// Represents the JSON configuration structure for commands.
+    /// </summary>
     private class CommandsConfig
     {
         public Dictionary<string, Command>? Commands { get; init; }
     }
     
+    /// <summary>
+    /// Represents a command definition containing a list of aliases.
+    /// </summary>
     private class Command
     {
         public string[]? Aliases { get; init; }
     }
     
+    /// <summary>
+    /// Maps a command key to its respective command callback handler.
+    /// </summary>
     private class CommandMapping(string commandKey, CommandInfo.CommandCallback callback)
     {
         public string CommandKey { get; } = commandKey;

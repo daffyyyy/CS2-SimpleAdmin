@@ -4,7 +4,9 @@ using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+using CS2_SimpleAdmin.Database;
 using CS2_SimpleAdmin.Managers;
+using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 using Menu;
 
@@ -19,7 +21,8 @@ public partial class CS2_SimpleAdmin
     internal static readonly HttpClient HttpClient = new();
 
     // Paths
-    internal static readonly string ConfigDirectory = Path.Combine(Application.RootDirectory, "configs/plugins/CS2-SimpleAdmin");
+    internal static readonly string ConfigDirectory =
+        Path.Combine(Application.RootDirectory, "configs/plugins/CS2-SimpleAdmin");
 
     // Localization
     public static IStringLocalizer? _localizer;
@@ -39,7 +42,9 @@ public partial class CS2_SimpleAdmin
     private static readonly HashSet<int> GodPlayers = [];
     internal static readonly HashSet<int> SilentPlayers = [];
     internal static readonly Dictionary<ulong, string> RenamedPlayers = [];
-    internal static readonly ConcurrentDictionary<int, PlayerInfo> PlayersInfo = [];
+    internal static readonly ConcurrentDictionary<ulong, PlayerInfo> PlayersInfo = [];
+    internal static readonly List<CCSPlayerController> CachedPlayers = [];
+    internal static readonly List<CCSPlayerController> BotPlayers = [];
     private static readonly List<DisconnectedPlayer> DisconnectedPlayers = [];
 
     // Discord Integration
@@ -47,7 +52,8 @@ public partial class CS2_SimpleAdmin
 
     // Database Settings
     internal string DbConnectionString = string.Empty;
-    internal static Database.Database? Database;
+    // internal static Database.Database? Database;
+    internal static IDatabaseProvider? DatabaseProvider;
 
     // Logger
     internal static ILogger? _logger;
@@ -56,16 +62,24 @@ public partial class CS2_SimpleAdmin
     public static KitsuneMenu Menu { get; private set; } = null!;
 
     // Shared API
-    internal static Api.CS2_SimpleAdminApi? SimpleAdminApi { get; set; }
+    internal static Api.CS2_SimpleAdminApi? SimpleAdminApi { get; private set; }
 
     // Managers
-    internal PermissionManager PermissionManager = new(Database);
-    internal BanManager BanManager = new(Database);
-    internal MuteManager MuteManager = new(Database);
-    internal WarnManager WarnManager = new(Database);
+    internal PermissionManager PermissionManager = new(DatabaseProvider);
+    internal BanManager BanManager = new(DatabaseProvider);
+    internal MuteManager MuteManager = new(DatabaseProvider);
+    internal WarnManager WarnManager = new(DatabaseProvider);
     internal CacheManager? CacheManager = new();
     internal ChatManager ChatManager = new();
 
     static string firstMessage = "";
     static string secondMessage = "";
+    private static readonly PlayerManager PlayerManager = new();
+
+    // Timers
+    internal Timer? PlayersTimer = null;
+
+    // Funny list
+    private readonly List<string> _requiredPlugins = ["MenuManagerCore", "PlayerSettings"];
+    private readonly List<string> _requiredShared = ["MenuManagerApi", "PlayerSettingsApi", "AnyBaseLib", "CS2-SimpleAdminApi"];
 }

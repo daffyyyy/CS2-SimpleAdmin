@@ -15,7 +15,7 @@ namespace CS2_SimpleAdmin;
 
 public partial class CS2_SimpleAdmin
 {
-    [GameEventHandler]
+	[GameEventHandler]
 	public HookResult OnPlayerConnectStatistics(EventPlayerConnectFull @event, GameEventInfo info)
 	{
 		if (!Config.IsCSSPanel) return HookResult.Continue;
@@ -31,7 +31,7 @@ public partial class CS2_SimpleAdmin
 		}
 
 
-		if (Database == null) return HookResult.Continue;
+		if (DatabaseProvider == null) return HookResult.Continue;
 
 		SteamID authorizedSteamID = player.AuthorizedSteamID!;
 		string ipAddress = player.IpAddress!.Split(":")[0];
@@ -50,7 +50,7 @@ public partial class CS2_SimpleAdmin
 		{
 			try
 			{
-				await using var connection = await Database.GetConnectionAsync();
+				await using var connection = await DatabaseProvider.CreateConnectionAsync();
 
 				string sql = "INSERT INTO `sa_statistics` (`serverId`, `playerId`, `playerName`, `playerIP`, `connectTime`, `flags`, `map`) " +
 					"VALUES (@serverId, @playerId, @playerName, @playerIP, @connectTime, @flags, @map)";
@@ -89,7 +89,7 @@ public partial class CS2_SimpleAdmin
 			|| player.IsBot || player.IsHLTV || !player.UserId.HasValue || player.AuthorizedSteamID == null)
 			return HookResult.Continue;
 
-		if (Database == null) return HookResult.Continue;
+		if (DatabaseProvider == null) return HookResult.Continue;
 
 		SteamID authorizedSteamID = player.AuthorizedSteamID!;
 		string ipAddress = player.IpAddress!.Split(":")[0];
@@ -105,7 +105,7 @@ public partial class CS2_SimpleAdmin
 		{
 			try
 			{
-				await using var connection = await Database.GetConnectionAsync();
+				await using var connection = await DatabaseProvider.CreateConnectionAsync();
 
 				string sql = "UPDATE `sa_statistics` SET `disconnectTime` = @disconnectTime, `disconnectDate` = @disconnectDate, `kills` = @kills, `duration` = @disconnectTime - `connectTime`  " +
 					"WHERE `playerId` = @playerId AND `disconnectTime` IS NULL";
