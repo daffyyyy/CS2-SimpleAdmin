@@ -59,7 +59,7 @@ jobs:
           cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/* ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi/
 
       - name: Zip Main Build Output
-        run: zip -r CS2-SimpleAdmin${{ steps.get_version.outputs.VERSION }}.zip ${{ env.OUTPUT_PATH }}
+        run: zip -r CS2-SimpleAdmin-${{ steps.get_version.outputs.VERSION }}.zip ${{ env.OUTPUT_PATH }}
 
       - name: Extract & Zip StatusBlocker Linux
         run: |
