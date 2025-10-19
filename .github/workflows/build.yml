@@ -16,7 +16,7 @@ env:
   PROJECT_NAME_CS2_SIMPLEADMIN: "CS2-SimpleAdmin"
   PROJECT_PATH_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi/CS2-SimpleAdminApi.csproj"
   PROJECT_NAME_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi"
-  PROJECT_PATH_FUNCOMMANDSMODULE: "Modules/CS2-SimpleAdmin_FunCommands/CS2-SimpleAdmin_FunCommands.csproj"
+  PROJECT_PATH_FUNCOMMANDSMODULE: "Modules/CS2-SimpleAdmin_FunCommands/CS2-SimpleAdmin_FunCommands/CS2-SimpleAdmin_FunCommands.csproj"
   PROJECT_NAME_FUNCOMMANDSMODULE: "CS2-SimpleAdmin_FunCommands"
   PROJECT_PATH_STEALTHMODULE: "Modules/CS2-SimpleAdmin_StealthModule/CS2-SimpleAdmin_StealthModule.csproj"
   PROJECT_NAME_STEALTHMODULE: "CS2-SimpleAdmin_StealthModule"
