@@ -8,7 +8,7 @@ public static class PlayersMenu
 {
     public static void OpenRealPlayersMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController, bool>? enableFilter = null)
     {
-        OpenMenu(admin, menuName, onSelectAction, p => p.IsBot == false);
+        OpenMenu(admin, menuName, onSelectAction, p => !p.IsBot);
     }
 
     public static void OpenAdminPlayersMenu(CCSPlayerController admin, string menuName, Action<CCSPlayerController, CCSPlayerController> onSelectAction, Func<CCSPlayerController?, bool>? enableFilter = null)
@@ -37,7 +37,7 @@ public static class PlayersMenu
             var playerName = player != null && player.PlayerName.Length > 26 ? player.PlayerName[..26] : player?.PlayerName;
 
             var optionName = HttpUtility.HtmlEncode(playerName);
-            if (player != null && enableFilter != null && enableFilter(player) == false)
+            if (player != null && enableFilter != null && !enableFilter(player))
                 continue;
 
             var enabled = admin.CanTarget(player);
@@ -47,7 +47,7 @@ public static class PlayersMenu
                     {
                         if (player != null) onSelectAction.Invoke(admin, player);
                     },
-                    enabled == false);
+                    !enabled);
         }
 
         if (menu != null) AdminMenu.OpenMenu(admin, menu);

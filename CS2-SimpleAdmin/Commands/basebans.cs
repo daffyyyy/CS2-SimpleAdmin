@@ -316,7 +316,7 @@ public partial class CS2_SimpleAdmin
 
         var canPermBan = AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/permban");
 
-        if (duration <= 0 && canPermBan == false)
+        if (duration <= 0 && !canPermBan)
         {
             caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_perm_restricted"]}");
             return false;

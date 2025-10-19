@@ -335,10 +335,10 @@ public static class PlayerExtensions
         {
             StringBuilder sb = new();
             sb.Append(localizer[messageKey, messageArgs]);
-
+            
             foreach (var part in Helper.SeparateLines(sb.ToString()))
             {
-                var lineWithPrefix = localizer["sa_prefix"] + part.Trim();
+                var lineWithPrefix = (CS2_SimpleAdmin._localizer?["sa_prefix"] ?? "") + part.Trim();
                 controller.PrintToChat(lineWithPrefix);
             }
         }

@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using CounterStrikeSharp.API;
+﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using CounterStrikeSharp.API.Core.Capabilities;
@@ -8,6 +7,7 @@ using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Memory.DynamicFunctions;
 using CS2_SimpleAdmin.Database;
 using CS2_SimpleAdmin.Managers;
+using CS2_SimpleAdmin.Menus;
 using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Logging;
 using MySqlConnector;
@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy & Dliix66";
-    public override string ModuleVersion => "1.7.7-alpha-10";
+    public override string ModuleVersion => "1.7.8-beta-1";
     
     public override void Load(bool hotReload)
     {
@@ -67,6 +67,9 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         PlayersTimer?.Kill();
         PlayersTimer = null;
         PlayerManager.CheckPlayersTimer();
+        
+        Menus.MenuManager.Instance.InitializeDefaultCategories();
+        BasicMenu.Initialize();
     }
 
     public override void OnAllPluginsLoaded(bool hotReload)
@@ -83,7 +86,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
 
         AddTimer(6.0f, () => ReloadAdmins(null));
         RegisterEvents();
-        RegisterCommands.InitializeCommands();
+        AddTimer(0.5f, RegisterCommands.InitializeCommands);
 
         if (!CoreConfig.UnlockConCommands)
         {
@@ -232,7 +235,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
         WarnManager = new WarnManager(DatabaseProvider);
     }
 
-    private static TargetResult? GetTarget(CommandInfo command, int argument = 1)
+    internal static TargetResult? GetTarget(CommandInfo command, int argument = 1)
     {
         var matches = command.GetArgTargetResult(argument);
 

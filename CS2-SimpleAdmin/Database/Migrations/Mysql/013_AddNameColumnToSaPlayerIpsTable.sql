@@ -1,11 +1,3 @@
-DELETE FROM `sa_players_ips`
-WHERE `id` NOT IN (
-    SELECT * FROM (
-          SELECT MIN(`id`)
-          FROM `sa_players_ips`
-          GROUP BY `steamid`
-      ) AS `keep_ids`
-);
 DELETE FROM sa_players_ips WHERE INET_ATON(address) IS NULL AND address IS NOT NULL;
 UPDATE `sa_players_ips` SET `address` = INET_ATON(address);
 ALTER TABLE `sa_players_ips` CHANGE `address` `address` INT UNSIGNED NOT NULL;

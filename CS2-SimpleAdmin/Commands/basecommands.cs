@@ -33,7 +33,7 @@ public partial class CS2_SimpleAdmin
     [CommandHelper(usage: "[#userid or name]", whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnPenaltiesCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (caller == null || caller.IsValid == false || !caller.UserId.HasValue || DatabaseProvider == null)
+        if (caller == null || !caller.IsValid || !caller.UserId.HasValue || DatabaseProvider == null)
             return;
         
         var userId = caller.UserId.Value;
@@ -160,7 +160,7 @@ public partial class CS2_SimpleAdmin
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnAdminVoiceCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (caller == null || caller.IsValid == false)
+        if (caller == null || !caller.IsValid)
             return;
 
         if (command.ArgCount > 1)
@@ -205,7 +205,7 @@ public partial class CS2_SimpleAdmin
     [CommandHelper(whoCanExecute: CommandUsage.CLIENT_ONLY)]
     public void OnAdminCommand(CCSPlayerController? caller, CommandInfo command)
     {
-        if (caller == null || caller.IsValid == false)
+        if (caller == null || !caller.IsValid)
             return;
 
         AdminMenu.OpenMenu(caller);

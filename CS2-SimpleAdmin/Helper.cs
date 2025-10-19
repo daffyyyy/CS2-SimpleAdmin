@@ -441,20 +441,20 @@ internal static class Helper
     public static void ShowAdminActivity(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs)
     {
         string[] publishActions = ["ban", "gag", "silence", "mute"];
-        
+
         if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 0) return;
         if (CS2_SimpleAdmin._localizer == null) return;
-        
+
         if (string.IsNullOrWhiteSpace(callerName))
             callerName = CS2_SimpleAdmin._localizer["sa_console"];
 
         var formattedMessageArgs = messageArgs.Select(arg => arg.ToString() ?? string.Empty).ToArray();
-        
-        if (dontPublish == false && publishActions.Any(messageKey.Contains))
+
+        if (!dontPublish && publishActions.Any(messageKey.Contains))
         {
             CS2_SimpleAdmin.SimpleAdminApi?.OnAdminShowActivityEvent(messageKey, callerName, dontPublish, messageArgs);
         }
-        
+
         // // Replace placeholder based on showActivityType
         // for (var i = 0; i < formattedMessageArgs.Length; i++)
         // {
@@ -478,7 +478,7 @@ internal static class Helper
                 AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/kick") ||
                 AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/ban"));
         }
-        
+
         foreach (var controller in validPlayers.ToList())
         {
             var currentMessageArgs = (string[])formattedMessageArgs.Clone();
@@ -496,6 +496,89 @@ internal static class Helper
 
             // Send the localized message to each player
             controller.SendLocalizedMessage(CS2_SimpleAdmin._localizer, messageKey, currentMessageArgs.Cast<object>().ToArray());
+        }
+    }
+
+    /// <summary>
+    /// Shows admin activity with a custom translated message (for modules with their own localizer).
+    /// </summary>
+    public static void ShowAdminActivityTranslated(string translatedMessage, string? callerName = null, bool dontPublish = false)
+    {
+        if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 0) return;
+        if (CS2_SimpleAdmin._localizer == null) return;
+
+        if (string.IsNullOrWhiteSpace(callerName))
+            callerName = CS2_SimpleAdmin._localizer["sa_console"];
+
+        var validPlayers = GetValidPlayers().Where(c => c is { IsValid: true, IsBot: false });
+
+        if (!validPlayers.Any())
+            return;
+
+        if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 3)
+        {
+            validPlayers = validPlayers.Where(c =>
+                AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/kick") ||
+                AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/ban"));
+        }
+
+        foreach (var controller in validPlayers.ToList())
+        {
+            // Replace "CALLER" placeholder based on showActivityType
+            var message = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
+            {
+                1 => translatedMessage.Replace("CALLER", AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/kick") || AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
+                _ => translatedMessage.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
+            };
+
+            // Send the pre-translated message to the player
+            controller.PrintToChat(message);
+        }
+    }
+
+    /// <summary>
+    /// Shows admin activity using module's localizer for per-player language support.
+    /// Each player receives the message in their configured language using SendLocalizedMessage.
+    /// </summary>
+    public static void ShowAdminActivityLocalized(IStringLocalizer moduleLocalizer, string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs)
+    {
+        if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 0) return;
+        if (CS2_SimpleAdmin._localizer == null) return;
+
+        if (string.IsNullOrWhiteSpace(callerName))
+            callerName = CS2_SimpleAdmin._localizer["sa_console"];
+
+        var formattedMessageArgs = messageArgs.Select(arg => arg.ToString() ?? string.Empty).ToArray();
+
+        var validPlayers = GetValidPlayers().Where(c => c is { IsValid: true, IsBot: false });
+
+        if (!validPlayers.Any())
+            return;
+
+        if (CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType == 3)
+        {
+            validPlayers = validPlayers.Where(c =>
+                AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/kick") ||
+                AdminManager.PlayerHasPermissions(new SteamID(c.SteamID), "@css/ban"));
+        }
+
+        foreach (var controller in validPlayers.ToList())
+        {
+            var currentMessageArgs = (string[])formattedMessageArgs.Clone();
+
+            // Replace "CALLER" placeholder based on showActivityType
+            for (var i = 0; i < currentMessageArgs.Length; i++)
+            {
+                var arg = currentMessageArgs[i];
+                currentMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
+                {
+                    1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/kick") || AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
+                    _ => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
+                };
+            }
+
+            // Send the localized message to each player using their language
+            controller.SendLocalizedMessage(moduleLocalizer, messageKey, currentMessageArgs.Cast<object>().ToArray());
         }
     }
 
@@ -794,7 +877,7 @@ internal static class Helper
         if (CS2_SimpleAdmin.DiscordWebhookClientLog == null || CS2_SimpleAdmin._localizer == null)
             return;
 
-        if (caller != null && caller.IsValid == false)
+        if (caller != null && !caller.IsValid)
             caller = null;
 
         var callerName = caller == null ? CS2_SimpleAdmin._localizer["sa_console"] : caller.PlayerName;
@@ -806,32 +889,38 @@ internal static class Helper
                 commandString]));
     }
 
-    public static IMenu? CreateMenu(string title, Action<CCSPlayerController>? backAction = null)
+    #pragma warning disable CS8604
+    public static IMenu? CreateMenu(string title, Action<CCSPlayerController>? backAction = null, Action<CCSPlayerController>? resetAction = null)
     {
+        if (CS2_SimpleAdmin.MenuApi == null)
+        {
+            return null;
+        }
+
         var menuType = CS2_SimpleAdmin.Instance.Config.MenuConfigs.MenuType.ToLower();
-        
         var menu = menuType switch
         {
             _ when menuType.Equals("selectable", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenu(title),
+                CS2_SimpleAdmin.MenuApi.GetMenu(title, backAction, resetAction),
 
             _ when menuType.Equals("dynamic", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ButtonMenu),
+                CS2_SimpleAdmin.MenuApi.GetMenuForcetype(title, MenuType.ButtonMenu, backAction, resetAction),
 
             _ when menuType.Equals("center", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.CenterMenu),
+                CS2_SimpleAdmin.MenuApi.GetMenuForcetype(title, MenuType.CenterMenu, backAction, resetAction),
 
             _ when menuType.Equals("chat", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ChatMenu),
+                CS2_SimpleAdmin.MenuApi.GetMenuForcetype(title, MenuType.ChatMenu, backAction, resetAction),
 
             _ when menuType.Equals("console", StringComparison.CurrentCultureIgnoreCase) =>
-                CS2_SimpleAdmin.MenuApi?.GetMenuForcetype(title, MenuType.ConsoleMenu),
+                CS2_SimpleAdmin.MenuApi.GetMenuForcetype(title, MenuType.ConsoleMenu, backAction, resetAction),
 
-            _ => CS2_SimpleAdmin.MenuApi?.GetMenu(title)
+            _ => CS2_SimpleAdmin.MenuApi.GetMenu(title, backAction, resetAction)
         };
 
         return menu;
     }
+    #pragma warning restore CS8604
 
     internal static IPluginManager? GetPluginManager()
     {

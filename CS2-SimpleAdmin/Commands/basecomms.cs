@@ -959,7 +959,7 @@ public partial class CS2_SimpleAdmin
 
         var canPermMute = AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/permmute");
 
-        if (duration <= 0 && canPermMute == false)
+        if (duration <= 0 && !canPermMute)
         {
             caller.PrintToChat($"{_localizer!["sa_prefix"]} {_localizer["sa_ban_perm_restricted"]}");
             return false;

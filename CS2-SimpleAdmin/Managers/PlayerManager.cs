@@ -95,66 +95,36 @@ internal class PlayerManager
                         {
                             await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
 
-                            if (CS2_SimpleAdmin.Instance.CacheManager.HasIpForPlayer(
-                                    steamId, ipAddress))
-                            {
-                                const string updateQuery = """
-                                                           UPDATE `sa_players_ips`
-                                                           SET used_at = CURRENT_TIMESTAMP,
-                                                               name = @playerName
-                                                           WHERE steamid = @SteamID AND address = @IPAddress;
-                                                           """;
-                                await connection.ExecuteAsync(updateQuery, new
-                                {
-                                    playerName,
-                                    SteamID = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64,
-                                    IPAddress = IpHelper.IpToUint(ipAddress)
-                                });
-                            }
-                            else
-                            {
-                                const string selectQuery =
-                                    "SELECT COUNT(*) FROM `sa_players_ips` WHERE steamid = @SteamID AND address = @IPAddress;";
-                                var recordExists = await connection.ExecuteScalarAsync<int>(selectQuery, new
-                                {
-                                    SteamID = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64,
-                                    IPAddress = IpHelper.IpToUint(ipAddress)
-                                });
+                            // Eliminates the need for SELECT COUNT and duplicate UPDATE queries
+                            var steamId64 = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64;
+                            var ipUint = IpHelper.IpToUint(ipAddress);
 
-                                if (recordExists > 0)
-                                {
-                                    const string updateQuery = """
-                                                               UPDATE `sa_players_ips`
-                                                               SET used_at = CURRENT_TIMESTAMP,
-                                                                   name = @playerName
-                                                               WHERE steamid = @SteamID AND address = @IPAddress;
-                                                               """;
-                                    await connection.ExecuteAsync(updateQuery, new
-                                    {
-                                        playerName,
-                                        SteamID = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64,
-                                        IPAddress = IpHelper.IpToUint(ipAddress)
-                                    });
-                                }
-                                else
-                                {
-                                    const string insertQuery = """
-                                                               INSERT INTO `sa_players_ips` (steamid, name, address, used_at)
-                                                               VALUES (@SteamID, @playerName, @IPAddress, CURRENT_TIMESTAMP);
-                                                               """;
-                                    await connection.ExecuteAsync(insertQuery, new
-                                    {
-                                        SteamID = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64,
-                                        playerName,
-                                        IPAddress = IpHelper.IpToUint(ipAddress)
-                                    });
-                                }
-                            }
+                            // MySQL: INSERT ... ON DUPLICATE KEY UPDATE pattern
+                            const string upsertQuery = """
+                                INSERT INTO `sa_players_ips` (steamid, name, address, used_at)
+                                VALUES (@SteamID, @playerName, @IPAddress, CURRENT_TIMESTAMP)
+                                ON DUPLICATE KEY UPDATE
+                                    used_at = CURRENT_TIMESTAMP,
+                                    name = @playerName;
+                                """;
+
+                            await connection.ExecuteAsync(upsertQuery, new
+                            {
+                                SteamID = steamId64,
+                                playerName,
+                                IPAddress = ipUint
+                            });
+
+                            // // Cache will be updated on next refresh cycle
+                            // if (!CS2_SimpleAdmin.Instance.CacheManager.HasIpForPlayer(steamId, ipAddress))
+                            // {
+                            //     // IP association will be reflected after cache refresh
+                            // }
                         }
                         catch (Exception ex)
                         {
                             CS2_SimpleAdmin._logger?.LogError(
-                                $"Unable to save ip address for {playerInfo.Name} ({ipAddress}) {ex.Message}");
+                                $"Unable to save ip address for {playerInfo.Name} ({ipAddress}): {ex.Message}");
                         }
 
                         playerInfo.AccountsAssociated =
@@ -313,31 +283,6 @@ internal class PlayerManager
     /// </remarks>
     public void CheckPlayersTimer()
     {
-        CS2_SimpleAdmin.Instance.AddTimer(0.12f, () =>
-        {
-            if (CS2_SimpleAdmin.SpeedPlayers.Count > 0)
-            {
-                foreach (var (player, speed) in CS2_SimpleAdmin.SpeedPlayers)
-                {
-                    if (player is { IsValid: true, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE })
-                    {
-                        player.SetSpeed(speed);
-                    }
-                }
-            }
-
-            if (CS2_SimpleAdmin.GravityPlayers.Count > 0)
-            {
-                foreach (var (player, gravity) in CS2_SimpleAdmin.GravityPlayers)
-                {
-                    if (player is { IsValid: true, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE })
-                    {
-                        player.SetGravity(gravity);
-                    }
-                }
-            }
-        }, TimerFlags.REPEAT);
-        
         CS2_SimpleAdmin.Instance.PlayersTimer = CS2_SimpleAdmin.Instance.AddTimer(61.0f, () =>
         {
 #if DEBUG
@@ -346,18 +291,26 @@ internal class PlayerManager
             if (CS2_SimpleAdmin.DatabaseProvider == null)
                 return;
             
-            var tempPlayers = Helper.GetValidPlayers()
-                .Select(p => new
-                {
-                    p.PlayerName, p.SteamID, p.IpAddress, p.UserId, p.Slot,
-                })
-                .ToList();
-            
+            // Optimization: Get players once and avoid allocating anonymous types
+            var validPlayers = Helper.GetValidPlayers();
+            if (validPlayers.Count == 0)
+                return;
+
+            // Use ValueTuple instead of anonymous type - better performance and less allocations
+            var tempPlayers = new List<(string PlayerName, ulong SteamID, string? IpAddress, int? UserId, int Slot)>(validPlayers.Count);
+            foreach (var p in validPlayers)
+            {
+                tempPlayers.Add((p.PlayerName, p.SteamID, p.IpAddress, p.UserId, p.Slot));
+            }
+
             var pluginInstance = CS2_SimpleAdmin.Instance;
+            var config = _config.OtherSettings; // Cache config access
+
             _ = Task.Run(async () =>
             {
                 try
                 {
+                    // Run all expire tasks in parallel
                     var expireTasks = new[]
                     {
                         pluginInstance.BanManager.ExpireOldBans(),
@@ -384,22 +337,33 @@ internal class PlayerManager
 
                 if (pluginInstance.CacheManager == null)
                     return;
-                
-                var bannedPlayers = tempPlayers.AsValueEnumerable()
-                    .Where(player =>
-                    {
-                        var playerName = player.PlayerName;
-                        var steamId = player.SteamID;
-                        var ip = player.IpAddress?.Split(':')[0];
 
-                        return CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
-                        {
-                            0 => pluginInstance.CacheManager.IsPlayerBanned(playerName, steamId, null),
-                            _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
-                                ? pluginInstance.CacheManager.IsPlayerOrAnyIpBanned(playerName, steamId, ip)
-                                : pluginInstance.CacheManager.IsPlayerBanned(playerName, steamId, ip)
-                        };
-                    }).ToList();
+                // Optimization: Cache ban type and multi-account check to avoid repeated config access
+                var banType = config.BanType;
+                var checkMultiAccounts = config.CheckMultiAccountsByIp;
+
+                var bannedPlayers = new List<(string PlayerName, ulong SteamID, string? IpAddress, int? UserId, int Slot)>();
+
+                // Manual loop instead of LINQ - better performance
+                foreach (var player in tempPlayers)
+                {
+                    var playerName = player.PlayerName;
+                    var steamId = player.SteamID;
+                    var ip = player.IpAddress?.Split(':')[0];
+
+                    bool isBanned = banType switch
+                    {
+                        0 => pluginInstance.CacheManager.IsPlayerBanned(playerName, steamId, null),
+                        _ => checkMultiAccounts
+                            ? pluginInstance.CacheManager.IsPlayerOrAnyIpBanned(playerName, steamId, ip)
+                            : pluginInstance.CacheManager.IsPlayerBanned(playerName, steamId, ip)
+                    };
+
+                    if (isBanned)
+                    {
+                        bannedPlayers.Add(player);
+                    }
+                }
 
                 if (bannedPlayers.Count > 0)
                 {
@@ -410,32 +374,38 @@ internal class PlayerManager
                     }
                 }
                 
-                if (_config.OtherSettings.TimeMode == 0)
+                if (config.TimeMode == 0)
                 {
-                    var onlinePlayers = tempPlayers.AsValueEnumerable().Select(player => (player.SteamID, player.UserId, player.Slot)).ToList();
-                    if (tempPlayers.Count == 0 || onlinePlayers.Count == 0) return;
+                    // Optimization: Manual projection instead of LINQ
+                    var onlinePlayers = new List<(ulong, int?, int)>(tempPlayers.Count);
+                    foreach (var player in tempPlayers)
+                    {
+                        onlinePlayers.Add((player.SteamID, player.UserId, player.Slot));
+                    }
+
+                    if (onlinePlayers.Count > 0)
+                    {
                         await pluginInstance.MuteManager.CheckOnlineModeMutes(onlinePlayers);
+                    }
                 }
             });
-            
+
             try
             {
+                // Optimization: Process penalties without LINQ allocations
                 var players = Helper.GetValidPlayers();
-                var penalizedSlots = players
-                    .Where(player => PlayerPenaltyManager.IsSlotInPenalties(player.Slot))
-                    .Select(player => new 
-                    { 
-                        Player = player, 
-                        IsMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute, out _), 
-                        IsSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out _), 
-                        IsGagged = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Gag, out _) 
-                    });
-
-                foreach (var entry in penalizedSlots)
+                foreach (var player in players)
                 {
-                    if (!entry.IsMuted && !entry.IsSilenced)
+                    if (!PlayerPenaltyManager.IsSlotInPenalties(player.Slot))
+                        continue;
+
+                    var isMuted = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Mute, out _);
+                    var isSilenced = PlayerPenaltyManager.IsPenalized(player.Slot, PenaltyType.Silence, out _);
+
+                    // Only reset voice flags if not muted or silenced
+                    if (!isMuted && !isSilenced)
                     {
-                        entry.Player.VoiceFlags = VoiceFlags.Normal;
+                        player.VoiceFlags = VoiceFlags.Normal;
                     }
                 }
 

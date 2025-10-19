@@ -96,9 +96,6 @@ public partial class CS2_SimpleAdmin
         CachedPlayers.Remove(player);
         
         SilentPlayers.Remove(player.Slot);
-        GodPlayers.Remove(player.Slot);
-        SpeedPlayers.Remove(player);
-        GravityPlayers.Remove(player);
 
         if (player.IsBot)
             return HookResult.Continue;
@@ -247,10 +244,6 @@ public partial class CS2_SimpleAdmin
         Logger.LogCritical("[OnRoundStart]");
 #endif
 
-        GodPlayers.Clear();
-        SpeedPlayers.Clear();
-        GravityPlayers.Clear();
-        
         foreach (var player in PlayersInfo.Values)
         {
             player.DiePosition = null;
@@ -467,8 +460,6 @@ public partial class CS2_SimpleAdmin
 
         GodPlayers.Clear();
         SilentPlayers.Clear();
-        SpeedPlayers.Clear();
-        GravityPlayers.Clear();
 
         PlayerPenaltyManager.RemoveAllPenalties();
     }
@@ -494,13 +485,9 @@ public partial class CS2_SimpleAdmin
     {
         var player = @event.Userid;
         
-        if (player?.UserId == null || !player.IsValid || player.IsHLTV || player.Connected != PlayerConnectedState.PlayerConnected)
-            return HookResult.Continue;
-
-        SpeedPlayers.Remove(player);
-        GravityPlayers.Remove(player);
-
-        if (!PlayersInfo.ContainsKey(player.SteamID) || @event.Attacker == null)
+        if (player?.UserId == null || !player.IsValid || player.IsHLTV ||
+            player.Connected != PlayerConnectedState.PlayerConnected || !PlayersInfo.ContainsKey(player.SteamID) ||
+            @event.Attacker == null)
             return HookResult.Continue;
 
         var playerPosition = player.PlayerPawn.Value?.AbsOrigin; 

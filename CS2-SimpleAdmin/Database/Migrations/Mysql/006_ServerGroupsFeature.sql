@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS `sa_groups_servers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 ALTER TABLE `sa_admins` ADD `group_id` INT NULL AFTER `created`;
-
 ALTER TABLE `sa_groups_flags` ADD FOREIGN KEY (`group_id`) REFERENCES `sa_groups`(`id`) ON DELETE CASCADE;
 ALTER TABLE `sa_groups_servers` ADD FOREIGN KEY (`group_id`) REFERENCES `sa_groups`(`id`) ON DELETE CASCADE;
 ALTER TABLE `sa_admins` ADD FOREIGN KEY (`group_id`) REFERENCES `sa_groups`(`id`) ON DELETE SET NULL;

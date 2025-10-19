@@ -29,7 +29,6 @@ internal class BanManager(IDatabaseProvider? databaseProvider)
         try
         {
             var sql = databaseProvider.GetAddBanQuery();
-            
             var banId = await connection.ExecuteScalarAsync<int?>(sql, new
             {
                 playerSteamid = player.SteamId.SteamId64,

@@ -35,29 +35,43 @@ public class ServerManager
         {
             if (CS2_SimpleAdmin.ServerLoaded || CS2_SimpleAdmin.DatabaseProvider == null) return;
 
-            if (_getIpTryCount > 32 && Helper.GetServerIp().StartsWith("0.0.0.0") || string.IsNullOrEmpty(Helper.GetServerIp()))
+            // Optimization: Get server IP once and reuse
+            var serverIp = Helper.GetServerIp();
+            var isInvalidIp = string.IsNullOrEmpty(serverIp) || serverIp.StartsWith("0.0.0");
+
+            // Check if we've exceeded retry limit with invalid IP
+            if (_getIpTryCount > 32 && isInvalidIp)
             {
                 CS2_SimpleAdmin._logger?.LogError("Unable to load server data - can't fetch ip address!");
                 return;
             }
 
-            var ipAddress = ConVar.Find("ip")?.StringValue;
+            // Optimization: Cache ConVar lookups
+            var ipConVar = ConVar.Find("ip");
+            var ipAddress = ipConVar?.StringValue;
+
+            // Use Helper IP if ConVar IP is invalid
             if (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0"))
             {
-                ipAddress = Helper.GetServerIp();
+                ipAddress = serverIp;
 
-                if (_getIpTryCount <= 32 && (string.IsNullOrEmpty(ipAddress) || ipAddress.StartsWith("0.0.0")))
+                // Retry if still invalid and under retry limit
+                if (_getIpTryCount <= 32 && isInvalidIp)
                 {
                     _getIpTryCount++;
-
                     LoadServerData();
                     return;
                 }
             }
 
-            var address = $"{ipAddress}:{ConVar.Find("hostport")?.GetPrimitiveValue<int>()}";
-            var hostname = ConVar.Find("hostname")?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
-            var rconPassword = ConVar.Find("rcon_password")?.StringValue ?? "";
+            // Optimization: Cache remaining ConVar lookups
+            var hostportConVar = ConVar.Find("hostport");
+            var hostnameConVar = ConVar.Find("hostname");
+            var rconPasswordConVar = ConVar.Find("rcon_password");
+
+            var address = $"{ipAddress}:{hostportConVar?.GetPrimitiveValue<int>()}";
+            var hostname = hostnameConVar?.StringValue ?? CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+            var rconPassword = rconPasswordConVar?.StringValue ?? "";
             CS2_SimpleAdmin.IpAddress = address;
             
             Task.Run(async () =>
@@ -118,6 +132,8 @@ public class ServerManager
                     }
                 }
             });
+            
+            CS2_SimpleAdmin.SimpleAdminApi?.OnSimpleAdminReadyEvent();
         });
     }
 }

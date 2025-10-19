@@ -8,11 +8,11 @@ public static class ManageServerMenu
 {
     public static void OpenMenu(CCSPlayerController admin)
     {
-        if (admin.IsValid == false)
+        if (!admin.IsValid)
             return;
 
         var localizer = CS2_SimpleAdmin._localizer;
-        if (AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/generic") == false)
+        if (!AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/generic"))
         {
             admin.PrintToChat(localizer?["sa_prefix"] ??
                               "[SimpleAdmin] " +

@@ -65,24 +65,11 @@ public static class RegisterCommands
 
         new("css_vote", CS2_SimpleAdmin.Instance.OnVoteCommand),
 
-        new("css_noclip", CS2_SimpleAdmin.Instance.OnNoclipCommand),
-        new("css_freeze", CS2_SimpleAdmin.Instance.OnFreezeCommand),
-        new("css_unfreeze", CS2_SimpleAdmin.Instance.OnUnfreezeCommand),
-        new("css_godmode", CS2_SimpleAdmin.Instance.OnGodCommand),
-
         new("css_slay", CS2_SimpleAdmin.Instance.OnSlayCommand),
         new("css_slap", CS2_SimpleAdmin.Instance.OnSlapCommand),
-        new("css_give", CS2_SimpleAdmin.Instance.OnGiveCommand),
-        new("css_strip", CS2_SimpleAdmin.Instance.OnStripCommand),
-        new("css_hp", CS2_SimpleAdmin.Instance.OnHpCommand),
-        new("css_speed", CS2_SimpleAdmin.Instance.OnSpeedCommand),
-        new("css_gravity", CS2_SimpleAdmin.Instance.OnGravityCommand),
-        new("css_resize", CS2_SimpleAdmin.Instance.OnResizeCommand),
-        new("css_money", CS2_SimpleAdmin.Instance.OnMoneyCommand),
         new("css_team", CS2_SimpleAdmin.Instance.OnTeamCommand),
         new("css_rename", CS2_SimpleAdmin.Instance.OnRenameCommand),
         new("css_prename", CS2_SimpleAdmin.Instance.OnPrenameCommand),
-        new("css_respawn", CS2_SimpleAdmin.Instance.OnRespawnCommand),
         new("css_tp", CS2_SimpleAdmin.Instance.OnGotoCommand),
         new("css_bring", CS2_SimpleAdmin.Instance.OnBringCommand),
         new("css_pluginsmanager", CS2_SimpleAdmin.Instance.OnPluginManagerCommand),
@@ -160,23 +147,12 @@ public static class RegisterCommands
                 { "css_addsilence", new Command { Aliases = ["css_addsilence"] } },
                 { "css_unsilence", new Command { Aliases = ["css_unsilence"] } },
                 { "css_vote", new Command { Aliases = ["css_vote"] } },
-                { "css_noclip", new Command { Aliases = ["css_noclip"] } },
-                { "css_freeze", new Command { Aliases = ["css_freeze"] } },
-                { "css_unfreeze", new Command { Aliases = ["css_unfreeze"] } },
-                { "css_godmode", new Command { Aliases = ["css_godmode"] } },
                 { "css_slay", new Command { Aliases = ["css_slay"] } },
                 { "css_slap", new Command { Aliases = ["css_slap"] } },
-                { "css_give", new Command { Aliases = ["css_give"] } },
-                { "css_strip", new Command { Aliases = ["css_strip"] } },
-                { "css_hp", new Command { Aliases = ["css_hp"] } },
-                { "css_speed", new Command { Aliases = ["css_speed"] } },
-                { "css_gravity", new Command { Aliases = ["css_gravity"] } },
-                { "css_resize", new Command { Aliases = ["css_resize", "css_size"] } },
-                { "css_money", new Command { Aliases = ["css_money"] } },
                 { "css_team", new Command { Aliases = ["css_team"] } },
                 { "css_rename", new Command { Aliases = ["css_rename"] } },
                 { "css_prename", new Command { Aliases = ["css_prename"] } },
-                { "css_respawn", new Command { Aliases = ["css_respawn"] } },
+                { "css_resize", new Command { Aliases = ["css_resize", "css_size"] } },
                 { "css_tp", new Command { Aliases = ["css_tp", "css_tpto", "css_goto"] } },
                 { "css_bring", new Command { Aliases = ["css_bring", "css_tphere"] } },
                 { "css_pluginsmanager", new Command { Aliases = ["css_pluginsmanager", "css_pluginmanager"] } },
@@ -205,25 +181,26 @@ public static class RegisterCommands
         var commandsConfig = JsonSerializer.Deserialize<CommandsConfig>(json, 
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-        if (commandsConfig?.Commands == null) return;
-        
-        foreach (var command in commandsConfig.Commands)
+        if (commandsConfig?.Commands != null)
         {
-            if (command.Value.Aliases == null) continue;
-            
-            CS2_SimpleAdmin._logger?.LogInformation(
-                $"Registering command: `{command.Key}` with aliases: `{string.Join(", ", command.Value.Aliases)}`");
-            
-            var mapping = CommandMappings.FirstOrDefault(m => m.CommandKey == command.Key);
-            if (mapping == null || command.Value.Aliases.Length == 0) continue;
-            
-            foreach (var alias in command.Value.Aliases)
+            foreach (var command in commandsConfig.Commands)
             {
-                CS2_SimpleAdmin.Instance.AddCommand(alias, "", mapping.Callback);
+                if (command.Value.Aliases == null) continue;
+            
+                CS2_SimpleAdmin._logger?.LogInformation(
+                    $"Registering command: `{command.Key}` with aliases: `{string.Join(", ", command.Value.Aliases)}`");
+            
+                var mapping = CommandMappings.FirstOrDefault(m => m.CommandKey == command.Key);
+                if (mapping == null || command.Value.Aliases.Length == 0) continue;
+            
+                foreach (var alias in command.Value.Aliases)
+                {
+                    CS2_SimpleAdmin.Instance.AddCommand(alias, "", mapping.Callback);
+                }
             }
         }
         
-        foreach (var (name, definitions) in RegisterCommands._commandDefinitions)
+        foreach (var (name, definitions) in _commandDefinitions)
         {
             foreach (var definition in definitions)
             {
