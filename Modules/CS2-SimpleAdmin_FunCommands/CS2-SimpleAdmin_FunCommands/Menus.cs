@@ -7,6 +7,26 @@ namespace CS2_SimpleAdmin_FunCommands;
 /// <summary>
 /// Menu creation methods for Fun Commands module.
 /// This file demonstrates different menu patterns using SimpleAdmin API.
+///
+/// PERMISSION OVERRIDE SUPPORT:
+/// ============================
+/// When registering menus in RegisterFunMenus(), you can pass a command name (e.g., "css_god")
+/// as the last parameter. This enables automatic permission override checking via CounterStrikeSharp's
+/// admin system.
+///
+/// How it works:
+/// 1. Server admin overrides a command's permissions (e.g., css_god requires @css/vip instead of @css/cheats)
+/// 2. SimpleAdmin's menu system automatically checks for overrides when displaying menus
+/// 3. If override exists, it uses the overridden permission; otherwise, uses the default permission
+///
+/// Example from RegisterFunMenus():
+///     _sharedApi.RegisterMenu("fun", "god",
+///         Localizer?["fun_menu_god"] ?? "God Mode",
+///         CreateGodModeMenu,
+///         "@css/cheats",   // Default permission
+///         "css_god");      // Command name for override checking
+///
+/// This means developers don't need to manually check permissions in their menu factory methods!
 /// </summary>
 public partial class CS2_SimpleAdmin_FunCommands
 {

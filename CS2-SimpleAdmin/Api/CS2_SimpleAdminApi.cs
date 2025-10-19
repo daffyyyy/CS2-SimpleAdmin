@@ -206,9 +206,9 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     }
 
     public void RegisterMenu(string categoryId, string menuId, string menuName,
-        Func<CCSPlayerController, object> menuFactory, string? permission = null)
+        Func<CCSPlayerController, object> menuFactory, string? permission = null, string? commandName = null)
     {
-        Menus.MenuManager.Instance.RegisterMenu(categoryId, menuId, menuName, BuilderFactory, permission);
+        Menus.MenuManager.Instance.RegisterMenu(categoryId, menuId, menuName, BuilderFactory, permission, commandName);
         return;
 
         MenuBuilder BuilderFactory(CCSPlayerController player)

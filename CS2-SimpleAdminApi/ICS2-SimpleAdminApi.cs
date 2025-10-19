@@ -143,7 +143,13 @@ public interface ICS2_SimpleAdminApi
     /// <summary>
     /// Registers a menu in a category.
     /// </summary>
-    void RegisterMenu(string categoryId, string menuId, string menuName, Func<CCSPlayerController, object> menuFactory, string? permission = null);
+    /// <param name="categoryId">The category to add this menu to.</param>
+    /// <param name="menuId">Unique identifier for the menu.</param>
+    /// <param name="menuName">Display name of the menu.</param>
+    /// <param name="menuFactory">Factory function that creates the menu for a player.</param>
+    /// <param name="permission">Required permission to access this menu (optional).</param>
+    /// <param name="commandName">Command name for permission override checking (optional, e.g., "css_god").</param>
+    void RegisterMenu(string categoryId, string menuId, string menuName, Func<CCSPlayerController, object> menuFactory, string? permission = null, string? commandName = null);
 
     /// <summary>
     /// Unregisters a menu from a category.

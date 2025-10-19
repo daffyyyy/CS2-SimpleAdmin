@@ -368,60 +368,64 @@ public partial class CS2_SimpleAdmin_FunCommands : BasePlugin, IPluginConfig<Con
         {
             _sharedApi.RegisterMenuCategory("fun", Localizer?["fun_category_name"] ?? "Fun Commands", "@css/generic");
 
+            // Register menus with command names for permission override support
+            // Server admins can override default permissions via CounterStrikeSharp admin system
+            // Example: If "css_god" is overridden to "@css/vip", only VIPs will see the God Mode menu
+
             if (Config.GodCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "god",
                     Localizer?["fun_menu_god"] ?? "God Mode",
-                    CreateGodModeMenu, "@css/cheats");
+                    CreateGodModeMenu, "@css/cheats", "css_god");
 
             if (Config.NoclipCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "noclip",
                     Localizer?["fun_menu_noclip"] ?? "No Clip",
-                    CreateNoClipMenu, "@css/cheats");
+                    CreateNoClipMenu, "@css/cheats", "css_noclip");
 
             if (Config.RespawnCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "respawn",
                     Localizer?["fun_menu_respawn"] ?? "Respawn",
-                    CreateRespawnMenu, "@css/cheats");
+                    CreateRespawnMenu, "@css/cheats", "css_respawn");
 
             if (Config.GiveCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "give",
                     Localizer?["fun_menu_give"] ?? "Give Weapon",
-                    CreateGiveWeaponMenu, "@css/cheats");
+                    CreateGiveWeaponMenu, "@css/cheats", "css_give");
 
             if (Config.StripCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "strip",
                     Localizer?["fun_menu_strip"] ?? "Strip Weapons",
-                    CreateStripWeaponsMenu, "@css/slay");
+                    CreateStripWeaponsMenu, "@css/slay", "css_strip");
 
             if (Config.FreezeCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "freeze",
                     Localizer?["fun_menu_freeze"] ?? "Freeze",
-                    CreateFreezeMenu, "@css/slay");
+                    CreateFreezeMenu, "@css/slay", "css_freeze");
 
             if (Config.HpCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "hp",
                     Localizer?["fun_menu_hp"] ?? "Set HP",
-                    CreateSetHpMenu, "@css/slay");
+                    CreateSetHpMenu, "@css/slay", "css_hp");
 
             if (Config.SpeedCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "speed",
                     Localizer?["fun_menu_speed"] ?? "Set Speed",
-                    CreateSetSpeedMenu, "@css/slay");
+                    CreateSetSpeedMenu, "@css/slay", "css_speed");
 
             if (Config.GravityCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "gravity",
                     Localizer?["fun_menu_gravity"] ?? "Set Gravity",
-                    CreateSetGravityMenu, "@css/slay");
+                    CreateSetGravityMenu, "@css/slay", "css_gravity");
 
             if (Config.MoneyCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "money",
                     Localizer?["fun_menu_money"] ?? "Set Money",
-                    CreateSetMoneyMenu, "@css/slay");
+                    CreateSetMoneyMenu, "@css/slay", "css_money");
 
             if (Config.ResizeCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "resize",
                     Localizer?["fun_menu_resize"] ?? "Resize Player",
-                    CreateSetResizeMenu, "@css/slay");
+                    CreateSetResizeMenu, "@css/slay", "css_resize");
 
             _menusRegistered = true;
             Logger.LogInformation("Fun menus registered successfully!");

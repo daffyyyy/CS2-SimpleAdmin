@@ -120,6 +120,7 @@ public partial class CS2_SimpleAdmin
         
         // Apply slap damage to the player
         player.Pawn.Value?.Slap(damage);
+        player.EmitSound("BaseGrenade.JumpThrowM");
 
         // Log the command
         if (command == null)

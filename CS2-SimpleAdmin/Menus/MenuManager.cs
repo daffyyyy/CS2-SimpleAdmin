@@ -46,7 +46,8 @@ public class MenuManager
     /// <param name="menuName">Display name of the menu.</param>
     /// <param name="menuFactory">Factory function that creates the menu for a player.</param>
     /// <param name="permission">Required permission to access this menu (optional).</param>
-    public void RegisterMenu(string categoryId, string menuId, string menuName, Func<CCSPlayerController, MenuBuilder> menuFactory, string? permission = null)
+    /// <param name="commandName">Command name for permission override checking (optional, e.g., "css_god").</param>
+    public void RegisterMenu(string categoryId, string menuId, string menuName, Func<CCSPlayerController, MenuBuilder> menuFactory, string? permission = null, string? commandName = null)
     {
         if (!_menuCategories.ContainsKey(categoryId))
         {
@@ -58,6 +59,10 @@ public class MenuManager
         if (permission != null)
         {
             _menuCategories[categoryId].MenuPermissions[menuId] = permission;
+        }
+        if (commandName != null)
+        {
+            _menuCategories[categoryId].MenuCommandNames[menuId] = commandName;
         }
     }
 
@@ -72,6 +77,7 @@ public class MenuManager
         category.MenuFactories.Remove(menuId);
         _menuCategories[categoryId].MenuNames.Remove(menuId);
         _menuCategories[categoryId].MenuPermissions.Remove(menuId);
+        _menuCategories[categoryId].MenuCommandNames.Remove(menuId);
     }
 
     /// <summary>
@@ -116,11 +122,39 @@ public class MenuManager
             var menuFactory = kvp.Value;
             var menuName = category.MenuNames.TryGetValue(menuId, out var name) ? name : menuId;
             var permission = category.MenuPermissions.TryGetValue(menuId, out var perm) ? perm : null;
+            var commandName = category.MenuCommandNames.TryGetValue(menuId, out var cmd) ? cmd : null;
 
-            // Check permissions
-            if (!string.IsNullOrEmpty(permission))
+            // Check permissions with command override support
+            var steamId = new SteamID(player.SteamID);
+
+            // If commandName is provided, check for permission overrides
+            if (!string.IsNullOrEmpty(commandName))
             {
-                var steamId = new SteamID(player.SteamID);
+                bool hasPermission;
+
+                // Check if command has overridden permissions
+                if (AdminManager.CommandIsOverriden(commandName))
+                {
+                    var overriddenPermission = AdminManager.GetPermissionOverrides(commandName);
+                    hasPermission = AdminManager.PlayerHasPermissions(steamId, overriddenPermission);
+                }
+                else if (!string.IsNullOrEmpty(permission))
+                {
+                    // Use default permission if no override exists
+                    hasPermission = AdminManager.PlayerHasPermissions(steamId, permission);
+                }
+                else
+                {
+                    // No permission required
+                    hasPermission = true;
+                }
+
+                if (!hasPermission)
+                    continue;
+            }
+            // Fallback to standard permission check if no commandName provided
+            else if (!string.IsNullOrEmpty(permission))
+            {
                 if (!AdminManager.PlayerHasPermissions(steamId, permission))
                     continue;
             }
@@ -187,4 +221,5 @@ public class MenuCategory
     public Dictionary<string, Func<CCSPlayerController, MenuBuilder>> MenuFactories { get; set; } = [];
     public Dictionary<string, string> MenuNames { get; set; } = [];
     public Dictionary<string, string> MenuPermissions { get; set; } = [];
+    public Dictionary<string, string> MenuCommandNames { get; set; } = [];
 }

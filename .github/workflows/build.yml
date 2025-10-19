@@ -16,6 +16,8 @@ env:
   PROJECT_NAME_CS2_SIMPLEADMIN: "CS2-SimpleAdmin"
   PROJECT_PATH_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi/CS2-SimpleAdminApi.csproj"
   PROJECT_NAME_CS2_SIMPLEADMINAPI: "CS2-SimpleAdminApi"
+  PROJECT_PATH_FUNCOMMANDSMODULE: "Modules/CS2-SimpleAdmin_FunCommands/CS2-SimpleAdmin_FunCommands.csproj"
+  PROJECT_NAME_FUNCOMMANDSMODULE: "CS2-SimpleAdmin_FunCommands"
   PROJECT_PATH_STEALTHMODULE: "Modules/CS2-SimpleAdmin_StealthModule/CS2-SimpleAdmin_StealthModule.csproj"
   PROJECT_NAME_STEALTHMODULE: "CS2-SimpleAdmin_StealthModule"
   OUTPUT_PATH: "./counterstrikesharp"
@@ -45,16 +47,20 @@ jobs:
           dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMIN }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}
           dotnet restore ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }}
           dotnet build ${{ env.PROJECT_PATH_CS2_SIMPLEADMINAPI }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}
+          dotnet restore ${{ env.PROJECT_PATH_FUNCOMMANDSMODULE }}
+          dotnet build ${{ env.PROJECT_PATH_FUNCOMMANDSMODULE }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_FUNCOMMANDSMODULE }}
           dotnet restore ${{ env.PROJECT_PATH_STEALTHMODULE }}
           dotnet build ${{ env.PROJECT_PATH_STEALTHMODULE }} -c Release -o ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_STEALTHMODULE }}
 
       - name: Combine projects
         run: |
           mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin
+          mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_FunCommands
           mkdir -p ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_StealthModule
           mkdir -p ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi
 
           cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMIN }}/* ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin/
+          cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_FUNCOMMANDSMODULE }}/* ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_FunCommands
           cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_STEALTHMODULE }}/* ${{ env.OUTPUT_PATH }}/plugins/CS2-SimpleAdmin_StealthModule
           cp -r ${{ env.TMP_PATH }}/${{ env.PROJECT_NAME_CS2_SIMPLEADMINAPI }}/* ${{ env.OUTPUT_PATH }}/shared/CS2-SimpleAdminApi/
 
