@@ -52,6 +52,7 @@ public partial class CS2_SimpleAdmin
 
         // Make the player commit suicide
         player.CommitSuicide(false, true);
+        player.EmitSound("Player.Death");
 
         // Determine message keys and arguments for the slay notification
         var (activityMessageKey, adminActivityArgs) =
@@ -120,7 +121,7 @@ public partial class CS2_SimpleAdmin
         
         // Apply slap damage to the player
         player.Pawn.Value?.Slap(damage);
-        player.EmitSound("BaseGrenade.JumpThrowM");
+        player.EmitSound("Player.DamageFall");
 
         // Log the command
         if (command == null)
