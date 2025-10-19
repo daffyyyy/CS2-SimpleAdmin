@@ -370,7 +370,7 @@ public partial class CS2_SimpleAdmin_FunCommands : BasePlugin, IPluginConfig<Con
 
             // Register menus with command names for permission override support
             // Server admins can override default permissions via CounterStrikeSharp admin system
-            // Example: If "css_god" is overridden to "@css/vip", only VIPs will see the God Mode menu
+            // Example: If "css_god" is overdden to "@css/vip", only VIPs will see the God Mode menu
 
             if (Config.GodCommands.Count > 0)
                 _sharedApi.RegisterMenu("fun", "god",

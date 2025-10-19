@@ -168,23 +168,35 @@ private void God(CCSPlayerController? caller, CCSPlayerController player)
 
 **Key Concepts Demonstrated:**
 
-#### Simple Player Selection Menu
+#### Simple Player Selection Menu (NEW API with MenuContext!)
+
 ```csharp
-private object CreateGodModeMenu(CCSPlayerController admin)
+// 🆕 NEW: Factory receives MenuContext - no more duplication!
+private object CreateGodModeMenu(CCSPlayerController admin, MenuContext context)
 {
-    // ✅ BEST PRACTICE: Use CreateMenuWithPlayers for simple player selection
-    return _sharedApi!.CreateMenuWithPlayers("God Mode", "fun", admin,
+    // ✅ BEST PRACTICE: Use context instead of repeating title and category
+    return _sharedApi!.CreateMenuWithPlayers(
+        context,  // ← Contains "God Mode" title and "fun" category automatically!
+        admin,
         player => player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(player),
-        God);  // Direct method reference
+        God);     // Direct method reference
 }
 ```
 
-#### Nested Menu with Value Selection
+**Why MenuContext is better:**
+- ❌ **Before:** You had to type `"God Mode"` and `"fun"` twice (in `RegisterMenu` and `CreateMenuWithPlayers`)
+- ✅ **After:** Context contains these values automatically - no duplication!
+- ✅ Less error-prone (can't accidentally use wrong category)
+- ✅ Easier to refactor (change title in one place)
+
+#### Nested Menu with Value Selection (NEW API!)
+
 ```csharp
-private object CreateSetHpMenu(CCSPlayerController admin)
+// 🆕 NEW: Uses MenuContext to eliminate duplication
+private object CreateSetHpMenu(CCSPlayerController admin, MenuContext context)
 {
-    // ✅ BEST PRACTICE: Use CreateMenuWithBack for menus with back button
-    var menu = _sharedApi!.CreateMenuWithBack("Set HP", "fun", admin);
+    // ✅ BEST PRACTICE: Use context instead of manual title/category
+    var menu = _sharedApi!.CreateMenuWithBack(context, admin);
 
     var players = _sharedApi.GetValidPlayers().Where(p =>
         p.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(p));
@@ -200,6 +212,7 @@ private object CreateSetHpMenu(CCSPlayerController admin)
 
 private object CreateHpSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
 {
+    // Note: Submenus don't receive context - they create their own titles dynamically
     var hpMenu = _sharedApi!.CreateMenuWithBack($"Set HP: {target.PlayerName}", "fun", admin);
     var hpValues = new[] { 1, 10, 25, 50, 100, 200, 500, 999 };
 
@@ -218,6 +231,31 @@ private object CreateHpSelectionMenu(CCSPlayerController admin, CCSPlayerControl
     }
 
     return hpMenu;
+}
+```
+
+**Comparison: Old vs New API**
+
+```csharp
+// ❌ OLD API - lots of duplication
+_sharedApi.RegisterMenu("fun", "god", "God Mode", CreateGodModeMenu, "@css/cheats", "css_god");
+
+private object CreateGodModeMenu(CCSPlayerController admin)
+{
+    return _sharedApi.CreateMenuWithPlayers(
+        "God Mode",  // ← Repeated from RegisterMenu
+        "fun",       // ← Repeated from RegisterMenu
+        admin, filter, action);
+}
+
+// ✅ NEW API - no duplication!
+_sharedApi.RegisterMenu("fun", "god", "God Mode", CreateGodModeMenu, "@css/cheats", "css_god");
+
+private object CreateGodModeMenu(CCSPlayerController admin, MenuContext context)
+{
+    return _sharedApi.CreateMenuWithPlayers(
+        context,     // ← Contains title and category automatically!
+        admin, filter, action);
 }
 ```
 

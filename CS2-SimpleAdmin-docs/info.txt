@@ -1,0 +1,1575 @@
+# Quickstart
+
+## Prerequisites
+
+* [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp/)
+* [AnyBaseLibCS2](https://github.com/NickFox007/AnyBaseLibCS2) required by PlayerSettings
+* [PlayerSettings](https://github.com/NickFox007/PlayerSettingsCS2) required by MenuManagerCS2
+* [MenuManagerCS2](https://github.com/NickFox007/MenuManagerCS2)
+* MySQL database
+
+## Getting Started
+
+{% hint style="warning" %}
+Remember to install all required dependencies!
+{% endhint %}
+
+1. **Clone or Download the Repository**:
+
+   Download release or clone the repository and publish to your `addons/counterstrikesharp/` directory.
+2. **First Launch Configuration**:\
+   On the first launch, a configuration file will be generated at:
+
+   ```
+   addons/counterstrikesharp/configs/plugins/CS2-SimpleAdmin/CS2-SimpleAdmin.json
+   ```
+
+   Edit this file to customize the plugin settings according to your server needs.
+3. **Enjoy Managing Your Server!**\
+   Use the commands provided by the plugin to easily manage your server.
+
+
+# General Configuration
+
+## Default configuration
+
+<pre class="language-json" data-title="CS2-SimpleAdmin.json" data-overflow="wrap" data-line-numbers data-full-width="false"><code class="lang-json">
+{
+  "ConfigVersion": 25,
+  "DatabaseConfig": {
+    "DatabaseType": "SQLite",
+    "SqliteFilePath": "cs2-simpleadmin.sqlite",
+    "DatabaseHost": "",
+    "DatabasePort": 3306,
+    "DatabaseUser": "",
+    "DatabasePassword": "",
+    "DatabaseName": "",
+    "DatabaseSSlMode": "preferred"
+  },
+  "OtherSettings": {
+    "ShowActivityType": 2,
+    "TeamSwitchType": 1,
+    "KickTime": 5,
+    "BanType": 1,
+    "TimeMode": 1,
+    "DisableDangerousCommands": true,
+    "MaxBanDuration": 10080,
+    "MaxMuteDuration": 10080,
+    "ExpireOldIpBans": 0,
+    "ReloadAdminsEveryMapChange": false,
+    "DisconnectedPlayersHistoryCount": 10,
+    "NotifyPenaltiesToAdminOnConnect": true,
+    "ShowBanMenuIfNoTime": true,
+    "UserMessageGagChatType": false,
+    "CheckMultiAccountsByIp": true,
+    "AdditionalCommandsToLog": [],
+    "IgnoredIps": []
+  },
+  "EnableMetrics": true,
+  "EnableUpdateCheck": true,
+  "Timezone": "UTC",
+  "WarnThreshold": {
+    "998": "css_addban STEAMID64 60 \u00223/4 Warn\u0022",
+    "999": "css_ban #USERID 120 \u00224/4 Warn\u0022"
+  },
+  "MultiServerMode": true,
+  "Discord": {
+    "DiscordLogWebhook": "",
+    "DiscordPenaltyBanSettings": [
+      {
+        "name": "Color",
+        "value": ""
+      },
+      {
+        "name": "Webhook",
+        "value": ""
+      },
+      {
+        "name": "ThumbnailUrl",
+        "value": ""
+      },
+      {
+        "name": "ImageUrl",
+        "value": ""
+      },
+      {
+        "name": "Footer",
+        "value": ""
+      },
+      {
+        "name": "Time",
+        "value": "{relative}"
+      }
+    ],
+    "DiscordPenaltyMuteSettings": [
+      {
+        "name": "Color",
+        "value": ""
+      },
+      {
+        "name": "Webhook",
+        "value": ""
+      },
+      {
+        "name": "ThumbnailUrl",
+        "value": ""
+      },
+      {
+        "name": "ImageUrl",
+        "value": ""
+      },
+      {
+        "name": "Footer",
+        "value": ""
+      },
+      {
+        "name": "Time",
+        "value": "{relative}"
+      }
+    ],
+    "DiscordPenaltyGagSettings": [
+      {
+        "name": "Color",
+        "value": ""
+      },
+      {
+        "name": "Webhook",
+        "value": ""
+      },
+      {
+        "name": "ThumbnailUrl",
+        "value": ""
+      },
+      {
+        "name": "ImageUrl",
+        "value": ""
+      },
+      {
+        "name": "Footer",
+        "value": ""
+      },
+      {
+        "name": "Time",
+        "value": "{relative}"
+      }
+    ],
+    "DiscordPenaltySilenceSettings": [
+      {
+        "name": "Color",
+        "value": ""
+      },
+      {
+        "name": "Webhook",
+        "value": ""
+      },
+      {
+        "name": "ThumbnailUrl",
+        "value": ""
+      },
+      {
+        "name": "ImageUrl",
+        "value": ""
+      },
+      {
+        "name": "Footer",
+        "value": ""
+      },
+      {
+        "name": "Time",
+        "value": "{relative}"
+      }
+    ],
+    "DiscordPenaltyWarnSettings": [
+      {
+        "name": "Color",
+        "value": ""
+      },
+      {
+        "name": "Webhook",
+        "value": ""
+      },
+      {
+        "name": "ThumbnailUrl",
+        "value": ""
+      },
+      {
+        "name": "ImageUrl",
+        "value": ""
+      },
+      {
+        "name": "Footer",
+        "value": ""
+      },
+      {
+        "name": "Time",
+        "value": "{relative}"
+      }
+    ],
+    "DiscordAssociatedAccountsSettings": [
+      {
+        "name": "Color",
+        "value": ""
+      },
+      {
+        "name": "Webhook",
+        "value": ""
+      },
+      {
+        "name": "ThumbnailUrl",
+        "value": ""
+      },
+      {
+        "name": "ImageUrl",
+        "value": ""
+      },
+      {
+        "name": "Footer",
+        "value": ""
+      },
+      {
+        "name": "Time",
+        "value": "{relative}"
+      }
+    ]
+  },
+  "DefaultMaps": [],
+  "WorkshopMaps": {},
+  "CustomServerCommands": [],
+  "MenuConfig": {
+    "MenuType": "selectable",
+    "Durations": [
+      {
+        "name": "1 minute",
+        "duration": 1
+      },
+      {
+        "name": "5 minutes",
+        "duration": 5
+      },
+      {
+        "name": "15 minutes",
+        "duration": 15
+      },
+      {
+        "name": "1 hour",
+        "duration": 60
+      },
+      {
+        "name": "1 day",
+        "duration": 1440
+      },
+      {
+        "name": "7 days",
+        "duration": 10080
+      },
+      {
+        "name": "14 days",
+        "duration": 20160
+      },
+      {
+        "name": "30 days",
+        "duration": 43200
+      },
+      {
+        "name": "Permanent",
+        "duration": 0
+      }
+    ],
+    "BanReasons": [
+      "Hacking",
+      "Voice Abuse",
+      "Chat Abuse",
+      "Admin disrespect",
+      "Other"
+    ],
+    "KickReasons": [
+      "Voice Abuse",
+      "Chat Abuse",
+      "Admin disrespect",
+      "Other"
+    ],
+    "WarnReasons": [
+      "Voice Abuse",
+      "Chat Abuse",
+      "Admin disrespect",
+      "Other"
+    ],
+    "MuteReasons": [
+      "Advertising",
+      "Spamming",
+      "Spectator camera abuse",
+      "Hate",
+      "Admin disrespect",
+      "Other"
+    ],
+    "AdminFlags": [
+      {
+        "name": "Generic",
+        "flag": "@css/generic"
+      },
+      {
+        "name": "Chat",
+        "flag": "@css/chat"
+      },
+      {
+        "name": "Change Map",
+        "flag": "@css/changemap"
+      },
+      {
+        "name": "Slay",
+        "flag": "@css/slay"
+      },
+      {
+        "name": "Kick",
+        "flag": "@css/kick"
+      },
+      {
+        "name": "Ban",
+        "flag": "@css/ban"
+      },
+      {
+        "name": "Perm Ban",
+        "flag": "@css/permban"
+      },
+      {
+        "name": "Unban",
+        "flag": "@css/unban"
+      },
+      {
+        "name": "Show IP",
+        "flag": "@css/showip"
+      },
+      {
+        "name": "Cvar",
+        "flag": "@css/cvar"
+      },
+      {
+        "name": "Rcon",
+        "flag": "@css/rcon"
+      },
+      {
+        "name": "Root (all flags)",
+        "flag": "@css/root"
+      }
+    ]
+  }
+}
+</code></pre>
+
+## List of time zones
+
+<details>
+
+<summary>List of time zones</summary>
+
+{% code lineNumbers="true" %}
+
+```
+UTC
+Pacific/Niue
+Pacific/Pago_Pago
+Pacific/Midway
+Pacific/Rarotonga
+Pacific/Tahiti
+Pacific/Honolulu
+America/Adak
+Pacific/Marquesas
+Pacific/Gambier
+America/Yakutat
+America/Metlakatla
+America/Anchorage
+America/Sitka
+America/Nome
+America/Juneau
+Pacific/Pitcairn
+America/Los_Angeles
+America/Tijuana
+America/Vancouver
+America/Dawson
+America/Whitehorse
+America/Dawson_Creek
+America/Creston
+America/Inuvik
+America/Phoenix
+America/Yellowknife
+America/Boise
+America/Mazatlan
+America/Fort_Nelson
+America/Cambridge_Bay
+America/Hermosillo
+America/Ojinaga
+America/Edmonton
+America/Denver
+America/Chihuahua
+Pacific/Easter
+Pacific/Galapagos
+America/Managua
+America/Guatemala
+America/Tegucigalpa
+America/Swift_Current
+America/Regina
+America/Rankin_Inlet
+America/Resolute
+America/Rainy_River
+America/Winnipeg
+America/Monterrey
+America/Belize
+America/El_Salvador
+America/Costa_Rica
+America/Merida
+America/Matamoros
+America/Mexico_City
+America/Chicago
+America/Bahia_Banderas
+America/Indiana/Tell_City
+America/North_Dakota/Beulah
+America/North_Dakota/New_Salem
+America/North_Dakota/Center
+America/Menominee
+America/Indiana/Knox
+America/Guayaquil
+America/Lima
+America/Bogota
+America/Eirunepe
+America/Rio_Branco
+America/Havana
+America/New_York
+America/Detroit
+America/Toronto
+America/Nipigon
+America/Indiana/Vevay
+America/Iqaluit
+America/Pangnirtung
+America/Atikokan
+America/Panama
+America/Port-au-Prince
+America/Grand_Turk
+America/Thunder_Bay
+America/Kentucky/Louisville
+America/Kentucky/Monticello
+America/Indiana/Indianapolis
+America/Indiana/Petersburg
+America/Indiana/Winamac
+America/Indiana/Vincennes
+America/Cancun
+America/Jamaica
+America/Cayman
+America/Indiana/Marengo
+America/Nassau
+America/Santiago
+America/Cuiaba
+America/Campo_Grande
+America/Porto_Velho
+America/Boa_Vista
+America/Guyana
+America/La_Paz
+America/Manaus
+America/Asuncion
+America/Caracas
+America/St_Kitts
+America/Grenada
+America/Dominica
+America/St_Lucia
+America/Curacao
+America/Port_of_Spain
+America/Lower_Princes
+America/Santo_Domingo
+America/Puerto_Rico
+America/Glace_Bay
+America/Goose_Bay
+America/St_Thomas
+America/Tortola
+America/Antigua
+America/Anguilla
+America/Martinique
+America/St_Vincent
+America/Montserrat
+America/Blanc-Sablon
+America/Marigot
+America/Aruba
+America/Barbados
+America/St_Barthelemy
+Atlantic/Bermuda
+America/Kralendijk
+America/Guadeloupe
+America/Moncton
+America/Thule
+America/Halifax
+America/St_Johns
+America/Belem
+Antarctica/Rothera
+Antarctica/Palmer
+America/Paramaribo
+America/Miquelon
+Atlantic/Stanley
+America/Sao_Paulo
+America/Argentina/Buenos_Aires
+America/Santarem
+America/Cayenne
+America/Godthab
+America/Bahia
+America/Argentina/Cordoba
+America/Montevideo
+America/Argentina/Jujuy
+America/Fortaleza
+America/Recife
+America/Punta_Arenas
+America/Araguaina
+America/Argentina/Ushuaia
+America/Argentina/Salta
+America/Argentina/Rio_Gallegos
+America/Argentina/San_Luis
+America/Argentina/Tucuman
+America/Argentina/San_Juan
+America/Argentina/Mendoza
+America/Argentina/Catamarca
+America/Maceio
+America/Argentina/La_Rioja
+America/Noronha
+Atlantic/South_Georgia
+Atlantic/Cape_Verde
+America/Scoresbysund
+Atlantic/Azores
+Antarctica/Troll
+Africa/Nouakchott
+Europe/Jersey
+Europe/Isle_of_Man
+Atlantic/Reykjavik
+Africa/Monrovia
+Africa/Bissau
+Atlantic/St_Helena
+Africa/Bamako
+Africa/Banjul
+Africa/Sao_Tome
+Africa/Lome
+Africa/Dakar
+Africa/Freetown
+Africa/Abidjan
+Africa/Ouagadougou
+Europe/London
+Africa/Conakry
+Europe/Guernsey
+America/Danmarkshavn
+Africa/Accra
+Atlantic/Faroe
+Atlantic/Madeira
+Europe/Lisbon
+Atlantic/Canary
+Africa/Casablanca
+Africa/El_Aaiun
+Europe/Podgorica
+Europe/Amsterdam
+Europe/Tirane
+Europe/Berlin
+Europe/Prague
+Africa/Tunis
+Europe/Vienna
+Europe/Skopje
+Europe/Malta
+Europe/Zurich
+Europe/Oslo
+Europe/Brussels
+Europe/Luxembourg
+Europe/Sarajevo
+Europe/Monaco
+Europe/Vatican
+Europe/Vaduz
+Europe/Busingen
+Africa/Algiers
+Europe/Gibraltar
+Europe/Stockholm
+Europe/Ljubljana
+Europe/Zagreb
+Europe/Budapest
+Europe/Belgrade
+Europe/Paris
+Europe/Copenhagen
+Arctic/Longyearbyen
+Europe/Bratislava
+Europe/Andorra
+Europe/Rome
+Africa/Ceuta
+Europe/Madrid
+Europe/Warsaw
+Europe/San_Marino
+Europe/Dublin
+Africa/Malabo
+Africa/Luanda
+Africa/Lagos
+Africa/Niamey
+Africa/Libreville
+Africa/Ndjamena
+Africa/Porto-Novo
+Africa/Kinshasa
+Africa/Bangui
+Africa/Brazzaville
+Africa/Douala
+Africa/Kigali
+Africa/Windhoek
+Africa/Khartoum
+Africa/Maputo
+Africa/Blantyre
+Africa/Harare
+Africa/Bujumbura
+Africa/Gaborone
+Africa/Lusaka
+Africa/Lubumbashi
+Europe/Sofia
+Europe/Helsinki
+Europe/Mariehamn
+Asia/Gaza
+Europe/Uzhgorod
+Africa/Cairo
+Europe/Tallinn
+Asia/Damascus
+Europe/Kaliningrad
+Europe/Athens
+Asia/Beirut
+Asia/Famagusta
+Europe/Zaporozhye
+Europe/Vilnius
+Europe/Riga
+Europe/Kiev
+Africa/Tripoli
+Europe/Bucharest
+Europe/Chisinau
+Asia/Amman
+Asia/Hebron
+Asia/Nicosia
+Asia/Jerusalem
+Africa/Maseru
+Africa/Mbabane
+Africa/Johannesburg
+Europe/Kirov
+Asia/Bahrain
+Antarctica/Syowa
+Asia/Riyadh
+Asia/Qatar
+Asia/Baghdad
+Europe/Minsk
+Asia/Kuwait
+Europe/Istanbul
+Asia/Aden
+Africa/Mogadishu
+Africa/Juba
+Africa/Asmara
+Africa/Djibouti
+Africa/Nairobi
+Indian/Antananarivo
+Indian/Mayotte
+Africa/Kampala
+Africa/Dar_es_Salaam
+Indian/Comoro
+Africa/Addis_Ababa
+Europe/Simferopol
+Europe/Moscow
+Asia/Tehran
+Asia/Baku
+Europe/Samara
+Asia/Dubai
+Indian/Mauritius
+Asia/Tbilisi
+Indian/Reunion
+Asia/Yerevan
+Europe/Ulyanovsk
+Europe/Saratov
+Indian/Mahe
+Europe/Volgograd
+Asia/Muscat
+Europe/Astrakhan
+Asia/Kabul
+Asia/Samarkand
+Indian/Kerguelen
+Asia/Dushanbe
+Asia/Oral
+Asia/Qyzylorda
+Asia/Atyrau
+Asia/Aqtau
+Asia/Tashkent
+Asia/Ashgabat
+Indian/Maldives
+Asia/Aqtobe
+Antarctica/Mawson
+Asia/Yekaterinburg
+Asia/Karachi
+Asia/Colombo
+Asia/Kolkata
+Asia/Kathmandu
+Asia/Bishkek
+Asia/Urumqi
+Indian/Chagos
+Asia/Dhaka
+Asia/Omsk
+Asia/Almaty
+Asia/Qostanay
+Asia/Thimphu
+Antarctica/Vostok
+Asia/Yangon
+Indian/Cocos
+Asia/Ho_Chi_Minh
+Asia/Hovd
+Asia/Phnom_Penh
+Asia/Vientiane
+Asia/Tomsk
+Antarctica/Davis
+Asia/Bangkok
+Asia/Novosibirsk
+Asia/Barnaul
+Asia/Krasnoyarsk
+Indian/Christmas
+Asia/Novokuznetsk
+Asia/Pontianak
+Asia/Jakarta
+Asia/Choibalsan
+Antarctica/Casey
+Asia/Kuching
+Asia/Kuala_Lumpur
+Asia/Irkutsk
+Asia/Ulaanbaatar
+Asia/Brunei
+Asia/Singapore
+Australia/Perth
+Asia/Taipei
+Asia/Macau
+Asia/Shanghai
+Asia/Hong_Kong
+Asia/Manila
+Asia/Makassar
+Australia/Eucla
+Asia/Chita
+Pacific/Palau
+Asia/Yakutsk
+Asia/Khandyga
+Asia/Dili
+Asia/Tokyo
+Asia/Seoul
+Asia/Pyongyang
+Asia/Jayapura
+Australia/Darwin
+Australia/Broken_Hill
+Australia/Adelaide
+Antarctica/DumontDUrville
+Pacific/Port_Moresby
+Pacific/Chuuk
+Asia/Ust-Nera
+Asia/Vladivostok
+Australia/Hobart
+Australia/Melbourne
+Australia/Sydney
+Australia/Brisbane
+Australia/Lindeman
+Australia/Currie
+Pacific/Guam
+Pacific/Saipan
+Australia/Lord_Howe
+Asia/Sakhalin
+Asia/Srednekolymsk
+Pacific/Norfolk
+Pacific/Guadalcanal
+Pacific/Kosrae
+Pacific/Pohnpei
+Pacific/Efate
+Asia/Magadan
+Antarctica/Macquarie
+Pacific/Bougainville
+Pacific/Noumea
+Pacific/Majuro
+Pacific/Wallis
+Pacific/Kwajalein
+Pacific/Nauru
+Asia/Anadyr
+Pacific/Tarawa
+Pacific/Funafuti
+Asia/Kamchatka
+Pacific/Fiji
+Pacific/Wake
+Antarctica/McMurdo
+Pacific/Auckland
+Pacific/Chatham
+Pacific/Apia
+Pacific/Fakaofo
+Pacific/Enderbury
+Pacific/Tongatapu
+Pacific/Kiritimati
+```
+
+{% endcode %}
+
+</details>
+
+## **CustomServerCommands** Example
+
+{% code overflow="wrap" %}
+
+```json
+"CustomServerCommands": [
+      { "Flag": "@css/root", "DisplayName": "Reload Admins", "Command": "css_admins_reload" },
+      { "Flag": "@css/cheat", "DisplayName": "Enable sv_cheats", "Command": "sv_cheats 1" }
+  ],
+```
+
+{% endcode %}
+
+[^1]: See time zone list below configuration
+
+[^2]: See example below configuration
+
+
+
+# Commands Configuration
+
+{% code title="Commands.json" overflow="wrap" lineNumbers="true" %}
+
+```json
+{
+  "Commands": {
+    "css_ban": { // Command key - don't touch
+      "Aliases": [ // Command aliases
+        "css_ban", // Remove to disable command or rename/add more for multiple aliases
+        "css_ban2" // In this case u can use `css_ban` and `css_ban2` as ban command
+      ]
+    },
+    "css_addban": {
+      "Aliases": [
+        "css_addban"
+      ]
+    },
+    "css_banip": {
+      "Aliases": [
+        "css_banip"
+      ]
+    },
+    "css_unban": {
+      "Aliases": [
+        "css_unban"
+      ]
+    },
+    "css_warn": {
+      "Aliases": [
+        "css_warn"
+      ]
+    },
+    "css_unwarn": {
+      "Aliases": [
+        "css_unwarn"
+      ]
+    },
+    "css_asay": {
+      "Aliases": [
+        "css_asay"
+      ]
+    },
+    "css_cssay": {
+      "Aliases": [
+        "css_cssay"
+      ]
+    },
+    "css_say": {
+      "Aliases": [
+        "css_say"
+      ]
+    },
+    "css_psay": {
+      "Aliases": [
+        "css_psay"
+      ]
+    },
+    "css_csay": {
+      "Aliases": [
+        "css_csay"
+      ]
+    },
+    "css_hsay": {
+      "Aliases": [
+        "css_hsay"
+      ]
+    },
+    "css_penalties": {
+      "Aliases": [
+        "css_penalties",
+        "css_mypenalties",
+        "css_comms"
+      ]
+    },
+    "css_admin": {
+      "Aliases": [
+        "css_admin"
+      ]
+    },
+    "css_adminhelp": {
+      "Aliases": [
+        "css_adminhelp"
+      ]
+    },
+    "css_addadmin": {
+      "Aliases": [
+        "css_addadmin"
+      ]
+    },
+    "css_deladmin": {
+      "Aliases": [
+        "css_deladmin"
+      ]
+    },
+    "css_addgroup": {
+      "Aliases": [
+        "css_addgroup"
+      ]
+    },
+    "css_delgroup": {
+      "Aliases": [
+        "css_delgroup"
+      ]
+    },
+    "css_reloadadmins": {
+      "Aliases": [
+        "css_reloadadmins"
+      ]
+    },
+    "css_hide": {
+      "Aliases": [
+        "css_hide",
+        "css_stealth"
+      ]
+    },
+    "css_hidecomms": {
+      "Aliases": [
+        "css_hidecomms"
+      ]
+    },
+    "css_who": {
+      "Aliases": [
+        "css_who"
+      ]
+    },
+    "css_disconnected": {
+      "Aliases": [
+        "css_disconnected",
+        "css_last"
+      ]
+    },
+    "css_warns": {
+      "Aliases": [
+        "css_warns"
+      ]
+    },
+    "css_players": {
+      "Aliases": [
+        "css_players"
+      ]
+    },
+    "css_kick": {
+      "Aliases": [
+        "css_kick"
+      ]
+    },
+    "css_map": {
+      "Aliases": [
+        "css_map",
+        "css_changemap"
+      ]
+    },
+    "css_wsmap": {
+      "Aliases": [
+        "css_wsmap",
+        "css_changewsmap",
+        "css_workshop"
+      ]
+    },
+    "css_cvar": {
+      "Aliases": [
+        "css_cvar"
+      ]
+    },
+    "css_rcon": {
+      "Aliases": [
+        "css_rcon"
+      ]
+    },
+    "css_rr": {
+      "Aliases": [
+        "css_rr",
+        "css_rg",
+        "css_restart",
+        "css_restartgame"
+      ]
+    },
+    "css_gag": {
+      "Aliases": [
+        "css_gag"
+      ]
+    },
+    "css_addgag": {
+      "Aliases": [
+        "css_addgag"
+      ]
+    },
+    "css_ungag": {
+      "Aliases": [
+        "css_ungag"
+      ]
+    },
+    "css_mute": {
+      "Aliases": [
+        "css_mute"
+      ]
+    },
+    "css_addmute": {
+      "Aliases": [
+        "css_addmute"
+      ]
+    },
+    "css_unmute": {
+      "Aliases": [
+        "css_unmute"
+      ]
+    },
+    "css_silence": {
+      "Aliases": [
+        "css_silence"
+      ]
+    },
+    "css_addsilence": {
+      "Aliases": [
+        "css_addsilence"
+      ]
+    },
+    "css_unsilence": {
+      "Aliases": [
+        "css_unsilence"
+      ]
+    },
+    "css_vote": {
+      "Aliases": [
+        "css_vote"
+      ]
+    },
+    "css_noclip": {
+      "Aliases": [
+        "css_noclip"
+      ]
+    },
+    "css_freeze": {
+      "Aliases": [
+        "css_freeze"
+      ]
+    },
+    "css_unfreeze": {
+      "Aliases": [
+        "css_unfreeze"
+      ]
+    },
+    "css_godmode": {
+      "Aliases": [
+        "css_godmode"
+      ]
+    },
+    "css_slay": {
+      "Aliases": [
+        "css_slay"
+      ]
+    },
+    "css_slap": {
+      "Aliases": [
+        "css_slap"
+      ]
+    },
+    "css_give": {
+      "Aliases": [
+        "css_give"
+      ]
+    },
+    "css_strip": {
+      "Aliases": [
+        "css_strip"
+      ]
+    },
+    "css_hp": {
+      "Aliases": [
+        "css_hp"
+      ]
+    },
+    "css_speed": {
+      "Aliases": [
+        "css_speed"
+      ]
+    },
+    "css_gravity": {
+      "Aliases": [
+        "css_gravity"
+      ]
+    },
+    "css_money": {
+      "Aliases": [
+        "css_money"
+      ]
+    },
+    "css_team": {
+      "Aliases": [
+        "css_team"
+      ]
+    },
+    "css_rename": {
+      "Aliases": [
+        "css_rename"
+      ]
+    },
+    "css_prename": {
+      "Aliases": [
+        "css_prename"
+      ]
+    },
+    "css_respawn": {
+      "Aliases": [
+        "css_respawn"
+      ]
+    },
+    "css_tp": {
+      "Aliases": [
+        "css_tp",
+        "css_tpto",
+        "css_goto"
+      ]
+    },
+    "css_bring": {
+      "Aliases": [
+        "css_bring",
+        "css_tphere"
+      ]
+    }
+  }
+}
+```
+
+{% endcode %}
+
+
+
+# Basebans
+
+## Ban player [<mark style="color:yellow;">@css/ban</mark>](#user-content-fn-1)[^1]
+
+```
+css_ban <#userid or name> [time in minutes/0 perm] [reason]
+```
+
+## Add ban for offline player [<mark style="color:yellow;">@css/ban</mark>](#user-content-fn-1)[^1]
+
+```
+css_addban <steamid> [time in minutes/0 perm] [reason]
+```
+
+## Add ban for ip address [<mark style="color:yellow;">@css/ban</mark>](#user-content-fn-1)[^1]
+
+```
+css_banip <ip> [time in minutes/0 perm] [reason]
+```
+
+## Unban player [<mark style="color:yellow;">@css/unban</mark>](#user-content-fn-1)[^1]
+
+```
+css_unban <steamid or name or ip> [reason]
+```
+
+## Warn player [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_warn <#userid or name> [time in minutes/0 perm] [reason]
+```
+
+## Unwarn player [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_unwarn <steamid or name or ip>
+```
+
+[^1]: Required flag
+
+
+# Basechat
+
+## Message to all admins [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_asay <message>
+```
+
+## Colorful message to all players [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_cssay <message>
+```
+
+## Message to all players - with admin prefix [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_say <message>
+```
+
+## Private message a player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_psay <#userid or name> <message>
+```
+
+## Center message to all players [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_csay <message>
+```
+
+## Hud message to all players [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_hsay <message>
+```
+
+[^1]: Required flag
+
+
+# Basecommands
+
+## Show penalties to player
+
+```
+css_penalties
+css_mypenalties
+css_comms
+```
+
+## Hide penalty notifications when player connect [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_hidecomms
+```
+
+## Admin menu [<mark style="color:yellow;">@css/generic</mark>](#user-content-fn-1)[^1]
+
+```
+css_admin
+```
+
+## Print admin\_help.txt file [<mark style="color:yellow;">@css/generic</mark>](#user-content-fn-1)[^1]
+
+```
+css_adminhelp
+```
+
+## Add new admin to database [<mark style="color:yellow;">@css/root</mark>](#user-content-fn-1)[^1]
+
+```
+css_addadmin <steamid> <name> <flags/groups> <immunity> <duration>
+```
+
+{% hint style="info" %}
+Add -g to the end of the command so that admin is on all servers
+{% endhint %}
+
+## Delete admin from database [<mark style="color:yellow;">@css/root</mark>](#user-content-fn-1)[^1]
+
+```
+css_deladmin <steamid>
+```
+
+{% hint style="info" %}
+Add -g to the end of the command to delete admin from all servers
+{% endhint %}
+
+## Create admin group in database [<mark style="color:yellow;">@css/root</mark>](#user-content-fn-1)[^1]
+
+```
+css_addgroup <group_name> <flags> <immunity>
+```
+
+{% hint style="info" %}
+Add -g to the end of the command so that group is on all servers
+{% endhint %}
+
+## Remove admin group from database [<mark style="color:yellow;">@css/root</mark>](#user-content-fn-1)[^1]
+
+```
+css_delgroup <group_name>
+```
+
+{% hint style="info" %}
+Add -g to the end of the command to delete group from all servers
+{% endhint %}
+
+## Reload admins [<mark style="color:yellow;">@css/root</mark>](#user-content-fn-1)[^1]
+
+```
+css_reloadadmins
+```
+
+## Hide you in scoreboard [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_hide
+css_stealth
+```
+
+## Show information about player [<mark style="color:yellow;">@css/generic</mark>](#user-content-fn-1)[^1]
+
+```
+css_who <#userid or name>
+```
+
+## Show last x disconnected players [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_disconnected
+css_last
+css_lastX - Where X is value from config
+```
+
+## Open warn list for specific player [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_warns <#userid or name>
+```
+
+## Show information about online players [<mark style="color:yellow;">@css/generic</mark>](#user-content-fn-1)[^1]
+
+```
+css_players
+```
+
+## Kick player [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_kick <#userid or name> [reason]
+```
+
+## Change map [<mark style="color:yellow;">@css/changemap</mark>](#user-content-fn-1)[^1]
+
+```
+css_map <mapname>
+css_changemap <mapname>
+```
+
+## Change workshop map [<mark style="color:yellow;">@css/changemap</mark>](#user-content-fn-1)[^1]
+
+```
+css_wsmap <name or id>
+css_changewsmap <name or id>
+css_workshop <name or id>
+```
+
+## Change cvar value [<mark style="color:yellow;">@css/cvar</mark>](#user-content-fn-1)[^1]
+
+```
+css_cvar <cvar> <value>
+```
+
+## Execute command as server [<mark style="color:yellow;">@css/rcon</mark>](#user-content-fn-1)[^1]
+
+```
+css_rcon <command>
+```
+
+## Restart game [<mark style="color:yellow;">@css/generic</mark>](#user-content-fn-1)[^1]
+
+```
+css_rr
+css_rg
+css_restart
+css_restartgame
+```
+
+[^1]: Required flag
+
+
+# Basecomms
+
+## Gag player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_gag <#userid or name> [time in minutes/0 perm] [reason]
+```
+
+## Add gag for offline player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_addgag <steamid> [time in minutes/0 perm] [reason]
+```
+
+## Ungag player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_ungag <steamid or name> [reason]
+```
+
+## Mute player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_mute <#userid or name> [time in minutes/0 perm] [reason]
+```
+
+## Add mute for offline player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_addmute <steamid> [time in minutes/0 perm] [reason]
+```
+
+## Unmute player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_unmute <steamid or name> [reason]
+```
+
+## Silence player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_silence <#userid or name> [time in minutes/0 perm] [reason]
+```
+
+## Add silence for offline player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_addsilence <steamid> [time in minutes/0 perm] [reason]
+```
+
+## Unsilence player [<mark style="color:yellow;">@css/chat</mark>](#user-content-fn-1)[^1]
+
+```
+css_unsilence <steamid or name> [reason]
+```
+
+[^1]: Required flag
+
+
+# Basevotes
+
+## Create a poll [<mark style="color:yellow;">@css/generic</mark>](#user-content-fn-1)[^1]
+
+```
+css_vote <question> [... options ...]
+```
+
+[^1]: Required flag
+
+# Funcommands
+
+## Turn on the player's noclip [<mark style="color:yellow;">@css/cheats</mark>](#user-content-fn-1)[^1]
+
+```
+css_noclip <#userid or name>
+```
+
+## Freeze a player [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_freeze <#userid or name> [duration]
+```
+
+## Unfreeze a player [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_unfreeze <#userid or name>
+```
+
+## Turn on godmode for the player [<mark style="color:yellow;">@css/cheats</mark>](#user-content-fn-1)[^1]
+
+```
+css_godmode <#userid or name>
+```
+
+[^1]: Required flag
+
+
+# Playercommands
+
+## Slay the player [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_slay <#userid or name>
+```
+
+## Slap the player [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_slap <#userid or name> [damage]
+```
+
+## Give the player an item [<mark style="color:yellow;">@css/cheats</mark>](#user-content-fn-1)[^1]
+
+```
+css_give <#userid or name> <weapon>
+```
+
+## Take all weapons away from the player [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_strip <#userid or name>
+```
+
+## Set the player's health [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_hp <#userid or name> <health>
+```
+
+## Set the player's speed [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_speed <#userid or name> <speed>
+```
+
+## Set the player's gravity [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_gravity <#userid or name> <gravity>
+```
+
+## Set the player's money [<mark style="color:yellow;">@css/slay</mark>](#user-content-fn-1)[^1]
+
+```
+css_money <#userid or name> <money>
+```
+
+## Set the player's team [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_team <#userid or name> [<ct/tt/spec>] [-k]
+```
+
+{% hint style="info" %}
+Adding -k means killing the player
+{% endhint %}
+
+## Rename a player [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_rename <#userid or name> <new name>
+```
+
+## Permanent rename a player [<mark style="color:yellow;">@css/ban</mark>](#user-content-fn-1)[^1]
+
+```
+css_prename <#userid or name> <new name>
+```
+
+## Respawn a dead player [<mark style="color:yellow;">@css/cheats</mark>](#user-content-fn-1)[^1]
+
+```
+css_respawn <#userid or name>
+```
+
+## Teleport to a player [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_tp <#userid or name>
+css_tpto <#userid or name>
+css_goto <#userid or name>
+```
+
+## Teleport a player to you [<mark style="color:yellow;">@css/kick</mark>](#user-content-fn-1)[^1]
+
+```
+css_bring <#userid or name>
+css_tphere <#userid or name>
+```
+
+[^1]: Required flag
+
+

@@ -6,12 +6,12 @@ This guide explains how to create modules for CS2-SimpleAdmin with custom comman
 
 ## 📖 Table of Contents
 
-1. [Quick Start](#quick-start)
-2. [Learning Resources](#learning-resources)
-3. [API Methods Reference](#api-methods)
-4. [Menu Patterns](#menu-patterns)
-5. [Best Practices](#best-practices)
-6. [Common Patterns](#common-patterns)
+1. [Quick Start](#-quick-start)
+2. [Learning Resources](#-learning-resources)
+3. [MenuContext API (New!)](#-menucontext-api-new)
+4. [API Methods Reference](#-api-methods-reference)
+5. [Menu Patterns](#-menu-patterns)
+6. [Best Practices](#best-practices)
 7. [Troubleshooting](#troubleshooting)
 
 ## 🚀 Quick Start
@@ -44,7 +44,7 @@ YourModule/
     └── ru.json
 ```
 
-### Step 3: Minimal Working Example
+### Step 3: Minimal Working Example (NEW MenuContext API!)
 
 ```csharp
 using CounterStrikeSharp.API.Core;
@@ -78,14 +78,17 @@ public class MyModule : BasePlugin
         _api.RegisterMenuCategory("mymodule", "My Module", "@css/generic");
 
         // 2. Register menu items in the category
+        // 🆕 NEW: Use MenuContext-aware overload (no duplication!)
         _api.RegisterMenu("mymodule", "action1", "Action 1", CreateAction1Menu, "@css/generic");
         _api.RegisterMenu("mymodule", "action2", "Action 2", CreateAction2Menu, "@css/kick");
     }
 
-    private object CreateAction1Menu(CCSPlayerController admin)
+    // 🆕 NEW: Factory now receives MenuContext parameter
+    private object CreateAction1Menu(CCSPlayerController admin, MenuContext context)
     {
         // Create a menu with automatic back button
-        var menu = _api!.CreateMenuWithBack("Action 1 Menu", "mymodule", admin);
+        // Use context instead of repeating title and category!
+        var menu = _api!.CreateMenuWithBack(context, admin);
 
         // Add menu options
         _api.AddMenuOption(menu, "Option 1", player =>
@@ -101,10 +104,13 @@ public class MyModule : BasePlugin
         return menu;
     }
 
-    private object CreateAction2Menu(CCSPlayerController admin)
+    // 🆕 NEW: MenuContext eliminates duplication here too!
+    private object CreateAction2Menu(CCSPlayerController admin, MenuContext context)
     {
-        // Use the built-in player selection menu
-        return _api!.CreateMenuWithPlayers("Select Player", "mymodule", admin,
+        // Use the built-in player selection menu with context
+        return _api!.CreateMenuWithPlayers(
+            context,  // ← Contains title & category automatically!
+            admin,
             player => player.IsValid && admin.CanTarget(player),
             (adminPlayer, targetPlayer) =>
             {
@@ -158,16 +164,15 @@ public class MyModule : BasePlugin
 
 The FunCommands module demonstrates **3 essential menu patterns** you'll use in every module:
 
-### Pattern 1: Simple Player Selection
+### Pattern 1: Simple Player Selection (NEW MenuContext API!)
 **When to use:** Select a player and immediately execute an action
 
 ```csharp
-// Example: God Mode menu
-private object CreateGodModeMenu(CCSPlayerController admin)
+// 🆕 NEW: Factory receives MenuContext - eliminates duplication!
+private object CreateGodModeMenu(CCSPlayerController admin, MenuContext context)
 {
     return _api.CreateMenuWithPlayers(
-        "God Mode",                         // Title
-        "yourmodule",                       // Category ID
+        context,                            // ← Contains title & category automatically!
         admin,                              // Admin
         player => player.IsValid && admin.CanTarget(player),  // Filter
         (adminPlayer, target) =>            // Action
@@ -178,16 +183,20 @@ private object CreateGodModeMenu(CCSPlayerController admin)
 }
 ```
 
-**See:** `CS2-SimpleAdmin_FunCommands/Menus.cs:21-29`
+**Why MenuContext is better:**
+- ❌ **Old way:** `"God Mode"` and `"yourmodule"` had to be typed twice (in RegisterMenu and CreateMenuWithPlayers)
+- ✅ **New way:** Context contains both automatically - no duplication, no mistakes!
 
-### Pattern 2: Nested Menu (Player → Value)
+**See:** `CS2-SimpleAdmin_FunCommands/Menus.cs:44-51`
+
+### Pattern 2: Nested Menu (Player → Value) - NEW MenuContext API!
 **When to use:** Select a player, then select a value/option for that player
 
 ```csharp
-// Example: Set HP menu (player selection)
-private object CreateSetHpMenu(CCSPlayerController admin)
+// 🆕 NEW: Uses MenuContext to eliminate duplication
+private object CreateSetHpMenu(CCSPlayerController admin, MenuContext context)
 {
-    var menu = _api.CreateMenuWithBack("Set HP", "yourmodule", admin);
+    var menu = _api.CreateMenuWithBack(context, admin);  // ← No more repeating title & category!
     var players = _api.GetValidPlayers().Where(p => admin.CanTarget(p));
 
     foreach (var player in players)
@@ -201,6 +210,7 @@ private object CreateSetHpMenu(CCSPlayerController admin)
 }
 
 // Example: Set HP menu (value selection)
+// Note: Submenus don't receive context - they create dynamic titles
 private object CreateHpValueMenu(CCSPlayerController admin, CCSPlayerController target)
 {
     var menu = _api.CreateMenuWithBack($"HP for {target.PlayerName}", "yourmodule", admin);
@@ -221,7 +231,12 @@ private object CreateHpValueMenu(CCSPlayerController admin, CCSPlayerController 
 }
 ```
 
-**See:** `CS2-SimpleAdmin_FunCommands/Menus.cs:134-173`
+**Benefits of MenuContext:**
+- ✅ Change menu title in one place (RegisterMenu) and it updates everywhere
+- ✅ Can't accidentally mistype category ID
+- ✅ Access to permission and command name from context if needed
+
+**See:** `CS2-SimpleAdmin_FunCommands/Menus.cs:163-178`
 
 ### Pattern 3: Nested Menu with Complex Data
 **When to use:** Need to display more complex options (like weapons with icons, items with descriptions)
@@ -263,6 +278,73 @@ private object CreateWeaponSelectionMenu(CCSPlayerController admin, CCSPlayerCon
 ```
 
 **See:** `CS2-SimpleAdmin_FunCommands/Menus.cs:67-109`
+
+## 🆕 MenuContext API (New!)
+
+### What is MenuContext?
+
+`MenuContext` is a new feature that eliminates code duplication when creating menus. When you register a menu, you provide information like title, category, and permissions. Previously, you had to repeat this information in your menu factory method. Now, this information is automatically passed to your factory via `MenuContext`.
+
+### MenuContext Properties
+
+```csharp
+public class MenuContext
+{
+    public string CategoryId { get; }      // e.g., "fun"
+    public string MenuId { get; }          // e.g., "god"
+    public string MenuTitle { get; }       // e.g., "God Mode"
+    public string? Permission { get; }     // e.g., "@css/cheats"
+    public string? CommandName { get; }    // e.g., "css_god"
+}
+```
+
+### Before vs After Comparison
+
+```csharp
+// ❌ OLD API - Duplication everywhere
+_api.RegisterMenu("fun", "god", "God Mode", CreateGodModeMenu, "@css/cheats");
+
+private object CreateGodModeMenu(CCSPlayerController admin)
+{
+    return _api.CreateMenuWithPlayers(
+        "God Mode",    // ← Duplicated from RegisterMenu
+        "fun",         // ← Duplicated from RegisterMenu
+        admin, filter, action);
+}
+
+// ✅ NEW API - No duplication!
+_api.RegisterMenu("fun", "god", "God Mode", CreateGodModeMenu, "@css/cheats");
+
+private object CreateGodModeMenu(CCSPlayerController admin, MenuContext context)
+{
+    return _api.CreateMenuWithPlayers(
+        context,       // ← Contains all info automatically!
+        admin, filter, action);
+}
+```
+
+### When to Use MenuContext
+
+| Menu Creation Method | Old Signature | New Signature (Recommended) |
+|---------------------|---------------|----------------------------|
+| `CreateMenuWithBack` | `(string title, string categoryId, ...)` | `(MenuContext context, ...)` |
+| `CreateMenuWithPlayers` | `(string title, string categoryId, ...)` | `(MenuContext context, ...)` |
+
+**Rule of thumb:** If you're creating a menu directly from a registered menu factory, use `MenuContext`. For dynamic submenus (e.g., player-specific menus), use the old API.
+
+### Backward Compatibility
+
+The old API still works! Both signatures are supported:
+
+```csharp
+// ✅ Old API - still works
+_api.RegisterMenu("cat", "id", "Title",
+    (CCSPlayerController admin) => CreateOldStyleMenu(admin));
+
+// ✅ New API - recommended
+_api.RegisterMenu("cat", "id", "Title",
+    (CCSPlayerController admin, MenuContext ctx) => CreateNewStyleMenu(admin, ctx));
+```
 
 ## 📋 API Methods Reference
 
@@ -312,35 +394,57 @@ _api.UnregisterMenu("fun", "godmode");
 ### 3. Menu Creation
 
 #### `CreateMenuWithBack(string title, string categoryId, CCSPlayerController player)`
+#### `CreateMenuWithBack(MenuContext context, CCSPlayerController player)` 🆕 NEW!
 
 Creates a menu with an automatic "Back" button that returns to the category menu.
 
-**Parameters:**
+**Parameters (Old API):**
 - `title` - Menu title
 - `categoryId` - Category this menu belongs to (for back navigation)
 - `player` - The admin player viewing the menu
 
+**Parameters (New API - Recommended):**
+- `context` - MenuContext containing title, category, and other metadata
+- `player` - The admin player viewing the menu
+
 **Returns:** `object` (MenuBuilder instance)
 
-**Example:**
+**Example (Old API):**
 ```csharp
 var menu = _api.CreateMenuWithBack("Weapon Selection", "fun", admin);
 ```
 
+**Example (New API - Recommended):**
+```csharp
+private object CreateWeaponMenu(CCSPlayerController admin, MenuContext context)
+{
+    var menu = _api.CreateMenuWithBack(context, admin);  // ← Uses context!
+    // ... add options
+    return menu;
+}
+```
+
 #### `CreateMenuWithPlayers(string title, string categoryId, CCSPlayerController admin, Func<CCSPlayerController, bool> filter, Action<CCSPlayerController, CCSPlayerController> onSelect)`
+#### `CreateMenuWithPlayers(MenuContext context, CCSPlayerController admin, Func<CCSPlayerController, bool> filter, Action<CCSPlayerController, CCSPlayerController> onSelect)` 🆕 NEW!
 
 Creates a menu with a list of players, filtered and with automatic back button.
 
-**Parameters:**
+**Parameters (Old API):**
 - `title` - Menu title
 - `categoryId` - Category for back navigation
 - `admin` - The admin player viewing the menu
 - `filter` - Function to filter which players appear in the menu
 - `onSelect` - Action to execute when a player is selected (receives admin and target)
 
+**Parameters (New API - Recommended):**
+- `context` - MenuContext containing title and category
+- `admin` - The admin player viewing the menu
+- `filter` - Function to filter which players appear in the menu
+- `onSelect` - Action to execute when a player is selected (receives admin and target)
+
 **Returns:** `object` (MenuBuilder instance)
 
-**Example:**
+**Example (Old API):**
 ```csharp
 return _api.CreateMenuWithPlayers("Select Player to Kick", "admin", admin,
     player => player.IsValid && admin.CanTarget(player),
@@ -349,6 +453,19 @@ return _api.CreateMenuWithPlayers("Select Player to Kick", "admin", admin,
         // Kick the selected player
         Server.ExecuteCommand($"css_kick {targetPlayer.UserId}");
     });
+```
+
+**Example (New API - Recommended):**
+```csharp
+private object CreateKickMenu(CCSPlayerController admin, MenuContext context)
+{
+    return _api.CreateMenuWithPlayers(context, admin,
+        player => player.IsValid && admin.CanTarget(player),
+        (adminPlayer, targetPlayer) =>
+        {
+            Server.ExecuteCommand($"css_kick {targetPlayer.UserId}");
+        });
+}
 ```
 
 ### 4. Menu Manipulation

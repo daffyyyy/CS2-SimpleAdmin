@@ -27,6 +27,35 @@ namespace CS2_SimpleAdmin_FunCommands;
 ///         "css_god");      // Command name for override checking
 ///
 /// This means developers don't need to manually check permissions in their menu factory methods!
+///
+/// MENU CONTEXT API (NEW!):
+/// ========================
+/// Menu factory methods now receive a MenuContext parameter that contains:
+/// - CategoryId: The category this menu belongs to (e.g., "fun")
+/// - MenuId: The unique identifier for this menu (e.g., "god")
+/// - MenuTitle: The display title from registration (e.g., "God Mode")
+/// - Permission: The default permission (e.g., "@css/cheats")
+/// - CommandName: The command name for override checking (e.g., "css_god")
+///
+/// This eliminates duplication when creating menus - you no longer need to repeat
+/// the title and category in both RegisterMenu() and CreateMenuWithPlayers()!
+///
+/// Before (old API):
+///     private object CreateGodModeMenu(CCSPlayerController admin)
+///     {
+///         return _sharedApi.CreateMenuWithPlayers(
+///             "God Mode",  // ← Duplicated from RegisterMenu
+///             "fun",       // ← Duplicated from RegisterMenu
+///             admin, filter, action);
+///     }
+///
+/// After (new API with MenuContext):
+///     private object CreateGodModeMenu(CCSPlayerController admin, MenuContext context)
+///     {
+///         return _sharedApi.CreateMenuWithPlayers(
+///             context,     // ← Contains both title and category automatically!
+///             admin, filter, action);
+///     }
 /// </summary>
 public partial class CS2_SimpleAdmin_FunCommands
 {
@@ -39,22 +68,21 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// <summary>
     /// Creates a simple player selection menu for god mode.
     /// PATTERN: CreateMenuWithPlayers with method reference
+    /// IMPROVED: Uses MenuContext to eliminate duplication of title and category
     /// </summary>
-    private object CreateGodModeMenu(CCSPlayerController admin)
+    private object CreateGodModeMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         return _sharedApi!.CreateMenuWithPlayers(
-            Localizer?["fun_menu_god"] ?? "God Mode",  // Menu title from translation
-            "fun",                         // Category ID (for back button navigation)
+            context,                       // ← Context contains title & category automatically!
             admin,                         // Admin opening the menu
             player => player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(player),  // Filter: only alive, targetable players
             God);                          // Action to execute (method reference)
     }
 
-    private object CreateNoClipMenu(CCSPlayerController admin)
+    private object CreateNoClipMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         return _sharedApi!.CreateMenuWithPlayers(
-            Localizer?["fun_menu_noclip"] ?? "No Clip",
-            "fun",
+            context,
             admin,
             player => player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(player),
             NoClip);
@@ -63,13 +91,13 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// <summary>
     /// Creates a player selection menu for respawn command.
     /// PATTERN: CreateMenuWithPlayers with method reference
+    /// IMPROVED: Uses MenuContext to eliminate duplication
     /// </summary>
-    private object CreateRespawnMenu(CCSPlayerController admin)
+    private object CreateRespawnMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         return _sharedApi!.CreateMenuWithPlayers(
-            Localizer?["fun_menu_respawn"] ?? "Respawn",  // Menu title from translation
-            "fun",                  // Category ID
-            admin,                  // Admin
+            context,
+            admin,
             admin.CanTarget,        // Filter: only targetable players (no LifeState check - can respawn dead players)
             Respawn);               // Use the Respawn method which includes death position teleport
     }
@@ -83,12 +111,12 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// <summary>
     /// Creates a nested menu: Player selection → Weapon selection.
     /// PATTERN: CreateMenuWithBack + foreach + AddSubMenu
+    /// IMPROVED: Uses MenuContext - no more duplication of title/category!
     /// </summary>
-    private object CreateGiveWeaponMenu(CCSPlayerController admin)
+    private object CreateGiveWeaponMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         var menu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_give"] ?? "Give Weapon",
-            "fun",
+            context,              // ← Context contains title & category!
             admin);
         var players = _sharedApi.GetValidPlayers().Where(p =>
             p.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(p));
@@ -134,11 +162,10 @@ public partial class CS2_SimpleAdmin_FunCommands
         return weaponMenu;
     }
 
-    private object CreateStripWeaponsMenu(CCSPlayerController admin)
+    private object CreateStripWeaponsMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         return _sharedApi!.CreateMenuWithPlayers(
-            Localizer?["fun_menu_strip"] ?? "Strip Weapons",
-            "fun",
+            context,
             admin,
             player => player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(player),
             (adminPlayer, targetPlayer) =>
@@ -148,11 +175,10 @@ public partial class CS2_SimpleAdmin_FunCommands
             });
     }
 
-    private object CreateFreezeMenu(CCSPlayerController admin)
+    private object CreateFreezeMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         return _sharedApi!.CreateMenuWithPlayers(
-            Localizer?["fun_menu_freeze"] ?? "Freeze",
-            "fun",
+            context,
             admin,
             player => player.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(player),
             (adminPlayer, targetPlayer) => { Freeze(adminPlayer, targetPlayer, -1); });
@@ -161,13 +187,12 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// <summary>
     /// Creates a nested menu for setting player HP with predefined values.
     /// PATTERN: Same as Give Weapon (player selection → value selection)
-    /// This is a common pattern you'll use frequently!
+    /// IMPROVED: Uses MenuContext - cleaner and less error-prone!
     /// </summary>
-    private object CreateSetHpMenu(CCSPlayerController admin)
+    private object CreateSetHpMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         var menu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_hp"] ?? "Set HP",
-            "fun",
+            context,
             admin);
         var players = _sharedApi.GetValidPlayers().Where(p =>
             p.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(p));
@@ -212,11 +237,10 @@ public partial class CS2_SimpleAdmin_FunCommands
         return hpSelectionMenu;
     }
 
-    private object CreateSetSpeedMenu(CCSPlayerController admin)
+    private object CreateSetSpeedMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         var menu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_speed"] ?? "Set Speed",
-            "fun",
+            context,
             admin);
         var players = _sharedApi.GetValidPlayers().Where(p =>
             p.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(p));
@@ -273,11 +297,10 @@ public partial class CS2_SimpleAdmin_FunCommands
         return speedSelectionMenu;
     }
 
-    private object CreateSetGravityMenu(CCSPlayerController admin)
+    private object CreateSetGravityMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         var menu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_gravity"] ?? "Set Gravity",
-            "fun",
+            context,
             admin);
         var players = _sharedApi.GetValidPlayers().Where(p =>
             p.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(p));
@@ -324,11 +347,10 @@ public partial class CS2_SimpleAdmin_FunCommands
         return gravitySelectionMenu;
     }
 
-    private object CreateSetMoneyMenu(CCSPlayerController admin)
+    private object CreateSetMoneyMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         var menu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_money"] ?? "Set Money",
-            "fun",
+            context,
             admin);
         var players = _sharedApi.GetValidPlayers().Where(p => admin.CanTarget(p));
 
@@ -366,11 +388,10 @@ public partial class CS2_SimpleAdmin_FunCommands
         return moneySelectionMenu;
     }
 
-    private object CreateSetResizeMenu(CCSPlayerController admin)
+    private object CreateSetResizeMenu(CCSPlayerController admin, CS2_SimpleAdminApi.MenuContext context)
     {
         var menu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_resize"] ?? "Resize Player",
-            "fun",
+            context,
             admin);
         var players = _sharedApi.GetValidPlayers().Where(p =>
             p.PlayerPawn?.Value?.LifeState == (int)LifeState_t.LIFE_ALIVE && admin.CanTarget(p));

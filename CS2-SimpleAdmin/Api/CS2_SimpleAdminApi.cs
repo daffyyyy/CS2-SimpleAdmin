@@ -233,6 +233,36 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         }
     }
 
+    public void RegisterMenu(string categoryId, string menuId, string menuName,
+        Func<CCSPlayerController, MenuContext, object> menuFactory, string? permission = null, string? commandName = null)
+    {
+        Menus.MenuManager.Instance.RegisterMenu(categoryId, menuId, menuName, BuilderFactory, permission, commandName);
+        return;
+
+        MenuBuilder BuilderFactory(CCSPlayerController player)
+        {
+            var context = new MenuContext(categoryId, menuId, menuName, permission, commandName);
+
+            if (menuFactory(player, context) is not MenuBuilder menuBuilder)
+                throw new InvalidOperationException("Menu factory must return MenuBuilder");
+
+            // Dodaj automatyczną obsługę przycisku 'Wróć'
+            menuBuilder.WithBackAction(p =>
+            {
+                if (Menus.MenuManager.Instance.GetMenuCategories().TryGetValue(categoryId, out var category))
+                {
+                    Menus.MenuManager.Instance.CreateCategoryMenuPublic(category, p).OpenMenu(p);
+                }
+                else
+                {
+                    Menus.MenuManager.Instance.OpenMainMenu(p);
+                }
+            });
+
+            return menuBuilder;
+        }
+    }
+
 
     public void UnregisterMenu(string categoryId, string menuId)
     {
@@ -255,6 +285,11 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         });
 
         return builder;
+    }
+
+    public object CreateMenuWithBack(MenuContext context, CCSPlayerController player)
+    {
+        return CreateMenuWithBack(context.MenuTitle, context.CategoryId, player);
     }
 
     public List<CCSPlayerController> GetValidPlayers()
@@ -281,6 +316,12 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         }
 
         return menu;
+    }
+
+    public object CreateMenuWithPlayers(MenuContext context, CCSPlayerController admin,
+        Func<CCSPlayerController, bool> filter, Action<CCSPlayerController, CCSPlayerController> onSelect)
+    {
+        return CreateMenuWithPlayers(context.MenuTitle, context.CategoryId, admin, filter, onSelect);
     }
 
     public void AddMenuOption(object menu, string name, Action<CCSPlayerController> action, bool disabled = false,

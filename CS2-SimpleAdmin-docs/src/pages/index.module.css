@@ -1,0 +1,97 @@
+/**
+ * CSS files with the .module.css suffix will be treated as CSS modules
+ * and scoped locally.
+ */
+
+.heroBanner {
+  padding: 8rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.videoBackground {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 56.25vw; /* 16:9 Aspect Ratio */
+  min-height: 100vh;
+  min-width: 177.77vh; /* 16:9 Aspect Ratio */
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.videoOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1;
+}
+
+.heroBanner :global(.container) {
+  position: relative;
+  z-index: 999 !important;
+}
+
+.heroBanner :global(.hero__title) {
+  color: white !important;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.9);
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.heroBanner :global(.hero__subtitle) {
+  color: white !important;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.9);
+  font-size: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.heroBanner .buttons {
+  position: relative;
+  z-index: 10;
+}
+
+@media screen and (max-width: 996px) {
+  .heroBanner {
+    padding: 4rem 2rem;
+    min-height: 400px;
+  }
+
+  .videoBackground {
+    width: 200vw;
+    height: 112.5vw;
+  }
+
+  .heroBanner :global(.hero__title) {
+    font-size: 2rem;
+  }
+
+  .heroBanner :global(.hero__subtitle) {
+    font-size: 1.2rem;
+  }
+}
+
+.buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+}
+
+.buttons :global(.button) {
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
