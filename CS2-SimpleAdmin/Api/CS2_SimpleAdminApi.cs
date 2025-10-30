@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Commands;
+using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Commands.Targeting;
 using CounterStrikeSharp.API.Modules.Entities;
@@ -205,6 +206,14 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         Menus.MenuManager.Instance.RegisterCategory(categoryId, categoryName, permission);
     }
 
+    public void RegisterMenuCategory(string categoryId, string categoryNameKey, string permission, object moduleLocalizer)
+    {
+        if (moduleLocalizer is not IStringLocalizer localizer)
+            throw new InvalidOperationException("moduleLocalizer must be an IStringLocalizer instance");
+
+        Menus.MenuManager.Instance.RegisterCategory(categoryId, categoryNameKey, permission, localizer);
+    }
+
     public void RegisterMenu(string categoryId, string menuId, string menuName,
         Func<CCSPlayerController, object> menuFactory, string? permission = null, string? commandName = null)
     {
@@ -263,6 +272,39 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
         }
     }
 
+    public void RegisterMenu(string categoryId, string menuId, string menuNameKey,
+        Func<CCSPlayerController, MenuContext, object> menuFactory, string? permission, string? commandName, object moduleLocalizer)
+    {
+        if (moduleLocalizer is not IStringLocalizer localizer)
+            throw new InvalidOperationException("moduleLocalizer must be an IStringLocalizer instance");
+
+        Menus.MenuManager.Instance.RegisterMenu(categoryId, menuId, menuNameKey, BuilderFactory, permission, commandName, localizer);
+        return;
+
+        MenuBuilder BuilderFactory(CCSPlayerController player)
+        {
+            var context = new MenuContext(categoryId, menuId, menuNameKey, permission, commandName);
+
+            if (menuFactory(player, context) is not MenuBuilder menuBuilder)
+                throw new InvalidOperationException("Menu factory must return MenuBuilder");
+
+            // Dodaj automatyczną obsługę przycisku 'Wróć'
+            menuBuilder.WithBackAction(p =>
+            {
+                if (Menus.MenuManager.Instance.GetMenuCategories().TryGetValue(categoryId, out var category))
+                {
+                    Menus.MenuManager.Instance.CreateCategoryMenuPublic(category, p).OpenMenu(p);
+                }
+                else
+                {
+                    Menus.MenuManager.Instance.OpenMainMenu(p);
+                }
+            });
+
+            return menuBuilder;
+        }
+    }
+
 
     public void UnregisterMenu(string categoryId, string menuId)
     {
@@ -289,7 +331,30 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
 
     public object CreateMenuWithBack(MenuContext context, CCSPlayerController player)
     {
-        return CreateMenuWithBack(context.MenuTitle, context.CategoryId, player);
+        // Get translated title if module has localizer
+        string title = context.MenuTitle;
+
+        if (Menus.MenuManager.Instance.GetMenuCategories().TryGetValue(context.CategoryId, out var category))
+        {
+            // Check if this specific menu has a localizer
+            if (category.MenuLocalizers.TryGetValue(context.MenuId, out var menuLocalizer))
+            {
+                using (new WithTemporaryCulture(player.GetLanguage()))
+                {
+                    title = menuLocalizer[context.MenuTitle] ?? context.MenuTitle;
+                }
+            }
+            // Fallback to category localizer
+            else if (category.ModuleLocalizer != null)
+            {
+                using (new WithTemporaryCulture(player.GetLanguage()))
+                {
+                    title = category.ModuleLocalizer[context.MenuTitle] ?? context.MenuTitle;
+                }
+            }
+        }
+
+        return CreateMenuWithBack(title, context.CategoryId, player);
     }
 
     public List<CCSPlayerController> GetValidPlayers()
@@ -321,7 +386,30 @@ public class CS2_SimpleAdminApi : ICS2_SimpleAdminApi
     public object CreateMenuWithPlayers(MenuContext context, CCSPlayerController admin,
         Func<CCSPlayerController, bool> filter, Action<CCSPlayerController, CCSPlayerController> onSelect)
     {
-        return CreateMenuWithPlayers(context.MenuTitle, context.CategoryId, admin, filter, onSelect);
+        // Get translated title if module has localizer
+        string title = context.MenuTitle;
+
+        if (Menus.MenuManager.Instance.GetMenuCategories().TryGetValue(context.CategoryId, out var category))
+        {
+            // Check if this specific menu has a localizer
+            if (category.MenuLocalizers.TryGetValue(context.MenuId, out var menuLocalizer))
+            {
+                using (new WithTemporaryCulture(admin.GetLanguage()))
+                {
+                    title = menuLocalizer[context.MenuTitle] ?? context.MenuTitle;
+                }
+            }
+            // Fallback to category localizer
+            else if (category.ModuleLocalizer != null)
+            {
+                using (new WithTemporaryCulture(admin.GetLanguage()))
+                {
+                    title = category.ModuleLocalizer[context.MenuTitle] ?? context.MenuTitle;
+                }
+            }
+        }
+
+        return CreateMenuWithPlayers(title, context.CategoryId, admin, filter, onSelect);
     }
 
     public void AddMenuOption(object menu, string name, Action<CCSPlayerController> action, bool disabled = false,

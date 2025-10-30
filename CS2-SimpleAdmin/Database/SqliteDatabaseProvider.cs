@@ -83,6 +83,17 @@ public class SqliteDatabaseProvider(string filePath) : IDatabaseProvider
     public string GetIpHistoryQuery() =>
         "SELECT steamid, name, address, used_at FROM sa_players_ips ORDER BY used_at DESC";
 
+    public string GetUpsertPlayerIpQuery()
+    {
+        return """
+            INSERT INTO sa_players_ips (steamid, name, address, used_at)
+            VALUES (@SteamID, @playerName, @IPAddress, CURRENT_TIMESTAMP)
+            ON CONFLICT(steamid, address) DO UPDATE SET
+                used_at = CURRENT_TIMESTAMP,
+                name = @playerName;
+            """;
+    }
+
     public string GetBanUpdateQuery(bool multiServer) =>
         multiServer
             ? """

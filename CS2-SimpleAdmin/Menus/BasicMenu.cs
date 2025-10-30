@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
@@ -12,32 +13,33 @@ public abstract class BasicMenu
 {
         /// <summary>
         /// Initializes all menus in the system by registering them with the MenuManager.
+        /// Register with translation keys instead of static names - translation happens per-player.
         /// </summary>
         public static void Initialize()
         {
             var manager = MenuManager.Instance;
 
-            // Players category menus
-            manager.RegisterMenu("players", "slap", "Slap Player", CreateSlapMenu, "@css/slay");
-            manager.RegisterMenu("players", "slay", "Slay Player", CreateSlayMenu, "@css/slay");
-            manager.RegisterMenu("players", "kick", "Kick Player", CreateKickMenu, "@css/kick");
-            manager.RegisterMenu("players", "warn", "Warn Player", CreateWarnMenu, "@css/kick");
-            manager.RegisterMenu("players", "ban", "Ban Player", CreateBanMenu, "@css/ban");
-            manager.RegisterMenu("players", "gag", "Gag Player", CreateGagMenu, "@css/chat");
-            manager.RegisterMenu("players", "mute", "Mute Player", CreateMuteMenu, "@css/chat");
-            manager.RegisterMenu("players", "silence", "Silence Player", CreateSilenceMenu, "@css/chat");
-            manager.RegisterMenu("players", "team", "Force Team", CreateForceTeamMenu, "@css/kick");
+            // Players category menus - using translation keys
+            manager.RegisterMenu("players", "slap", "sa_slap", CreateSlapMenu, "@css/slay");
+            manager.RegisterMenu("players", "slay", "sa_slay", CreateSlayMenu, "@css/slay");
+            manager.RegisterMenu("players", "kick", "sa_kick", CreateKickMenu, "@css/kick");
+            manager.RegisterMenu("players", "warn", "sa_warn", CreateWarnMenu, "@css/kick");
+            manager.RegisterMenu("players", "ban", "sa_ban", CreateBanMenu, "@css/ban");
+            manager.RegisterMenu("players", "gag", "sa_gag", CreateGagMenu, "@css/chat");
+            manager.RegisterMenu("players", "mute", "sa_mute", CreateMuteMenu, "@css/chat");
+            manager.RegisterMenu("players", "silence", "sa_silence", CreateSilenceMenu, "@css/chat");
+            manager.RegisterMenu("players", "team", "sa_team_force", CreateForceTeamMenu, "@css/kick");
 
-            // Server category menus
-            manager.RegisterMenu("server", "plugins", "Manage Plugins", CreatePluginsMenu, "@css/root");
-            manager.RegisterMenu("server", "changemap", "Change Map", CreateChangeMapMenu, "@css/changemap");
-            manager.RegisterMenu("server", "restart", "Restart Game", CreateRestartGameMenu, "@css/generic");
-            manager.RegisterMenu("server", "custom", "Custom Commands", CreateCustomCommandsMenu, "@css/generic");
+            // Server category menus - using translation keys
+            manager.RegisterMenu("server", "plugins", "sa_menu_pluginsmanager_title", CreatePluginsMenu, "@css/root");
+            manager.RegisterMenu("server", "changemap", "sa_changemap", CreateChangeMapMenu, "@css/changemap");
+            manager.RegisterMenu("server", "restart", "sa_restart_game", CreateRestartGameMenu, "@css/generic");
+            manager.RegisterMenu("server", "custom", "sa_menu_custom_commands", CreateCustomCommandsMenu, "@css/generic");
 
-            // Admin category menus
-            manager.RegisterMenu("admin", "add", "Add Admin", CreateAddAdminMenu, "@css/root");
-            manager.RegisterMenu("admin", "remove", "Remove Admin", CreateRemoveAdminMenu, "@css/root");
-            manager.RegisterMenu("admin", "reload", "Reload Admins", CreateReloadAdminsMenu, "@css/root");
+            // Admin category menus - using translation keys
+            manager.RegisterMenu("admin", "add", "sa_admin_add", CreateAddAdminMenu, "@css/root");
+            manager.RegisterMenu("admin", "remove", "sa_admin_remove", CreateRemoveAdminMenu, "@css/root");
+            manager.RegisterMenu("admin", "reload", "sa_admin_reload", CreateReloadAdminsMenu, "@css/root");
         }
 
         /// <summary>
@@ -49,10 +51,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateSlapMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var slapMenu = new MenuBuilder(localizer?["sa_slap"] ?? "Slap Player");
+            var slapMenu = new MenuBuilder("sa_slap", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(admin.CanTarget);
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -70,18 +72,25 @@ public abstract class BasicMenu
         /// <returns>A MenuBuilder instance for the slap damage menu.</returns>
         private static MenuBuilder CreateSlapDamageMenu(CCSPlayerController admin, CCSPlayerController target)
         {
-            var slapDamageMenu = new MenuBuilder($"Slap: {target.PlayerName}");
+            var localizer = CS2_SimpleAdmin._localizer;
+            string localizedTitle;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                localizedTitle = $"{localizer?["sa_slap"] ?? "Slap"}: {target.PlayerName}";
+            }
+
+            var slapDamageMenu = new MenuBuilder(localizedTitle);
             var damages = new[] { 0, 1, 5, 10, 50, 100 };
 
             foreach (var damage in damages)
             {
-                slapDamageMenu.AddOption($"{damage} HP", _ =>
+                slapDamageMenu.AddOption($"{damage} HP", currentAdmin =>
                 {
                     if (target.IsValid)
                     {
-                        CS2_SimpleAdmin.Slap(admin, target, damage);
-                        // Keep menu open for consecutive slaps
-                        CreateSlapDamageMenu(admin, target).OpenMenu(admin);
+                        CS2_SimpleAdmin.Slap(currentAdmin, target, damage);
+                        // Reopen the same menu (not create new one) to keep back button working
+                        slapDamageMenu.OpenMenu(currentAdmin);
                     }
                 });
             }
@@ -97,10 +106,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateSlayMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var slayMenu = new MenuBuilder(localizer?["sa_slay"] ?? "Slay Player");
+            var slayMenu = new MenuBuilder("sa_slay", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(admin.CanTarget);
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -124,14 +133,14 @@ public abstract class BasicMenu
         private static MenuBuilder CreateKickMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var kickMenu = new MenuBuilder(localizer?["sa_kick"] ?? "Kick Player");
+            var kickMenu = new MenuBuilder("sa_kick", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                kickMenu.AddSubMenu(playerName, () => CreateReasonMenu(admin, player, "Kick", PenaltyType.Kick, 
+                kickMenu.AddSubMenu(playerName, () => CreateReasonMenu(admin, player, "Kick", PenaltyType.Kick,
                     (_, _, reason) =>
                     {
                         if (player.IsValid)
@@ -152,10 +161,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateWarnMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var warnMenu = new MenuBuilder(localizer?["sa_warn"] ?? "Warn Player");
+            var warnMenu = new MenuBuilder("sa_warn", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -181,10 +190,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateBanMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var banMenu = new MenuBuilder(localizer?["sa_ban"] ?? "Ban Player");
+            var banMenu = new MenuBuilder("sa_ban", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -210,10 +219,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateGagMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var gagMenu = new MenuBuilder(localizer?["sa_gag"] ?? "Gag Player");
+            var gagMenu = new MenuBuilder("sa_gag", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -239,10 +248,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateMuteMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var muteMenu = new MenuBuilder(localizer?["sa_mute"] ?? "Mute Player");
+            var muteMenu = new MenuBuilder("sa_mute", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -268,10 +277,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateSilenceMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var silenceMenu = new MenuBuilder(localizer?["sa_silence"] ?? "Silence Player");
+            var silenceMenu = new MenuBuilder("sa_silence", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -297,10 +306,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateForceTeamMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var teamMenu = new MenuBuilder(localizer?["sa_team_force"] ?? "Force Team");
+            var teamMenu = new MenuBuilder("sa_team_force", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -319,14 +328,32 @@ public abstract class BasicMenu
         private static MenuBuilder CreateTeamSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var teamSelectionMenu = new MenuBuilder($"Force Team: {target.PlayerName}");
+
+            // Localize title for admin's language
+            string localizedTitle;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                localizedTitle = $"{localizer?["sa_team_force"] ?? "Force Team"}: {target.PlayerName}";
+            }
+
+            var teamSelectionMenu = new MenuBuilder(localizedTitle);
+
+            // Localize team options for admin's language
+            string ctName, tName, swapName, specName;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                ctName = localizer?["sa_team_ct"] ?? "CT";
+                tName = localizer?["sa_team_t"] ?? "T";
+                swapName = localizer?["sa_team_swap"] ?? "Swap";
+                specName = localizer?["sa_team_spec"] ?? "Spec";
+            }
 
             var teams = new[]
             {
-                (localizer?["sa_team_ct"] ?? "CT", "ct", CsTeam.CounterTerrorist),
-                (localizer?["sa_team_t"] ?? "T", "t", CsTeam.Terrorist),
-                (localizer?["sa_team_swap"] ?? "Swap", "swap", CsTeam.Spectator),
-                (localizer?["sa_team_spec"] ?? "Spec", "spec", CsTeam.Spectator)
+                (ctName, "ct", CsTeam.CounterTerrorist),
+                (tName, "t", CsTeam.Terrorist),
+                (swapName, "swap", CsTeam.Spectator),
+                (specName, "spec", CsTeam.Spectator)
             };
 
             foreach (var (name, teamName, teamNum) in teams)
@@ -351,7 +378,7 @@ public abstract class BasicMenu
         private static MenuBuilder CreatePluginsMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var pluginsMenu = new MenuBuilder(localizer?["sa_menu_pluginsmanager_title"] ?? "Manage Plugins");
+            var pluginsMenu = new MenuBuilder("sa_menu_pluginsmanager_title", admin, localizer);
 
             pluginsMenu.AddOption("Open Plugins Manager", _ =>
             {
@@ -369,7 +396,7 @@ public abstract class BasicMenu
         private static MenuBuilder CreateChangeMapMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var mapMenu = new MenuBuilder(localizer?["sa_changemap"] ?? "Change Map");
+            var mapMenu = new MenuBuilder("sa_changemap", admin, localizer);
 
             // Add default maps
             var maps = CS2_SimpleAdmin.Instance.Config.DefaultMaps;
@@ -402,7 +429,7 @@ public abstract class BasicMenu
         private static MenuBuilder CreateRestartGameMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var restartMenu = new MenuBuilder(localizer?["sa_restart_game"] ?? "Restart Game");
+            var restartMenu = new MenuBuilder("sa_restart_game", admin, localizer);
 
             restartMenu.AddOption("Restart Round", _ =>
             {
@@ -420,7 +447,7 @@ public abstract class BasicMenu
         private static MenuBuilder CreateCustomCommandsMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var customMenu = new MenuBuilder(localizer?["sa_menu_custom_commands"] ?? "Custom Commands");
+            var customMenu = new MenuBuilder("sa_menu_custom_commands", admin, localizer);
 
             var customCommands = CS2_SimpleAdmin.Instance.Config.CustomServerCommands;
             
@@ -455,10 +482,10 @@ public abstract class BasicMenu
         private static MenuBuilder CreateAddAdminMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var addAdminMenu = new MenuBuilder(localizer?["sa_admin_add"] ?? "Add Admin");
+            var addAdminMenu = new MenuBuilder("sa_admin_add", admin, localizer);
 
             var players = Helper.GetValidPlayers().Where(p => !p.IsBot && admin.CanTarget(p));
-            
+
             foreach (var player in players)
             {
                 var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
@@ -476,7 +503,16 @@ public abstract class BasicMenu
         /// <returns>A MenuBuilder instance for the admin flags menu.</returns>
         private static MenuBuilder CreateAdminFlagsMenu(CCSPlayerController admin, CCSPlayerController target)
         {
-            var flagsMenu = new MenuBuilder($"Add Admin: {target.PlayerName}");
+            var localizer = CS2_SimpleAdmin._localizer;
+
+            // Localize title for admin's language
+            string localizedTitle;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                localizedTitle = $"{localizer?["sa_admin_add"] ?? "Add Admin"}: {target.PlayerName}";
+            }
+
+            var flagsMenu = new MenuBuilder(localizedTitle);
 
             foreach (var adminFlag in CS2_SimpleAdmin.Instance.Config.MenuConfigs.AdminFlags)
             {
@@ -501,7 +537,7 @@ public abstract class BasicMenu
         private static MenuBuilder CreateRemoveAdminMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var removeAdminMenu = new MenuBuilder(localizer?["sa_admin_remove"] ?? "Remove Admin");
+            var removeAdminMenu = new MenuBuilder("sa_admin_remove", admin, localizer);
 
             var adminPlayers = Helper.GetValidPlayers().Where(p => 
                 AdminManager.GetPlayerAdminData(p)?.Flags.Count > 0 && 
@@ -531,7 +567,7 @@ public abstract class BasicMenu
         private static MenuBuilder CreateReloadAdminsMenu(CCSPlayerController admin)
         {
             var localizer = CS2_SimpleAdmin._localizer;
-            var reloadMenu = new MenuBuilder(localizer?["sa_admin_reload"] ?? "Reload Admins");
+            var reloadMenu = new MenuBuilder("sa_admin_reload", admin, localizer);
 
             reloadMenu.AddOption("Reload Admins", _ =>
             {
@@ -546,13 +582,35 @@ public abstract class BasicMenu
         /// </summary>
         /// <param name="admin">The admin player selecting duration.</param>
         /// <param name="player">The target player for the penalty.</param>
-        /// <param name="actionName">The name of the penalty action.</param>
+        /// <param name="actionName">The name of the penalty action (e.g., "Kick", "Ban").</param>
         /// <param name="onSelectAction">Callback action executed when duration is selected.</param>
         /// <returns>A MenuBuilder instance for the duration menu.</returns>
         private static MenuBuilder CreateDurationMenu(CCSPlayerController admin, CCSPlayerController player, string actionName,
             Action<CCSPlayerController, CCSPlayerController, int> onSelectAction)
         {
-            var durationMenu = new MenuBuilder($"{actionName} Duration: {player.PlayerName}");
+            var localizer = CS2_SimpleAdmin._localizer;
+
+            // Convert action name to translation key (e.g., "Ban" -> "sa_ban")
+            var actionKey = actionName.ToLower() switch
+            {
+                "kick" => "sa_kick",
+                "ban" => "sa_ban",
+                "warn" => "sa_warn",
+                "gag" => "sa_gag",
+                "mute" => "sa_mute",
+                "silence" => "sa_silence",
+                _ => actionName
+            };
+
+            // Localize title for admin's language
+            string localizedAction, durationText;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                localizedAction = localizer?[actionKey] ?? actionName;
+                durationText = localizer?["sa_duration"] ?? "Duration";
+            }
+
+            var durationMenu = new MenuBuilder($"{localizedAction} {durationText}: {player.PlayerName}");
 
             foreach (var durationItem in CS2_SimpleAdmin.Instance.Config.MenuConfigs.Durations)
             {
@@ -570,14 +628,36 @@ public abstract class BasicMenu
         /// </summary>
         /// <param name="admin">The admin player selecting reason.</param>
         /// <param name="player">The target player for the penalty.</param>
-        /// <param name="actionName">The name of the penalty action.</param>
+        /// <param name="actionName">The name of the penalty action (e.g., "Kick", "Ban").</param>
         /// <param name="penaltyType">The type of penalty to determine which reason list to use.</param>
         /// <param name="onSelectAction">Callback action executed when reason is selected.</param>
         /// <returns>A MenuBuilder instance for the reason menu.</returns>
         private static MenuBuilder CreateReasonMenu(CCSPlayerController admin, CCSPlayerController player, string actionName,
             PenaltyType penaltyType, Action<CCSPlayerController, CCSPlayerController, string> onSelectAction)
         {
-            var reasonMenu = new MenuBuilder($"{actionName} Reason: {player.PlayerName}");
+            var localizer = CS2_SimpleAdmin._localizer;
+
+            // Convert action name to translation key
+            var actionKey = actionName.ToLower() switch
+            {
+                "kick" => "sa_kick",
+                "ban" => "sa_ban",
+                "warn" => "sa_warn",
+                "gag" => "sa_gag",
+                "mute" => "sa_mute",
+                "silence" => "sa_silence",
+                _ => actionName
+            };
+
+            // Localize title for admin's language
+            string localizedAction, reasonText;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                localizedAction = localizer?[actionKey] ?? actionName;
+                reasonText = localizer?["sa_reason"] ?? "Reason";
+            }
+
+            var reasonMenu = new MenuBuilder($"{localizedAction} {reasonText}: {player.PlayerName}");
 
             var reasons = penaltyType switch
             {

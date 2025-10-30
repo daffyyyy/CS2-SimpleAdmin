@@ -145,20 +145,38 @@ public class CS2_SimpleAdmin_ExampleModule: BasePlugin
             // STEP 1: Register a menu category
             // This creates a new section in the main admin menu
             // Permission: @css/generic means all admins can see it
+            //
+            // ⚠️ LOCALIZATION OPTIONS:
+            //
+            // OPTION A - No translations (hard-coded text):
             _sharedApi.RegisterMenuCategory(
                 "example",              // Category ID (unique identifier)
-                "Example Features",     // Display name in admin menu
+                "Example Features",     // Display name (hard-coded, same for all players)
                 "@css/generic"          // Required permission
             );
+            //
+            // OPTION B - With per-player translations (🆕 NEW!):
+            // If your module has lang/ folder with translations, use this pattern:
+            //   _sharedApi.RegisterMenuCategory(
+            //       "example",                      // Category ID
+            //       "example_category_name",        // Translation key
+            //       "@css/generic",                 // Permission
+            //       Localizer!                      // Module's localizer
+            //   );
+            // This will translate the category name per-player based on their css_lang setting!
 
             // STEP 2: Register individual menu items in the category
             // 🆕 NEW: These use MenuContext API - factory receives (admin, context) parameters
+            //
+            // ⚠️ LOCALIZATION OPTIONS:
+            //
+            // OPTION A - No translations (hard-coded text):
 
             // Example 1: Simple menu with options
             _sharedApi.RegisterMenu(
                 "example",              // Category ID
                 "simple_action",        // Menu ID (unique within category)
-                "Simple Actions",       // Display name
+                "Simple Actions",       // Display name (hard-coded)
                 CreateSimpleActionMenu, // Factory method
                 "@css/generic"          // Required permission
             );
@@ -167,7 +185,7 @@ public class CS2_SimpleAdmin_ExampleModule: BasePlugin
             _sharedApi.RegisterMenu(
                 "example",
                 "player_selection",
-                "Select Player",
+                "Select Player",        // Display name
                 CreatePlayerSelectionMenu,
                 "@css/kick"             // Requires kick permission
             );
@@ -176,7 +194,7 @@ public class CS2_SimpleAdmin_ExampleModule: BasePlugin
             _sharedApi.RegisterMenu(
                 "example",
                 "nested_menu",
-                "Give Credits",
+                "Give Credits",         // Display name
                 CreateGiveCreditsMenu,
                 "@css/generic"
             );
@@ -185,11 +203,25 @@ public class CS2_SimpleAdmin_ExampleModule: BasePlugin
             _sharedApi.RegisterMenu(
                 "example",
                 "test_command",
-                "Test Command",
+                "Test Command",         // Display name
                 CreateTestCommandMenu,
                 "@css/root",            // Default permission
                 "css_test"              // Command name for override checking
             );
+
+            // OPTION B - With per-player translations (🆕 NEW!):
+            // If your module has lang/ folder, use this pattern:
+            //   _sharedApi.RegisterMenu(
+            //       "example",                      // Category ID
+            //       "menu_id",                      // Menu ID
+            //       "menu_translation_key",         // Translation key (NOT translated text!)
+            //       CreateYourMenu,                 // Factory method
+            //       "@css/generic",                 // Permission
+            //       "css_command",                  // Command name (optional)
+            //       Localizer!                      // Module's localizer
+            //   );
+            // This will translate the menu name per-player based on their css_lang!
+            // See FunCommands module for real example.
 
             _menusRegistered = true;
             Logger.LogInformation("Example menus registered successfully!");

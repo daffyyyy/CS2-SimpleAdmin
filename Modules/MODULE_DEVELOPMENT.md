@@ -75,10 +75,17 @@ public class MyModule : BasePlugin
         if (_api == null) return;
 
         // 1. Register a new category
+        // IMPORTANT: If your module has lang/ folder with translations, use YOUR module's Localizer!
+        // Example: _api.RegisterMenuCategory("mymodule", Localizer?["mymodule_category_name"] ?? "My Module", "@css/generic");
+        //
+        // This will use YOUR module's translations in server language.
+        // For modules without translations, you can use hard-coded text:
         _api.RegisterMenuCategory("mymodule", "My Module", "@css/generic");
 
         // 2. Register menu items in the category
         // 🆕 NEW: Use MenuContext-aware overload (no duplication!)
+        // NOTE: Use YOUR module's Localizer if you have lang/ folder with translations:
+        //   _api.RegisterMenu("mymodule", "action1", Localizer?["mymodule_menu_action1"] ?? "Action 1", CreateAction1Menu, "@css/generic");
         _api.RegisterMenu("mymodule", "action1", "Action 1", CreateAction1Menu, "@css/generic");
         _api.RegisterMenu("mymodule", "action2", "Action 2", CreateAction2Menu, "@css/kick");
     }
@@ -356,12 +363,27 @@ Registers a new menu category that appears in the main admin menu.
 
 **Parameters:**
 - `categoryId` - Unique identifier for the category (e.g., "fun", "vip", "economy")
-- `categoryName` - Display name shown in menu (e.g., "Fun Commands")
+- `categoryName` - **TRANSLATION KEY** for the display name (e.g., "vip_category_name", NOT "VIP Features")
 - `permission` - Required permission to see the category (default: "@css/generic")
+
+**IMPORTANT FOR MODULES WITH TRANSLATIONS:**
+- If your module has a `lang/` folder with translation files, use **YOUR module's Localizer**
+- This will display menu names in the **server's language** (not per-player)
+- For per-player localization, only **CS2-SimpleAdmin's built-in menus** support this currently
 
 **Example:**
 ```csharp
+// ✅ CORRECT: Module with translations uses its own Localizer
+_api.RegisterMenuCategory("vip", Localizer?["vip_category_name"] ?? "VIP Features", "@css/vip");
+// In YOUR module's lang/en.json: "vip_category_name": "VIP Features"
+// In YOUR module's lang/pl.json: "vip_category_name": "Funkcje VIP"
+
+// ✅ ALSO CORRECT: Module without translations uses hard-coded text
 _api.RegisterMenuCategory("vip", "VIP Features", "@css/vip");
+
+// ❌ INCORRECT: Using translation key without Localizer
+_api.RegisterMenuCategory("vip", "vip_category_name", "@css/vip");
+// This would display "vip_category_name" literally!
 ```
 
 ### 2. Menu Registration
@@ -373,13 +395,28 @@ Registers a menu item within a category.
 **Parameters:**
 - `categoryId` - The category to add this menu to
 - `menuId` - Unique identifier for the menu
-- `menuName` - Display name in the category menu
-- `menuFactory` - Function that creates the menu when selected (receives admin player)
+- `menuName` - Display name for the menu (use **your module's Localizer** if you have translations)
+- `menuFactory` - Function that creates the menu when selected (receives admin player and MenuContext)
 - `permission` - Optional permission required to see this menu item
+
+**IMPORTANT FOR MODULES WITH TRANSLATIONS:**
+- Use **your module's Localizer** if you have a `lang/` folder: `Localizer?["key"] ?? "Fallback"`
+- This shows menu in **server language**, not per-player
+- Per-player localization is only available for CS2-SimpleAdmin's built-in menus
 
 **Example:**
 ```csharp
+// ✅ CORRECT: Module with translations uses its own Localizer
+_api.RegisterMenu("fun", "godmode", Localizer?["fun_menu_god"] ?? "God Mode", CreateGodModeMenu, "@css/cheats");
+// In YOUR module's lang/en.json: "fun_menu_god": "God Mode"
+// In YOUR module's lang/pl.json: "fun_menu_god": "Tryb Boga"
+
+// ✅ ALSO CORRECT: Module without translations uses hard-coded text
 _api.RegisterMenu("fun", "godmode", "God Mode", CreateGodModeMenu, "@css/cheats");
+
+// ❌ INCORRECT: Using translation key without Localizer
+_api.RegisterMenu("fun", "godmode", "fun_menu_god", CreateGodModeMenu, "@css/cheats");
+// This would display "fun_menu_god" literally!
 ```
 
 #### `UnregisterMenu(string categoryId, string menuId)`
@@ -625,12 +662,32 @@ private object CreateAdminToolsMenu(CCSPlayerController admin)
 
 ## Best Practices
 
-1. **Always check for API availability**
+1. **Use your module's Localizer for translations** 🌍
+   ```csharp
+   // ✅ CORRECT: Module with translations uses its own Localizer
+   _api.RegisterMenuCategory("mymodule", Localizer?["mymodule_category"] ?? "My Module", "@css/generic");
+   _api.RegisterMenu("mymodule", "action", Localizer?["mymodule_menu_action"] ?? "My Action", CreateMenu, "@css/generic");
+
+   // ✅ ALSO CORRECT: Module without translations uses hard-coded text
+   _api.RegisterMenuCategory("mymodule", "My Module", "@css/generic");
+   _api.RegisterMenu("mymodule", "action", "My Action", CreateMenu, "@css/generic");
+
+   // ❌ WRONG: Using translation key without Localizer
+   _api.RegisterMenuCategory("mymodule", "mymodule_category", "@css/generic");
+   // This would display "mymodule_category" literally!
+   ```
+
+   **✅ Per-player localization now available!**
+   - Both CS2-SimpleAdmin built-in menus AND module menus support per-player localization
+   - Each player sees menus in their own language based on their `css_lang` setting
+   - See "Advanced: Per-Player Localization for Modules" section below for implementation details
+
+2. **Always check for API availability**
    ```csharp
    if (_api == null) return;
    ```
 
-2. **Validate player state before actions**
+3. **Validate player state before actions**
    ```csharp
    if (target.IsValid && target.PlayerPawn?.Value != null)
    {
@@ -638,11 +695,11 @@ private object CreateAdminToolsMenu(CCSPlayerController admin)
    }
    ```
 
-3. **Use descriptive category and menu IDs**
+4. **Use descriptive category and menu IDs**
    - Good: `"economy"`, `"vip_features"`, `"fun_commands"`
    - Bad: `"cat1"`, `"menu"`, `"test"`
 
-4. **Clean up on unload**
+5. **Clean up on unload**
    ```csharp
    public override void Unload(bool hotReload)
    {
@@ -651,14 +708,14 @@ private object CreateAdminToolsMenu(CCSPlayerController admin)
    }
    ```
 
-5. **Use appropriate permissions**
+6. **Use appropriate permissions**
    - `@css/generic` - All admins
    - `@css/ban` - Admins who can ban
    - `@css/kick` - Admins who can kick
    - `@css/root` - Root admins only
    - Custom permissions from your module
 
-6. **Handle hot reload**
+7. **Handle hot reload**
    ```csharp
    _api.OnSimpleAdminReady += RegisterMenus;
    RegisterMenus(); // Fallback for hot reload case
@@ -717,3 +774,72 @@ See the `CS2-SimpleAdmin_FunCommands` module in the `Modules/` directory for a c
 **Q: API is null in OnAllPluginsLoaded**
 - Wait for the `OnSimpleAdminReady` event instead of immediate registration
 - Make sure CS2-SimpleAdmin is loaded before your module
+
+## Advanced: Per-Player Localization for Modules (✅ NOW AVAILABLE!)
+
+**🆕 NEW:** Module menus now support **per-player localization** based on `css_lang`!
+
+Both CS2-SimpleAdmin's built-in menus AND module menus can show in each player's configured language.
+
+### How to Use Per-Player Localization in Your Module
+
+**1. Register Category with Localizer:**
+
+```csharp
+// Pass translation KEY (not translated text) and module's Localizer
+_api.RegisterMenuCategory(
+    "mymodule",
+    "mymodule_category_name",  // Translation key from your lang/ folder
+    "@css/generic",
+    Localizer!                  // Your module's localizer
+);
+```
+
+**2. Register Menus with Localizer:**
+
+```csharp
+_api.RegisterMenu(
+    "mymodule",
+    "action",
+    "mymodule_menu_action",     // Translation key from your lang/ folder
+    CreateMenu,
+    "@css/generic",             // Permission
+    "css_mycommand",            // Command name for override (optional)
+    Localizer!                  // Your module's localizer
+);
+```
+
+**How it works:**
+1. Your module passes its `IStringLocalizer` and translation **key** (not translated text)
+2. SimpleAdmin's `MenuManager` stores both the key and the localizer
+3. When displaying menu to a player, MenuManager translates using:
+   ```csharp
+   using (new WithTemporaryCulture(player.GetLanguage()))
+   {
+       localizedName = moduleLocalizer[translationKey];
+   }
+   ```
+4. Each player sees menus in their own language based on their `css_lang` setting!
+
+**Complete Example:**
+
+See `Modules/CS2-SimpleAdmin_FunCommands/` for a real implementation:
+
+```csharp
+// Register category with per-player localization
+_api.RegisterMenuCategory("fun", "fun_category_name", "@css/generic", Localizer!);
+
+// Register menu with per-player localization
+_api.RegisterMenu("fun", "god", "fun_menu_god",
+    CreateGodModeMenu, "@css/cheats", "css_god", Localizer!);
+```
+
+**Without Per-Player Localization (backwards compatible):**
+
+If you don't need per-player localization, the old API still works:
+
+```csharp
+// Hard-coded text (same for all players)
+_api.RegisterMenuCategory("mymodule", "My Module", "@css/generic");
+_api.RegisterMenu("mymodule", "action", "Do Action", CreateMenu, "@css/generic");
+```

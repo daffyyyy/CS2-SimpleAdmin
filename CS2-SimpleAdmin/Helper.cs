@@ -426,7 +426,7 @@ internal static class Helper
 
         var communityUrl = caller != null ? "<" + new SteamID(caller.SteamID).ToCommunityUrl() + ">" : "<https://steamcommunity.com/profiles/0>";
         var callerName = caller != null ? caller.PlayerName : CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console";
-        _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(Helper.GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
+        _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command.GetCommandString]));
     }
 
     private static void SendDiscordLogMessage(CCSPlayerController? caller, string command, IStringLocalizer? localizer)
@@ -1026,7 +1026,9 @@ public static class Time
 {
     public static DateTime ActualDateTime()
     {
-        return DateTime.UtcNow;
+        if (CS2_SimpleAdmin.Instance.Config.DatabaseConfig.DatabaseType.ToLower().Equals("sqlite"))
+            return DateTime.UtcNow;
+        
         string timezoneId = CS2_SimpleAdmin.Instance.Config.Timezone;
         DateTime utcNow = DateTime.UtcNow;
 

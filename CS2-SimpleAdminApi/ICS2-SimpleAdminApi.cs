@@ -141,6 +141,16 @@ public interface ICS2_SimpleAdminApi
     void RegisterMenuCategory(string categoryId, string categoryName, string permission = "@css/generic");
 
     /// <summary>
+    /// Registers a menu category with per-player localization support for modules.
+    /// 🆕 NEW: Supports per-player localization using module's IStringLocalizer!
+    /// </summary>
+    /// <param name="categoryId">The category ID (unique identifier).</param>
+    /// <param name="categoryNameKey">Translation key from module's lang files.</param>
+    /// <param name="permission">Required permission to access this category.</param>
+    /// <param name="moduleLocalizer">Module's IStringLocalizer for per-player translation.</param>
+    void RegisterMenuCategory(string categoryId, string categoryNameKey, string permission, object moduleLocalizer);
+
+    /// <summary>
     /// Registers a menu in a category.
     /// </summary>
     /// <param name="categoryId">The category to add this menu to.</param>
@@ -162,6 +172,19 @@ public interface ICS2_SimpleAdminApi
     /// <param name="permission">Required permission to access this menu (optional).</param>
     /// <param name="commandName">Command name for permission override checking (optional, e.g., "css_god").</param>
     void RegisterMenu(string categoryId, string menuId, string menuName, Func<CCSPlayerController, MenuContext, object> menuFactory, string? permission = null, string? commandName = null);
+
+    /// <summary>
+    /// Registers a menu with per-player localization support for modules.
+    /// 🆕 NEW: Supports per-player localization using module's IStringLocalizer!
+    /// </summary>
+    /// <param name="categoryId">The category to add this menu to.</param>
+    /// <param name="menuId">Unique identifier for the menu.</param>
+    /// <param name="menuNameKey">Translation key from module's lang files.</param>
+    /// <param name="menuFactory">Factory function that receives player and menu context.</param>
+    /// <param name="permission">Required permission to access this menu (optional).</param>
+    /// <param name="commandName">Command name for permission override checking (optional).</param>
+    /// <param name="moduleLocalizer">Module's IStringLocalizer for per-player translation.</param>
+    void RegisterMenu(string categoryId, string menuId, string menuNameKey, Func<CCSPlayerController, MenuContext, object> menuFactory, string? permission, string? commandName, object moduleLocalizer);
 
     /// <summary>
     /// Unregisters a menu from a category.

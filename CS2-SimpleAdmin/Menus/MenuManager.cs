@@ -1,4 +1,5 @@
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Translations;
 using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Entities;
 
@@ -39,6 +40,26 @@ public class MenuManager
     }
 
     /// <summary>
+    /// Registers a new menu category with per-player localization support for modules.
+    /// 🆕 NEW: Enables modules to provide localized category names based on each player's css_lang!
+    /// </summary>
+    /// <param name="categoryId">Unique identifier for the category.</param>
+    /// <param name="categoryNameKey">Translation key from module's lang files.</param>
+    /// <param name="permission">Required permission to access this category.</param>
+    /// <param name="moduleLocalizer">Module's IStringLocalizer for per-player translation.</param>
+    public void RegisterCategory(string categoryId, string categoryNameKey, string permission, Microsoft.Extensions.Localization.IStringLocalizer moduleLocalizer)
+    {
+        _menuCategories[categoryId] = new MenuCategory
+        {
+            Id = categoryId,
+            Name = categoryNameKey,  // Store the key, not translated text
+            Permission = permission,
+            MenuFactories = new Dictionary<string, Func<CCSPlayerController, MenuBuilder>>(),
+            ModuleLocalizer = moduleLocalizer  // Store module's localizer
+        };
+    }
+
+    /// <summary>
     /// Registers a menu within a category (API for other plugins).
     /// </summary>
     /// <param name="categoryId">The category to add this menu to.</param>
@@ -56,6 +77,37 @@ public class MenuManager
 
         _menuCategories[categoryId].MenuFactories[menuId] = menuFactory;
         _menuCategories[categoryId].MenuNames[menuId] = menuName;
+        if (permission != null)
+        {
+            _menuCategories[categoryId].MenuPermissions[menuId] = permission;
+        }
+        if (commandName != null)
+        {
+            _menuCategories[categoryId].MenuCommandNames[menuId] = commandName;
+        }
+    }
+
+    /// <summary>
+    /// Registers a menu with per-player localization support for modules.
+    /// 🆕 NEW: Enables modules to provide localized menu names based on each player's css_lang!
+    /// </summary>
+    /// <param name="categoryId">The category to add this menu to.</param>
+    /// <param name="menuId">Unique identifier for the menu.</param>
+    /// <param name="menuNameKey">Translation key from module's lang files.</param>
+    /// <param name="menuFactory">Factory function that creates the menu for a player.</param>
+    /// <param name="permission">Required permission to access this menu (optional).</param>
+    /// <param name="commandName">Command name for permission override checking (optional).</param>
+    /// <param name="moduleLocalizer">Module's IStringLocalizer for per-player translation.</param>
+    public void RegisterMenu(string categoryId, string menuId, string menuNameKey, Func<CCSPlayerController, MenuBuilder> menuFactory, string? permission, string? commandName, Microsoft.Extensions.Localization.IStringLocalizer moduleLocalizer)
+    {
+        if (!_menuCategories.ContainsKey(categoryId))
+        {
+            RegisterCategory(categoryId, categoryId); // Auto-create category if it doesn't exist
+        }
+
+        _menuCategories[categoryId].MenuFactories[menuId] = menuFactory;
+        _menuCategories[categoryId].MenuNames[menuId] = menuNameKey;  // Store the key
+        _menuCategories[categoryId].MenuLocalizers[menuId] = moduleLocalizer;  // Store localizer
         if (permission != null)
         {
             _menuCategories[categoryId].MenuPermissions[menuId] = permission;
@@ -88,7 +140,7 @@ public class MenuManager
     public MenuBuilder CreateMainMenu(CCSPlayerController player)
     {
         var localizer = CS2_SimpleAdmin._localizer;
-        var mainMenu = new MenuBuilder(localizer?["sa_title"] ?? "SimpleAdmin");
+        var mainMenu = new MenuBuilder("sa_title", player, localizer);
 
         foreach (var category in _menuCategories.Values)
         {
@@ -98,8 +150,23 @@ public class MenuManager
             if (!AdminManager.PlayerHasPermissions(steamId, category.Permission))
                 continue;
 
+            // Get localized category name for this player
+            // If category has a module localizer, use it; otherwise use main plugin localizer
+            string localizedCategoryName;
+            using (new WithTemporaryCulture(player.GetLanguage()))
+            {
+                if (category.ModuleLocalizer != null)
+                {
+                    localizedCategoryName = category.ModuleLocalizer[category.Name] ?? category.Name;
+                }
+                else
+                {
+                    localizedCategoryName = localizer?[category.Name] ?? category.Name;
+                }
+            }
+
             // Pass player to CreateCategoryMenu
-            mainMenu.AddSubMenu(category.Name, () => CreateCategoryMenu(category, player),
+            mainMenu.AddSubMenu(localizedCategoryName, () => CreateCategoryMenu(category, player),
                 permission: category.Permission);
         }
 
@@ -114,7 +181,24 @@ public class MenuManager
     /// <returns>A MenuBuilder instance for the category menu.</returns>
     private MenuBuilder CreateCategoryMenu(MenuCategory category, CCSPlayerController player)
     {
-        var categoryMenu = new MenuBuilder(category.Name);
+        var localizer = CS2_SimpleAdmin._localizer;
+
+        // Get localized category name for this player
+        // If category has a module localizer, use it; otherwise use main plugin localizer
+        string localizedCategoryName;
+        using (new WithTemporaryCulture(player.GetLanguage()))
+        {
+            if (category.ModuleLocalizer != null)
+            {
+                localizedCategoryName = category.ModuleLocalizer[category.Name] ?? category.Name;
+            }
+            else
+            {
+                localizedCategoryName = localizer?[category.Name] ?? category.Name;
+            }
+        }
+
+        var categoryMenu = new MenuBuilder(localizedCategoryName);
 
         foreach (var kvp in category.MenuFactories)
         {
@@ -159,8 +243,30 @@ public class MenuManager
                     continue;
             }
 
+            // Get localized menu name for this player
+            // If menu has its own localizer, use it; otherwise use category or main plugin localizer
+            string localizedMenuName;
+            using (new WithTemporaryCulture(player.GetLanguage()))
+            {
+                if (category.MenuLocalizers.TryGetValue(menuId, out var menuLocalizer))
+                {
+                    // Menu has its own module localizer
+                    localizedMenuName = menuLocalizer[menuName] ?? menuName;
+                }
+                else if (category.ModuleLocalizer != null)
+                {
+                    // Use category's module localizer
+                    localizedMenuName = category.ModuleLocalizer[menuName] ?? menuName;
+                }
+                else
+                {
+                    // Use main plugin localizer
+                    localizedMenuName = localizer?[menuName] ?? menuName;
+                }
+            }
+
             // Call the actual factory with player parameter
-            categoryMenu.AddSubMenu(menuName, () => menuFactory(player), permission: permission);
+            categoryMenu.AddSubMenu(localizedMenuName, () => menuFactory(player), permission: permission);
         }
 
         return categoryMenu.WithBackButton();
@@ -190,12 +296,12 @@ public class MenuManager
     /// </summary>
     public void InitializeDefaultCategories()
     {
-        var localizer = CS2_SimpleAdmin._localizer;
-
-        RegisterCategory("players", localizer?["sa_menu_players_manage"] ?? "Manage Players", "@css/generic");
-        RegisterCategory("server", localizer?["sa_menu_server_manage"] ?? "Server Management", "@css/generic");
-        // RegisterCategory("fun", localizer?["sa_menu_fun_commands"] ?? "Fun Commands", "@css/generic");
-        RegisterCategory("admin", localizer?["sa_menu_admins_manage"] ?? "Admin Management", "@css/root");
+        // Register categories with translation keys instead of translated names
+        // The actual translation will happen per-player in CreateMainMenu/CreateCategoryMenu
+        RegisterCategory("players", "sa_menu_players_manage", "@css/generic");
+        RegisterCategory("server", "sa_menu_server_manage", "@css/generic");
+        // RegisterCategory("fun", "sa_menu_fun_commands", "@css/generic");
+        RegisterCategory("admin", "sa_menu_admins_manage", "@css/root");
     }
 
     /// <summary>
@@ -222,4 +328,17 @@ public class MenuCategory
     public Dictionary<string, string> MenuNames { get; set; } = [];
     public Dictionary<string, string> MenuPermissions { get; set; } = [];
     public Dictionary<string, string> MenuCommandNames { get; set; } = [];
+
+    // 🆕 NEW: Support for per-player localization in modules
+    /// <summary>
+    /// Optional IStringLocalizer from external module for per-player translation of category name.
+    /// If null, Name is used as-is (for CS2-SimpleAdmin's built-in categories with translation keys).
+    /// </summary>
+    public Microsoft.Extensions.Localization.IStringLocalizer? ModuleLocalizer { get; set; }
+
+    /// <summary>
+    /// Stores IStringLocalizer for each menu that uses module localization.
+    /// Key: menuId, Value: module's localizer
+    /// </summary>
+    public Dictionary<string, Microsoft.Extensions.Localization.IStringLocalizer> MenuLocalizers { get; set; } = [];
 }

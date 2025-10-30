@@ -1,6 +1,7 @@
 using System.Globalization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Translations;
 
 namespace CS2_SimpleAdmin_FunCommands;
 
@@ -139,8 +140,15 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// </summary>
     private object CreateWeaponSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
+        // Translate title per-player based on admin's css_lang
+        string translatedTitle;
+        using (new WithTemporaryCulture(admin.GetLanguage()))
+        {
+            translatedTitle = Localizer?["fun_menu_give_player", target.PlayerName] ?? $"Give Weapon: {target.PlayerName}";
+        }
+
         var weaponMenu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_give_player", target.PlayerName] ?? $"Give Weapon: {target.PlayerName}",
+            translatedTitle,
             "fun",
             admin);
 
@@ -212,8 +220,15 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// </summary>
     private object CreateHpSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
+        // Translate title per-player based on admin's css_lang
+        string translatedTitle;
+        using (new WithTemporaryCulture(admin.GetLanguage()))
+        {
+            translatedTitle = Localizer?["fun_menu_hp_player", target.PlayerName] ?? $"Set HP: {target.PlayerName}";
+        }
+
         var hpSelectionMenu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_hp_player", target.PlayerName] ?? $"Set HP: {target.PlayerName}",
+            translatedTitle,
             "fun",
             admin);
 
@@ -222,8 +237,15 @@ public partial class CS2_SimpleAdmin_FunCommands
 
         foreach (var hp in hpValues)
         {
+            // Translate option label per-player
+            string optionLabel;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                optionLabel = Localizer?["fun_menu_hp_value", hp] ?? $"{hp} HP";
+            }
+
             _sharedApi.AddMenuOption(hpSelectionMenu,
-                Localizer?["fun_menu_hp_value", hp] ?? $"{hp} HP",
+                optionLabel,
                 _ =>
             {
                 if (target.IsValid)
@@ -261,8 +283,15 @@ public partial class CS2_SimpleAdmin_FunCommands
     /// </summary>
     private object CreateSpeedSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
+        // Translate title per-player based on admin's css_lang
+        string translatedTitle;
+        using (new WithTemporaryCulture(admin.GetLanguage()))
+        {
+            translatedTitle = Localizer?["fun_menu_speed_player", target.PlayerName] ?? $"Set Speed: {target.PlayerName}";
+        }
+
         var speedSelectionMenu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_speed_player", target.PlayerName] ?? $"Set Speed: {target.PlayerName}",
+            translatedTitle,
             "fun",
             admin);
 
@@ -275,8 +304,15 @@ public partial class CS2_SimpleAdmin_FunCommands
 
         foreach (var (speed, display) in speedValues)
         {
+            // Translate option label per-player
+            string optionLabel;
+            using (new WithTemporaryCulture(admin.GetLanguage()))
+            {
+                optionLabel = Localizer?["fun_menu_speed_value", display] ?? $"Speed {display}";
+            }
+
             _sharedApi.AddMenuOption(speedSelectionMenu,
-                Localizer?["fun_menu_speed_value", display] ?? $"Speed {display}",
+                optionLabel,
                 _ =>
             {
                 if (target.IsValid)
@@ -316,8 +352,15 @@ public partial class CS2_SimpleAdmin_FunCommands
 
     private object CreateGravitySelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
+        // Translate title per-player based on admin's css_lang
+        string translatedTitle;
+        using (new WithTemporaryCulture(admin.GetLanguage()))
+        {
+            translatedTitle = Localizer?["fun_menu_gravity_player", target.PlayerName] ?? $"Set Gravity: {target.PlayerName}";
+        }
+
         var gravitySelectionMenu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_gravity_player", target.PlayerName] ?? $"Set Gravity: {target.PlayerName}",
+            translatedTitle,
             "fun",
             admin);
         var gravityValues = new[]
@@ -365,8 +408,15 @@ public partial class CS2_SimpleAdmin_FunCommands
 
     private object CreateMoneySelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
+        // Translate title per-player based on admin's css_lang
+        string translatedTitle;
+        using (new WithTemporaryCulture(admin.GetLanguage()))
+        {
+            translatedTitle = Localizer?["fun_menu_money_player", target.PlayerName] ?? $"Set Money: {target.PlayerName}";
+        }
+
         var moneySelectionMenu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_money_player", target.PlayerName] ?? $"Set Money: {target.PlayerName}",
+            translatedTitle,
             "fun",
             admin);
         var moneyValues = new[] { 0, 1000, 2500, 5000, 10000, 16000 };
@@ -407,8 +457,15 @@ public partial class CS2_SimpleAdmin_FunCommands
 
     private object CreateResizeSelectionMenu(CCSPlayerController admin, CCSPlayerController target)
     {
+        // Translate title per-player based on admin's css_lang
+        string translatedTitle;
+        using (new WithTemporaryCulture(admin.GetLanguage()))
+        {
+            translatedTitle = Localizer?["fun_menu_resize_player", target.PlayerName] ?? $"Resize: {target.PlayerName}";
+        }
+
         var resizeSelectionMenu = _sharedApi!.CreateMenuWithBack(
-            Localizer?["fun_menu_resize_player", target.PlayerName] ?? $"Resize: {target.PlayerName}",
+            translatedTitle,
             "fun",
             admin);
         var resizeValues = new[]

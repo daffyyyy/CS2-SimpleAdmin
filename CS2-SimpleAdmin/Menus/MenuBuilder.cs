@@ -1,26 +1,87 @@
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Core.Translations;
+using Microsoft.Extensions.Localization;
 
 namespace CS2_SimpleAdmin.Menus;
-public class MenuBuilder(string title)
+public class MenuBuilder
 {
+    private readonly string _title;
+    private readonly CCSPlayerController? _player;
+    private readonly IStringLocalizer? _localizer;
     private readonly List<MenuOption> _options = [];
     private MenuBuilder? _parentMenu;
     private Action<CCSPlayerController>? _backAction;
     private Action<CCSPlayerController>? _resetAction;
 
     /// <summary>
+    /// Constructor for player-localized menu with translation key
+    /// </summary>
+    public MenuBuilder(string titleKey, CCSPlayerController player, IStringLocalizer? localizer = null)
+    {
+        _title = titleKey;
+        _player = player;
+        _localizer = localizer ?? CS2_SimpleAdmin._localizer;
+    }
+
+    /// <summary>
+    /// Constructor for static title (backward compatibility)
+    /// </summary>
+    public MenuBuilder(string title)
+    {
+        _title = title;
+        _player = null;
+        _localizer = null;
+    }
+
+    /// <summary>
+    /// Gets the localized title for the player
+    /// </summary>
+    private string GetLocalizedTitle()
+    {
+        if (_player != null && _localizer != null)
+        {
+            using (new WithTemporaryCulture(_player.GetLanguage()))
+            {
+                return _localizer[_title];
+            }
+        }
+        return _title;
+    }
+
+    /// <summary>
     /// Adds a menu option with an action.
     /// </summary>
-    public MenuBuilder AddOption(string name, Action<CCSPlayerController> action, bool disabled = false, string? permission = null)
+    /// <param name="name">Display name or translation key</param>
+    /// <param name="action">Action to perform when selected</param>
+    /// <param name="disabled">Whether the option is disabled</param>
+    /// <param name="permission">Required permission</param>
+    /// <param name="isTranslationKey">If true, name is a translation key to be localized</param>
+    public MenuBuilder AddOption(string name, Action<CCSPlayerController> action, bool disabled = false, string? permission = null, bool isTranslationKey = false)
     {
         _options.Add(new MenuOption
         {
             Name = name,
             Action = action,
             Disabled = disabled,
-            Permission = permission
+            Permission = permission,
+            IsTranslationKey = isTranslationKey
         });
         return this;
+    }
+
+    /// <summary>
+    /// Gets the localized name for a menu option
+    /// </summary>
+    private string GetLocalizedOptionName(MenuOption option)
+    {
+        if (option.IsTranslationKey && _player != null && _localizer != null)
+        {
+            using (new WithTemporaryCulture(_player.GetLanguage()))
+            {
+                return _localizer[option.Name];
+            }
+        }
+        return option.Name;
     }
 
     /// <summary>
@@ -99,8 +160,11 @@ public class MenuBuilder(string title)
     {
         if (!player.IsValid) return;
 
+        // Get localized title
+        var localizedTitle = GetLocalizedTitle();
+
         // Use MenuManager dependency
-        var menu = Helper.CreateMenu(title, _backAction);
+        var menu = Helper.CreateMenu(localizedTitle, _backAction);
         if (menu == null) return;
 
         foreach (var option in _options)
@@ -115,7 +179,10 @@ public class MenuBuilder(string title)
                 }
             }
 
-            menu.AddMenuOption(option.Name, (menuPlayer, menuOption) =>
+            // Get localized option name
+            var localizedName = GetLocalizedOptionName(option);
+
+            menu.AddMenuOption(localizedName, (menuPlayer, menuOption) =>
             {
                 option.Action?.Invoke(menuPlayer);
             }, option.Disabled);
@@ -166,5 +233,6 @@ public class MenuOption
     public Action<CCSPlayerController>? Action { get; set; }
     public bool Disabled { get; set; }
     public string? Permission { get; set; }
+    public bool IsTranslationKey { get; set; }
 }
     

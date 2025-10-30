@@ -99,14 +99,8 @@ internal class PlayerManager
                             var steamId64 = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64;
                             var ipUint = IpHelper.IpToUint(ipAddress);
 
-                            // MySQL: INSERT ... ON DUPLICATE KEY UPDATE pattern
-                            const string upsertQuery = """
-                                INSERT INTO `sa_players_ips` (steamid, name, address, used_at)
-                                VALUES (@SteamID, @playerName, @IPAddress, CURRENT_TIMESTAMP)
-                                ON DUPLICATE KEY UPDATE
-                                    used_at = CURRENT_TIMESTAMP,
-                                    name = @playerName;
-                                """;
+                            // Use database-specific UPSERT query (handles MySQL vs SQLite syntax differences)
+                            var upsertQuery = CS2_SimpleAdmin.DatabaseProvider.GetUpsertPlayerIpQuery();
 
                             await connection.ExecuteAsync(upsertQuery, new
                             {
