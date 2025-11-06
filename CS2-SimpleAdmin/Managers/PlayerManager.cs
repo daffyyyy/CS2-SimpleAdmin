@@ -364,7 +364,12 @@ internal class PlayerManager
                     foreach (var player in bannedPlayers)
                     {
                         if (!player.UserId.HasValue) continue;
-                        await Server.NextWorldUpdateAsync(() => Helper.KickPlayer((int)player.UserId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED));
+                        await Server.NextWorldUpdateAsync(() =>
+                        {
+                            if (Helper.GetPlayerFromSteamid64(player.SteamID) != null)
+                                Helper.KickPlayer((int)player.UserId,
+                                    NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+                        });
                     }
                 }
                 

@@ -49,25 +49,27 @@ public static class ManagePlayersMenu
         if (AdminManager.CommandIsOverriden("css_warn")
                 ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_warn"))
                 : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/kick"))
-            options.Add(new ChatMenuOptionData(localizer?["sa_warn"] ?? "Warn", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_warn"] ?? "Warn", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_warn"] ?? "Warn"}: {player.PlayerName}", player, WarnMenu))));
+            options.Add(new ChatMenuOptionData(localizer?["sa_warn"] ?? "Warn", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_warn"] ?? "Warn", (a, p) => DurationMenu.OpenMenu(a, $"{localizer?["sa_warn"] ?? "Warn"}: {p.PlayerName}", p, WarnMenu))));
 
         if (hasBan)
-            options.Add(new ChatMenuOptionData(localizer?["sa_ban"] ?? "Ban", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_ban"] ?? "Ban", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_ban"] ?? "Ban"}: {player.PlayerName}", player, BanMenu))));
+            options.Add(new ChatMenuOptionData(localizer?["sa_ban"] ?? "Ban", () =>
+                PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_ban"] ?? "Ban", (a, p) =>
+                    DurationMenu.OpenMenu(a, $"{localizer?["sa_ban"] ?? "Ban"}: {p.PlayerName}", p, BanMenu))));
 
         if (hasChat)
         {
             if (AdminManager.CommandIsOverriden("css_gag")
                     ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_gag"))
                     : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat"))
-                options.Add(new ChatMenuOptionData(localizer?["sa_gag"] ?? "Gag", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_gag"] ?? "Gag", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_gag"] ?? "Gag"}: {player.PlayerName}", player, GagMenu))));
+                options.Add(new ChatMenuOptionData(localizer?["sa_gag"] ?? "Gag", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_gag"] ?? "Gag", (a, p) => DurationMenu.OpenMenu(a, $"{localizer?["sa_gag"] ?? "Gag"}: {p.PlayerName}", p, GagMenu))));
             if (AdminManager.CommandIsOverriden("css_mute")
                     ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_mute"))
                     : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat"))
-                options.Add(new ChatMenuOptionData(localizer?["sa_mute"] ?? "Mute", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_mute"] ?? "Mute", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_mute"] ?? "Mute"}: {player.PlayerName}", player, MuteMenu))));
+                options.Add(new ChatMenuOptionData(localizer?["sa_mute"] ?? "Mute", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_mute"] ?? "Mute", (a, p) => DurationMenu.OpenMenu(a, $"{localizer?["sa_mute"] ?? "Mute"}: {p.PlayerName}", p, MuteMenu))));
             if (AdminManager.CommandIsOverriden("css_silence")
                     ? AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), AdminManager.GetPermissionOverrides("css_silence"))
                     : AdminManager.PlayerHasPermissions(new SteamID(admin.SteamID), "@css/chat"))
-                options.Add(new ChatMenuOptionData(localizer?["sa_silence"] ?? "Silence", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_silence"] ?? "Silence", (admin, player) => DurationMenu.OpenMenu(admin, $"{localizer?["sa_silence"] ?? "Silence"}: {player.PlayerName}", player, SilenceMenu))));
+                options.Add(new ChatMenuOptionData(localizer?["sa_silence"] ?? "Silence", () => PlayersMenu.OpenRealPlayersMenu(admin, localizer?["sa_silence"] ?? "Silence", (a, p) => DurationMenu.OpenMenu(a, $"{localizer?["sa_silence"] ?? "Silence"}: {p.PlayerName}", p, SilenceMenu))));
         }
 
         if (AdminManager.CommandIsOverriden("css_team")
@@ -159,22 +161,9 @@ public static class ManagePlayersMenu
             {
                 if (player is { IsValid: true })
                     Ban(admin, player, duration, reason);
-                
+
                 CS2_SimpleAdmin.MenuApi?.CloseMenu(admin);
             });
-
-        // var menu = AdminMenu.CreateMenu($"{CS2_SimpleAdmin._localizer?["sa_ban"] ?? "Ban"}: {player?.PlayerName}");
-        //
-        // foreach (var option in CS2_SimpleAdmin.Instance.Config.MenuConfigs.BanReasons)
-        // {
-        // 	menu?.AddMenuOption(option, (_, _) =>
-        // 	{
-        // 		if (player is { IsValid: true })
-        // 			Ban(admin, player, duration, option);
-        // 	});
-        // }
-        //
-        // if (menu != null) AdminMenu.OpenMenu(admin, menu);
     }
 
     private static void Ban(CCSPlayerController admin, CCSPlayerController player, int duration, string reason)

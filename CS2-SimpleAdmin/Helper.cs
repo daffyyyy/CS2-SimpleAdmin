@@ -64,7 +64,7 @@ internal static class Helper
 
     public static List<CCSPlayerController> GetValidPlayers()
     {
-        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().ToList();
+        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().Where(p => p.Connected == PlayerConnectedState.PlayerConnected).ToList();
     }
     
     public static List<CCSPlayerController> GetValidPlayersWithBots()
@@ -583,27 +583,32 @@ internal static class Helper
     }
 
     public static void DisplayCenterMessage(
-        CCSPlayerController player,
-        string messageKey,
-        string? callerName = null,
+        CCSPlayerController player, 
+        string messageKey, 
+        string? callerName = null, 
         params object[] messageArgs)
     {
         if (CS2_SimpleAdmin._localizer == null) return;
 
+        // Determine the localized message key
         var localizedMessageKey = $"{messageKey}";
 
         var formattedMessageArgs = messageArgs.Select(arg => arg?.ToString() ?? string.Empty).ToArray();
 
+        // Replace placeholder based on showActivityType
         for (var i = 0; i < formattedMessageArgs.Length; i++)
         {
-            var arg = formattedMessageArgs[i]; 
+            var arg = formattedMessageArgs[i]; // Convert argument to string if not null
+            // Replace "CALLER" placeholder in the argument string
             formattedMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
             {
                 1 => arg.Replace("CALLER", CS2_SimpleAdmin._localizer["sa_admin"]),
+                2 => arg.Replace("CALLER", callerName ?? "Console"),
                 _ => arg
             };
         }
 
+        // Print the localized message to the center of the screen for the player
         using (new WithTemporaryCulture(player.GetLanguage()))
         {
             player.PrintToCenter(CS2_SimpleAdmin._localizer[localizedMessageKey, formattedMessageArgs.Cast<object>().ToArray()]);

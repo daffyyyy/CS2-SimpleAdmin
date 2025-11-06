@@ -57,8 +57,9 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                slapMenu.AddSubMenu(playerName, () => CreateSlapDamageMenu(admin, player));
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                slapMenu.AddSubMenu(playerName, () => CreateSlapDamageMenu(admin, capturedPlayer));
             }
 
             return slapMenu.WithBackButton();
@@ -112,12 +113,13 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
                 slayMenu.AddOption(playerName, _ =>
                 {
-                    if (player.IsValid)
+                    if (capturedPlayer.IsValid)
                     {
-                        CS2_SimpleAdmin.Slay(admin, player);
+                        CS2_SimpleAdmin.Slay(admin, capturedPlayer);
                     }
                 });
             }
@@ -139,13 +141,14 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                kickMenu.AddSubMenu(playerName, () => CreateReasonMenu(admin, player, "Kick", PenaltyType.Kick,
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                kickMenu.AddSubMenu(playerName, () => CreateReasonMenu(admin, capturedPlayer, "Kick", PenaltyType.Kick,
                     (_, _, reason) =>
                     {
-                        if (player.IsValid)
+                        if (capturedPlayer.IsValid)
                         {
-                            CS2_SimpleAdmin.Instance.Kick(admin, player, reason, admin.PlayerName);
+                            CS2_SimpleAdmin.Instance.Kick(admin, capturedPlayer, reason, admin.PlayerName);
                         }
                     }));
             }
@@ -167,14 +170,15 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                warnMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, player, "Warn", 
-                    (_, _, duration) => CreateReasonMenu(admin, player, "Warn", PenaltyType.Warn,
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                warnMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, capturedPlayer, "Warn",
+                    (_, _, duration) => CreateReasonMenu(admin, capturedPlayer, "Warn", PenaltyType.Warn,
                         (_, _, reason) =>
                         {
-                            if (player.IsValid)
+                            if (capturedPlayer.IsValid)
                             {
-                                CS2_SimpleAdmin.Instance.Warn(admin, player, duration, reason, admin.PlayerName);
+                                CS2_SimpleAdmin.Instance.Warn(admin, capturedPlayer, duration, reason, admin.PlayerName);
                             }
                         })));
             }
@@ -196,14 +200,15 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                banMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, player, "Ban", 
-                    (_, _, duration) => CreateReasonMenu(admin, player, "Ban", PenaltyType.Ban,
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                banMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, capturedPlayer, "Ban",
+                    (_, _, duration) => CreateReasonMenu(admin, capturedPlayer, "Ban", PenaltyType.Ban,
                         (_, _, reason) =>
                         {
-                            if (player.IsValid)
+                            if (capturedPlayer.IsValid)
                             {
-                                CS2_SimpleAdmin.Instance.Ban(admin, player, duration, reason, admin.PlayerName);
+                                CS2_SimpleAdmin.Instance.Ban(admin, capturedPlayer, duration, reason, admin.PlayerName);
                             }
                         })));
             }
@@ -225,14 +230,15 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                gagMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, player, "Gag", 
-                    (_, _, duration) => CreateReasonMenu(admin, player, "Gag", PenaltyType.Gag,
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                gagMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, capturedPlayer, "Gag",
+                    (_, _, duration) => CreateReasonMenu(admin, capturedPlayer, "Gag", PenaltyType.Gag,
                         (_, _, reason) =>
                         {
-                            if (player.IsValid)
+                            if (capturedPlayer.IsValid)
                             {
-                                CS2_SimpleAdmin.Instance.Gag(admin, player, duration, reason);
+                                CS2_SimpleAdmin.Instance.Gag(admin, capturedPlayer, duration, reason);
                             }
                         })));
             }
@@ -254,14 +260,15 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                muteMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, player, "Mute", 
-                    (_, _, duration) => CreateReasonMenu(admin, player, "Mute", PenaltyType.Mute,
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                muteMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, capturedPlayer, "Mute",
+                    (_, _, duration) => CreateReasonMenu(admin, capturedPlayer, "Mute", PenaltyType.Mute,
                         (_, _, reason) =>
                         {
-                            if (player.IsValid)
+                            if (capturedPlayer.IsValid)
                             {
-                                CS2_SimpleAdmin.Instance.Mute(admin, player, duration, reason);
+                                CS2_SimpleAdmin.Instance.Mute(admin, capturedPlayer, duration, reason);
                             }
                         })));
             }
@@ -283,14 +290,15 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                silenceMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, player, "Silence", 
-                    (_, _, duration) => CreateReasonMenu(admin, player, "Silence", PenaltyType.Silence,
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                silenceMenu.AddSubMenu(playerName, () => CreateDurationMenu(admin, capturedPlayer, "Silence",
+                    (_, _, duration) => CreateReasonMenu(admin, capturedPlayer, "Silence", PenaltyType.Silence,
                         (_, _, reason) =>
                         {
-                            if (player.IsValid)
+                            if (capturedPlayer.IsValid)
                             {
-                                CS2_SimpleAdmin.Instance.Silence(admin, player, duration, reason);
+                                CS2_SimpleAdmin.Instance.Silence(admin, capturedPlayer, duration, reason);
                             }
                         })));
             }
@@ -312,8 +320,9 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                teamMenu.AddSubMenu(playerName, () => CreateTeamSelectionMenu(admin, player));
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                teamMenu.AddSubMenu(playerName, () => CreateTeamSelectionMenu(admin, capturedPlayer));
             }
 
             return teamMenu.WithBackButton();
@@ -488,8 +497,9 @@ public abstract class BasicMenu
 
             foreach (var player in players)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
-                addAdminMenu.AddSubMenu(playerName, () => CreateAdminFlagsMenu(admin, player));
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
+                addAdminMenu.AddSubMenu(playerName, () => CreateAdminFlagsMenu(admin, capturedPlayer));
             }
 
             return addAdminMenu.WithBackButton();
@@ -539,19 +549,20 @@ public abstract class BasicMenu
             var localizer = CS2_SimpleAdmin._localizer;
             var removeAdminMenu = new MenuBuilder("sa_admin_remove", admin, localizer);
 
-            var adminPlayers = Helper.GetValidPlayers().Where(p => 
-                AdminManager.GetPlayerAdminData(p)?.Flags.Count > 0 && 
-                p != admin && 
+            var adminPlayers = Helper.GetValidPlayers().Where(p =>
+                AdminManager.GetPlayerAdminData(p)?.Flags.Count > 0 &&
+                p != admin &&
                 admin.CanTarget(p));
-            
+
             foreach (var player in adminPlayers)
             {
-                var playerName = player.PlayerName.Length > 26 ? player.PlayerName[..26] : player.PlayerName;
+                var capturedPlayer = player; // Capture to local variable to avoid closure issue
+                var playerName = capturedPlayer.PlayerName.Length > 26 ? capturedPlayer.PlayerName[..26] : capturedPlayer.PlayerName;
                 removeAdminMenu.AddOption(playerName, _ =>
                 {
-                    if (player.IsValid)
+                    if (capturedPlayer.IsValid)
                     {
-                        CS2_SimpleAdmin.Instance.RemoveAdmin(admin, player.SteamID.ToString());
+                        CS2_SimpleAdmin.Instance.RemoveAdmin(admin, capturedPlayer.SteamID.ToString());
                     }
                 });
             }
@@ -583,10 +594,10 @@ public abstract class BasicMenu
         /// <param name="admin">The admin player selecting duration.</param>
         /// <param name="player">The target player for the penalty.</param>
         /// <param name="actionName">The name of the penalty action (e.g., "Kick", "Ban").</param>
-        /// <param name="onSelectAction">Callback action executed when duration is selected.</param>
+        /// <param name="onSelectAction">Callback function that returns the next menu when duration is selected.</param>
         /// <returns>A MenuBuilder instance for the duration menu.</returns>
         private static MenuBuilder CreateDurationMenu(CCSPlayerController admin, CCSPlayerController player, string actionName,
-            Action<CCSPlayerController, CCSPlayerController, int> onSelectAction)
+            Func<CCSPlayerController, CCSPlayerController, int, MenuBuilder> onSelectAction)
         {
             var localizer = CS2_SimpleAdmin._localizer;
 
@@ -614,10 +625,8 @@ public abstract class BasicMenu
 
             foreach (var durationItem in CS2_SimpleAdmin.Instance.Config.MenuConfigs.Durations)
             {
-                durationMenu.AddOption(durationItem.Name, _ =>
-                {
-                    onSelectAction(admin, player, durationItem.Duration);
-                });
+                var capturedDuration = durationItem.Duration; // Capture to avoid closure issue
+                durationMenu.AddSubMenu(durationItem.Name, () => onSelectAction(admin, player, capturedDuration));
             }
 
             return durationMenu.WithBackButton();

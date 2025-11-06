@@ -41,11 +41,12 @@ public static class PlayersMenu
                 continue;
 
             var enabled = admin.CanTarget(player);
+            var capturedPlayer = player; // Capture in local variable to avoid closure issues
 
             if (optionName != null)
-                menu?.AddMenuOption(optionName, (_, _) =>
+                menu?.AddMenuOption(optionName, (controller, option) =>
                     {
-                        if (player != null) onSelectAction.Invoke(admin, player);
+                        if (capturedPlayer != null) onSelectAction.Invoke(admin, capturedPlayer);
                     },
                     !enabled);
         }
