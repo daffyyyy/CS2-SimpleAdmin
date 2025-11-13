@@ -23,7 +23,7 @@ public partial class CS2_SimpleAdmin
     {
         RegisterListener<Listeners.OnMapStart>(OnMapStart);
         // RegisterListener<Listeners.OnClientConnect>(OnClientConnect);
-        RegisterListener<Listeners.OnClientConnect>(OnClientConnect);
+        // RegisterListener<Listeners.OnClientConnect>(OnClientConnect);
         RegisterListener<Listeners.OnClientConnected>(OnClientConnected);
         RegisterListener<Listeners.OnGameServerSteamAPIActivated>(OnGameServerSteamAPIActivated);
         if (Config.OtherSettings.UserMessageGagChatType)

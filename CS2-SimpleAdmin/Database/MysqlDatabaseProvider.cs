@@ -15,7 +15,7 @@ public class MySqlDatabaseProvider(string connectionString) : IDatabaseProvider
         cmd.CommandText = "SET NAMES 'utf8mb4' COLLATE 'utf8mb4_general_ci';";
         await cmd.ExecuteNonQueryAsync();
         
-        cmd.CommandText = "SET time_zone = '+00:00';";
+        // cmd.CommandText = "SET time_zone = '+00:00';";
         await cmd.ExecuteNonQueryAsync();
 
         return connection;

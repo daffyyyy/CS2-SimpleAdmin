@@ -13,7 +13,7 @@ namespace CS2_SimpleAdmin.Managers;
 
 internal class PlayerManager
 {
-    private readonly SemaphoreSlim _loadPlayerSemaphore = new(5);
+    private readonly SemaphoreSlim _loadPlayerSemaphore = new(10);
     private readonly CS2_SimpleAdminConfig _config = CS2_SimpleAdmin.Instance.Config;
 
     /// <summary>
@@ -51,7 +51,6 @@ internal class PlayerManager
             try
             {
                 await _loadPlayerSemaphore.WaitAsync();
-
                 if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(steamId))
                 {
                     var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
@@ -284,18 +283,6 @@ internal class PlayerManager
 #endif
             if (CS2_SimpleAdmin.DatabaseProvider == null)
                 return;
-            
-            // Optimization: Get players once and avoid allocating anonymous types
-            var validPlayers = Helper.GetValidPlayers();
-            if (validPlayers.Count == 0)
-                return;
-
-            // Use ValueTuple instead of anonymous type - better performance and less allocations
-            var tempPlayers = new List<(string PlayerName, ulong SteamID, string? IpAddress, int? UserId, int Slot)>(validPlayers.Count);
-            foreach (var p in validPlayers)
-            {
-                tempPlayers.Add((p.PlayerName, p.SteamID, p.IpAddress, p.UserId, p.Slot));
-            }
 
             var pluginInstance = CS2_SimpleAdmin.Instance;
             var config = _config.OtherSettings; // Cache config access
@@ -304,7 +291,8 @@ internal class PlayerManager
             {
                 try
                 {
-                    // Run all expire tasks in parallel
+                    // Always run cache and permission refresh, regardless of player count
+                    // This ensures bans/mutes status changes are detected even when server is empty
                     var expireTasks = new[]
                     {
                         pluginInstance.BanManager.ExpireOldBans(),
@@ -332,6 +320,11 @@ internal class PlayerManager
                 if (pluginInstance.CacheManager == null)
                     return;
 
+                // Only check players if there are any online
+                var validPlayers = Helper.GetValidPlayers();
+                if (validPlayers.Count == 0)
+                    return;
+
                 // Optimization: Cache ban type and multi-account check to avoid repeated config access
                 var banType = config.BanType;
                 var checkMultiAccounts = config.CheckMultiAccountsByIp;
@@ -339,7 +332,7 @@ internal class PlayerManager
                 var bannedPlayers = new List<(string PlayerName, ulong SteamID, string? IpAddress, int? UserId, int Slot)>();
 
                 // Manual loop instead of LINQ - better performance
-                foreach (var player in tempPlayers)
+                foreach (var player in validPlayers)
                 {
                     var playerName = player.PlayerName;
                     var steamId = player.SteamID;
@@ -355,7 +348,7 @@ internal class PlayerManager
 
                     if (isBanned)
                     {
-                        bannedPlayers.Add(player);
+                        bannedPlayers.Add((playerName, steamId, ip, player.UserId, player.Slot));
                     }
                 }
 
@@ -376,8 +369,8 @@ internal class PlayerManager
                 if (config.TimeMode == 0)
                 {
                     // Optimization: Manual projection instead of LINQ
-                    var onlinePlayers = new List<(ulong, int?, int)>(tempPlayers.Count);
-                    foreach (var player in tempPlayers)
+                    var onlinePlayers = new List<(ulong, int?, int)>(validPlayers.Count);
+                    foreach (var player in validPlayers)
                     {
                         onlinePlayers.Add((player.SteamID, player.UserId, player.Slot));
                     }
