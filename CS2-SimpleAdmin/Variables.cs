@@ -40,7 +40,6 @@ public partial class CS2_SimpleAdmin
     internal static readonly HashSet<ulong> AdminDisabledJoinComms = [];
 
     // Player Management
-    private static readonly HashSet<int> GodPlayers = [];
     internal static readonly HashSet<int> SilentPlayers = [];
     internal static readonly Dictionary<ulong, string> RenamedPlayers = [];
     internal static readonly ConcurrentDictionary<ulong, PlayerInfo> PlayersInfo = [];
