@@ -64,7 +64,7 @@ internal static class Helper
 
     public static List<CCSPlayerController> GetValidPlayers()
     {
-        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().Where(p => p.Connected == PlayerConnectedState.PlayerConnected).ToList();
+        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().Where(p => p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected).ToList();
     }
     
     public static List<CCSPlayerController> GetValidPlayersWithBots()

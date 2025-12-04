@@ -80,13 +80,7 @@ internal class PlayerManager
                 {
                     var playerInfo = new PlayerInfo(userId, slot, new SteamID(steamId), playerName, ipAddress);
                     CS2_SimpleAdmin.PlayersInfo[steamId] = playerInfo;
-
-                    await Server.NextWorldUpdateAsync(() =>
-                    {
-                        if (!CS2_SimpleAdmin.CachedPlayers.Contains(player))
-                            CS2_SimpleAdmin.CachedPlayers.Add(player);
-                    });
-
+                    
                     if (_config.OtherSettings.CheckMultiAccountsByIp && ipAddress != null &&
                         CS2_SimpleAdmin.PlayersInfo[steamId] != null)
                     {
@@ -253,6 +247,7 @@ internal class PlayerManager
                 _loadPlayerSemaphore.Release();
             }
         });
+        
         if (CS2_SimpleAdmin.RenamedPlayers.TryGetValue(player.SteamID, out var name))
         {
             player.Rename(name);
