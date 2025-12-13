@@ -620,47 +620,40 @@ internal class CacheManager: IDisposable
         if (CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType == 0 || string.IsNullOrEmpty(ipAddress))
             return false;
 
-        if (!_playerIpsCache.TryGetValue(steamId, out var ipData))
+        if (!IpHelper.TryConvertIpToUint(ipAddress, out var ipUInt))
             return false;
 
-        var cutoff = Time.ActualDateTime().AddDays(-CS2_SimpleAdmin.Instance.Config.OtherSettings.ExpireOldIpBans);
+        if (_cachedIgnoredIps.Contains(ipUInt))
+            return false;
+
+        if (!_ipIndex.TryGetValue(ipUInt, out var ipBanRecords))
+            return false;
+
+        var ipBan = ipBanRecords.FirstOrDefault(r => r.StatusEnum == BanStatus.ACTIVE);
+        if (ipBan == null)
+            return false;
+
+        if (!_banCache.TryGetValue(ipBan.Id, out var cachedIpBan) || cachedIpBan.StatusEnum != BanStatus.ACTIVE)
+            return false;
+
+        var expireOldIpBans = CS2_SimpleAdmin.Instance.Config.OtherSettings.ExpireOldIpBans;
+        if (expireOldIpBans > 0)
+        {
+            var cutoff = Time.ActualDateTime().AddDays(-expireOldIpBans);
+            if (ipBan.Created < cutoff)
+                return false;
+        }
+
         var unknownName = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
 
-        if (ipAddress != null && IpHelper.TryConvertIpToUint(ipAddress, out var ipAsUint))
-        {
-            if (!_cachedIgnoredIps.Contains(ipAsUint))
-            {
-                ipData.Add(new IpRecord(ipAsUint, Time.ActualDateTime().AddSeconds(-2), unknownName));
-            }
-        }
+        if (string.IsNullOrEmpty(ipBan.PlayerName))
+            ipBan.PlayerName = playerName;
 
-        foreach (var ipRecord in ipData)
-        {
-            if (ipRecord.UsedAt < cutoff || _cachedIgnoredIps.Contains(ipRecord.Ip))
-                continue;
+        ipBan.PlayerSteamId ??= steamId;
 
-            if (!_ipIndex.TryGetValue(ipRecord.Ip, out var banRecords))
-                continue;
+        _ = Task.Run(() => UpdatePlayerData(playerName, steamId, ipAddress));
 
-            var activeBan = banRecords.FirstOrDefault(r => r.StatusEnum == BanStatus.ACTIVE);
-            if (activeBan == null)
-                continue;
-
-            // Double-check the ban is still active in cache (handle race conditions)
-            if (!_banCache.TryGetValue(activeBan.Id, out var cachedBan) || cachedBan.StatusEnum != BanStatus.ACTIVE)
-                continue;
-
-            if (string.IsNullOrEmpty(activeBan.PlayerName))
-                activeBan.PlayerName = unknownName;
-
-            activeBan.PlayerSteamId ??= steamId;
-
-            _ = Task.Run(() => UpdatePlayerData(playerName, steamId, ipAddress));
-
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     /// <summary>
