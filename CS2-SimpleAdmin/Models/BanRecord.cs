@@ -24,7 +24,10 @@ public record BanRecord
     
     [Column("player_ip")]
     public string? PlayerIp { get; set; }
-    
+
+    [Column("created")]
+    public DateTime Created { get; init; }
+
     [Column("status")]
     public required string Status { get; init; }
 
