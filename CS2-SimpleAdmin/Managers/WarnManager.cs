@@ -42,7 +42,7 @@ internal class WarnManager(IDatabaseProvider? databaseProvider)
 
             return warnId;
         }
-        catch(Exception e)
+        catch(Exception)
         {
             return null;
         }

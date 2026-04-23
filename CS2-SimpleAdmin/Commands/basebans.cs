@@ -27,7 +27,7 @@ public partial class CS2_SimpleAdmin
         
         var targets = GetTarget(command);
         if (targets == null) return;
-        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, Connected: PlayerConnectedState.PlayerConnected, IsHLTV: false }).ToList();
+        var playersToTarget = targets.Players.Where(player => player is { IsValid: true, Connected: PlayerConnectedState.Connected, IsHLTV: false }).ToList();
 
         if (playersToTarget.Count > 1 && Config.OtherSettings.DisableDangerousCommands || playersToTarget.Count == 0)
         {
@@ -373,7 +373,7 @@ public partial class CS2_SimpleAdmin
         
         var targets = GetTarget(command);
         if (targets == null) return;
-        var playersToTarget = targets.Players.Where(player => player.IsValid && player.Connected == PlayerConnectedState.PlayerConnected && !player.IsHLTV).ToList();
+        var playersToTarget = targets.Players.Where(player => player.IsValid && player.Connected == PlayerConnectedState.Connected && !player.IsHLTV).ToList();
 
         if (playersToTarget.Count > 1 && Config.OtherSettings.DisableDangerousCommands || playersToTarget.Count == 0)
         {

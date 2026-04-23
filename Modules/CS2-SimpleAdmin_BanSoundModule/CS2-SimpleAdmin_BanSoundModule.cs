@@ -45,7 +45,7 @@ public class CS2_SimpleAdmin_BanSoundModule: BasePlugin
         foreach (var player in Utilities.GetPlayers().Where(p => p.IsValid && !p.IsBot))
         {
             var filter = new RecipientFilter(player);
-            player?.EmitSound("bansound", volume: 0.9f, recipients: filter);
+            player?.EmitSound("bansound", volume: 0.75f, recipients: filter);
         }
     }
 } 

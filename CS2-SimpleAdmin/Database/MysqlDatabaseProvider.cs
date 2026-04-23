@@ -251,6 +251,11 @@ public class MySqlDatabaseProvider(string connectionString) : IDatabaseProvider
             ? "UPDATE sa_bans SET player_ip = NULL WHERE status = 'ACTIVE' AND ends <= @ipBansTime"
             : "UPDATE sa_bans SET player_ip = NULL WHERE status = 'ACTIVE' AND ends <= @ipBansTime AND server_id = @serverid";
     }
+
+    public string GetExpireOldPlayerIpsQuery()
+    {
+        return "DELETE FROM sa_players_ips WHERE used_at <= @ipBansTime";
+    }
     
     public string GetAddMuteQuery(bool includePlayerName) =>
         includePlayerName

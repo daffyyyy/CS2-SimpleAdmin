@@ -259,7 +259,7 @@ public partial class CS2_SimpleAdmin
             {
                 var player = Utilities.GetPlayerFromSteamId(list.Key);
 
-                if (player == null || !player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
+                if (player == null || !player.IsValid || player.Connected != PlayerConnectedState.Connected)
                     continue;
 
                 if (player.PlayerName.Equals(list.Value))
@@ -328,7 +328,7 @@ public partial class CS2_SimpleAdmin
                     ? Utilities.GetPlayerFromUserid(userId) 
                     : null;
         
-                if (target == null || !target.IsValid || target.Connected != PlayerConnectedState.PlayerConnected)
+                if (target == null || !target.IsValid || target.Connected != PlayerConnectedState.Connected)
                     return HookResult.Continue;
                 
                 return !player.CanTarget(target) ? HookResult.Stop : HookResult.Continue;
@@ -473,7 +473,7 @@ public partial class CS2_SimpleAdmin
         var player = @event.Userid;
         
         if (player?.UserId == null || !player.IsValid || player.IsHLTV ||
-            player.Connected != PlayerConnectedState.PlayerConnected || !PlayersInfo.ContainsKey(player.SteamID) ||
+            player.Connected != PlayerConnectedState.Connected || !PlayersInfo.ContainsKey(player.SteamID) ||
             @event.Attacker == null)
             return HookResult.Continue;
 

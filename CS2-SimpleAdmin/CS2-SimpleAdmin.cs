@@ -22,7 +22,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
     public override string ModuleName => "CS2-SimpleAdmin" + (Helper.IsDebugBuild ? " (DEBUG)" : " (RELEASE)");
     public override string ModuleDescription => "Simple admin plugin for Counter-Strike 2 :)";
     public override string ModuleAuthor => "daffyy";
-    public override string ModuleVersion => "1.7.8-beta-10b";
+    public override string ModuleVersion => "1.7.9a";
     
     public override void Load(bool hotReload)
     {
@@ -46,7 +46,7 @@ public partial class CS2_SimpleAdmin : BasePlugin, IPluginConfig<CS2_SimpleAdmin
                 CachedPlayers.Clear();
                 BotPlayers.Clear();
                 
-                foreach (var player in Utilities.GetPlayers().Where(p => p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected && !p.IsHLTV).ToArray()) 
+                foreach (var player in Utilities.GetPlayers().Where(p => p.IsValid && p is { Connected: PlayerConnectedState.Connected, IsHLTV: false }).ToArray()) 
                 {
                     if (!player.IsBot)
                         PlayerManager.LoadPlayerData(player, true);

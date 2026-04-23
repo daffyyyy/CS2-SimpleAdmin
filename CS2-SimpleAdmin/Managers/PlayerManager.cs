@@ -13,7 +13,7 @@ namespace CS2_SimpleAdmin.Managers;
 
 internal class PlayerManager
 {
-    private readonly SemaphoreSlim _loadPlayerSemaphore = new(10);
+    private readonly SemaphoreSlim _loadPlayerSemaphore = new(6);
     private readonly CS2_SimpleAdminConfig _config = CS2_SimpleAdmin.Instance.Config;
 
     /// <summary>
@@ -51,69 +51,41 @@ internal class PlayerManager
             try
             {
                 await _loadPlayerSemaphore.WaitAsync();
-                if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(steamId))
+
+                // Save ip address before ban check
+                await SavePlayerIpAddress(steamId, playerName, ipAddress);
+
+                // Always check bans first, regardless of PlayersInfo state
+                var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
                 {
-                    var isBanned = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType switch
+                    0 => CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(playerName, steamId, null),
+                    _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
+                        ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(playerName, steamId,
+                            ipAddress)
+                        : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(playerName, steamId, ipAddress)
+                };
+
+                CS2_SimpleAdmin._logger?.LogInformation($"[BAN CHECK] Player {playerName} ({steamId}) IP: {ipAddress} - BanType: {CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType} - CheckMultiAccounts: {CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp} - isBanned: {isBanned}");
+
+                if (isBanned)
+                {
+                    CS2_SimpleAdmin._logger?.LogInformation($"[BAN CHECK] KICKING {playerName} ({steamId})");
+                    await Server.NextWorldUpdateAsync(() =>
                     {
-                        0 => CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(playerName, steamId, null),
-                        _ => CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp
-                            ? CS2_SimpleAdmin.Instance.CacheManager.IsPlayerOrAnyIpBanned(playerName, steamId,
-                                ipAddress)
-                            : CS2_SimpleAdmin.Instance.CacheManager.IsPlayerBanned(playerName, steamId, ipAddress)
-                    };
+                        CS2_SimpleAdmin._logger?.LogInformation($"[BAN CHECK] Executing kick for {playerName}");
+                        Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
+                    });
 
-                    // CS2_SimpleAdmin._logger?.LogInformation($"Player {playerName} ({steamId} - {ipAddress}) is banned? {isBanned.ToString()}");
-
-                    if (isBanned)
-                    {
-                        await Server.NextWorldUpdateAsync(() =>
-                        {
-                            // CS2_SimpleAdmin._logger?.LogInformation($"Kicking {playerName}");
-                            Helper.KickPlayer(userId, NetworkDisconnectionReason.NETWORK_DISCONNECT_REJECT_BANNED);
-                        });
-
-                        return;
-                    }
+                    return;
                 }
 
-                if (fullConnect)
+                if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(steamId))
                 {
                     var playerInfo = new PlayerInfo(userId, slot, new SteamID(steamId), playerName, ipAddress);
                     CS2_SimpleAdmin.PlayersInfo[steamId] = playerInfo;
-                    
-                    if (_config.OtherSettings.CheckMultiAccountsByIp && ipAddress != null &&
-                        CS2_SimpleAdmin.PlayersInfo[steamId] != null)
+
+                    if (_config.OtherSettings.CheckMultiAccountsByIp && ipAddress != null)
                     {
-                        try
-                        {
-                            await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
-
-                            // Eliminates the need for SELECT COUNT and duplicate UPDATE queries
-                            var steamId64 = CS2_SimpleAdmin.PlayersInfo[steamId].SteamId.SteamId64;
-                            var ipUint = IpHelper.IpToUint(ipAddress);
-
-                            // Use database-specific UPSERT query (handles MySQL vs SQLite syntax differences)
-                            var upsertQuery = CS2_SimpleAdmin.DatabaseProvider.GetUpsertPlayerIpQuery();
-
-                            await connection.ExecuteAsync(upsertQuery, new
-                            {
-                                SteamID = steamId64,
-                                playerName,
-                                IPAddress = ipUint
-                            });
-
-                            // // Cache will be updated on next refresh cycle
-                            // if (!CS2_SimpleAdmin.Instance.CacheManager.HasIpForPlayer(steamId, ipAddress))
-                            // {
-                            //     // IP association will be reflected after cache refresh
-                            // }
-                        }
-                        catch (Exception ex)
-                        {
-                            CS2_SimpleAdmin._logger?.LogError(
-                                $"Unable to save ip address for {playerInfo.Name} ({ipAddress}): {ex.Message}");
-                        }
-
                         playerInfo.AccountsAssociated =
                             CS2_SimpleAdmin.Instance.CacheManager?.GetAccountsByIp(ipAddress).AsValueEnumerable()
                                 .Select(x => (x.SteamId, x.PlayerName)).ToList() ?? [];
@@ -200,7 +172,7 @@ internal class PlayerManager
                                                               AdminManager.PlayerHasPermissions(
                                                                   new SteamID(p.SteamID),
                                                                   "@css/ban")) &&
-                                                             p.Connected == PlayerConnectedState.PlayerConnected &&
+                                                             p.Connected == PlayerConnectedState.Connected &&
                                                              !CS2_SimpleAdmin.AdminDisabledJoinComms
                                                                  .Contains(p.SteamID)))
                                     {
@@ -247,10 +219,42 @@ internal class PlayerManager
                 _loadPlayerSemaphore.Release();
             }
         });
-        
+
         if (CS2_SimpleAdmin.RenamedPlayers.TryGetValue(player.SteamID, out var name))
         {
             player.Rename(name);
+        }
+    }
+
+    /// <summary>
+    /// Saves player's IP address to the database for multi-account detection.
+    /// This is called before ban checks to ensure IP is recorded even if player is banned.
+    /// </summary>
+    private async Task SavePlayerIpAddress(ulong steamId, string playerName, string? ipAddress)
+    {
+        if (!_config.OtherSettings.CheckMultiAccountsByIp || ipAddress == null || CS2_SimpleAdmin.DatabaseProvider == null)
+            return;
+
+        try
+        {
+            await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
+
+            var steamId64 = steamId;
+            var ipUint = IpHelper.IpToUint(ipAddress);
+
+            var upsertQuery = CS2_SimpleAdmin.DatabaseProvider.GetUpsertPlayerIpQuery();
+
+            await connection.ExecuteAsync(upsertQuery, new
+            {
+                SteamID = steamId64,
+                playerName,
+                IPAddress = ipUint
+            });
+        }
+        catch (Exception ex)
+        {
+            CS2_SimpleAdmin._logger?.LogError(
+                $"Unable to save ip address for {playerName} ({ipAddress}): {ex.Message}");
         }
     }
 

@@ -431,6 +431,9 @@ public async Task UnbanPlayer(string playerPattern, string adminSteamId, string 
                 var ipBansTime = currentTime.AddDays(-CS2_SimpleAdmin.Instance.Config.OtherSettings.ExpireOldIpBans);
                 sql = databaseProvider.GetExpireIpBansQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
                 await connection.ExecuteAsync(sql, new { ipBansTime, CS2_SimpleAdmin.ServerId });
+
+                sql = databaseProvider.GetExpireOldPlayerIpsQuery();
+                await connection.ExecuteAsync(sql, new { ipBansTime });
             }
         }
         catch (Exception)

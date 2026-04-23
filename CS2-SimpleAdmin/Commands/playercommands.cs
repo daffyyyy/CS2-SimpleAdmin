@@ -44,7 +44,7 @@ public partial class CS2_SimpleAdmin
     /// <param name="command">Optional command info for logging.</param>
     internal static void Slay(CCSPlayerController? caller, CCSPlayerController player, string? callerName = null, CommandInfo? command = null)
     {
-        if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected) return;
+        if (!player.IsValid || player.Connected != PlayerConnectedState.Connected) return;
         if (!caller.CanTarget(player)) return;
 
         // Set default caller name if not provided
@@ -93,7 +93,7 @@ public partial class CS2_SimpleAdmin
 
         playersToTarget.ForEach(player =>
         {
-            if (player.Connected != PlayerConnectedState.PlayerConnected)
+            if (player.Connected != PlayerConnectedState.Connected)
                 return;
 
             if (caller!.CanTarget(player))
@@ -207,7 +207,7 @@ public partial class CS2_SimpleAdmin
     internal static void ChangeTeam(CCSPlayerController? caller, CCSPlayerController player, string teamName, CsTeam teamNum, bool kill, CommandInfo? command = null)
     {
         // Check if the player is valid and connected
-        if (!player.IsValid || player.Connected != PlayerConnectedState.PlayerConnected)
+        if (!player.IsValid || player.Connected != PlayerConnectedState.Connected)
             return;
 
         // Ensure the caller can target the player
@@ -284,7 +284,7 @@ public partial class CS2_SimpleAdmin
         playersToTarget.ForEach(player =>
         {
             // Check if the player is connected and can be targeted
-            if (player.Connected != PlayerConnectedState.PlayerConnected || !caller!.CanTarget(player))
+            if (player.Connected != PlayerConnectedState.Connected || !caller!.CanTarget(player))
                 return;
             
             // Determine message key and arguments for the rename notification
@@ -330,7 +330,7 @@ public partial class CS2_SimpleAdmin
         playersToTarget.ForEach(player =>
         {
             // Check if the player is connected and can be targeted
-            if (player.Connected != PlayerConnectedState.PlayerConnected || !caller!.CanTarget(player))
+            if (player.Connected != PlayerConnectedState.Connected || !caller!.CanTarget(player))
                 return;
             
             // Determine message key and arguments for the rename notification
@@ -379,7 +379,7 @@ public partial class CS2_SimpleAdmin
                 return;
 
             destinationPlayer = targets.Players.FirstOrDefault(p =>
-                p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
+                p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.Connected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
 
             if (destinationPlayer == null || !caller.CanTarget(destinationPlayer) || caller.PlayerPawn.Value == null)
                 return;
@@ -399,7 +399,7 @@ public partial class CS2_SimpleAdmin
                 return;
 
             playersToTeleport = targets.Players
-                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller.CanTarget(p))
+                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.Connected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller.CanTarget(p))
                 .ToList();
 
             if (!playersToTeleport.Any())
@@ -476,7 +476,7 @@ public partial class CS2_SimpleAdmin
             destinationPlayer = caller;
 
             playersToTeleport = targets.Players
-                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller.CanTarget(p))
+                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.Connected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller.CanTarget(p))
                 .ToList();
         }
         else
@@ -486,7 +486,7 @@ public partial class CS2_SimpleAdmin
                 return;
 
             destinationPlayer = destination.Players.FirstOrDefault(p =>
-                p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
+                p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.Connected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE });
 
             if (destinationPlayer == null)
                 return;
@@ -497,7 +497,7 @@ public partial class CS2_SimpleAdmin
                 return;
 
             playersToTeleport = targets.Players
-                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.PlayerConnected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller!.CanTarget(p))
+                .Where(p => p is { IsValid: true, IsHLTV: false, Connected: PlayerConnectedState.Connected, PlayerPawn.Value.LifeState: (int)LifeState_t.LIFE_ALIVE } && caller!.CanTarget(p))
                 .ToList();
         }
 

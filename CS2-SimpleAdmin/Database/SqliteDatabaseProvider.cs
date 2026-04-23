@@ -166,6 +166,9 @@ public class SqliteDatabaseProvider(string filePath) : IDatabaseProvider
         multiServer
             ? "UPDATE sa_bans SET player_ip = NULL WHERE status = 'ACTIVE' AND ends <= @ipBansTime"
             : "UPDATE sa_bans SET player_ip = NULL WHERE status = 'ACTIVE' AND ends <= @ipBansTime AND server_id = @serverid";
+
+    public string GetExpireOldPlayerIpsQuery() =>
+        "DELETE FROM sa_players_ips WHERE used_at <= @ipBansTime";
     
     public string GetAdminsQuery() =>
         """

@@ -626,34 +626,81 @@ internal class CacheManager: IDisposable
         if (_cachedIgnoredIps.Contains(ipUInt))
             return false;
 
-        if (!_ipIndex.TryGetValue(ipUInt, out var ipBanRecords))
-            return false;
-
-        var ipBan = ipBanRecords.FirstOrDefault(r => r.StatusEnum == BanStatus.ACTIVE);
-        if (ipBan == null)
-            return false;
-
-        if (!_banCache.TryGetValue(ipBan.Id, out var cachedIpBan) || cachedIpBan.StatusEnum != BanStatus.ACTIVE)
-            return false;
-
-        var expireOldIpBans = CS2_SimpleAdmin.Instance.Config.OtherSettings.ExpireOldIpBans;
-        if (expireOldIpBans > 0)
+        // Direct ip ban (ban record has player_ip set)
+        if (_ipIndex.TryGetValue(ipUInt, out var ipBanRecords))
         {
-            var cutoff = Time.ActualDateTime().AddDays(-expireOldIpBans);
-            if (ipBan.Created < cutoff)
-                return false;
+            var ipBan = ipBanRecords.FirstOrDefault(r => r.StatusEnum == BanStatus.ACTIVE);
+            if (ipBan != null && _banCache.TryGetValue(ipBan.Id, out var cachedIpBan) && cachedIpBan.StatusEnum == BanStatus.ACTIVE)
+            {
+                var expireOldIpBans = CS2_SimpleAdmin.Instance.Config.OtherSettings.ExpireOldIpBans;
+                if (expireOldIpBans <= 0 || ipBan.Created >= Time.ActualDateTime().AddDays(-expireOldIpBans))
+                {
+                    if (string.IsNullOrEmpty(ipBan.PlayerName))
+                        ipBan.PlayerName = playerName;
+                    ipBan.PlayerSteamId ??= steamId;
+                    _ = Task.Run(() => UpdatePlayerData(playerName, steamId, ipAddress));
+                    return true;
+                }
+            }
         }
 
-        var unknownName = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
+        // Multiaccount ban - check if other accounts using current ip are banned
+        if (!_playerIpsCache.IsEmpty)
+        {
+            foreach (var (otherSteamId, ipSet) in _playerIpsCache)
+            {
+                // Skip current player
+                if (otherSteamId == steamId)
+                    continue;
 
-        if (string.IsNullOrEmpty(ipBan.PlayerName))
-            ipBan.PlayerName = playerName;
+                // Check if this ip is in the other accounts ip history
+                if (ipSet.All(record => record.Ip != ipUInt)) continue;
+                // Found another account using this ip - check if its banned
+                if (!_steamIdIndex.TryGetValue(otherSteamId, out var otherSteamBans)) continue;
+                var activeBan = otherSteamBans.FirstOrDefault(b => b.StatusEnum == BanStatus.ACTIVE);
+                if (activeBan == null || !_banCache.TryGetValue(activeBan.Id, out var cachedBan) ||
+                    cachedBan.StatusEnum != BanStatus.ACTIVE) continue;
+                _ = Task.Run(() => UpdatePlayerData(playerName, steamId, ipAddress));
+                return true;
+            }
+        }
 
-        ipBan.PlayerSteamId ??= steamId;
+        // Multiaccount ban - check if this player used any ip where other banned accounts are connected
+        // Search sa_players_ips for all accounts sharing the same ips as current player
+        if (!CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp)
+            return false;
 
-        _ = Task.Run(() => UpdatePlayerData(playerName, steamId, ipAddress));
+        if (!_playerIpsCache.TryGetValue(steamId, out var playerIps))
+            return false;
 
-        return true;
+        // For each ip the player used (current or historical)
+        foreach (var playerIpRecord in playerIps)
+        {
+            // Search sa_players_ips for other accounts using this same ip (as uint)
+            foreach (var (otherSteamId, otherIpSet) in _playerIpsCache)
+            {
+                if (otherSteamId == steamId)
+                    continue;
+
+                // Check if this other account used the player ip
+                if (otherIpSet.All(record => record.Ip != playerIpRecord.Ip))
+                    continue;
+
+                // Check if this other account is banned
+                if (!_steamIdIndex.TryGetValue(otherSteamId, out var otherSteamBans))
+                    continue;
+
+                var activeBan = otherSteamBans.FirstOrDefault(b => b.StatusEnum == BanStatus.ACTIVE);
+                if (activeBan == null || !_banCache.TryGetValue(activeBan.Id, out var cachedBan) ||
+                    cachedBan.StatusEnum != BanStatus.ACTIVE)
+                    continue;
+
+                _ = Task.Run(() => UpdatePlayerData(playerName, steamId, ipAddress));
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>

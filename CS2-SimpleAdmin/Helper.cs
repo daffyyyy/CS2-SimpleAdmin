@@ -11,12 +11,14 @@ using CounterStrikeSharp.API.ValveConstants.Protobuf;
 using CS2_SimpleAdminApi;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 using CounterStrikeSharp.API.Core.Plugin.Host;
 using CounterStrikeSharp.API.Modules.Entities.Constants;
@@ -64,7 +66,7 @@ internal static class Helper
 
     public static List<CCSPlayerController> GetValidPlayers()
     {
-        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().Where(p => p.IsValid && p.Connected == PlayerConnectedState.PlayerConnected).ToList();
+        return CS2_SimpleAdmin.CachedPlayers.AsValueEnumerable().Where(p => p.IsValid && p.Connected == PlayerConnectedState.Connected).ToList();
     }
     
     public static List<CCSPlayerController> GetValidPlayersWithBots()
@@ -855,26 +857,34 @@ internal static class Helper
         }
     }
 
-    public static void UpdateConfig<T>(T config) where T : BasePluginConfig, new()
+    public static void UpdateConfig(BasePluginConfig config)
     {
         // get newest config version
-        var newCfgVersion = new T().Version;
+        var configType = config.GetType();
+        var newCfgVersion = ((BasePluginConfig)Activator.CreateInstance(configType)!).Version;
 
         // loaded config is up to date
         if (config.Version == newCfgVersion)
             return;
 
-        // update the version
-        config.Version = newCfgVersion;
+        // Load existing JSON file and update version property
+        if (!File.Exists(CfgPath))
+            return;
 
-        // serialize the updated config back to json
-        var updatedJsonContent = JsonSerializer.Serialize(config,
-            new JsonSerializerOptions
+        var json = File.ReadAllText(CfgPath);
+        var node = JsonNode.Parse(json);
+
+        if (node != null)
+        {
+            node["Version"] = newCfgVersion;
+            var updatedJsonContent = node.ToJsonString(new JsonSerializerOptions
             {
                 WriteIndented = true,
                 Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
             });
-        File.WriteAllText(CfgPath, updatedJsonContent);
+            
+            File.WriteAllText(CfgPath, updatedJsonContent);
+        }
     }
 
     public static void TryLogCommandOnDiscord(CCSPlayerController? caller, string commandString)

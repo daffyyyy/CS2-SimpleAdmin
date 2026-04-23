@@ -40,6 +40,7 @@ public interface IDatabaseProvider
     string GetUpdateBanStatusQuery();
     string GetExpireBansQuery(bool multiServer);
     string GetExpireIpBansQuery(bool multiServer);
+    string GetExpireOldPlayerIpsQuery();
     
     // MuteManager
     string GetAddMuteQuery(bool includePlayerName);
