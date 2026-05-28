@@ -331,7 +331,7 @@ public async Task UnbanPlayer(string playerPattern, string adminSteamId, string 
 
         foreach (var ban in bansList)
         {
-            int banId = ban.id;
+            int banId = Convert.ToInt32((object)ban.id);
 
             var sqlInsertUnban = databaseProvider.GetInsertUnbanQuery(reason != null);
             var unbanId = await connection.ExecuteScalarAsync<int>(sqlInsertUnban, new { banId, adminId, reason });
@@ -340,7 +340,10 @@ public async Task UnbanPlayer(string playerPattern, string adminSteamId, string 
             await connection.ExecuteAsync(sqlUpdateBan, new { unbanId, banId });
         }
     }
-    catch { }
+    catch (Exception ex)
+    {
+        CS2_SimpleAdmin.Instance?.Logger?.LogError(ex, "UnbanPlayer failed for pattern {Pattern}", playerPattern);
+    }
 }
 
     // public async Task CheckOnlinePlayers(List<(string? IpAddress, ulong SteamID, int? UserId, int Slot)> players)
