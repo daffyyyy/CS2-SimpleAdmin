@@ -73,7 +73,7 @@ internal class CacheManager: IDisposable
             if (CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp)
             {
                 // Optimization: Load IP history and build cache in single pass
-                var ipHistory = await connection.QueryAsync<(ulong steamid, string? name, uint address, DateTime used_at)>(
+                var ipHistory = await connection.QueryAsync<(ulong steamid, string? name, long address, DateTime used_at)>(
                     "SELECT steamid, name, address, used_at FROM sa_players_ips ORDER BY steamid, address, used_at DESC");
 
                 var unknownName = CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
@@ -94,12 +94,12 @@ internal class CacheManager: IDisposable
                     currentSteamId = record.steamid;
 
                     // Only keep the latest timestamp for each IP
-                    if (!latestIpTimestamps.TryGetValue(record.address, out var existingTimestamp) ||
+                    if (!latestIpTimestamps.TryGetValue(((uint)(record.address & 0xFFFFFFFF)), out var existingTimestamp) ||
                         record.used_at > existingTimestamp)
                     {
-                        latestIpTimestamps[record.address] = record.used_at;
+                        latestIpTimestamps[((uint)(record.address & 0xFFFFFFFF))] = record.used_at;
                         currentIpSet.Add(new IpRecord(
-                            record.address,
+                            ((uint)(record.address & 0xFFFFFFFF)),
                             record.used_at,
                             string.IsNullOrEmpty(record.name) ? unknownName : record.name
                         ));
@@ -283,7 +283,7 @@ internal class CacheManager: IDisposable
             
             if (CS2_SimpleAdmin.Instance.Config.OtherSettings.CheckMultiAccountsByIp)
             {
-                var ipHistory = (await connection.QueryAsync<(ulong steamid, string? name, uint address, DateTime used_at)>(
+                var ipHistory = (await connection.QueryAsync<(ulong steamid, string? name, long address, DateTime used_at)>(
                     "SELECT steamid, name, address, used_at FROM sa_players_ips WHERE used_at >= @lastUpdate ORDER BY used_at DESC LIMIT 300",
                     new { lastUpdate = _lastUpdateTime }));
 
@@ -291,7 +291,7 @@ internal class CacheManager: IDisposable
                 {
                     var ipSet = new HashSet<IpRecord>(
                         group
-                            .GroupBy(x => x.address)
+                            .GroupBy(x => (uint)(x.address & 0xFFFFFFFF))
                             .Select(g =>
                             {
                                 var latest = g.MaxBy(x => x.used_at);
