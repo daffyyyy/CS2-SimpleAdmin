@@ -263,7 +263,7 @@ internal class MuteManager(IDatabaseProvider? databaseProvider)
 
             foreach (var mute in mutesList)
             {
-                int muteId = mute.id;
+                int muteId = Convert.ToInt32((object)mute.id);
 
                 int? unmuteId =
                     await connection.ExecuteScalarAsync<int>(sqlInsertUnmute, new { muteId, adminId, reason });
