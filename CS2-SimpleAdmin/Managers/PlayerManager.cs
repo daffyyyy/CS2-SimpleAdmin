@@ -1,3 +1,4 @@
+using System.Globalization;
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Admin;
@@ -43,6 +44,11 @@ internal class PlayerManager
             ? player.PlayerName
             : CS2_SimpleAdmin._localizer?["sa_unknown"] ?? "Unknown";
         var ipAddress = player.IpAddress?.Split(":")[0];
+
+        if (CS2_SimpleAdmin.RenamedPlayers.TryGetValue(steamId, out var renamedTo))
+        {
+            player.Rename(renamedTo);
+        }
 
         if (CS2_SimpleAdmin.DatabaseProvider == null || CS2_SimpleAdmin.Instance.CacheManager == null) return;
 
@@ -219,10 +225,92 @@ internal class PlayerManager
                 _loadPlayerSemaphore.Release();
             }
         });
+    }
 
-        if (CS2_SimpleAdmin.RenamedPlayers.TryGetValue(player.SteamID, out var name))
+    /// <summary>
+    /// Returns every ban, gag/mute/silence and warn ever recorded for a SteamID, newest first.
+    /// Rows carry: type, status, reason, duration, created, ends, admin_name, lift_reason, lift_date, lift_admin.
+    /// </summary>
+    /// <param name="steamId">SteamID64 of the player, online or not.</param>
+    /// <param name="type">Optional filter: bans, gags, mutes, silences or warns.</param>
+    public async Task<List<dynamic>> GetPenaltyHistory(ulong steamId, string? type = null)
+    {
+        if (CS2_SimpleAdmin.DatabaseProvider == null) return [];
+
+        try
         {
-            player.Rename(name);
+            await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
+            var sql = CS2_SimpleAdmin.DatabaseProvider.GetPenaltyHistoryQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
+            var rows = (await connection.QueryAsync(sql, new { PlayerSteamID = steamId, serverid = CS2_SimpleAdmin.ServerId })).ToList();
+
+            // Filter word is the plural (bans, gags, mutes, silences, warns); rows carry BAN/GAG/MUTE/SILENCE/WARN
+            if (type != null)
+                rows.RemoveAll(r => !type.Equals((string)r.type + "s", StringComparison.OrdinalIgnoreCase));
+
+            return rows;
+        }
+        catch (Exception ex)
+        {
+            CS2_SimpleAdmin._logger?.LogError("Unable to load penalty history: {exception}", ex.Message);
+            return [];
+        }
+    }
+
+    /// <summary>
+    /// Dapper gives DateTime on MySQL but can give a string on SQLite; accept both.
+    /// </summary>
+    internal static DateTime? ToDateTime(object? value) =>
+        value switch
+        {
+            DateTime d => d,
+            string s when DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed) => parsed,
+            _ => null
+        };
+
+    /// <summary>
+    /// Loads permanent renames from the database into memory.
+    /// </summary>
+    public async Task LoadRenamedPlayers()
+    {
+        if (CS2_SimpleAdmin.DatabaseProvider == null) return;
+
+        try
+        {
+            await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
+            var rows = await connection.QueryAsync<(long steamId, string name)>(CS2_SimpleAdmin.DatabaseProvider.GetRenamesQuery());
+
+            await Server.NextWorldUpdateAsync(() =>
+            {
+                foreach (var (steamId, name) in rows)
+                    CS2_SimpleAdmin.RenamedPlayers[(ulong)steamId] = name;
+            });
+        }
+        catch (Exception ex)
+        {
+            CS2_SimpleAdmin._logger?.LogError("Unable to load renames: {exception}", ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Persists or removes a permanent rename (css_prename) for a player.
+    /// </summary>
+    /// <param name="steamId">SteamID64 of the player.</param>
+    /// <param name="name">Forced name, or null/empty to remove the rename.</param>
+    public async Task SaveRenamedPlayer(ulong steamId, string? name)
+    {
+        if (CS2_SimpleAdmin.DatabaseProvider == null) return;
+
+        try
+        {
+            await using var connection = await CS2_SimpleAdmin.DatabaseProvider.CreateConnectionAsync();
+            if (string.IsNullOrEmpty(name))
+                await connection.ExecuteAsync(CS2_SimpleAdmin.DatabaseProvider.GetDeleteRenameQuery(), new { steamId });
+            else
+                await connection.ExecuteAsync(CS2_SimpleAdmin.DatabaseProvider.GetUpsertRenameQuery(), new { steamId, name });
+        }
+        catch (Exception ex)
+        {
+            CS2_SimpleAdmin._logger?.LogError("Unable to save rename: {exception}", ex.Message);
         }
     }
 

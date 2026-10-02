@@ -251,9 +251,9 @@ css_prename PlayerName "NewIdentity"
 ```
 
 **Notes:**
-- Name is enforced even after reconnect
-- Stored in database
-- Player cannot change it
+- Name is enforced even after reconnect, map change and server restart
+- Stored in the database (`sa_renames`) and shared by every server using that database
+- Player cannot change it; `css_prename <player>` with no name removes the rename
 - Useful for offensive names
 
 ---

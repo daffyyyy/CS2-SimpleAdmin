@@ -440,6 +440,25 @@ internal static class Helper
         _ = CS2_SimpleAdmin.DiscordWebhookClientLog.SendMessageAsync(GenerateMessageDiscord(localizer["sa_discord_log_command", $"[{callerName}]({communityUrl})", command]));
     }
 
+    /// <summary>
+    /// Resolves the admin name one recipient should see, honoring ShowActivityType:
+    /// on type 0 and 1 only admins see the real name, everyone else sees the generic ADMIN label.
+    /// The generic and console labels are uppercased so they read as labels beside real player names.
+    /// </summary>
+    /// <param name="recipient">The player the message is being sent to.</param>
+    /// <param name="callerName">Name of the admin who ran the command, or null for console.</param>
+    internal static string ResolveActivityName(CCSPlayerController recipient, string? callerName)
+    {
+        var hideFromPlayers = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType is 0 or 1;
+
+        if (hideFromPlayers
+            && !AdminManager.PlayerHasPermissions(new SteamID(recipient.SteamID), "@css/kick")
+            && !AdminManager.PlayerHasPermissions(new SteamID(recipient.SteamID), "@css/ban"))
+            return (CS2_SimpleAdmin._localizer?["sa_admin"] ?? "Admin").ToString().ToUpperInvariant();
+
+        return callerName ?? (CS2_SimpleAdmin._localizer?["sa_console"] ?? "Console").ToString().ToUpperInvariant();
+    }
+
     public static void ShowAdminActivity(string messageKey, string? callerName = null, bool dontPublish = false, params object[] messageArgs)
     {
         string[] publishActions = ["ban", "gag", "silence", "mute"];
@@ -486,15 +505,9 @@ internal static class Helper
             var currentMessageArgs = (string[])formattedMessageArgs.Clone();
 
             // Replace "CALLER" placeholder based on showActivityType and whether the recipient is an admin
+            var shownName = ResolveActivityName(controller, callerName);
             for (var i = 0; i < currentMessageArgs.Length; i++)
-            {
-                var arg = currentMessageArgs[i];
-                currentMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
-                {
-                    1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/kick") || AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
-                    _ => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
-                };
-            }
+                currentMessageArgs[i] = currentMessageArgs[i].Replace("CALLER", shownName);
 
             // Send the localized message to each player
             controller.SendLocalizedMessage(CS2_SimpleAdmin._localizer, messageKey, currentMessageArgs.Cast<object>().ToArray());
@@ -569,15 +582,9 @@ internal static class Helper
             var currentMessageArgs = (string[])formattedMessageArgs.Clone();
 
             // Replace "CALLER" placeholder based on showActivityType
+            var shownName = ResolveActivityName(controller, callerName);
             for (var i = 0; i < currentMessageArgs.Length; i++)
-            {
-                var arg = currentMessageArgs[i];
-                currentMessageArgs[i] = CS2_SimpleAdmin.Instance.Config.OtherSettings.ShowActivityType switch
-                {
-                    1 => arg.Replace("CALLER", AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/kick") || AdminManager.PlayerHasPermissions(new SteamID(controller.SteamID), "@css/ban") ? callerName : CS2_SimpleAdmin._localizer["sa_admin"]),
-                    _ => arg.Replace("CALLER", callerName ?? CS2_SimpleAdmin._localizer["sa_console"]),
-                };
-            }
+                currentMessageArgs[i] = currentMessageArgs[i].Replace("CALLER", shownName);
 
             // Send the localized message to each player using their language
             controller.SendLocalizedMessage(moduleLocalizer, messageKey, currentMessageArgs.Cast<object>().ToArray());
@@ -1011,10 +1018,6 @@ public static class PluginInfo
         Console.WriteLine("|_______||___| |_|   |_||___|    |_______||_______||__| |__||______| |_|   |_||___| |_|  |__|");
         Console.WriteLine("				>> Version: " + moduleVersion);
         Console.WriteLine("		>> GitHub: https://github.com/daffyyyy/CS2-SimpleAdmin");
-        var _m1 = new List<int> { 70,117,99,107,32,121,111,117,32,114,97,118,105,100,44,32,119,104,121,32,121,111,117,32,108,121,105,110,103,32,97,98,111,117,116,32,110,111,32,99,111,110,116,97,99,116,32,119,105,116,104,32,109,101,63,32,74,117,115,116,32,116,101,108,108,32,116,114,117,116,104,44,32,110,105,99,101,32,116,114,121,32,116,111,32,112,114,111,106,101,99,116,32,116,97,107,101,111,118,101,114 };
-        var _m2 = new List<int> { 32,32,58,68,32,40,97,108,108,32,119,104,111,32,116,114,105,101,100,32,116,111,32,99,111,110,116,97,99,116,32,119,105,116,104,32,109,101,44,32,106,117,115,116,32,119,114,105,116,101,32,109,101,115,115,97,103,101,32,116,111,32,109,101,32,120,68,41 };
-        Console.WriteLine("		>> " + new string(_m1.Select(c => (char)c).ToArray()));
-        Console.WriteLine("		>> " + new string(_m2.Select(c => (char)c).ToArray()));
         Console.WriteLine(" ");
     }
 }

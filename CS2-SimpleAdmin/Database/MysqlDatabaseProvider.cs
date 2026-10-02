@@ -217,8 +217,8 @@ public class MySqlDatabaseProvider(string connectionString) : IDatabaseProvider
     public string GetUnbanRetrieveBansQuery(bool multiServer)
     {
         return multiServer
-            ? "SELECT id FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE'"
-            : "SELECT id FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE' AND server_id = @serverid";
+            ? "SELECT id, player_steamid FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE'"
+            : "SELECT id, player_steamid FROM sa_bans WHERE (player_steamid = @pattern OR player_name = @pattern OR player_ip = @pattern) AND status = 'ACTIVE' AND server_id = @serverid";
     }
 
     public string GetUnbanAdminIdQuery()
@@ -237,6 +237,15 @@ public class MySqlDatabaseProvider(string connectionString) : IDatabaseProvider
     {
         return "UPDATE sa_bans SET status = 'UNBANNED', unban_id = @unbanId WHERE id = @banId";
     }
+
+    public string GetRenamesQuery() =>
+        "SELECT player_steamid, name FROM sa_renames";
+
+    public string GetUpsertRenameQuery() =>
+        "INSERT INTO sa_renames (player_steamid, name) VALUES (@steamId, @name) ON DUPLICATE KEY UPDATE name = @name";
+
+    public string GetDeleteRenameQuery() =>
+        "DELETE FROM sa_renames WHERE player_steamid = @steamId";
 
     public string GetExpireBansQuery(bool multiServer)
     {
@@ -403,6 +412,29 @@ public class MySqlDatabaseProvider(string connectionString) : IDatabaseProvider
         multiServer
             ? "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime"
             : "UPDATE sa_warns SET status = 'EXPIRED' WHERE status = 'ACTIVE' AND `duration` > 0 AND ends <= @CurrentTime AND server_id = @serverid";
+
+    public string GetPenaltyHistoryQuery(bool multiServer) =>
+        $"""
+        SELECT b.id, 'BAN' AS type, b.player_name, b.admin_name, b.reason, b.duration, b.created, b.ends, b.status,
+               ub.reason AS lift_reason, ub.date AS lift_date, ua.player_name AS lift_admin
+        FROM sa_bans b
+        LEFT JOIN sa_unbans ub ON ub.id = b.unban_id
+        LEFT JOIN sa_admins ua ON ua.id = ub.admin_id
+        WHERE b.player_steamid = @PlayerSteamID {(multiServer ? "" : "AND b.server_id = @serverid")}
+        UNION ALL
+        SELECT m.id, m.type, m.player_name, m.admin_name, m.reason, m.duration, m.created, m.ends, m.status,
+               um.reason AS lift_reason, um.date AS lift_date, ua.player_name AS lift_admin
+        FROM sa_mutes m
+        LEFT JOIN sa_unmutes um ON um.id = m.unmute_id
+        LEFT JOIN sa_admins ua ON ua.id = um.admin_id
+        WHERE m.player_steamid = @PlayerSteamID {(multiServer ? "" : "AND m.server_id = @serverid")}
+        UNION ALL
+        SELECT w.id, 'WARN' AS type, w.player_name, w.admin_name, w.reason, w.duration, w.created, w.ends, w.status,
+               NULL AS lift_reason, NULL AS lift_date, NULL AS lift_admin
+        FROM sa_warns w
+        WHERE w.player_steamid = @PlayerSteamID {(multiServer ? "" : "AND w.server_id = @serverid")}
+        ORDER BY created DESC
+        """;
 
     public ValueTask DisposeAsync() => ValueTask.CompletedTask;
 }

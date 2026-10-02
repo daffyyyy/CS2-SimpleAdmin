@@ -71,13 +71,16 @@ public partial class CS2_SimpleAdmin
 
         var utf8BytesString = Encoding.UTF8.GetBytes(command.GetCommandString[command.GetCommandString.IndexOf(' ')..]);
         var utf8String = Encoding.UTF8.GetString(utf8BytesString);
+        var callerName = caller?.PlayerName;
 
         Helper.LogCommand(caller, command);
         foreach (var player in Helper.GetValidPlayers())
         {
+            // The message always goes out (it is a broadcast, not an activity notice),
+            // but the admin's name follows ShowActivityType like every other activity message.
             player.SendLocalizedMessage(_localizer,
                 "sa_adminsay_prefix",
-                utf8String.ReplaceColorTags());
+                utf8String.ReplaceColorTags(), Helper.ResolveActivityName(player, callerName));
         }
     }
 
