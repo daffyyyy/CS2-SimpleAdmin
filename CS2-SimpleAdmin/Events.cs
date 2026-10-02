@@ -513,18 +513,31 @@ public partial class CS2_SimpleAdmin
     [GameEventHandler]
     public HookResult OnPlayerInfo(EventPlayerInfo @event, GameEventInfo _)
     {
-        var player = @event.Userid;
-
-        if (player is null || !player.IsValid || player.IsBot)
-            return HookResult.Continue;
-
-        if (!RenamedPlayers.TryGetValue(player.SteamID, out var name)) return HookResult.Continue;
-
-        if (player.PlayerName.Equals(name))
-            return HookResult.Continue;
-
-        player.Rename(name);
-
+        EnforceRename(@event.Userid);
         return HookResult.Continue;
+    }
+
+    [GameEventHandler]
+    public HookResult OnPlayerChangename(EventPlayerChangename @event, GameEventInfo _)
+    {
+        EnforceRename(@event.Userid);
+        return HookResult.Continue;
+    }
+
+    /// <summary>
+    /// Re-applies a permanent rename. Checked after a short delay because the engine may not
+    /// have written the client's new name yet when the event fires, and Rename itself
+    /// takes 0.4s to settle (it briefly writes the name with a trailing space).
+    /// </summary>
+    private void EnforceRename(CCSPlayerController? player)
+    {
+        if (player is null || !player.IsValid || player.IsBot) return;
+        if (!RenamedPlayers.TryGetValue(player.SteamID, out var name)) return;
+
+        AddTimer(0.5f, () =>
+        {
+            if (player.IsValid && !player.PlayerName.Equals(name))
+                player.Rename(name);
+        });
     }
 }

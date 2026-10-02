@@ -10,8 +10,10 @@ namespace CS2_SimpleAdmin.Managers;
 internal class CacheManager: IDisposable
 {
     private readonly ConcurrentDictionary<int, BanRecord> _banCache = [];
-    private readonly ConcurrentDictionary<ulong, List<BanRecord>> _steamIdIndex = [];
-    private readonly ConcurrentDictionary<uint, List<BanRecord>> _ipIndex = [];
+    // Rebuilt into fresh instances and swapped, so unlocked readers on the game thread never see a half-built index
+    private ConcurrentDictionary<ulong, List<BanRecord>> _steamIdIndex = [];
+    private ConcurrentDictionary<uint, List<BanRecord>> _ipIndex = [];
+    private readonly object _indexLock = new();
 
     private readonly ConcurrentDictionary<ulong, HashSet<IpRecord>> _playerIpsCache = [];
     private HashSet<uint> _cachedIgnoredIps = [];
@@ -178,7 +180,7 @@ internal class CacheManager: IDisposable
                     player_steamid AS PlayerSteamId,
                     player_ip AS PlayerIp,
                     status AS Status
-                    FROM `sa_bans` WHERE updated_at > @lastUpdate OR created > @lastUpdate ORDER BY updated_at DESC
+                    FROM `sa_bans` WHERE updated_at >= @lastUpdate OR created >= @lastUpdate ORDER BY updated_at DESC
                     """,
                     new { lastUpdate = lastCheckTime }
                 )).ToList();
@@ -221,7 +223,7 @@ internal class CacheManager: IDisposable
                     player_steamid AS PlayerSteamId,
                     player_ip AS PlayerIp,
                     status AS Status
-                    FROM `sa_bans` WHERE server_id = @serverId AND (updated_at > @lastUpdate OR created > @lastUpdate) ORDER BY updated_at DESC
+                    FROM `sa_bans` WHERE server_id = @serverId AND (updated_at >= @lastUpdate OR created >= @lastUpdate) ORDER BY updated_at DESC
                     """,
                     new { serverId = CS2_SimpleAdmin.ServerId, lastUpdate = lastCheckTime }
                 )).ToList();
@@ -294,7 +296,7 @@ internal class CacheManager: IDisposable
                             .GroupBy(x => x.Address)
                             .Select(g =>
                             {
-                                var latest = g.MaxBy(x => x.Used_at);
+                                var latest = g.MaxBy(x => x.Used_at)!; // group is never empty
                                 return new IpRecord(
                                     g.Key,
                                     latest.Used_at,
@@ -353,8 +355,36 @@ internal class CacheManager: IDisposable
     /// </summary>
     private void RebuildIndexes()
     {
-        _steamIdIndex.Clear();
-        _ipIndex.Clear();
+        // SetBanStatus (unban thread) and RefreshCacheAsync (timer thread) can both get here
+        lock (_indexLock)
+        {
+            RebuildIndexesCore();
+        }
+    }
+
+    /// <summary>
+    /// Updates the status of the given bans in the cache and rebuilds the indexes,
+    /// so unbans take effect immediately instead of waiting for the next refresh.
+    /// </summary>
+    /// <param name="banIds">Ban ids to update.</param>
+    /// <param name="status">New status.</param>
+    public void SetBanStatus(IEnumerable<int> banIds, BanStatus status)
+    {
+        var changed = false;
+        foreach (var id in banIds)
+        {
+            if (!_banCache.TryGetValue(id, out var ban) || ban.StatusEnum == status) continue;
+            _banCache[id] = ban with { Status = status.ToString() };
+            changed = true;
+        }
+
+        if (changed) RebuildIndexes();
+    }
+
+    private void RebuildIndexesCore()
+    {
+        var steamIdIndex = new ConcurrentDictionary<ulong, List<BanRecord>>();
+        var ipIndex = new ConcurrentDictionary<uint, List<BanRecord>>();
 
         // Optimization: Cache config value to avoid repeated property access
         var banType = CS2_SimpleAdmin.Instance.Config.OtherSettings.BanType;
@@ -369,10 +399,10 @@ internal class CacheManager: IDisposable
             if (ban.PlayerSteamId.HasValue)
             {
                 var steamId = ban.PlayerSteamId.Value;
-                if (!_steamIdIndex.TryGetValue(steamId, out var steamList))
+                if (!steamIdIndex.TryGetValue(steamId, out var steamList))
                 {
                     steamList = new List<BanRecord>();
-                    _steamIdIndex[steamId] = steamList;
+                    steamIdIndex[steamId] = steamList;
                 }
                 steamList.Add(ban);
             }
@@ -381,14 +411,18 @@ internal class CacheManager: IDisposable
             if (checkIpBans && !string.IsNullOrEmpty(ban.PlayerIp) &&
                 IpHelper.TryConvertIpToUint(ban.PlayerIp, out var ipUInt))
             {
-                if (!_ipIndex.TryGetValue(ipUInt, out var ipList))
+                if (!ipIndex.TryGetValue(ipUInt, out var ipList))
                 {
                     ipList = new List<BanRecord>();
-                    _ipIndex[ipUInt] = ipList;
+                    ipIndex[ipUInt] = ipList;
                 }
                 ipList.Add(ban);
             }
         }
+
+        // Reference swap is atomic; readers finish on the old index or start on the complete new one
+        Volatile.Write(ref _steamIdIndex, steamIdIndex);
+        Volatile.Write(ref _ipIndex, ipIndex);
     }
     
     /// <summary>
