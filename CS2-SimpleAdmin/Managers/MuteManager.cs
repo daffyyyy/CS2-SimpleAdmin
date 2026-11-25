@@ -159,7 +159,7 @@ internal class MuteManager(IDatabaseProvider? databaseProvider)
         {
             await using var connection = await databaseProvider.CreateConnectionAsync();
 
-            var sql = databaseProvider.GetRetrieveMutesQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
+            var sql = databaseProvider.GetMuteStatsQuery(CS2_SimpleAdmin.Instance.Config.MultiServerMode);
             var result = await connection.QuerySingleAsync<(int TotalMutes, int TotalGags, int TotalSilences)>(sql, new
             {
                 PlayerSteamID = playerInfo.SteamId.SteamId64,

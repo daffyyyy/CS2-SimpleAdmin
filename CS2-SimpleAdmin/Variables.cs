@@ -75,7 +75,7 @@ public partial class CS2_SimpleAdmin
     internal MuteManager MuteManager = new(DatabaseProvider);
     internal WarnManager WarnManager = new(DatabaseProvider);
     internal CacheManager? CacheManager = new();
-    private static readonly PlayerManager PlayerManager = new();
+    internal static readonly PlayerManager PlayerManager = new();
 
     // Timers
     internal Timer? PlayersTimer = null;

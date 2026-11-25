@@ -1,5 +1,6 @@
 {GREEN}[ CS2-SimpleAdmin HELP ]{DEFAULT}
 - css_who <#userid or name>  - Display informations about player
+- css_history <#userid or name or steamid64> [bans|gags|mutes|silences|warns] - Print player's penalty history to console
 - css_players - Display player list
 - css_ban <#userid or name> [time in minutes/0 perm] [reason] - Ban player
 - css_addban <steamid> [time in minutes/0 perm] [reason] - Ban player via steamid64

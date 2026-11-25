@@ -36,24 +36,34 @@ public partial class CS2_SimpleAdmin
         if (caller == null || !caller.IsValid || !caller.UserId.HasValue || DatabaseProvider == null)
             return;
         
-        var userId = caller.UserId.Value;
         var steamId = caller.SteamID;
-        
+
         if (!string.IsNullOrEmpty(command.GetArg(1)) && AdminManager.PlayerHasPermissions(new SteamID(caller.SteamID), "@css/kick"))
         {
             var targets = GetTarget(command);
-            
+
             if (targets == null)
                 return;
-            
-            var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
-            playersToTarget.ForEach(player =>
-            {
-                if (!player.UserId.HasValue) return;
-                if (!caller.CanTarget(player)) return;
 
-                userId = player.UserId.Value;
-            });
+            var playersToTarget = targets.Players.Where(player => player is { IsValid: true, IsHLTV: false }).ToList();
+            if (playersToTarget.Count != 1)
+            {
+                command.ReplyToCommand("Only one target is allowed.");
+                return;
+            }
+
+            var target = playersToTarget[0];
+            if (!target.UserId.HasValue || !caller.CanTarget(target)) return;
+
+            // Only the user id was reassigned before, so every lookup below used the caller's own penalties
+            steamId = target.SteamID;
+        }
+
+        // PlayersInfo is filled by the async connect load; a target who joined a moment ago may not be in it yet
+        if (!PlayersInfo.ContainsKey(steamId))
+        {
+            command.ReplyToCommand("Player data is still loading, try again in a moment.");
+            return;
         }
 
         Task.Run(async () =>
@@ -495,33 +505,74 @@ public partial class CS2_SimpleAdmin
     /// Reloads admin data asynchronously and updates admin caches.
     /// </summary>
     /// <param name="caller">The player issuing the reload command.</param>
+    private static readonly SemaphoreSlim ReloadAdminsLock = new(1, 1);
+    private static int _reloadGeneration;
+
     public void ReloadAdmins(CCSPlayerController? caller)
     {
         if (DatabaseProvider == null) return;
-        
+
         Task.Run(async () =>
         {
-            await PermissionManager.CreateGroupsJsonFile();
-            await PermissionManager.CreateAdminsJsonFile();
-            
-            var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
-            var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");
-            
-               await Server.NextWorldUpdateAsync(() =>
+            // Serialize reloads end to end: overlapping ones (css_admins_reload, add admin, map change) race on the JSON files,
+            // and CSS reads them on timers up to 4s later. Capped so a hibernating server cannot hold the lock forever.
+            await ReloadAdminsLock.WaitAsync();
+            // If the cap expires (hibernation) and a newer reload runs, this one's pending timers must not apply a stale snapshot
+            var generation = Interlocked.Increment(ref _reloadGeneration);
+            try
             {
-                AddTimer(1, () =>
-                {
-                    if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(2.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
-                    if (!string.IsNullOrEmpty(groupsFile))
-                        AddTimer(3.0f, () => AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json"));
-                    if (!string.IsNullOrEmpty(adminsFile))
-                        AddTimer(4.0f, () => AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json"));
+                await PermissionManager.CreateGroupsJsonFile();
+                var admins = await PermissionManager.CreateAdminsJsonFile();
 
-                    _logger?.LogInformation("Loaded admins!");
+                var adminsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/admins.json");
+                var groupsFile = await File.ReadAllTextAsync(Instance.ModuleDirectory + "/data/groups.json");
+
+                var loaded = new TaskCompletionSource();
+                var scheduled = Server.NextWorldUpdateAsync(() =>
+                {
+                    AddTimer(1, () =>
+                    {
+                        if (!string.IsNullOrEmpty(adminsFile))
+                            AddTimer(2.0f, () =>
+                            {
+                                if (generation != _reloadGeneration) return;
+                                // Strip old permissions right before loading the new ones, not seconds earlier
+                                PermissionManager.ApplyAdminCache(admins);
+                                AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+                            });
+                        if (!string.IsNullOrEmpty(groupsFile))
+                            AddTimer(3.0f, () =>
+                            {
+                                if (generation != _reloadGeneration) return;
+                                AdminManager.LoadAdminGroups(ModuleDirectory + "/data/groups.json");
+                            });
+                        AddTimer(4.0f, () =>
+                        {
+                            if (generation == _reloadGeneration)
+                            {
+                                if (!string.IsNullOrEmpty(adminsFile))
+                                    AdminManager.LoadAdminData(ModuleDirectory + "/data/admins.json");
+                                _logger?.LogInformation("Loaded admins!");
+                            }
+
+                            // Always completes, so a superseded reload cannot hold the lock until the cap
+                            loaded.TrySetResult();
+                        });
+                    });
                 });
-            });
-        });  
+
+                await Task.WhenAny(Task.WhenAll(scheduled, loaded.Task), Task.Delay(TimeSpan.FromSeconds(15)));
+            }
+            catch (Exception ex)
+            {
+                // A failed DB read aborts here, leaving current permissions untouched
+                _logger?.LogError("Unable to reload admins: {exception}", ex.Message);
+            }
+            finally
+            {
+                ReloadAdminsLock.Release();
+            }
+        });
 
         //_ = _adminManager.GiveAllGroupsFlags();
         //_ = _adminManager.GiveAllFlags();
@@ -834,6 +885,99 @@ public partial class CS2_SimpleAdmin
                 });
             });
         });
+    }
+
+    /// <summary>
+    /// Prints a player's full penalty history (bans, gags, mutes, silences, warns) to the caller's console.
+    /// Accepts a SteamID64 so it also works for players who are not online.
+    /// </summary>
+    /// <param name="caller">The player issuing the command or null for console.</param>
+    /// <param name="command">The command containing the target and an optional penalty type filter.</param>
+    [RequiresPermissions("@css/kick")]
+    [CommandHelper(minArgs: 1, usage: "<#userid or name or steamid64> [bans|gags|mutes|silences|warns]", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
+    public void OnHistoryCommand(CCSPlayerController? caller, CommandInfo command)
+    {
+        if (DatabaseProvider == null || _localizer == null) return;
+
+        var filter = command.ArgCount > 2 ? command.GetArg(2).ToLowerInvariant() : null;
+        if (filter is not (null or "bans" or "gags" or "mutes" or "silences" or "warns"))
+        {
+            command.ReplyToCommand("Usage: css_history <#userid or name or steamid64> [bans|gags|mutes|silences|warns]");
+            return;
+        }
+
+        ulong steamId;
+        string? name = null;
+
+        if (Helper.ValidateSteamId(command.GetArg(1), out var parsedSteamId) && parsedSteamId != null)
+        {
+            if (caller != null && !caller.CanTarget(parsedSteamId)) return;
+
+            steamId = parsedSteamId.SteamId64;
+            if (PlayersInfo.TryGetValue(steamId, out var info)) name = info.Name;
+        }
+        else
+        {
+            var targets = GetTarget(command);
+            if (targets == null) return;
+
+            var players = targets.Players.Where(p => p is { IsValid: true, IsBot: false, IsHLTV: false }).ToList();
+            if (players.Count != 1)
+            {
+                command.ReplyToCommand("Only one target is allowed.");
+                return;
+            }
+
+            var player = players[0];
+            if (caller != null && !caller.CanTarget(player)) return;
+
+            steamId = player.SteamID;
+            name = player.PlayerName;
+        }
+
+        Helper.LogCommand(caller, command);
+        Action<string> print = caller == null ? Server.PrintToConsole : caller.PrintToConsole;
+        var callerSteamId = caller?.SteamID;
+
+        Task.Run(async () =>
+        {
+            var rows = await PlayerManager.GetPenaltyHistory(steamId, filter);
+            // Offline players are only known by SteamID; borrow the name stored on their latest record
+            name ??= rows.Count > 0 ? (string?)rows[0].player_name : null;
+
+            await Server.NextWorldUpdateAsync(() =>
+            {
+                // The slot may have been reused by another player while the query ran
+                if (caller != null && (!caller.IsValid || caller.SteamID != callerSteamId)) return;
+                PrintHistory(print, name ?? steamId.ToString(), steamId, rows);
+            });
+        });
+    }
+
+    /// <summary>
+    /// Writes history rows from <see cref="PlayerManager.GetPenaltyHistory"/> as one console line each.
+    /// </summary>
+    internal void PrintHistory(Action<string> print, string name, ulong steamId, List<dynamic> rows)
+    {
+        if (_localizer == null) return;
+
+        if (rows.Count == 0)
+        {
+            print(_localizer["sa_history_none", name]);
+            return;
+        }
+
+        print(_localizer["sa_history_header", name, steamId, rows.Count]);
+        foreach (var r in rows)
+        {
+            var duration = (int)r.duration == 0 ? "perm" : $"{(int)r.duration}m";
+            var line = $"[{Date(r.created)}] {(string)r.type,-7} {(string)r.status,-8} {duration,-6} by {(string)r.admin_name}: {(string)r.reason}";
+            if (r.lift_date != null)
+                line += $" | lifted {Date(r.lift_date)} by {(string?)r.lift_admin ?? "?"}: {(string?)r.lift_reason}";
+            print(line);
+        }
+
+        static string Date(object? value) => PlayerManager.ToDateTime(value)?.ToString("yyyy-MM-dd HH:mm") ?? "?";
     }
 
     /// <summary>

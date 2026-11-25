@@ -292,10 +292,9 @@ public partial class CS2_SimpleAdmin
             var adminActivityArgs = new object[] { "CALLER", player.PlayerName, newName };
 
             // Display admin activity message to other players
-            if (caller != null && SilentPlayers.Contains(caller.Slot)) return;
+            if (caller != null && !SilentPlayers.Contains(caller.Slot))
+                Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
 
-            Helper.ShowAdminActivity(activityMessageKey, callerName, false, adminActivityArgs);
-            
             // Rename the player
             player.Rename(newName);
         });
@@ -344,15 +343,18 @@ public partial class CS2_SimpleAdmin
             }
             
             // Determine if the new name is valid and update the renamed players list
+            var steamId = player.SteamID;
             if (!string.IsNullOrEmpty(newName))
             {
-                RenamedPlayers[player.SteamID] = newName;
+                RenamedPlayers[steamId] = newName;
                 player.Rename(newName);
             }
             else
             {
-                RenamedPlayers.Remove(player.SteamID);
+                RenamedPlayers.Remove(steamId);
             }
+
+            Task.Run(() => PlayerManager.SaveRenamedPlayer(steamId, newName));
         });
     }
 

@@ -45,6 +45,7 @@ public static class RegisterCommands
         new("css_who", CS2_SimpleAdmin.Instance.OnWhoCommand),
         new("css_disconnected", CS2_SimpleAdmin.Instance.OnDisconnectedCommand),
         new("css_warns", CS2_SimpleAdmin.Instance.OnWarnsCommand),
+        new("css_history", CS2_SimpleAdmin.Instance.OnHistoryCommand),
         new("css_players", CS2_SimpleAdmin.Instance.OnPlayersCommand),
         new("css_kick", CS2_SimpleAdmin.Instance.OnKickCommand),
         new("css_map", CS2_SimpleAdmin.Instance.OnMapCommand),
@@ -130,6 +131,7 @@ public static class RegisterCommands
                 { "css_who", new Command { Aliases = ["css_who"] } },
                 { "css_disconnected", new Command { Aliases = ["css_disconnected", "css_last"] } },
                 { "css_warns", new Command { Aliases = ["css_warns"] } },
+                { "css_history", new Command { Aliases = ["css_history", "css_penaltyhistory"] } },
                 { "css_players", new Command { Aliases = ["css_players"] } },
                 { "css_kick", new Command { Aliases = ["css_kick"] } },
                 { "css_map", new Command { Aliases = ["css_map", "css_changemap"] } },
@@ -197,6 +199,13 @@ public static class RegisterCommands
                 {
                     CS2_SimpleAdmin.Instance.AddCommand(alias, "", mapping.Callback);
                 }
+            }
+
+            // Commands added after Commands.json was generated are registered under their default name
+            foreach (var mapping in CommandMappings.Where(m => !commandsConfig.Commands.ContainsKey(m.CommandKey)))
+            {
+                CS2_SimpleAdmin._logger?.LogInformation($"Registering command: `{mapping.CommandKey}` (not in Commands.json, using default alias)");
+                CS2_SimpleAdmin.Instance.AddCommand(mapping.CommandKey, "", mapping.Callback);
             }
         }
         

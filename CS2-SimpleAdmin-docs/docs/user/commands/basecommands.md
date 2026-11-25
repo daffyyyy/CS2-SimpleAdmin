@@ -313,6 +313,36 @@ css_warns PlayerName
 
 ---
 
+### Show Penalty History
+
+Print every past and current penalty for a player to your console.
+
+```bash
+css_history <#userid or name or steamid64> [bans|gags|mutes|silences|warns]
+```
+
+**Permission:** `@css/kick`
+
+**Shows:**
+- Bans, gags, mutes, silences and warns, newest first
+- Status (active, expired, unbanned, unmuted), duration and reason
+- Admin who issued it
+- Who lifted it, when and why, for unbans and unmutes
+
+**Notes:**
+- Accepts a SteamID64, so it works for players who are not online
+- The optional second argument narrows the list to one penalty type
+- Also available in the admin menu under Players > History
+
+**Examples:**
+```bash
+css_history #123
+css_history PlayerName bans
+css_history 76561198012345678
+```
+
+---
+
 ### Show Online Players
 
 Show information about all online players.
