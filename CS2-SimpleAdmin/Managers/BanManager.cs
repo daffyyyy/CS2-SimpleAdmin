@@ -332,7 +332,7 @@ public async Task UnbanPlayer(string playerPattern, string adminSteamId, string 
 
         foreach (var ban in bansList)
         {
-            int banId = ban.id;
+            int banId = (int)ban.id; // SQLite returns long
 
             var sqlInsertUnban = databaseProvider.GetInsertUnbanQuery(reason != null);
             var unbanId = await connection.ExecuteScalarAsync<int>(sqlInsertUnban, new { banId, adminId, reason });

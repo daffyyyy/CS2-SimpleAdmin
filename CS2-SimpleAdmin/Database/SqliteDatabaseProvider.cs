@@ -5,7 +5,8 @@ namespace CS2_SimpleAdmin.Database;
 
 public class SqliteDatabaseProvider(string filePath) : IDatabaseProvider
 {
-    private readonly string _connectionString = $"Data Source={filePath}";
+    // Dates are stored as UTC; without DateTimeKind=Utc they are read back shifted by the machine's UTC offset
+    private readonly string _connectionString = $"Data Source={filePath};DateTimeKind=Utc";
 
     public async Task<DbConnection> CreateConnectionAsync()
     {
