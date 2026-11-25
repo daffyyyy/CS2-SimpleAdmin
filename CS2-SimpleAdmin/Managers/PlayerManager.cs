@@ -85,7 +85,9 @@ internal class PlayerManager
                     return;
                 }
 
-                if (!CS2_SimpleAdmin.PlayersInfo.ContainsKey(steamId))
+                // Must run on every full connect: OnMapStart wipes all penalties (and CSS resets voice flags), while
+                // PlayersInfo can survive a map change, so gating on it would silently drop active mutes.
+                if (fullConnect)
                 {
                     var playerInfo = new PlayerInfo(userId, slot, new SteamID(steamId), playerName, ipAddress);
                     CS2_SimpleAdmin.PlayersInfo[steamId] = playerInfo;
@@ -130,7 +132,7 @@ internal class PlayerManager
                                 {
                                     string muteType = mute.type;
                                     DateTime ends = mute.ends;
-                                    int duration = mute.duration;
+                                    int duration = (int)mute.duration; // SQLite returns long
                                     switch (muteType)
                                     {
                                         // Apply mute penalty based on mute type

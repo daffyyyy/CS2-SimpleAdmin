@@ -161,6 +161,7 @@ internal class CacheManager: IDisposable
             IEnumerable<BanRecord> updatedBans;
 
             // Get current time from database in local timezone (CURRENT_TIMESTAMP uses session timezone, not UTC)
+            // Overlap refreshes by a second: SQLite compares dates as text, and "10:00:05" sorts before "10:00:05Z"
             var currentDatabaseTime = await connection.QueryFirstAsync<DateTime>("SELECT CURRENT_TIMESTAMP");
 
             // Optimization: Only get IDs for comparison if we need to check for deletions
@@ -208,7 +209,7 @@ internal class CacheManager: IDisposable
                 updatedBans = updatedList;
 
                 // Update last check time to current database time
-                _lastDatabaseTime = currentDatabaseTime;
+                _lastDatabaseTime = currentDatabaseTime.AddSeconds(-1);
             }
             else
             {
@@ -254,7 +255,7 @@ internal class CacheManager: IDisposable
                 updatedBans = updatedList;
 
                 // Update last check time to current database time
-                _lastDatabaseTime = currentDatabaseTime;
+                _lastDatabaseTime = currentDatabaseTime.AddSeconds(-1);
             }
 
             // Optimization: Only process deletions if we have the full ID list
